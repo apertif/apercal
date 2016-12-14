@@ -39,26 +39,14 @@ class ccal:
         self.selfcaldir = self.basedir + self.selfcalsubdir
         self.finaldir = self.basedir + self.finalsubdir
 
-    ####################################################################################
-    ##### Functions to execute the different modes of the self-calibration process #####
-    ####################################################################################
-
-    def go(self):
-        '''
-        Execute the full cross calibration process
-        '''
-        self.logger.info("########## Starting CROSS CALIBRATION ##########")
+        # Name the datasets
         self.fluxcal = self.fluxcal.rstrip('MS') + 'mir'
         self.polcal = self.polcal.rstrip('MS') + 'mir'
         self.target = self.target.rstrip('MS') + 'mir'
-        self.director('ch', self.crosscaldir)
-        if self.compensate_fringestop_fluxcal or self.compensate_fringestop_polcal or self.compensate_fringestop_target:
-            self.comp_fstop()
-        if self.fluxcal_gains or self.fluxcal_bandpass:
-            self.cal_fluxcal()
-        if self.transfer_to_target:
-            self.copy_gains()
-        self.logger.info("########## CROSS CALIBRATION done ##########")
+
+    ####################################################################################
+    ##### Functions to execute the different modes of the self-calibration process #####
+    ####################################################################################
 
     def cal_fluxcal(self):
         self.logger.info('### Starting to calibrate flux calibrator ###')
@@ -79,60 +67,69 @@ class ccal:
         self.logger.info('### Gains copied ###')
         gpcopy.go()
 
+    def go(self):
+        '''
+        Execute the full cross calibration process
+        '''
+        self.logger.info("########## Starting CROSS CALIBRATION ##########")
+        self.director('ch', self.crosscaldir)
+        if self.compensate_fringestop:
+            self.comp_fstop()
+            self.fluxcal_phasecal()
+        if self.fluxcal_gains or self.fluxcal_bandpass:
+            self.cal_fluxcal()
+        if self.transfer_to_target:
+            self.copy_gains()
+        self.logger.info("########## CROSS CALIBRATION done ##########")
+
     ###########################################################################################
     ##### Functions to compensate for the fringe stopping. Hopefully not needed for long. #####
     ###########################################################################################
 
-    def comp_fstop(self):
-        '''
-        Divide the dataset by a model of amplitude 1 at the North Pole to compensate for the non-existent fringe stopping
-        '''
-        self.logger.info('### Doing fringe stopping ###')
-        if self.compensate_fringestop_fluxcal:
-            self.vis = self.fluxcal
-            fluxcalcoords = self.getradec(self.vis)
-            self.logger.info('# Apparent coordinates of the flux calibrator are RA: ' + str(fluxcalcoords.ra.deg) + ' deg, DEC: ' + str(fluxcalcoords.dec.deg) + ' deg #')
-            equinox = self.getequinox(self.vis)
-            self.logger.info('# Equinox of the day of the observation is ' + str(equinox) + ' #')
-            curr_coords = fluxcalcoords.transform_to(FK5(equinox='J' + str(equinox)))
-            self.logger.info('# Transforming coordinates to new equinox #')
-            self.logger.info('# New coordinates are RA: '  + str(curr_coords.ra.deg) + ' deg, DEC: ' + str(curr_coords.dec.deg) + ' deg #')
-            dec_off = self.calc_np_offset(curr_coords)
-            self.logger.info('# Declination offset towards north pole for the flux calibrator is ' + str(dec_off) + ' arcsec #')
-            self.fringe_stop(dec_off)
-        if self.compensate_fringestop_polcal:
-            self.vis = self.polcal
-            polcalcoords = self.getradec(self.vis)
-            self.logger.info('# Apparent coordinates of the polarisation calibrator are RA: ' + str(polcalcoords.ra.deg) + ' deg, DEC: ' + str(polcalcoords.dec.deg) + ' deg #')
-            equinox = self.getequinox(self.vis)
-            self.logger.info('# Equinox of the day of the observation is ' + str(equinox) + ' #')
-            curr_coords = polcalcoords.transform_to(FK5(equinox='J' + str(equinox)))
-            self.logger.info('# Transforming coordinates to new equinox #')
-            self.logger.info('# New coordinates are RA: ' + str(curr_coords.ra.deg) + ' deg, DEC: ' + str(curr_coords.dec.deg) + ' deg #')
-            dec_off = self.calc_np_offset(curr_coords)
-            self.logger.info('# Declination offset towards north pole for the polarised calibrator is ' + str(dec_off) + ' arcsec #')
-            self.fringe_stop(dec_off)
-        if self.compensate_fringestop_target:
-            self.vis = self.target
-            targetcoords = self.getradec(self.vis)
-            self.logger.info('# Apparent coordinates of the target are RA: ' + str(targetcoords.ra.deg) + ' deg, DEC: ' + str(targetcoords.dec.deg) + ' deg #')
-            equinox = self.getequinox(self.vis)
-            self.logger.info('# Equinox of the day of the observation is ' + str(equinox) + ' #')
-            curr_coords = targetcoords.transform_to(FK5(equinox='J' + str(equinox)))
-            self.logger.info('# Transforming coordinates to new equinox #')
-            self.logger.info('# New coordinates are RA: ' + str(curr_coords.ra.deg) + ' deg, DEC: ' + str(curr_coords.dec.deg) + ' deg #')
-            dec_off = self.calc_np_offset(curr_coords)
-            self.logger.info('# Declination offset towards north pole for the target is ' + str(dec_off) + ' arcsec #')
-            self.fringe_stop(dec_off)
-        self.logger.info('### Fringe stopping done! ###')
-
     def correct_freq(self):
-        self.logger.info('# Correcting the observing frequency (sfreq keyword in MIRIAD) #')
+        self.logger.info('# Correcting the observing frequency (sfreq keyword in MIRIAD) of dataset ' + self.vis + ' #')
         puthd = lib.miriad('puthd')
         puthd.in_ = self.vis + '/sfreq'
         puthd.value = self.obsfreq
         self.logger.info('# New frequency is ' + str(puthd.value) + ' #')
         puthd.go()
+
+    def comp_fstop(self):
+        '''
+        Divide the dataset by a model of amplitude 1 at the North Pole to compensate for the non-existent fringe stopping
+        '''
+        self.logger.info('### Starting fringe stopping ###')
+        # Correct for fringe stopping of the flux calibrator
+        self.vis = self.fluxcal
+        self.correct_freq()
+        if self.equinox == 'J2000' or self.equinox == 'Apparent':
+            fluxcalcoords = self.getradec(self.vis)
+        elif self.quinox == 'current':
+            equinox = self.getequinox(self.vis)
+            self.logger.info('# Equinox of the day of the observation is ' + str(equinox) + ' #')
+            fluxcalcoords = self.getradec(self.vis)
+            curr_coords = fluxcalcoords.transform_to(FK5(equinox='J' + str(equinox)))
+            self.logger.info('# Transforming coordinates to new equinox #')
+        self.logger.info('# Coordinates of the flux calibrator are RA: ' + str(fluxcalcoords.ra.deg) + ' deg, DEC: ' + str(fluxcalcoords.dec.deg) + ' deg #')
+        dec_off = self.calc_np_offset(curr_coords)
+        self.logger.info('# Declination offset towards north pole for the flux calibrator is ' + str(dec_off) + ' arcsec #')
+        self.fringe_stop(dec_off)
+        # Correct for fringe stopping of the target field
+        self.vis = self.target
+        self.correct_freq()
+        if self.equinox == 'J2000' or self.equinox == 'Apparent':
+            targetcoords = self.getradec(self.vis)
+        elif self.quinox == 'current':
+            equinox = self.getequinox(self.vis)
+            self.logger.info('# Equinox of the day of the observation is ' + str(equinox) + ' #')
+            targetcoords = self.getradec(self.vis)
+            curr_coords = targetcoords.transform_to(FK5(equinox='J' + str(equinox)))
+            self.logger.info('# Transforming coordinates to new equinox #')
+        self.logger.info('# Coordinates of the flux calibrator are RA: ' + str(targetcoords.ra.deg) + ' deg, DEC: ' + str(targetcoords.dec.deg) + ' deg #')
+        dec_off = self.calc_np_offset(curr_coords)
+        self.logger.info('# Declination offset towards north pole for the target field is ' + str(dec_off) + ' arcsec #')
+        self.fringe_stop(dec_off)
+        self.logger.info('### Fringe stopping done! ###')
 
     def fringe_stop(self, offset):
         self.correct_freq()
@@ -154,6 +151,26 @@ class ccal:
         dec_off = (90.0 - coords.dec.deg) * 3600.0
         return dec_off
 
+    def fluxcal_phasecal(self):
+        '''
+        Self-calibrate the calibrator on phase to move it to the field centre to derive a good bandpass
+        '''
+        self.logger.info('### Self-calibrating calibrator to move it to the field centre ###')
+        self.vis = self.fluxcal
+        selfcal = lib.miriad('selfcal')
+        selfcal.vis = self.vis
+        selfcal.interval = self.selfcal_fluxcal_solint
+        selfcal.options = 'mfs,phase'
+        selfcal.go()
+        self.logger.info('# Self calibrating calibrator dataset ' + self.vis + ' with solution interval ' + str(self.selfcal_fluxcal_solint) + ' #')
+        uvcat = lib.miriad('uvcat')
+        uvcat.vis = self.fluxcal
+        uvcat.out = self.fluxcal + '.copy'
+        uvcat.go()
+        self.director('rm', self.fluxcal)
+        self.director('rn', self.fluxcal, file=uvcat.out)
+        self.logger.info('### Calibrator moved to the field centre ###')
+
     ##################################################################################################################
     ##### Helper functions to get coordinates and central frequency of a dataset and fix the coordinate notation #####
     ##################################################################################################################
@@ -165,8 +182,10 @@ class ccal:
         return: coords, an instance of the astropy.coordinates SkyCoord class which has a few convenient attributes.
         '''
         prthd = lib.basher('prthd in=' + infile)
-        regex = re.compile(".*(J2000).*")
-        # regex = re.compile(".*(Apparent).*")
+        if self.equinox == 'J2000':
+            regex = re.compile(".*(J2000).*")
+        elif self.equinox == 'Apparent':
+            regex = re.compile(".*(Apparent).*")
         coordline = [m.group(0) for l in prthd for m in [regex.search(l)] if m][0].split()
         rastr = coordline[3]
         decstr = coordline[5]
