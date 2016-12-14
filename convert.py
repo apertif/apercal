@@ -113,6 +113,22 @@ class convert:
         self.uvfits2miriad()
         self.logger.info('########## FILE CONVERSION done ##########')
 
+    #######################################################################
+    ##### Manage the creation and moving of new directories and files #####
+    #######################################################################
+
+    def show(self):
+        '''
+        Prints the current settings of the pipeline. Only shows keywords, which are in the default config file default.cfg
+        '''
+        config = ConfigParser.ConfigParser()
+        config.readfp(open(self.apercaldir + '/default.cfg'))
+        for s in config.sections():
+            print(s)
+            o = config.options(s)
+            for o in config.items(s):
+                print('\t' + str(o[0]) + ' = ' + str(self.__dict__.__getitem__(o[0])))
+
     def director(self, option, dest, file=None, verbose=True):
         '''
         director: Function to move, remove, and copy files and directories
@@ -139,17 +155,17 @@ class convert:
             self.cwd = os.getcwd()  # Save the current working directory in a variable
             if verbose == True:
                 self.logger.info('# Moved to directory ' + str(dest) + ' #')
-        elif option == 'mv':
+        elif option == 'mv':  # Move
             if os.path.exists(dest):
                 lib.basher("mv " + str(file) + " " + str(dest))
             else:
                 os.mkdir(dest)
                 lib.basher("mv " + str(file) + " " + str(dest))
-        elif option == 'rn':
+        elif option == 'rn':  # Rename
             lib.basher("mv " + str(file) + " " + str(dest))
-        elif option == 'cp':
+        elif option == 'cp':  # Copy
             lib.basher("cp -r " + str(file) + " " + str(dest))
-        elif option == 'rm':
+        elif option == 'rm':  # Remove
             lib.basher("rm -r " + str(dest))
         else:
-            print('### Option not supported! Only mk, ch, mv, rm, rn, and cp are supported! ###')
+            print('### Option not supported! Only mk, ch, mv, rm, and cp are supported! ###')

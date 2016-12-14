@@ -45,11 +45,16 @@ class scal:
         go: Splits the dataset into subbands of equal size and runs the selfcal cycle with the chosen mode. Handles parametric and amplitude calibration as well as deep single subband imaging.
         '''
         self.logger.info("########## Starting SELF CALIBRATION ##########")
-        self.target = self.target.rstrip('MS') + 'mir'  # Rename self.target since MS has already been converted to MIRIAD file
+        if self.field == 'fluxcal':
+            self.target = self.fluxcal.rstrip('MS') + 'mir'  # Rename self.target since MS has already been converted to MIRIAD file
+        if self.field == 'polcal':
+            self.target = self.polcal.rstrip('MS') + 'mir'  # Rename self.target since MS has already been converted to MIRIAD file
+        elif self.field == 'target':
+            self.target = self.target.rstrip('MS') + 'mir'  # Rename self.target since MS has already been converted to MIRIAD file
         self.apply_cal()
         # self.turbo_speed() # Use turbo mode if enabled. Switch is inside turbo_speed
         self.split_data() # Split the data. Also checks if the data has already been split
-        if self.parametric == True:  # Do parametric self-calibration if enabled
+        if self.parametric:  # Do parametric self-calibration if enabled
             self.par_cal()
         if self.mode == 'adaptive':  # Do adaptive self-calibration
             self.adaptive()
