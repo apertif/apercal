@@ -107,9 +107,11 @@ class convert:
         '''
         Executes the whole conversion from MS format to MIRIAD format of the flux calibrator, polarisation calibrator, and target dataset
         '''
+        self.logger.info('########## FILE CONVERSION started ##########')
         self.director('ch', self.crosscaldir)
         self.ms2uvfits()
         self.uvfits2miriad()
+        self.logger.info('########## FILE CONVERSION done ##########')
 
     def director(self, option, dest, file=None, verbose=True):
         '''

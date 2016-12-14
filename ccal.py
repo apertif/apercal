@@ -127,10 +127,10 @@ class ccal:
         self.logger.info('### Fringe stopping done! ###')
 
     def correct_freq(self):
-        self.logger.info('# Correcting for 50 MHz offset #')
+        self.logger.info('# Correcting the observing frequency (sfreq keyword in MIRIAD) #')
         puthd = lib.miriad('puthd')
         puthd.in_ = self.vis + '/sfreq'
-        puthd.value = 1.42046
+        puthd.value = self.obsfreq
         self.logger.info('# New frequency is ' + str(puthd.value) + ' #')
         puthd.go()
 

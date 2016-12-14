@@ -1,7 +1,7 @@
 - clean minorcycle and change adaptive selfcal
 - implement amp calibration
 - check for blank images/models
-- write flag module for aoflagger and strategy
 - include automatic flagging of channels with HI/RFI by mean rms
 - help function
 - crosscal
+- write flag module to flag during self-/cross-calibration
