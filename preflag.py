@@ -43,7 +43,14 @@ class preflag:
         '''
         Runs the CASA flagdata task to flag entire antennas, baselines, correlations etc. before doing any other calibration. Mostly used for commissioning where we know that telescopes are not working or correlations are absent.
         '''
-        self.logger.info('### Starting pre-flagging of known flags ###')
+        self.logger.info('### Starting pre-flagging of known flags using CASA task flagdata ###')
+        from casat import flagdata
+        flagdata = flagdata.flagdata
+        self.flag_auto()
+        self.flag_antenna()
+        self.flag_corr()
+        self.flag_shadow()
+        self.flag_baseline()
         self.logger.info('### Pre-flagging of known flags done ###')
 
     def go(self):
@@ -60,7 +67,59 @@ class preflag:
     ##### Subfunctions for the different manual_flag steps #####
     ############################################################
 
+    def flag_auto(self):
+        '''
+        Function to flag the auto-correlations
+        '''
+        if self.manual_flag_auto:
+            self.logger.info('# Flagging auto-correlations #')
+            flagdata(vis=self.fluxcal, mode='manual', autocorr=True)
+            flagdata(vis=self.polcal, mode='manual', autocorr=True)
+            flagdata(vis=self.target, mode='manual', autocorr=True)
+        else:
+            self.logger.info('# Auto-correlations not flagged #')
 
+    def flag_antenna(self):
+        '''
+        Function to flag complete antennas
+        '''
+        if self.manual_flag_antenna != '':
+            self.logger.info('# Flagging antennas ' + self.manual_flag_antenna + ' #')
+            flagdata(vis=self.fluxcal, mode='manual', antenna=self.manual_flag_antenna)
+            flagdata(vis=self.polcal, mode='manual', antenna=self.manual_flag_antenna)
+            flagdata(vis=self.target, mode='manual', antenna=self.manual_flag_antenna)
+
+    def flag_corr(self):
+        '''
+        Function to flag whole correlations
+        '''
+        if self.manual_flag_corr != '':
+            self.logger.info('# Flagging correlations ' + self.manual_flag_corr + ' #')
+            flagdata(vis=self.fluxcal, mode='manual', correlation=self.manual_flag_corr)
+            flagdata(vis=self.polcal, mode='manual', correlation=self.manual_flag_corr)
+            flagdata(vis=self.target, mode='manual', correlation=self.manual_flag_corr)
+
+    def flag_shadow(self):
+        '''
+        Function to flag shadowing of antennas
+        '''
+        if self.manual_flag_shadow:
+            self.logger.info('# Flagging shadowed antennas #')
+            flagdata(vis=self.fluxcal, mode='shadow')
+            flagdata(vis=self.polcal, mode='shadow')
+            flagdata(vis=self.target, mode='shadow')
+        else:
+            self.logger.warning('# No checking or flagging of shadowed antennas done #')
+
+    def flag_baseline(self):
+        '''
+        Function to flag individual baselines
+        '''
+        if self.manual_flag_baseline != '':
+            self.logger.info('# Flagging baselines ' + self.manual_flag_baseline + ' #')
+            flagdata(vis=self.fluxcal, mode='manual', antenna=self.manual_flag_baseline)
+            flagdata(vis=self.polcal, mode='manual', antenna=self.manual_flag_baseline)
+            flagdata(vis=self.target, mode='manual', antenna=self.manual_flag_baseline)
 
     #######################################################################
     ##### Manage the creation and moving of new directories and files #####
