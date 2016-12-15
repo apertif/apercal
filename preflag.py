@@ -2,7 +2,7 @@ import os, sys
 import logging
 import lib
 import ConfigParser
-import casat
+import casac
 
 class preflag:
     def __init__(self, file=None, **kwargs):
@@ -44,13 +44,12 @@ class preflag:
         Runs the CASA flagdata task to flag entire antennas, baselines, correlations etc. before doing any other calibration. Mostly used for commissioning where we know that telescopes are not working or correlations are absent.
         '''
         self.logger.info('### Starting pre-flagging of known flags using CASA task flagdata ###')
-        from casat import flagdata
-        flagdata = flagdata.flagdata
-        self.flag_auto()
-        self.flag_antenna()
-        self.flag_corr()
-        self.flag_shadow()
-        self.flag_baseline()
+        if self.manual_flagging:
+            self.flag_auto()
+            self.flag_antenna()
+            self.flag_corr()
+            self.flag_shadow()
+            self.flag_baseline()
         self.logger.info('### Pre-flagging of known flags done ###')
 
     def go(self):
@@ -73,6 +72,9 @@ class preflag:
         '''
         if self.manual_flag_auto:
             self.logger.info('# Flagging auto-correlations #')
+            af = casac.casac.agentflagger()
+            af.open(self.fluxcal)
+            af.selectdata
             flagdata(vis=self.fluxcal, mode='manual', autocorr=True)
             flagdata(vis=self.polcal, mode='manual', autocorr=True)
             flagdata(vis=self.target, mode='manual', autocorr=True)
