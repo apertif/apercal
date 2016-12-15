@@ -2,7 +2,7 @@ import os, sys
 import logging
 import lib
 import ConfigParser
-import casat
+import casac
 
 class convert:
     def __init__(self, file=None, **kwargs):
@@ -28,18 +28,23 @@ class convert:
         Executes the CASA exportuvfits or the command line utility ms2uvfits to convert the data from MS to UVFITS format. Does it for the flux calibrator, polarisation calibrator, and target field independently.
         '''
         if self.ms2uvfits_tool == 'casa':
-            self.logger.info('### Using CASA task exportuvfits to convert from MS to UVFITS format! ###')
-            from casat import exportuvfits
-            exportuvfits = exportuvfits.exportuvfits
+            self.logger.info('### Using CASA toolkit to convert from MS to UVFITS format! ###')
+            ms = casac.casac.ms()
             if self.convert_fluxcal == True:
-                exportuvfits(vis=self.rawdir + '/' + self.fluxcal, fitsfile=self.crosscaldir + '/' + str(self.fluxcal).rstrip('MS') + 'UVFITS', datacolumn='data')
-                self.logger.info('### Converted MS file ' + self.fluxcal + ' to UVFITS using CASA task exportuvfits! ###')
+                ms.open(self.rawdir + '/' + self.fluxcal)
+                ms.tofits(self.crosscaldir + '/' + str(self.fluxcal).rstrip('MS') + 'UVFITS', column='DATA')
+                ms.done()
+                self.logger.info('### Converted MS file ' + self.fluxcal + ' to UVFITS using CASA toolkit! ###')
             if self.convert_polcal == True:
-                exportuvfits(vis=self.rawdir + '/' + self.polcal, fitsfile=self.crosscaldir + '/' + str(self.polcal).rstrip('MS') + 'UVFITS', datacolumn='data')
-                self.logger.info('### Converted MS file ' + self.polcal + ' to UVFITS using CASA task exportuvfits! ###')
+                ms.open(self.rawdir + '/' + self.polcal)
+                ms.tofits(self.crosscaldir + '/' + str(self.polcal).rstrip('MS') + 'UVFITS', column='DATA')
+                ms.done()
+                self.logger.info('### Converted MS file ' + self.polcal + ' to UVFITS using CASA toolkit! ###')
             if self.convert_target == True:
-                exportuvfits(vis=self.rawdir + '/' + self.target, fitsfile=self.crosscaldir + '/' + str(self.target).rstrip('MS') + 'UVFITS', datacolumn='data')
-                self.logger.info('### Converted MS file ' + self.target + ' to UVFITS using CASA task exportuvfits! ###')
+                ms.open(self.rawdir + '/' + self.target)
+                ms.tofits(self.crosscaldir + '/' + str(self.target).rstrip('MS') + 'UVFITS', column='DATA')
+                ms.done()
+                self.logger.info('### Converted MS file ' + self.target + ' to UVFITS using CASA toolkit! ###')
         elif self.ms2uvfits_tool == 'ms2uvfits':
             self.logger.info('### Using ms2uvfits to convert from MS to UVFITS format! ###')
             if self.convert_fluxcal == True:
