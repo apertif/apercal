@@ -362,3 +362,490 @@ Handling the visibility data
 01/19/2017 02:31:10 PM - convert - INFO : ### Converted UVFITS file WSRTA2211440_B018.MS to MIRIAD format using MIRIAD task fits! ###
 01/19/2017 02:31:10 PM - convert - INFO : ### Conversion from UVFITS to MIRIAD fromat done! ###
 01/19/2017 02:31:10 PM - convert - INFO : ########## FILE CONVERSION done ##########
+01/19/2017 02:58:01 PM - CROSSCAL - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 02:58:16 PM - root - INFO : Logging started!
+01/19/2017 02:58:16 PM - root - INFO : To see the log in a bash window use the following command:
+01/19/2017 02:58:16 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/19/2017 02:58:20 PM - CROSSCAL - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 03:00:06 PM - root - INFO : Logging started!
+01/19/2017 03:00:06 PM - root - INFO : To see the log in a bash window use the following command:
+01/19/2017 03:00:06 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/19/2017 03:00:12 PM - CROSSCAL - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 03:00:13 PM - CROSSCAL - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/crosscal #
+01/19/2017 03:00:13 PM - CROSSCAL - INFO : # Doing fringe stopping by using the integration time of the observation and a point source model #
+01/19/2017 03:00:13 PM - masher - DEBUG : selfcal vis=WSRTA2211440_B018.mir interval=0.016666 options=phase 
+01/19/2017 03:00:13 PM - basher - DEBUG : selfcal vis=WSRTA2211440_B018.mir interval=0.016666 options=phase 
+01/19/2017 03:00:30 PM - basher - DEBUG : Command = selfcal vis=WSRTA2211440_B018.mir interval=0.016666 options=phase 
+01/19/2017 03:00:30 PM - basher - DEBUG : 
+
+selfcal: Revision 1.19, 2016/01/28 22:07:15 UTC
+
+Model is a point source at the observing center
+Reading the visibility file ...
+Accumulating statistics ...
+Finding the selfcal solutions ...
+Correlations with inappropriate Stokes type discarded: 21059251
+Total number of correlations being used: 17819366
+Total number of solution intervals: 21093
+Solution intervals merged together: 40
+Rms of the gain phases (degrees):  73.3
+Rms deviation of gain from 1: 6.176E-08
+Ratio of Actual to Theoretical noise: 2.818E+03
+
+01/19/2017 03:00:30 PM - basher - DEBUG : ### Warning:  No. correlations with bad baseline numbers: 32398848
+### Warning:  Intervals with no solution: 39
+
+01/19/2017 03:00:30 PM - basher - DEBUG : Returning output.
+01/19/2017 03:08:34 PM - root - INFO : Logging started!
+01/19/2017 03:08:34 PM - root - INFO : To see the log in a bash window use the following command:
+01/19/2017 03:08:34 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/19/2017 03:08:36 PM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 03:08:38 PM - preflag - INFO : ########## PRE-FLAGGING started ##########
+01/19/2017 03:08:38 PM - preflag - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/raw #
+01/19/2017 03:08:38 PM - preflag - INFO : ### Doing pre-flagging with AOFlagger ###
+01/19/2017 03:10:21 PM - preflag - INFO : ### Flagging of WSRTA2211440_B018.MS using fluxcal.rfis done ###
+01/19/2017 03:10:21 PM - preflag - INFO : ### Starting pre-flagging of known flags ###
+01/19/2017 03:10:21 PM - preflag - INFO : # Flagging auto-correlations for flux calibrator data #
+01/19/2017 03:11:33 PM - preflag - INFO : # Auto-correlation flagging for flux calibrator data done #
+01/19/2017 03:11:33 PM - preflag - INFO : # Flagging antenna(s) RT2,RT3,RT8,RTC,RTD for flux calibrator data #
+01/19/2017 03:15:03 PM - preflag - INFO : # Flagging of antenna(s) RT2,RT3,RT8,RTC,RTD for flux calibrator data done #
+01/19/2017 03:15:03 PM - preflag - INFO : # Flagging correlation(s) XY,YX,YY for flux calibrator data #
+01/19/2017 03:15:03 PM - preflag - INFO : # Flagging of correlation(s) XY,YX,YY for flux calibrator data done #
+01/19/2017 03:15:03 PM - preflag - INFO : # Flagging shadowed antennas for flux calibrator data #
+01/19/2017 03:15:59 PM - preflag - INFO : # Flagging of shadowed antennas for flux calibrator data done #
+01/19/2017 03:15:59 PM - preflag - INFO : ### Pre-flagging of known flags done ###
+01/19/2017 03:15:59 PM - preflag - INFO : ########## PRE-FLAGGING done ##########
+01/19/2017 03:22:42 PM - convert - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 03:22:50 PM - convert - INFO : ########## FILE CONVERSION started ##########
+01/19/2017 03:22:50 PM - convert - INFO : # Creating directory /data/adebahr/apertif/2211440_3C147/crosscal #
+01/19/2017 03:22:50 PM - convert - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/crosscal #
+01/19/2017 03:22:50 PM - convert - INFO : ### Using CASA toolkit to convert from MS to UVFITS format! ###
+01/19/2017 03:24:08 PM - convert - INFO : ### Converted MS file WSRTA2211440_B018.MS to UVFITS using CASA toolkit! ###
+01/19/2017 03:24:08 PM - convert - INFO : ### Using MIRIAD fits task to convert data from UVFITS to MIRIAD format ###
+01/19/2017 03:24:08 PM - masher - DEBUG : fits in=/data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.UVFITS op=uvin out=/data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.mir 
+01/19/2017 03:24:08 PM - basher - DEBUG : fits in=/data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.UVFITS op=uvin out=/data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.mir 
+01/19/2017 03:24:30 PM - basher - DEBUG : Command = fits in=/data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.UVFITS op=uvin out=/data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.mir 
+01/19/2017 03:24:30 PM - basher - DEBUG : 
+
+fits: Revision 1.32, 2014/09/15 04:39:01 UTC
+
+Determining various defaults ...
+  Assuming systemp=30
+  Assuming jyperk=8
+
+Analysing the extension tables ...
+  Using antenna table information
+  Decrementing times for configration 1 by  0.41 seconds (UTC-UT1).
+  Using frequency table information
+
+Handling the visibility data
+  Data are linearly polarized
+  Reading the correlation data
+  The estimated integration time of a sample is 1 seconds
+  Number of antennas: 12
+  Number of antenna configurations: 1
+
+01/19/2017 03:24:30 PM - basher - DEBUG : ### Warning:  1 unrecognised cards were written to the history file
+### Warning:  Some visibilities had zero weight
+
+01/19/2017 03:24:30 PM - basher - DEBUG : Returning output.
+01/19/2017 03:24:30 PM - basher - DEBUG : rm -r /data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.UVFITS
+01/19/2017 03:24:31 PM - basher - DEBUG : Returning output.
+01/19/2017 03:24:31 PM - convert - INFO : ### Converted UVFITS file WSRTA2211440_B018.MS to MIRIAD format using MIRIAD task fits! ###
+01/19/2017 03:24:31 PM - convert - INFO : ### Conversion from UVFITS to MIRIAD fromat done! ###
+01/19/2017 03:24:31 PM - convert - INFO : ########## FILE CONVERSION done ##########
+01/19/2017 03:24:36 PM - CROSSCAL - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 03:24:39 PM - CROSSCAL - INFO : # Doing fringe stopping by using the integration time of the observation and a point source model #
+01/19/2017 03:24:39 PM - masher - DEBUG : selfcal vis=WSRTA2211440_B018.mir interval=0.016666 options=phase 
+01/19/2017 03:24:39 PM - basher - DEBUG : selfcal vis=WSRTA2211440_B018.mir interval=0.016666 options=phase 
+01/19/2017 03:24:56 PM - basher - DEBUG : Command = selfcal vis=WSRTA2211440_B018.mir interval=0.016666 options=phase 
+01/19/2017 03:24:56 PM - basher - DEBUG : 
+
+selfcal: Revision 1.19, 2016/01/28 22:07:15 UTC
+
+Model is a point source at the observing center
+Reading the visibility file ...
+Accumulating statistics ...
+Finding the selfcal solutions ...
+Correlations with inappropriate Stokes type discarded: 21059251
+Total number of correlations being used: 17819366
+Total number of solution intervals: 21093
+Solution intervals merged together: 53
+Rms of the gain phases (degrees):  73.4
+Rms deviation of gain from 1: 6.293E-08
+Ratio of Actual to Theoretical noise: 3.177E+03
+
+01/19/2017 03:24:56 PM - basher - DEBUG : ### Warning:  No. correlations with bad baseline numbers: 32398848
+### Warning:  Intervals with no solution: 36
+
+01/19/2017 03:24:56 PM - basher - DEBUG : Returning output.
+01/19/2017 03:27:30 PM - root - INFO : Logging started!
+01/19/2017 03:27:30 PM - root - INFO : To see the log in a bash window use the following command:
+01/19/2017 03:27:30 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/19/2017 03:27:35 PM - CROSSCAL - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 03:27:38 PM - CROSSCAL - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/crosscal #
+01/19/2017 03:27:38 PM - CROSSCAL - INFO : # Doing bandpass calibration on the flux calibrator data #
+01/19/2017 03:27:38 PM - masher - DEBUG : mfcal vis=WSRTA2211440_B018.mir 
+01/19/2017 03:27:38 PM - basher - DEBUG : mfcal vis=WSRTA2211440_B018.mir 
+01/19/2017 03:28:09 PM - basher - DEBUG : Command = mfcal vis=WSRTA2211440_B018.mir 
+01/19/2017 03:28:09 PM - basher - DEBUG : 
+MfCal: $Revision: 1.17 $, $Date: 2016/05/01 22:31:05 $
+Selecting parallel-hand polarisations
+Reading the data ...
+Number correlations accepted: 51297730
+Number of frequency bands/settings: 1
+Number of polarisations selected: 2
+Number of solution intervals: 96
+Number of passband solution intervals: 1
+Initialising ...
+Using known frequency variation of 3c147
+Generating initial solution estimate ...
+Doing solution refinement ...
+Iter= 1, Solution Error:  1.130
+Iter= 2, Solution Error:  0.514
+Iter= 3, Solution Error:  0.276
+Iter= 4, Solution Error:  0.196
+Iter= 5, Solution Error:  0.134
+Iter= 6, Solution Error:  0.100
+Iter= 7, Solution Error:  0.081
+Iter= 8, Solution Error:  0.064
+Iter= 9, Solution Error:  0.031
+Iter=10, Solution Error:  0.019
+Iter=11, Solution Error:  0.008
+Iter=12, Solution Error:  0.007
+Iter=13, Solution Error:  0.018
+Iter=14, Solution Error:  0.006
+Iter=15, Solution Error:  0.006
+Iter=16, Solution Error:  0.007
+Iter=17, Solution Error:  0.006
+Iter=18, Solution Error:  0.005
+Iter=19, Solution Error:  0.005
+Iter=20, Solution Error:  0.005
+Iter=21, Solution Error:  0.005
+Iter=22, Solution Error:  0.005
+Iter=23, Solution Error:  0.004
+Iter=24, Solution Error:  0.004
+Iter=25, Solution Error:  0.004
+Iter=26, Solution Error:  0.003
+Iter=27, Solution Error:  0.003
+Iter=28, Solution Error:  0.003
+Iter=29, Solution Error:  0.003
+Iter=30, Solution Error:  0.003
+Saving solution ...
+
+01/19/2017 03:28:09 PM - basher - DEBUG : ### Warning:  Correlations flagged or edge-rejected: 12689593
+### Warning:  Failed to converge
+
+01/19/2017 03:28:09 PM - basher - DEBUG : Returning output.
+01/19/2017 03:28:09 PM - CROSSCAL - INFO : # Bandpass calibration on the flux calibrator data done #
+01/19/2017 03:40:06 PM - root - INFO : Logging started!
+01/19/2017 03:40:06 PM - root - INFO : To see the log in a bash window use the following command:
+01/19/2017 03:40:06 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/19/2017 03:40:12 PM - convert - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 03:40:14 PM - convert - INFO : ########## FILE CONVERSION started ##########
+01/19/2017 03:40:14 PM - convert - INFO : # Creating directory /data/adebahr/apertif/2211440_3C147/crosscal #
+01/19/2017 03:40:14 PM - convert - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/crosscal #
+01/19/2017 03:40:14 PM - convert - INFO : ### Using CASA toolkit to convert from MS to UVFITS format! ###
+01/19/2017 03:41:32 PM - convert - INFO : ### Converted MS file WSRTA2211440_B018.MS to UVFITS using CASA toolkit! ###
+01/19/2017 03:41:32 PM - convert - INFO : ### Using MIRIAD fits task to convert data from UVFITS to MIRIAD format ###
+01/19/2017 03:41:32 PM - masher - DEBUG : fits in=/data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.UVFITS op=uvin out=/data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.mir 
+01/19/2017 03:41:32 PM - basher - DEBUG : fits in=/data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.UVFITS op=uvin out=/data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.mir 
+01/19/2017 03:41:53 PM - basher - DEBUG : Command = fits in=/data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.UVFITS op=uvin out=/data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.mir 
+01/19/2017 03:41:53 PM - basher - DEBUG : 
+
+fits: Revision 1.32, 2014/09/15 04:39:01 UTC
+
+Determining various defaults ...
+  Assuming systemp=30
+  Assuming jyperk=8
+
+Analysing the extension tables ...
+  Using antenna table information
+  Decrementing times for configration 1 by  0.41 seconds (UTC-UT1).
+  Using frequency table information
+
+Handling the visibility data
+  Data are linearly polarized
+  Reading the correlation data
+  The estimated integration time of a sample is 1 seconds
+  Number of antennas: 12
+  Number of antenna configurations: 1
+
+01/19/2017 03:41:53 PM - basher - DEBUG : ### Warning:  1 unrecognised cards were written to the history file
+### Warning:  Some visibilities had zero weight
+
+01/19/2017 03:41:53 PM - basher - DEBUG : Returning output.
+01/19/2017 03:41:53 PM - basher - DEBUG : rm -r /data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.UVFITS
+01/19/2017 03:41:54 PM - basher - DEBUG : Returning output.
+01/19/2017 03:41:54 PM - convert - INFO : ### Converted UVFITS file WSRTA2211440_B018.MS to MIRIAD format using MIRIAD task fits! ###
+01/19/2017 03:41:54 PM - convert - INFO : ### Conversion from UVFITS to MIRIAD fromat done! ###
+01/19/2017 03:41:54 PM - convert - INFO : ########## FILE CONVERSION done ##########
+01/19/2017 03:42:05 PM - CROSSCAL - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 03:42:08 PM - CROSSCAL - INFO : ### Fringe stopping started ###
+01/19/2017 03:42:08 PM - CROSSCAL - INFO : # Doing fringe stopping by using the integration time of the observation and a point source model #
+01/19/2017 03:42:08 PM - masher - DEBUG : selfcal vis=WSRTA2211440_B018.mir interval=0.016666 options=phase 
+01/19/2017 03:42:08 PM - basher - DEBUG : selfcal vis=WSRTA2211440_B018.mir interval=0.016666 options=phase 
+01/19/2017 03:42:25 PM - basher - DEBUG : Command = selfcal vis=WSRTA2211440_B018.mir interval=0.016666 options=phase 
+01/19/2017 03:42:25 PM - basher - DEBUG : 
+
+selfcal: Revision 1.19, 2016/01/28 22:07:15 UTC
+
+Model is a point source at the observing center
+Reading the visibility file ...
+Accumulating statistics ...
+Finding the selfcal solutions ...
+Correlations with inappropriate Stokes type discarded: 21059251
+Total number of correlations being used: 17819366
+Total number of solution intervals: 21093
+Solution intervals merged together: 62
+Rms of the gain phases (degrees):  73.6
+Rms deviation of gain from 1: 6.296E-08
+Ratio of Actual to Theoretical noise: 3.324E+03
+
+01/19/2017 03:42:25 PM - basher - DEBUG : ### Warning:  No. correlations with bad baseline numbers: 32398848
+### Warning:  Intervals with no solution: 42
+
+01/19/2017 03:42:25 PM - basher - DEBUG : Returning output.
+01/19/2017 03:45:14 PM - root - INFO : Logging started!
+01/19/2017 03:45:14 PM - root - INFO : To see the log in a bash window use the following command:
+01/19/2017 03:45:14 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/19/2017 03:45:16 PM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 03:45:18 PM - preflag - INFO : ########## PRE-FLAGGING started ##########
+01/19/2017 03:45:18 PM - preflag - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/raw #
+01/19/2017 03:45:18 PM - preflag - INFO : ### Doing pre-flagging with AOFlagger ###
+01/19/2017 03:47:12 PM - preflag - INFO : ### Flagging of WSRTA2211440_B018.MS using fluxcal.rfis done ###
+01/19/2017 03:47:12 PM - preflag - INFO : ### Starting pre-flagging of known flags ###
+01/19/2017 03:47:12 PM - preflag - INFO : # Flagging auto-correlations for flux calibrator data #
+01/19/2017 03:48:22 PM - preflag - INFO : # Auto-correlation flagging for flux calibrator data done #
+01/19/2017 03:48:22 PM - preflag - INFO : # Flagging antenna(s) RT2,RT3,RT8,RTC,RTD for flux calibrator data #
+01/19/2017 03:51:52 PM - preflag - INFO : # Flagging of antenna(s) RT2,RT3,RT8,RTC,RTD for flux calibrator data done #
+01/19/2017 03:51:52 PM - preflag - INFO : # Flagging correlation(s) XY,YX,YY for flux calibrator data #
+01/19/2017 03:51:52 PM - preflag - INFO : # Flagging of correlation(s) XY,YX,YY for flux calibrator data done #
+01/19/2017 03:51:52 PM - preflag - INFO : # Flagging shadowed antennas for flux calibrator data #
+01/19/2017 03:52:49 PM - preflag - INFO : # Flagging of shadowed antennas for flux calibrator data done #
+01/19/2017 03:52:49 PM - preflag - INFO : ### Pre-flagging of known flags done ###
+01/19/2017 03:52:49 PM - preflag - INFO : ########## PRE-FLAGGING done ##########
+01/19/2017 04:02:12 PM - convert - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 04:02:17 PM - convert - INFO : ########## FILE CONVERSION started ##########
+01/19/2017 04:02:17 PM - convert - INFO : # Creating directory /data/adebahr/apertif/2211440_3C147/crosscal #
+01/19/2017 04:02:17 PM - convert - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/crosscal #
+01/19/2017 04:02:17 PM - convert - INFO : ### Using CASA toolkit to convert from MS to UVFITS format! ###
+01/19/2017 04:03:33 PM - convert - INFO : ### Converted MS file WSRTA2211440_B018.MS to UVFITS using CASA toolkit! ###
+01/19/2017 04:03:33 PM - convert - INFO : ### Using MIRIAD fits task to convert data from UVFITS to MIRIAD format ###
+01/19/2017 04:03:33 PM - masher - DEBUG : fits in=/data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.UVFITS op=uvin out=/data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.mir 
+01/19/2017 04:03:33 PM - basher - DEBUG : fits in=/data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.UVFITS op=uvin out=/data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.mir 
+01/19/2017 04:03:55 PM - basher - DEBUG : Command = fits in=/data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.UVFITS op=uvin out=/data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.mir 
+01/19/2017 04:03:55 PM - basher - DEBUG : 
+
+fits: Revision 1.32, 2014/09/15 04:39:01 UTC
+
+Determining various defaults ...
+  Assuming systemp=30
+  Assuming jyperk=8
+
+Analysing the extension tables ...
+  Using antenna table information
+  Decrementing times for configration 1 by  0.41 seconds (UTC-UT1).
+  Using frequency table information
+
+Handling the visibility data
+  Data are linearly polarized
+  Reading the correlation data
+  The estimated integration time of a sample is 1 seconds
+  Number of antennas: 12
+  Number of antenna configurations: 1
+
+01/19/2017 04:03:55 PM - basher - DEBUG : ### Warning:  1 unrecognised cards were written to the history file
+### Warning:  Some visibilities had zero weight
+
+01/19/2017 04:03:55 PM - basher - DEBUG : Returning output.
+01/19/2017 04:03:55 PM - basher - DEBUG : rm -r /data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.UVFITS
+01/19/2017 04:03:56 PM - basher - DEBUG : Returning output.
+01/19/2017 04:03:56 PM - convert - INFO : ### Converted UVFITS file WSRTA2211440_B018.MS to MIRIAD format using MIRIAD task fits! ###
+01/19/2017 04:03:56 PM - convert - INFO : ### Conversion from UVFITS to MIRIAD fromat done! ###
+01/19/2017 04:03:56 PM - convert - INFO : ########## FILE CONVERSION done ##########
+01/19/2017 04:04:00 PM - CROSSCAL - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 04:04:03 PM - CROSSCAL - INFO : ### Fringe stopping started ###
+01/19/2017 04:04:03 PM - CROSSCAL - INFO : # Doing fringe stopping by using the integration time of the observation and a point source model #
+01/19/2017 04:04:03 PM - masher - DEBUG : selfcal vis=WSRTA2211440_B018.mir interval=0.016666 options=phase 
+01/19/2017 04:04:03 PM - basher - DEBUG : selfcal vis=WSRTA2211440_B018.mir interval=0.016666 options=phase 
+01/19/2017 04:04:21 PM - basher - DEBUG : Command = selfcal vis=WSRTA2211440_B018.mir interval=0.016666 options=phase 
+01/19/2017 04:04:21 PM - basher - DEBUG : 
+
+selfcal: Revision 1.19, 2016/01/28 22:07:15 UTC
+
+Model is a point source at the observing center
+Reading the visibility file ...
+Accumulating statistics ...
+Finding the selfcal solutions ...
+Correlations with inappropriate Stokes type discarded: 21059251
+Total number of correlations being used: 17819366
+Total number of solution intervals: 21093
+Solution intervals merged together: 2956
+Rms of the gain phases (degrees):  73.5
+Rms deviation of gain from 1: 6.304E-08
+Ratio of Actual to Theoretical noise: 3.227E+03
+
+01/19/2017 04:04:21 PM - basher - DEBUG : ### Warning:  No. correlations with bad baseline numbers: 32398848
+### Warning:  Intervals with no solution: 36
+
+01/19/2017 04:04:21 PM - basher - DEBUG : Returning output.
+01/19/2017 04:07:13 PM - root - INFO : Logging started!
+01/19/2017 04:07:13 PM - root - INFO : To see the log in a bash window use the following command:
+01/19/2017 04:07:13 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/19/2017 04:07:22 PM - CROSSCAL - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 04:07:23 PM - CROSSCAL - INFO : ### Fringe stopping started ###
+01/19/2017 04:07:23 PM - CROSSCAL - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/crosscal #
+01/19/2017 04:07:23 PM - CROSSCAL - INFO : # Doing fringe stopping by using the integration time of the observation and a point source model #
+01/19/2017 04:07:23 PM - masher - DEBUG : selfcal vis=WSRTA2211440_B018.mir interval=0.016666 options=phase 
+01/19/2017 04:07:23 PM - basher - DEBUG : selfcal vis=WSRTA2211440_B018.mir interval=0.016666 options=phase 
+01/19/2017 04:07:40 PM - basher - DEBUG : Command = selfcal vis=WSRTA2211440_B018.mir interval=0.016666 options=phase 
+01/19/2017 04:07:40 PM - basher - DEBUG : 
+
+selfcal: Revision 1.19, 2016/01/28 22:07:15 UTC
+
+Model is a point source at the observing center
+Reading the visibility file ...
+Accumulating statistics ...
+Finding the selfcal solutions ...
+Correlations with inappropriate Stokes type discarded: 21059251
+Total number of correlations being used: 17819366
+Total number of solution intervals: 21093
+Solution intervals merged together: 2956
+Rms of the gain phases (degrees):  73.5
+Rms deviation of gain from 1: 6.304E-08
+Ratio of Actual to Theoretical noise: 3.227E+03
+
+01/19/2017 04:07:40 PM - basher - DEBUG : ### Warning:  No. correlations with bad baseline numbers: 32398848
+### Warning:  Intervals with no solution: 36
+
+01/19/2017 04:07:40 PM - basher - DEBUG : Returning output.
+01/19/2017 04:15:06 PM - root - INFO : Logging started!
+01/19/2017 04:15:06 PM - root - INFO : To see the log in a bash window use the following command:
+01/19/2017 04:15:06 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/19/2017 04:15:08 PM - PREFLAG - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 04:15:16 PM - CROSSCAL - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 04:15:18 PM - CROSSCAL - INFO : ### Fringe stopping started ###
+01/19/2017 04:15:18 PM - CROSSCAL - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/crosscal #
+01/19/2017 04:15:18 PM - CROSSCAL - INFO : # Doing fringe stopping by using the integration time of the observation and a point source model #
+01/19/2017 04:15:18 PM - masher - DEBUG : selfcal vis=WSRTA2211440_B018.mir interval=0.016666 options=phase 
+01/19/2017 04:15:18 PM - basher - DEBUG : selfcal vis=WSRTA2211440_B018.mir interval=0.016666 options=phase 
+01/19/2017 04:15:35 PM - basher - DEBUG : Command = selfcal vis=WSRTA2211440_B018.mir interval=0.016666 options=phase 
+01/19/2017 04:15:35 PM - basher - DEBUG : 
+
+selfcal: Revision 1.19, 2016/01/28 22:07:15 UTC
+
+Model is a point source at the observing center
+Reading the visibility file ...
+Accumulating statistics ...
+Finding the selfcal solutions ...
+Correlations with inappropriate Stokes type discarded: 21059251
+Total number of correlations being used: 17819366
+Total number of solution intervals: 21093
+Solution intervals merged together: 2956
+Rms of the gain phases (degrees):  73.5
+Rms deviation of gain from 1: 6.304E-08
+Ratio of Actual to Theoretical noise: 3.227E+03
+
+01/19/2017 04:15:35 PM - basher - DEBUG : ### Warning:  No. correlations with bad baseline numbers: 32398848
+### Warning:  Intervals with no solution: 36
+
+01/19/2017 04:15:35 PM - basher - DEBUG : Returning output.
+01/19/2017 04:16:16 PM - root - INFO : Logging started!
+01/19/2017 04:16:16 PM - root - INFO : To see the log in a bash window use the following command:
+01/19/2017 04:16:16 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/19/2017 04:16:22 PM - CROSSCAL - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 04:16:24 PM - CROSSCAL - INFO : ### Fringe stopping started ###
+01/19/2017 04:16:24 PM - CROSSCAL - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/crosscal #
+01/19/2017 04:16:24 PM - CROSSCAL - INFO : # Doing fringe stopping by using the integration time of the observation and a point source model #
+01/19/2017 04:16:24 PM - masher - DEBUG : selfcal vis=WSRTA2211440_B018.mir interval=0.016666 options=phase 
+01/19/2017 04:16:24 PM - basher - DEBUG : selfcal vis=WSRTA2211440_B018.mir interval=0.016666 options=phase 
+01/19/2017 04:16:41 PM - basher - DEBUG : Command = selfcal vis=WSRTA2211440_B018.mir interval=0.016666 options=phase 
+01/19/2017 04:16:41 PM - basher - DEBUG : 
+
+selfcal: Revision 1.19, 2016/01/28 22:07:15 UTC
+
+Model is a point source at the observing center
+Reading the visibility file ...
+Accumulating statistics ...
+Finding the selfcal solutions ...
+Correlations with inappropriate Stokes type discarded: 21059251
+Total number of correlations being used: 17819366
+Total number of solution intervals: 21093
+Solution intervals merged together: 2956
+Rms of the gain phases (degrees):  73.5
+Rms deviation of gain from 1: 6.304E-08
+Ratio of Actual to Theoretical noise: 3.227E+03
+
+01/19/2017 04:16:41 PM - basher - DEBUG : ### Warning:  No. correlations with bad baseline numbers: 32398848
+### Warning:  Intervals with no solution: 36
+
+01/19/2017 04:16:41 PM - basher - DEBUG : Returning output.
+01/19/2017 04:16:41 PM - CROSSCAL - INFO : # Self calibrating flux calibrator dataset WSRTA2211440_B018.mir with solution interval 0.016666 #
+01/19/2017 04:16:41 PM - masher - DEBUG : uvcat vis=WSRTA2211440_B018.mir out=WSRTA2211440_B018.mir.copy 
+01/19/2017 04:16:41 PM - basher - DEBUG : uvcat vis=WSRTA2211440_B018.mir out=WSRTA2211440_B018.mir.copy 
+01/19/2017 04:17:04 PM - basher - DEBUG : Command = uvcat vis=WSRTA2211440_B018.mir out=WSRTA2211440_B018.mir.copy 
+01/19/2017 04:17:04 PM - basher - DEBUG : 
+UvCat: version 15-oct-2012
+Applying gain corrections to WSRTA2211440_B018.mir
+
+01/19/2017 04:17:04 PM - basher - DEBUG : Returning output.
+01/19/2017 04:17:04 PM - basher - DEBUG : rm -r WSRTA2211440_B018.mir
+01/19/2017 04:17:04 PM - basher - DEBUG : Returning output.
+01/19/2017 04:17:04 PM - basher - DEBUG : mv WSRTA2211440_B018.mir.copy WSRTA2211440_B018.mir
+01/19/2017 04:17:04 PM - basher - DEBUG : Returning output.
+01/19/2017 04:17:04 PM - CROSSCAL - INFO : ### Fringe stopping done ###
+01/19/2017 04:24:13 PM - CROSSCAL - INFO : # Doing bandpass calibration on the flux calibrator data #
+01/19/2017 04:24:13 PM - masher - DEBUG : mfcal vis=WSRTA2211440_B018.mir 
+01/19/2017 04:24:13 PM - basher - DEBUG : mfcal vis=WSRTA2211440_B018.mir 
+01/19/2017 04:24:44 PM - basher - DEBUG : Command = mfcal vis=WSRTA2211440_B018.mir 
+01/19/2017 04:24:44 PM - basher - DEBUG : 
+MfCal: $Revision: 1.17 $, $Date: 2016/05/01 22:31:05 $
+Selecting parallel-hand polarisations
+Reading the data ...
+Number correlations accepted: 44010020
+Number of frequency bands/settings: 1
+Number of polarisations selected: 2
+Number of solution intervals: 83
+Number of passband solution intervals: 1
+Initialising ...
+Using known frequency variation of 3c147
+Generating initial solution estimate ...
+Doing solution refinement ...
+Iter= 1, Solution Error:  0.338
+Iter= 2, Solution Error:  0.182
+Iter= 3, Solution Error:  0.172
+Iter= 4, Solution Error:  0.145
+Iter= 5, Solution Error:  0.122
+Iter= 6, Solution Error:  0.103
+Iter= 7, Solution Error:  0.089
+Iter= 8, Solution Error:  0.078
+Iter= 9, Solution Error:  0.069
+Iter=10, Solution Error:  0.061
+Iter=11, Solution Error:  0.055
+Iter=12, Solution Error:  0.050
+Iter=13, Solution Error:  0.014
+Iter=14, Solution Error:  0.002
+Iter=15, Solution Error:  0.002
+Iter=16, Solution Error:  0.002
+Iter=17, Solution Error:  0.002
+Iter=18, Solution Error:  0.002
+Iter=19, Solution Error:  0.002
+Iter=20, Solution Error:  0.002
+Iter=21, Solution Error:  0.002
+Iter=22, Solution Error:  0.002
+Iter=23, Solution Error:  0.002
+Iter=24, Solution Error:  0.002
+Iter=25, Solution Error:  0.002
+Iter=26, Solution Error:  0.001
+Iter=27, Solution Error:  0.002
+Iter=28, Solution Error:  0.001
+Iter=29, Solution Error:  0.001
+Iter=30, Solution Error:  0.001
+Saving solution ...
+
+01/19/2017 04:24:44 PM - basher - DEBUG : ### Warning:  Correlations flagged or edge-rejected: 13418364
+### Warning:  Failed to converge
+
+01/19/2017 04:24:44 PM - basher - DEBUG : Returning output.
+01/19/2017 04:24:44 PM - CROSSCAL - INFO : # Bandpass calibration on the flux calibrator data done #

@@ -6,7 +6,7 @@ import casac
 
 class convert:
     def __init__(self, file=None, **kwargs):
-        self.logger = logging.getLogger('convert')
+        self.logger = logging.getLogger('CONVERT')
         config = ConfigParser.ConfigParser()  # Initialise the config parser
         if file != None:
             config.readfp(open(file))
