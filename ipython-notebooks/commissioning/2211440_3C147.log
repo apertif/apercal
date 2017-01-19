@@ -1,0 +1,253 @@
+01/18/2017 11:33:27 AM - root - INFO : Logging started!
+01/18/2017 11:33:27 AM - root - INFO : To see the log in a bash window use the following command:
+01/18/2017 11:33:27 AM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/18/2017 03:52:31 PM - root - INFO : Logging started!
+01/18/2017 03:52:31 PM - root - INFO : To see the log in a bash window use the following command:
+01/18/2017 03:52:31 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/18/2017 03:52:36 PM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/18/2017 04:03:04 PM - root - INFO : Logging started!
+01/18/2017 04:03:04 PM - root - INFO : To see the log in a bash window use the following command:
+01/18/2017 04:03:04 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/18/2017 04:05:07 PM - root - INFO : Logging started!
+01/18/2017 04:05:07 PM - root - INFO : To see the log in a bash window use the following command:
+01/18/2017 04:05:07 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/18/2017 04:05:10 PM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/18/2017 04:40:15 PM - root - INFO : Logging started!
+01/18/2017 04:40:15 PM - root - INFO : To see the log in a bash window use the following command:
+01/18/2017 04:40:15 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/18/2017 04:40:18 PM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/18/2017 04:42:29 PM - root - INFO : Logging started!
+01/18/2017 04:42:29 PM - root - INFO : To see the log in a bash window use the following command:
+01/18/2017 04:42:29 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/18/2017 04:42:30 PM - root - INFO : Logging started!
+01/18/2017 04:42:30 PM - root - INFO : Logging started!
+01/18/2017 04:42:30 PM - root - INFO : To see the log in a bash window use the following command:
+01/18/2017 04:42:30 PM - root - INFO : To see the log in a bash window use the following command:
+01/18/2017 04:42:30 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/18/2017 04:42:30 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/18/2017 04:42:33 PM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/18/2017 04:42:33 PM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/18/2017 04:43:35 PM - root - INFO : Logging started!
+01/18/2017 04:43:35 PM - root - INFO : To see the log in a bash window use the following command:
+01/18/2017 04:43:35 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/18/2017 04:43:37 PM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/18/2017 04:44:59 PM - root - INFO : Logging started!
+01/18/2017 04:44:59 PM - root - INFO : To see the log in a bash window use the following command:
+01/18/2017 04:44:59 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/18/2017 04:45:01 PM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/18/2017 04:45:02 PM - preflag - INFO : ########## PRE-FLAGGING started ##########
+01/18/2017 04:47:43 PM - root - INFO : Logging started!
+01/18/2017 04:47:43 PM - root - INFO : To see the log in a bash window use the following command:
+01/18/2017 04:47:43 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/18/2017 04:47:46 PM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/18/2017 04:47:47 PM - preflag - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/raw #
+01/18/2017 04:47:47 PM - preflag - INFO : ### Doing pre-flagging with AOFlagger ###
+01/18/2017 04:47:47 PM - preflag - INFO : ### Flagging of WSRTA2211440_B018.MS using fluxcal.rfis done ###
+01/18/2017 04:56:36 PM - root - INFO : Logging started!
+01/18/2017 04:56:36 PM - root - INFO : To see the log in a bash window use the following command:
+01/18/2017 04:56:36 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/18/2017 04:56:37 PM - root - INFO : Logging started!
+01/18/2017 04:56:37 PM - root - INFO : Logging started!
+01/18/2017 04:56:37 PM - root - INFO : To see the log in a bash window use the following command:
+01/18/2017 04:56:37 PM - root - INFO : To see the log in a bash window use the following command:
+01/18/2017 04:56:37 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/18/2017 04:56:37 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/18/2017 04:56:38 PM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/18/2017 04:56:38 PM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/18/2017 04:56:39 PM - preflag - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/raw #
+01/18/2017 04:56:39 PM - preflag - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/raw #
+01/18/2017 04:56:39 PM - preflag - INFO : ### Doing pre-flagging with AOFlagger ###
+01/18/2017 04:56:39 PM - preflag - INFO : ### Doing pre-flagging with AOFlagger ###
+01/18/2017 04:56:39 PM - preflag - INFO : ### Flagging of WSRTA2211440_B018.MS using fluxcal.rfis done ###
+01/18/2017 04:56:39 PM - preflag - INFO : ### Flagging of WSRTA2211440_B018.MS using fluxcal.rfis done ###
+01/18/2017 05:01:19 PM - root - INFO : Logging started!
+01/18/2017 05:01:19 PM - root - INFO : To see the log in a bash window use the following command:
+01/18/2017 05:01:19 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/18/2017 05:01:21 PM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/18/2017 05:01:22 PM - preflag - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/raw #
+01/18/2017 05:01:22 PM - preflag - INFO : ### Doing pre-flagging with AOFlagger ###
+01/18/2017 05:01:22 PM - preflag - INFO : ### Flagging of WSRTA2211440_B018.MS using fluxcal.rfis done ###
+01/18/2017 05:02:53 PM - root - INFO : Logging started!
+01/18/2017 05:02:53 PM - root - INFO : To see the log in a bash window use the following command:
+01/18/2017 05:02:53 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/18/2017 05:02:54 PM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/18/2017 05:02:55 PM - preflag - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/raw #
+01/18/2017 05:02:55 PM - preflag - INFO : ### Doing pre-flagging with AOFlagger ###
+01/18/2017 05:02:55 PM - preflag - INFO : ### Flagging of WSRTA2211440_B018.MS using fluxcal.rfis done ###
+01/18/2017 05:04:24 PM - root - INFO : Logging started!
+01/18/2017 05:04:24 PM - root - INFO : To see the log in a bash window use the following command:
+01/18/2017 05:04:24 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/18/2017 05:04:26 PM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/18/2017 05:04:28 PM - preflag - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/raw #
+01/18/2017 05:04:28 PM - preflag - INFO : ### Doing pre-flagging with AOFlagger ###
+01/18/2017 05:06:12 PM - preflag - INFO : ### Flagging of WSRTA2211440_B018.MS using fluxcal.rfis done ###
+01/19/2017 09:53:00 AM - root - INFO : Logging started!
+01/19/2017 09:53:00 AM - root - INFO : To see the log in a bash window use the following command:
+01/19/2017 09:53:00 AM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/19/2017 09:53:05 AM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 09:54:18 AM - root - INFO : Logging started!
+01/19/2017 09:54:18 AM - root - INFO : To see the log in a bash window use the following command:
+01/19/2017 09:54:18 AM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/19/2017 09:54:21 AM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 09:54:25 AM - preflag - INFO : # Flagging antennas RT3,RT8,RTC,RTD #
+01/19/2017 09:55:06 AM - root - INFO : Logging started!
+01/19/2017 09:55:06 AM - root - INFO : To see the log in a bash window use the following command:
+01/19/2017 09:55:06 AM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/19/2017 09:55:08 AM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 09:55:11 AM - preflag - INFO : # Flagging antennas RT3,RT8,RTC,RTD #
+01/19/2017 09:56:39 AM - root - INFO : Logging started!
+01/19/2017 09:56:39 AM - root - INFO : To see the log in a bash window use the following command:
+01/19/2017 09:56:39 AM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/19/2017 09:56:41 AM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 09:56:43 AM - preflag - INFO : # Flagging antennas RT3,RT8,RTC,RTD #
+01/19/2017 09:56:43 AM - preflag - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/raw #
+01/19/2017 09:57:53 AM - root - INFO : Logging started!
+01/19/2017 09:57:53 AM - root - INFO : To see the log in a bash window use the following command:
+01/19/2017 09:57:53 AM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/19/2017 09:57:55 AM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 09:57:57 AM - preflag - INFO : # Flagging antennas RT3,RT8,RTC,RTD #
+01/19/2017 09:57:57 AM - preflag - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/raw #
+01/19/2017 10:00:55 AM - root - INFO : Logging started!
+01/19/2017 10:00:55 AM - root - INFO : To see the log in a bash window use the following command:
+01/19/2017 10:00:55 AM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/19/2017 10:00:57 AM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 10:00:59 AM - preflag - INFO : # Flagging antennas RT3,RT8,RTC,RTD #
+01/19/2017 10:00:59 AM - preflag - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/raw #
+01/19/2017 10:06:38 AM - root - INFO : Logging started!
+01/19/2017 10:06:38 AM - root - INFO : To see the log in a bash window use the following command:
+01/19/2017 10:06:38 AM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/19/2017 10:06:40 AM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 10:06:42 AM - preflag - INFO : # Flagging antennas RT3,RT8,RTC,RTD #
+01/19/2017 10:06:42 AM - preflag - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/raw #
+01/19/2017 10:35:23 AM - root - INFO : Logging started!
+01/19/2017 10:35:23 AM - root - INFO : To see the log in a bash window use the following command:
+01/19/2017 10:35:23 AM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/19/2017 10:35:27 AM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 10:35:29 AM - preflag - INFO : # Flagging antennas RT3,RT8,RTC,RTD #
+01/19/2017 10:35:29 AM - preflag - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/raw #
+01/19/2017 10:40:21 AM - root - INFO : Logging started!
+01/19/2017 10:40:21 AM - root - INFO : To see the log in a bash window use the following command:
+01/19/2017 10:40:21 AM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/19/2017 10:40:23 AM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 10:40:25 AM - preflag - INFO : # Flagging antennas RT3,RT8,RTC,RTD #
+01/19/2017 10:40:26 AM - preflag - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/raw #
+01/19/2017 10:58:52 AM - root - INFO : Logging started!
+01/19/2017 10:58:52 AM - root - INFO : To see the log in a bash window use the following command:
+01/19/2017 10:58:52 AM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/19/2017 10:58:54 AM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 10:58:57 AM - preflag - INFO : # Flagging antennas RT3,RT8,RTC,RTD #
+01/19/2017 10:58:57 AM - preflag - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/raw #
+01/19/2017 12:42:13 PM - root - INFO : Logging started!
+01/19/2017 12:42:13 PM - root - INFO : To see the log in a bash window use the following command:
+01/19/2017 12:42:13 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/19/2017 12:42:16 PM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 12:42:22 PM - preflag - INFO : # Auto-correlations not flagged #
+01/19/2017 12:42:41 PM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 12:42:44 PM - preflag - INFO : # Flagging auto-correlations #
+01/19/2017 12:42:44 PM - preflag - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/raw #
+01/19/2017 12:43:51 PM - root - INFO : Logging started!
+01/19/2017 12:43:51 PM - root - INFO : To see the log in a bash window use the following command:
+01/19/2017 12:43:51 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/19/2017 12:43:53 PM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 12:43:58 PM - preflag - INFO : # Flagging auto-correlations #
+01/19/2017 12:43:58 PM - preflag - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/raw #
+01/19/2017 01:07:54 PM - root - INFO : Logging started!
+01/19/2017 01:07:54 PM - root - INFO : To see the log in a bash window use the following command:
+01/19/2017 01:07:54 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/19/2017 01:07:55 PM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 01:07:59 PM - preflag - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/raw #
+01/19/2017 01:07:59 PM - preflag - INFO : # Flagging shadowed antennas for flux calibrator data #
+01/19/2017 01:10:05 PM - root - INFO : Logging started!
+01/19/2017 01:10:05 PM - root - INFO : To see the log in a bash window use the following command:
+01/19/2017 01:10:05 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/19/2017 01:10:07 PM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 01:10:10 PM - preflag - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/raw #
+01/19/2017 01:10:10 PM - preflag - INFO : # Flagging shadowed antennas for flux calibrator data #
+01/19/2017 01:11:06 PM - preflag - INFO : # Flagging of shadowed antennas for flux calibrator data done #
+01/19/2017 01:15:34 PM - root - INFO : Logging started!
+01/19/2017 01:15:34 PM - root - INFO : To see the log in a bash window use the following command:
+01/19/2017 01:15:34 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/19/2017 01:15:36 PM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 01:15:40 PM - preflag - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/raw #
+01/19/2017 01:15:40 PM - preflag - INFO : # Flagging baseline(s) RT4&&RT6 for flux calibrator data #
+01/19/2017 01:16:51 PM - preflag - INFO : # Flagging of baseline(s) RT4&&RT6 for flux calibrator data done #
+01/19/2017 01:23:00 PM - root - INFO : Logging started!
+01/19/2017 01:23:00 PM - root - INFO : To see the log in a bash window use the following command:
+01/19/2017 01:23:00 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/19/2017 01:23:06 PM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 01:23:10 PM - preflag - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/raw #
+01/19/2017 01:26:02 PM - root - INFO : Logging started!
+01/19/2017 01:26:02 PM - root - INFO : To see the log in a bash window use the following command:
+01/19/2017 01:26:02 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/19/2017 01:26:03 PM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 01:26:12 PM - preflag - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/raw #
+01/19/2017 01:27:58 PM - root - INFO : Logging started!
+01/19/2017 01:27:58 PM - root - INFO : To see the log in a bash window use the following command:
+01/19/2017 01:27:58 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/19/2017 01:28:00 PM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 01:28:03 PM - preflag - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/raw #
+01/19/2017 01:28:03 PM - preflag - INFO : # Flagging antenna(s) RT3,RT8,RTC,RTD for flux calibrator data #
+01/19/2017 01:28:03 PM - preflag - INFO : # Flagging of antenna(s) RT3,RT8,RTC,RTD for flux calibrator data done #
+01/19/2017 01:28:37 PM - preflag - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/raw #
+01/19/2017 01:28:37 PM - preflag - INFO : # Flagging baseline(s) RT4&&RT6 for flux calibrator data #
+01/19/2017 01:29:47 PM - preflag - INFO : # Flagging of baseline(s) RT4&&RT6 for flux calibrator data done #
+01/19/2017 01:30:02 PM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 01:30:07 PM - preflag - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/raw #
+01/19/2017 01:30:07 PM - preflag - INFO : # Flagging baseline(s) RT4&&RT6,RT5&&RT7 for flux calibrator data #
+01/19/2017 01:30:07 PM - preflag - INFO : # Flagging of baseline(s) RT4&&RT6,RT5&&RT7 for flux calibrator data done #
+01/19/2017 01:34:06 PM - root - INFO : Logging started!
+01/19/2017 01:34:06 PM - root - INFO : To see the log in a bash window use the following command:
+01/19/2017 01:34:06 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/19/2017 01:34:08 PM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 01:34:11 PM - preflag - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/raw #
+01/19/2017 01:34:11 PM - preflag - INFO : # Flagging antenna(s) RT3,RT8,RTC,RTD for flux calibrator data #
+01/19/2017 01:35:25 PM - preflag - INFO : # Flagging of antenna(s) RT3,RT8,RTC,RTD for flux calibrator data done #
+01/19/2017 01:35:51 PM - root - INFO : Logging started!
+01/19/2017 01:35:51 PM - root - INFO : To see the log in a bash window use the following command:
+01/19/2017 01:35:51 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/19/2017 01:35:53 PM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 01:35:56 PM - preflag - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/raw #
+01/19/2017 01:35:56 PM - preflag - INFO : # Flagging antenna(s) RT3,RT8,RTC,RTD for flux calibrator data #
+01/19/2017 01:37:10 PM - preflag - INFO : # Flagging of antenna(s) RT3,RT8,RTC,RTD for flux calibrator data done #
+01/19/2017 01:44:26 PM - root - INFO : Logging started!
+01/19/2017 01:44:26 PM - root - INFO : To see the log in a bash window use the following command:
+01/19/2017 01:44:26 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/19/2017 01:44:28 PM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 01:44:29 PM - preflag - INFO : ########## PRE-FLAGGING started ##########
+01/19/2017 01:44:29 PM - preflag - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/raw #
+01/19/2017 01:44:29 PM - preflag - INFO : ### Doing pre-flagging with AOFlagger ###
+01/19/2017 01:47:35 PM - root - INFO : Logging started!
+01/19/2017 01:47:35 PM - root - INFO : To see the log in a bash window use the following command:
+01/19/2017 01:47:35 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/19/2017 01:47:37 PM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 01:47:40 PM - preflag - INFO : ########## PRE-FLAGGING started ##########
+01/19/2017 01:47:40 PM - preflag - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/raw #
+01/19/2017 01:47:40 PM - preflag - INFO : ### Doing pre-flagging with AOFlagger ###
+01/19/2017 01:49:33 PM - preflag - INFO : ### Flagging of WSRTA2211440_B018.MS using fluxcal.rfis done ###
+01/19/2017 01:49:33 PM - preflag - INFO : ### Starting pre-flagging of known flags using CASA task flagdata ###
+01/19/2017 01:49:33 PM - preflag - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/raw #
+01/19/2017 01:49:33 PM - preflag - INFO : # Flagging antenna(s) RT3,RT8,RTC,RTD for flux calibrator data #
+01/19/2017 01:50:48 PM - preflag - INFO : # Flagging of antenna(s) RT3,RT8,RTC,RTD for flux calibrator data done #
+01/19/2017 01:50:48 PM - preflag - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/raw #
+01/19/2017 01:50:48 PM - preflag - INFO : # Flagging correlation(s) XY,YX,YY for flux calibrator data #
+01/19/2017 01:50:48 PM - preflag - INFO : # Flagging of correlation(s) RT3,RT8,RTC,RTD for flux calibrator data done #
+01/19/2017 01:50:48 PM - preflag - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/raw #
+01/19/2017 01:50:48 PM - preflag - INFO : # Flagging shadowed antennas for flux calibrator data #
+01/19/2017 01:51:45 PM - preflag - INFO : # Flagging of shadowed antennas for flux calibrator data done #
+01/19/2017 01:57:37 PM - root - INFO : Logging started!
+01/19/2017 01:57:37 PM - root - INFO : To see the log in a bash window use the following command:
+01/19/2017 01:57:37 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/19/2017 01:57:39 PM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 01:57:40 PM - preflag - INFO : ########## PRE-FLAGGING started ##########
+01/19/2017 01:57:40 PM - preflag - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/raw #
+01/19/2017 01:57:40 PM - preflag - INFO : ### Doing pre-flagging with AOFlagger ###
+01/19/2017 01:59:24 PM - preflag - INFO : ### Flagging of WSRTA2211440_B018.MS using fluxcal.rfis done ###
+01/19/2017 01:59:24 PM - preflag - INFO : ### Starting pre-flagging of known flags ###
+01/19/2017 01:59:24 PM - preflag - INFO : # Flagging antenna(s) RT3,RT8,RTC,RTD for flux calibrator data #
+01/19/2017 02:00:38 PM - preflag - INFO : # Flagging of antenna(s) RT3,RT8,RTC,RTD for flux calibrator data done #
+01/19/2017 02:00:38 PM - preflag - INFO : # Flagging correlation(s) XY,YX,YY for flux calibrator data #
+01/19/2017 02:00:38 PM - preflag - INFO : # Flagging of correlation(s) RT3,RT8,RTC,RTD for flux calibrator data done #
+01/19/2017 02:00:38 PM - preflag - INFO : # Flagging shadowed antennas for flux calibrator data #
+01/19/2017 02:01:34 PM - preflag - INFO : # Flagging of shadowed antennas for flux calibrator data done #
+01/19/2017 02:01:34 PM - preflag - INFO : ### Pre-flagging of known flags done ###
+01/19/2017 02:01:34 PM - preflag - INFO : ########## PRE-FLAGGING done ##########
