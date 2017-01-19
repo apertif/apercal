@@ -27,7 +27,8 @@ class convert:
         '''
         Executes the CASA exportuvfits or the command line utility ms2uvfits to convert the data from MS to UVFITS format. Does it for the flux calibrator, polarisation calibrator, and target field independently.
         '''
-        if self.ms2uvfits_tool == 'casa':
+        self.director('ch', self.crosscaldir)
+        if self.convert_ms2uvfits_tool == 'casa':
             self.logger.info('### Using CASA toolkit to convert from MS to UVFITS format! ###')
             ms = casac.casac.ms()
             if self.convert_fluxcal == True:
@@ -45,7 +46,7 @@ class convert:
                 ms.tofits(self.crosscaldir + '/' + str(self.target).rstrip('MS') + 'UVFITS', column='DATA')
                 ms.done()
                 self.logger.info('### Converted MS file ' + self.target + ' to UVFITS using CASA toolkit! ###')
-        elif self.ms2uvfits_tool == 'ms2uvfits':
+        elif self.convert_ms2uvfits_tool == 'ms2uvfits':
             self.logger.info('### Using ms2uvfits to convert from MS to UVFITS format! ###')
             if self.convert_fluxcal == True:
                 os.system('ms2uvfits in=' + self.rawdir + '/' + self.fluxcal + ' out=' + self.crosscaldir + '/' + str(self.fluxcal).rstrip('MS') + 'UVFITS')
@@ -64,46 +65,53 @@ class convert:
         '''
         Executes the selected miriad task (fits or wsrtfits) to convert the data from UVFITS to MIRIAD format. Does it for the flux calibrator, polarisation calibrator, and target field independently.
         '''
-        if self.uvfits2mir_tool == 'fits':
+        self.director('ch', self.crosscaldir)
+        if self.convert_uvfits2mir_tool == 'fits':
             self.logger.info('### Using MIRIAD fits task to convert data from UVFITS to MIRIAD format ###')
             fits = lib.miriad('fits')
             fits.op = 'uvin'
             if self.convert_fluxcal == True:
-                fits._in = self.crosscaldir + '/' + str(self.fluxcal).rstrip('MS') + 'UVFITS'
+                fits.in_ = self.crosscaldir + '/' + str(self.fluxcal).rstrip('MS') + 'UVFITS'
                 fits.out = self.crosscaldir + '/' + str(self.fluxcal).rstrip('MS') + 'mir'
                 fits.go()
+                self.director('rm', self.crosscaldir + '/' + str(self.fluxcal).rstrip('MS') + 'UVFITS')
                 self.logger.info('### Converted UVFITS file ' + self.fluxcal + ' to MIRIAD format using MIRIAD task fits! ###')
             if self.convert_polcal == True:
-                fits._in = self.crosscaldir + '/' + str(self.polcal).rstrip('MS') + 'UVFITS'
+                fits.in_ = self.crosscaldir + '/' + str(self.polcal).rstrip('MS') + 'UVFITS'
                 fits.out = self.crosscaldir + '/' + str(self.polcal).rstrip('MS') + 'mir'
                 fits.go()
+                self.director('rm', self.crosscaldir + '/' + str(self.polcal).rstrip('MS') + 'UVFITS')
                 self.logger.info('### Converted UVFITS file ' + self.polcal + ' to MIRIAD format using MIRIAD task fits! ###')
             if self.convert_target == True:
-                fits._in = self.crosscaldir + '/' + str(self.target).rstrip('MS') + 'UVFITS'
+                fits.in_ = self.crosscaldir + '/' + str(self.target).rstrip('MS') + 'UVFITS'
                 fits.out = self.crosscaldir + '/' + str(self.target).rstrip('MS') + 'mir'
                 fits.go()
+                self.director('rm', self.crosscaldir + '/' + str(self.target).rstrip('MS') + 'UVFITS')
                 self.logger.info('### Converted UVFITS file ' + self.target + ' to MIRIAD format using MIRIAD task fits! ###')
             self.logger.info('### Conversion from UVFITS to MIRIAD fromat done! ###')
-        elif self.uvfits2mir_tool == 'wsrtfits':
+        elif self.convert_uvfits2mir_tool == 'wsrtfits':
             self.logger.info('### Using MIRIAD wsrtfits task to convert data from UVFITS to MIRIAD format ###')
             wsrtfits = lib.miriad('wsrtfits')
             wsrtfits.op = 'uvin'
             if self.convert_fluxcal == True:
-                wsrtfits._in = self.crosscaldir + '/' + str(self.fluxcal).rstrip('MS') + 'UVFITS'
+                wsrtfits.in_ = self.crosscaldir + '/' + str(self.fluxcal).rstrip('MS') + 'UVFITS'
                 wsrtfits.out = self.crosscaldir + '/' + str(self.fluxcal).rstrip('MS') + 'mir'
                 wsrtfits.go()
+                self.director('rm', self.crosscaldir + '/' + str(self.fluxcal).rstrip('MS') + 'UVFITS')
                 self.logger.info('### Converted UVFITS file ' + self.fluxcal + ' to MIRIAD format using MIRIAD task wsrtfits! ###')
             if self.convert_polcal == True:
-                wsrtfits._in = self.crosscaldir + '/' + str(self.polcal).rstrip('MS') + 'UVFITS'
+                wsrtfits.in_ = self.crosscaldir + '/' + str(self.polcal).rstrip('MS') + 'UVFITS'
                 wsrtfits.out = self.crosscaldir + '/' + str(self.polcal).rstrip('MS') + 'mir'
                 wsrtfits.go()
+                self.director('rm', self.crosscaldir + '/' + str(self.polcal).rstrip('MS') + 'UVFITS')
                 self.logger.info('### Converted UVFITS file ' + self.polcal + ' to MIRIAD format using MIRIAD task wsrtfits! ###')
             if self.convert_target == True:
-                wsrtfits._in = self.crosscaldir + '/' + str(self.target).rstrip('MS') + 'UVFITS'
+                wsrtfits.in_ = self.crosscaldir + '/' + str(self.target).rstrip('MS') + 'UVFITS'
                 wsrtfits.out = self.crosscaldir + '/' + str(self.target).rstrip('MS') + 'mir'
                 wsrtfits.go()
+                self.director('rm', self.crosscaldir + '/' + str(self.target).rstrip('MS') + 'UVFITS')
                 self.logger.info('### Converted UVFITS file ' + self.target + ' to MIRIAD format using MIRIAD task wsrtfits! ###')
-            self.logger.info('### Conversion from UVFITS to MIRIAD fromat done! ###')
+            self.logger.info('### Conversion from UVFITS to MIRIAD format done! ###')
         else:
             self.logger.error('### Conversion tool not supported! Exiting pipeline! ###')
             sys.exit(1)
@@ -113,7 +121,6 @@ class convert:
         Executes the whole conversion from MS format to MIRIAD format of the flux calibrator, polarisation calibrator, and target dataset
         '''
         self.logger.info('########## FILE CONVERSION started ##########')
-        self.director('ch', self.crosscaldir)
         self.ms2uvfits()
         self.uvfits2miriad()
         self.logger.info('########## FILE CONVERSION done ##########')
@@ -149,17 +156,20 @@ class convert:
                 if verbose == True:
                     self.logger.info('# Creating directory ' + str(dest) + ' #')
         elif option == 'ch':
-            self.lwd = os.getcwd()  # Save the former working directory in a variable
-            try:
-                os.chdir(dest)
-            except:
-                os.mkdir(dest)
+            if os.getcwd() == dest:
+                pass
+            else:
+                self.lwd = os.getcwd()  # Save the former working directory in a variable
+                try:
+                    os.chdir(dest)
+                except:
+                    os.mkdir(dest)
+                    if verbose == True:
+                        self.logger.info('# Creating directory ' + str(dest) + ' #')
+                    os.chdir(dest)
+                self.cwd = os.getcwd()  # Save the current working directory in a variable
                 if verbose == True:
-                    self.logger.info('# Creating directory ' + str(dest) + ' #')
-                os.chdir(dest)
-            self.cwd = os.getcwd()  # Save the current working directory in a variable
-            if verbose == True:
-                self.logger.info('# Moved to directory ' + str(dest) + ' #')
+                    self.logger.info('# Moved to directory ' + str(dest) + ' #')
         elif option == 'mv':  # Move
             if os.path.exists(dest):
                 lib.basher("mv " + str(file) + " " + str(dest))
@@ -173,4 +183,4 @@ class convert:
         elif option == 'rm':  # Remove
             lib.basher("rm -r " + str(dest))
         else:
-            print('### Option not supported! Only mk, ch, mv, rm, and cp are supported! ###')
+            print('### Option not supported! Only mk, ch, mv, rm, rn, and cp are supported! ###')

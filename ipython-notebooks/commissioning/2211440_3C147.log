@@ -251,3 +251,114 @@
 01/19/2017 02:01:34 PM - preflag - INFO : # Flagging of shadowed antennas for flux calibrator data done #
 01/19/2017 02:01:34 PM - preflag - INFO : ### Pre-flagging of known flags done ###
 01/19/2017 02:01:34 PM - preflag - INFO : ########## PRE-FLAGGING done ##########
+01/19/2017 02:16:03 PM - convert - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 02:16:04 PM - convert - INFO : ########## FILE CONVERSION started ##########
+01/19/2017 02:16:04 PM - convert - INFO : # Creating directory /data/adebahr/apertif/2211440_3C147/crosscal #
+01/19/2017 02:16:04 PM - convert - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/crosscal #
+01/19/2017 02:18:10 PM - root - INFO : Logging started!
+01/19/2017 02:18:10 PM - root - INFO : To see the log in a bash window use the following command:
+01/19/2017 02:18:10 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/19/2017 02:18:16 PM - convert - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 02:18:17 PM - convert - INFO : ########## FILE CONVERSION started ##########
+01/19/2017 02:18:17 PM - convert - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/crosscal #
+01/19/2017 02:18:17 PM - convert - INFO : ### Using CASA toolkit to convert from MS to UVFITS format! ###
+01/19/2017 02:19:08 PM - convert - INFO : ### Converted MS file WSRTA2211440_B018.MS to UVFITS using CASA toolkit! ###
+01/19/2017 02:19:08 PM - convert - INFO : ### Using MIRIAD fits task to convert data from UVFITS to MIRIAD format ###
+01/19/2017 02:19:08 PM - masher - DEBUG : fits _in=/data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.UVFITS op=uvin out=/data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.mir 
+01/19/2017 02:19:08 PM - basher - DEBUG : fits _in=/data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.UVFITS op=uvin out=/data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.mir 
+01/19/2017 02:19:08 PM - basher - DEBUG : Command = fits _in=/data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.UVFITS op=uvin out=/data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.mir 
+01/19/2017 02:19:08 PM - basher - DEBUG : 
+
+fits: Revision 1.32, 2014/09/15 04:39:01 UTC
+
+
+01/19/2017 02:19:08 PM - basher - DEBUG : ### Warning:  Keyword name has zero length or too long
+### Fatal Error:  Input file name is missing
+
+01/19/2017 02:19:08 PM - basher - DEBUG : Returning output.
+01/19/2017 02:19:08 PM - convert - INFO : ### Converted UVFITS file WSRTA2211440_B018.MS to MIRIAD format using MIRIAD task fits! ###
+01/19/2017 02:19:08 PM - convert - INFO : ### Conversion from UVFITS to MIRIAD fromat done! ###
+01/19/2017 02:19:08 PM - convert - INFO : ########## FILE CONVERSION done ##########
+01/19/2017 02:24:56 PM - root - INFO : Logging started!
+01/19/2017 02:24:56 PM - root - INFO : To see the log in a bash window use the following command:
+01/19/2017 02:24:56 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/19/2017 02:25:00 PM - convert - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 02:25:02 PM - convert - INFO : ########## FILE CONVERSION started ##########
+01/19/2017 02:25:02 PM - convert - INFO : # Creating directory /data/adebahr/apertif/2211440_3C147/crosscal #
+01/19/2017 02:25:02 PM - convert - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/crosscal #
+01/19/2017 02:25:02 PM - convert - INFO : ### Using CASA toolkit to convert from MS to UVFITS format! ###
+01/19/2017 02:25:52 PM - convert - INFO : ### Converted MS file WSRTA2211440_B018.MS to UVFITS using CASA toolkit! ###
+01/19/2017 02:25:52 PM - convert - INFO : ### Using MIRIAD fits task to convert data from UVFITS to MIRIAD format ###
+01/19/2017 02:25:52 PM - masher - DEBUG : fits in=/data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.UVFITS op=uvin out=/data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.mir 
+01/19/2017 02:25:52 PM - basher - DEBUG : fits in=/data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.UVFITS op=uvin out=/data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.mir 
+01/19/2017 02:26:14 PM - basher - DEBUG : Command = fits in=/data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.UVFITS op=uvin out=/data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.mir 
+01/19/2017 02:26:14 PM - basher - DEBUG : 
+
+fits: Revision 1.32, 2014/09/15 04:39:01 UTC
+
+Determining various defaults ...
+  Assuming systemp=30
+  Assuming jyperk=8
+
+Analysing the extension tables ...
+  Using antenna table information
+  Decrementing times for configration 1 by  0.41 seconds (UTC-UT1).
+  Using frequency table information
+
+Handling the visibility data
+  Data are linearly polarized
+  Reading the correlation data
+  The estimated integration time of a sample is 1 seconds
+  Number of antennas: 12
+  Number of antenna configurations: 1
+
+01/19/2017 02:26:14 PM - basher - DEBUG : ### Warning:  1 unrecognised cards were written to the history file
+### Warning:  Some visibilities had zero weight
+
+01/19/2017 02:26:14 PM - basher - DEBUG : Returning output.
+01/19/2017 02:26:14 PM - convert - INFO : ### Converted UVFITS file WSRTA2211440_B018.MS to MIRIAD format using MIRIAD task fits! ###
+01/19/2017 02:26:14 PM - convert - INFO : ### Conversion from UVFITS to MIRIAD fromat done! ###
+01/19/2017 02:26:14 PM - convert - INFO : ########## FILE CONVERSION done ##########
+01/19/2017 02:29:50 PM - root - INFO : Logging started!
+01/19/2017 02:29:50 PM - root - INFO : To see the log in a bash window use the following command:
+01/19/2017 02:29:50 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.log
+01/19/2017 02:29:53 PM - preflag - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 02:29:57 PM - convert - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/2211440_3C147.cfg successfully read! ###
+01/19/2017 02:29:58 PM - convert - INFO : ########## FILE CONVERSION started ##########
+01/19/2017 02:29:58 PM - convert - INFO : # Creating directory /data/adebahr/apertif/2211440_3C147/crosscal #
+01/19/2017 02:29:58 PM - convert - INFO : # Moved to directory /data/adebahr/apertif/2211440_3C147/crosscal #
+01/19/2017 02:29:58 PM - convert - INFO : ### Using CASA toolkit to convert from MS to UVFITS format! ###
+01/19/2017 02:30:48 PM - convert - INFO : ### Converted MS file WSRTA2211440_B018.MS to UVFITS using CASA toolkit! ###
+01/19/2017 02:30:48 PM - convert - INFO : ### Using MIRIAD fits task to convert data from UVFITS to MIRIAD format ###
+01/19/2017 02:30:48 PM - masher - DEBUG : fits in=/data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.UVFITS op=uvin out=/data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.mir 
+01/19/2017 02:30:48 PM - basher - DEBUG : fits in=/data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.UVFITS op=uvin out=/data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.mir 
+01/19/2017 02:31:09 PM - basher - DEBUG : Command = fits in=/data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.UVFITS op=uvin out=/data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.mir 
+01/19/2017 02:31:09 PM - basher - DEBUG : 
+
+fits: Revision 1.32, 2014/09/15 04:39:01 UTC
+
+Determining various defaults ...
+  Assuming systemp=30
+  Assuming jyperk=8
+
+Analysing the extension tables ...
+  Using antenna table information
+  Decrementing times for configration 1 by  0.41 seconds (UTC-UT1).
+  Using frequency table information
+
+Handling the visibility data
+  Data are linearly polarized
+  Reading the correlation data
+  The estimated integration time of a sample is 1 seconds
+  Number of antennas: 12
+  Number of antenna configurations: 1
+
+01/19/2017 02:31:09 PM - basher - DEBUG : ### Warning:  1 unrecognised cards were written to the history file
+### Warning:  Some visibilities had zero weight
+
+01/19/2017 02:31:09 PM - basher - DEBUG : Returning output.
+01/19/2017 02:31:09 PM - basher - DEBUG : rm -r /data/adebahr/apertif/2211440_3C147/crosscal/WSRTA2211440_B018.UVFITS
+01/19/2017 02:31:10 PM - basher - DEBUG : Returning output.
+01/19/2017 02:31:10 PM - convert - INFO : ### Converted UVFITS file WSRTA2211440_B018.MS to MIRIAD format using MIRIAD task fits! ###
+01/19/2017 02:31:10 PM - convert - INFO : ### Conversion from UVFITS to MIRIAD fromat done! ###
+01/19/2017 02:31:10 PM - convert - INFO : ########## FILE CONVERSION done ##########
