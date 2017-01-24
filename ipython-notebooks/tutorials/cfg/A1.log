@@ -1,0 +1,1814 @@
+01/24/2017 03:52:59 PM - root - INFO : Logging started!
+01/24/2017 03:52:59 PM - root - INFO : To see the log in a bash window use the following command:
+01/24/2017 03:52:59 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A1.log
+01/24/2017 03:53:03 PM - CONVERT - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A1.cfg successfully read! ###
+01/24/2017 03:53:06 PM - CONVERT - INFO : ########## FILE CONVERSION started ##########
+01/24/2017 03:53:40 PM - root - INFO : Logging started!
+01/24/2017 03:53:40 PM - root - INFO : To see the log in a bash window use the following command:
+01/24/2017 03:53:40 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A1.log
+01/24/2017 03:53:42 PM - CONVERT - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A1.cfg successfully read! ###
+01/24/2017 03:53:43 PM - CONVERT - INFO : ########## FILE CONVERSION started ##########
+01/24/2017 03:53:43 PM - CONVERT - INFO : ### Starting conversion from UVFITS to MIRIAD format ###
+01/24/2017 03:53:43 PM - CONVERT - INFO : # Moved to directory /data/adebahr/apertif/tutorial/NGC4062//crosscal #
+01/24/2017 03:53:43 PM - CONVERT - INFO : ### Using MIRIAD wsrtfits task to convert data from UVFITS to MIRIAD format ###
+01/24/2017 03:53:43 PM - masher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/NGC4062//crosscal/3C147.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/NGC4062//crosscal/3C147.mir 
+01/24/2017 03:53:43 PM - basher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/NGC4062//crosscal/3C147.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/NGC4062//crosscal/3C147.mir 
+01/24/2017 03:53:43 PM - basher - DEBUG : Command = wsrtfits in=/data/adebahr/apertif/tutorial/NGC4062//crosscal/3C147.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/NGC4062//crosscal/3C147.mir 
+01/24/2017 03:53:43 PM - basher - DEBUG : 
+wsrtfits: version 1.3.1 21-Jul-04
+ /data/adebahr/apertif/tutorial/NGC4062//crosscal/3C147.UVFITS                                                                   
+Assuming systemp=30
+Assuming jyperk=8
+Reading AIPS AN table
+ freqref    1406803587.0000000     
+Decrementing times for configration  1 by  0.14 seconds (UTC-UT1).
+ Mount type :           1
+Reading AIPS FQ table
+Reading AIPS SU table
+ 3C147               
+Doppler tracking..
+Data are linearly polarized
+Reading the correlation data
+The estimated integration time of a sample is 60 seconds
+Number of antennas: 14
+Number of antenna configurations: 1
+
+01/24/2017 03:53:43 PM - basher - DEBUG : ### Warning [wsrtfits]:  Ignored random parameter INTTIM
+### Warning [wsrtfits]:  Some visibilities had zero weight
+
+01/24/2017 03:53:43 PM - basher - DEBUG : Returning output.
+01/24/2017 03:53:43 PM - basher - DEBUG : rm -r /data/adebahr/apertif/tutorial/NGC4062//crosscal/3C147.UVFITS
+01/24/2017 03:53:43 PM - basher - DEBUG : Returning output.
+01/24/2017 03:53:43 PM - CONVERT - INFO : ### Converted UVFITS file 3C147.MS to MIRIAD format using MIRIAD task wsrtfits! ###
+01/24/2017 03:53:43 PM - CONVERT - INFO : ### Conversion from UVFITS to MIRIAD format done! ###
+01/24/2017 03:53:43 PM - CONVERT - INFO : ### Conversion from UVFITS to MIRIAD format done! ###
+01/24/2017 03:53:43 PM - CONVERT - INFO : ########## FILE CONVERSION done ##########
+01/24/2017 03:55:18 PM - root - INFO : Logging started!
+01/24/2017 03:55:18 PM - root - INFO : To see the log in a bash window use the following command:
+01/24/2017 03:55:18 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A1.log
+01/24/2017 03:55:20 PM - CONVERT - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A1.cfg successfully read! ###
+01/24/2017 03:55:22 PM - CONVERT - INFO : ########## FILE CONVERSION started ##########
+01/24/2017 03:55:22 PM - CONVERT - INFO : ### Starting conversion from UVFITS to MIRIAD format ###
+01/24/2017 03:55:22 PM - CONVERT - INFO : # Moved to directory /data/adebahr/apertif/tutorial/NGC4062/crosscal #
+01/24/2017 03:55:22 PM - CONVERT - INFO : ### Using MIRIAD wsrtfits task to convert data from UVFITS to MIRIAD format ###
+01/24/2017 03:55:22 PM - masher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/NGC4062/crosscal/3C147.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/NGC4062/crosscal/3C147.mir 
+01/24/2017 03:55:22 PM - basher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/NGC4062/crosscal/3C147.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/NGC4062/crosscal/3C147.mir 
+01/24/2017 03:55:22 PM - basher - DEBUG : Command = wsrtfits in=/data/adebahr/apertif/tutorial/NGC4062/crosscal/3C147.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/NGC4062/crosscal/3C147.mir 
+01/24/2017 03:55:22 PM - basher - DEBUG : 
+wsrtfits: version 1.3.1 21-Jul-04
+ /data/adebahr/apertif/tutorial/NGC4062/crosscal/3C147.UVFITS                                                                    
+Assuming systemp=30
+Assuming jyperk=8
+Reading AIPS AN table
+ freqref    1406803587.0000000     
+Decrementing times for configration  1 by  0.14 seconds (UTC-UT1).
+ Mount type :           1
+Reading AIPS FQ table
+Reading AIPS SU table
+ 3C147               
+Doppler tracking..
+Data are linearly polarized
+Reading the correlation data
+The estimated integration time of a sample is 60 seconds
+Number of antennas: 14
+Number of antenna configurations: 1
+
+01/24/2017 03:55:22 PM - basher - DEBUG : ### Warning [wsrtfits]:  Ignored random parameter INTTIM
+### Warning [wsrtfits]:  Some visibilities had zero weight
+
+01/24/2017 03:55:22 PM - basher - DEBUG : Returning output.
+01/24/2017 03:55:22 PM - basher - DEBUG : rm -r /data/adebahr/apertif/tutorial/NGC4062/crosscal/3C147.UVFITS
+01/24/2017 03:55:22 PM - basher - DEBUG : Returning output.
+01/24/2017 03:55:22 PM - CONVERT - INFO : ### Converted UVFITS file 3C147.MS to MIRIAD format using MIRIAD task wsrtfits! ###
+01/24/2017 03:55:22 PM - masher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/NGC4062/crosscal/3C138.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/NGC4062/crosscal/3C138.mir 
+01/24/2017 03:55:22 PM - basher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/NGC4062/crosscal/3C138.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/NGC4062/crosscal/3C138.mir 
+01/24/2017 03:55:22 PM - basher - DEBUG : Command = wsrtfits in=/data/adebahr/apertif/tutorial/NGC4062/crosscal/3C138.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/NGC4062/crosscal/3C138.mir 
+01/24/2017 03:55:22 PM - basher - DEBUG : 
+wsrtfits: version 1.3.1 21-Jul-04
+ /data/adebahr/apertif/tutorial/NGC4062/crosscal/3C138.UVFITS                                                                    
+Assuming systemp=30
+Assuming jyperk=8
+Reading AIPS AN table
+ freqref    1406803587.0000000     
+Decrementing times for configration  1 by  0.14 seconds (UTC-UT1).
+ Mount type :           1
+Reading AIPS FQ table
+Reading AIPS SU table
+ 3C138               
+Doppler tracking..
+Data are linearly polarized
+Reading the correlation data
+The estimated integration time of a sample is 60 seconds
+Number of antennas: 14
+Number of antenna configurations: 1
+
+01/24/2017 03:55:22 PM - basher - DEBUG : ### Warning [wsrtfits]:  Ignored random parameter INTTIM
+### Warning [wsrtfits]:  Some visibilities had zero weight
+
+01/24/2017 03:55:22 PM - basher - DEBUG : Returning output.
+01/24/2017 03:55:22 PM - basher - DEBUG : rm -r /data/adebahr/apertif/tutorial/NGC4062/crosscal/3C138.UVFITS
+01/24/2017 03:55:22 PM - basher - DEBUG : Returning output.
+01/24/2017 03:55:22 PM - CONVERT - INFO : ### Converted UVFITS file 3C138.MS to MIRIAD format using MIRIAD task wsrtfits! ###
+01/24/2017 03:55:22 PM - masher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/NGC4062/crosscal/NGC4062.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/NGC4062/crosscal/NGC4062.mir 
+01/24/2017 03:55:22 PM - basher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/NGC4062/crosscal/NGC4062.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/NGC4062/crosscal/NGC4062.mir 
+01/24/2017 03:55:25 PM - basher - DEBUG : Command = wsrtfits in=/data/adebahr/apertif/tutorial/NGC4062/crosscal/NGC4062.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/NGC4062/crosscal/NGC4062.mir 
+01/24/2017 03:55:25 PM - basher - DEBUG : 
+wsrtfits: version 1.3.1 21-Jul-04
+ /data/adebahr/apertif/tutorial/NGC4062/crosscal/NGC4062.UVFITS                                                                  
+Assuming systemp=30
+Assuming jyperk=8
+Reading AIPS AN table
+ freqref    1406803587.0000000     
+Decrementing times for configration  1 by  0.14 seconds (UTC-UT1).
+ Mount type :           1
+Reading AIPS FQ table
+Reading AIPS SU table
+ NGC4062             
+Doppler tracking..
+Data are linearly polarized
+Reading the correlation data
+The estimated integration time of a sample is 60 seconds
+Number of antennas: 14
+Number of antenna configurations: 1
+
+01/24/2017 03:55:25 PM - basher - DEBUG : ### Warning [wsrtfits]:  Ignored random parameter INTTIM
+### Warning [wsrtfits]:  Some apparent RA/DECs looked bad -- they were recomputed
+### Warning [wsrtfits]:  Some visibilities had zero weight
+
+01/24/2017 03:55:25 PM - basher - DEBUG : Returning output.
+01/24/2017 03:55:25 PM - basher - DEBUG : rm -r /data/adebahr/apertif/tutorial/NGC4062/crosscal/NGC4062.UVFITS
+01/24/2017 03:55:25 PM - basher - DEBUG : Returning output.
+01/24/2017 03:55:25 PM - CONVERT - INFO : ### Converted UVFITS file NGC4062.MS to MIRIAD format using MIRIAD task wsrtfits! ###
+01/24/2017 03:55:25 PM - CONVERT - INFO : ### Conversion from UVFITS to MIRIAD format done! ###
+01/24/2017 03:55:25 PM - CONVERT - INFO : ### Conversion from UVFITS to MIRIAD format done! ###
+01/24/2017 03:55:25 PM - CONVERT - INFO : ########## FILE CONVERSION done ##########
+01/24/2017 03:56:33 PM - CROSSCAL - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A1.cfg successfully read! ###
+01/24/2017 03:56:36 PM - CROSSCAL - INFO : ### Bandpass calibration on the flux calibrator data started ###
+01/24/2017 03:56:36 PM - masher - DEBUG : mfcal vis=3C147.mir 
+01/24/2017 03:56:36 PM - basher - DEBUG : mfcal vis=3C147.mir 
+01/24/2017 03:56:39 PM - basher - DEBUG : Command = mfcal vis=3C147.mir 
+01/24/2017 03:56:39 PM - basher - DEBUG : 
+MfCal: $Revision: 1.17 $, $Date: 2016/05/01 22:31:05 $
+Selecting parallel-hand polarisations
+Reading the data ...
+Number correlations accepted: 662720
+Number of frequency bands/settings: 4
+Number of polarisations selected: 2
+Number of solution intervals: 3
+Number of passband solution intervals: 1
+Initialising ...
+Using known frequency variation of 3c147
+Generating initial solution estimate ...
+Doing solution refinement ...
+Iter= 1, Solution Error:  0.447
+Iter= 2, Solution Error:  0.032
+Iter= 3, Solution Error:  0.019
+Iter= 4, Solution Error:  0.017
+Iter= 5, Solution Error:  0.016
+Iter= 6, Solution Error:  0.015
+Iter= 7, Solution Error:  0.014
+Iter= 8, Solution Error:  0.013
+Iter= 9, Solution Error:  0.013
+Iter=10, Solution Error:  0.013
+Iter=11, Solution Error:  0.013
+Iter=12, Solution Error:  0.013
+Iter=13, Solution Error:  0.013
+Iter=14, Solution Error:  0.013
+Iter=15, Solution Error:  0.013
+Iter=16, Solution Error:  0.013
+Iter=17, Solution Error:  0.013
+Iter=18, Solution Error:  0.013
+Iter=19, Solution Error:  0.013
+Iter=20, Solution Error:  0.012
+Iter=21, Solution Error:  0.012
+Iter=22, Solution Error:  0.011
+Iter=23, Solution Error:  0.010
+Iter=24, Solution Error:  0.010
+Iter=25, Solution Error:  0.009
+Iter=26, Solution Error:  0.008
+Iter=27, Solution Error:  0.008
+Iter=28, Solution Error:  0.007
+Iter=29, Solution Error:  0.007
+Iter=30, Solution Error:  0.006
+Saving solution ...
+
+01/24/2017 03:56:39 PM - basher - DEBUG : ### Warning:  Correlations flagged or edge-rejected: 36160
+### Warning:  Failed to converge
+
+01/24/2017 03:56:39 PM - basher - DEBUG : Returning output.
+01/24/2017 03:56:39 PM - CROSSCAL - INFO : ### Bandpass calibration on the flux calibrator data done ###
+01/24/2017 03:57:00 PM - CROSSCAL - INFO : ### Polarisation calibration on the polarised calibrator data started ###
+01/24/2017 03:57:00 PM - CROSSCAL - INFO : # Bandpass solutions from flux calibrator not found. #
+01/24/2017 03:57:00 PM - CROSSCAL - INFO : # Deriving bandpass from polarised calibrator using mfcal. #
+01/24/2017 03:57:00 PM - masher - DEBUG : mfcal vis=3C138.mir 
+01/24/2017 03:57:00 PM - basher - DEBUG : mfcal vis=3C138.mir 
+01/24/2017 03:57:03 PM - basher - DEBUG : Command = mfcal vis=3C138.mir 
+01/24/2017 03:57:03 PM - basher - DEBUG : 
+MfCal: $Revision: 1.17 $, $Date: 2016/05/01 22:31:05 $
+Selecting parallel-hand polarisations
+Reading the data ...
+Number correlations accepted: 679040
+Number of frequency bands/settings: 4
+Number of polarisations selected: 2
+Number of solution intervals: 3
+Number of passband solution intervals: 1
+Initialising ...
+Using known frequency variation of 3c138
+Generating initial solution estimate ...
+Doing solution refinement ...
+Iter= 1, Solution Error:  0.445
+Iter= 2, Solution Error:  0.046
+Iter= 3, Solution Error:  0.042
+Iter= 4, Solution Error:  0.040
+Iter= 5, Solution Error:  0.032
+Iter= 6, Solution Error:  0.023
+Iter= 7, Solution Error:  0.019
+Iter= 8, Solution Error:  0.010
+Iter= 9, Solution Error:  0.009
+Iter=10, Solution Error:  0.008
+Iter=11, Solution Error:  0.007
+Iter=12, Solution Error:  0.006
+Iter=13, Solution Error:  0.005
+Iter=14, Solution Error:  0.005
+Iter=15, Solution Error:  0.004
+Iter=16, Solution Error:  0.004
+Iter=17, Solution Error:  0.003
+Iter=18, Solution Error:  0.003
+Iter=19, Solution Error:  0.003
+Iter=20, Solution Error:  0.002
+Iter=21, Solution Error:  0.002
+Iter=22, Solution Error:  0.002
+Iter=23, Solution Error:  0.002
+Iter=24, Solution Error:  0.001
+Iter=25, Solution Error:  0.001
+Iter=26, Solution Error:  0.001
+Iter=27, Solution Error:  0.001
+Iter=28, Solution Error:  0.001
+Saving solution ...
+
+01/24/2017 03:57:03 PM - basher - DEBUG : ### Warning:  Correlations flagged or edge-rejected: 19840
+
+01/24/2017 03:57:03 PM - basher - DEBUG : Returning output.
+01/24/2017 03:57:03 PM - CROSSCAL - INFO : # Bandpass solutions from polarised calibrator derived. #
+01/24/2017 03:57:03 PM - CROSSCAL - INFO : # Continuing with polarisation calibration (leakage, angle) from polarised calibrator data. #
+01/24/2017 03:57:03 PM - masher - DEBUG : gpcal vis=3C138.mir nfbin=256.0 options=xyphase,linear 
+01/24/2017 03:57:03 PM - basher - DEBUG : gpcal vis=3C138.mir nfbin=256.0 options=xyphase,linear 
+01/24/2017 03:57:03 PM - basher - DEBUG : Command = gpcal vis=3C138.mir nfbin=256.0 options=xyphase,linear 
+01/24/2017 03:57:03 PM - basher - DEBUG : 
+
+gpcal: Revision 1.22, 2016/05/01 22:31:05 UTC
+
+
+01/24/2017 03:57:03 PM - basher - DEBUG : ### Fatal Error:  Unrecognised option xyphase
+
+01/24/2017 03:57:03 PM - basher - DEBUG : Returning output.
+01/24/2017 03:57:03 PM - CROSSCAL - INFO : # Solved for polarisation leakage and angle on polarised calibrator. #
+01/24/2017 03:59:42 PM - root - INFO : Logging started!
+01/24/2017 03:59:42 PM - root - INFO : To see the log in a bash window use the following command:
+01/24/2017 03:59:42 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A1.log
+01/24/2017 03:59:47 PM - CROSSCAL - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A1.cfg successfully read! ###
+01/24/2017 03:59:53 PM - CROSSCAL - INFO : # Moved to directory /data/adebahr/apertif/tutorial/NGC4062/crosscal #
+01/24/2017 03:59:53 PM - CROSSCAL - INFO : ### Polarisation calibration on the polarised calibrator data started ###
+01/24/2017 03:59:53 PM - CROSSCAL - INFO : # Bandpass solutions from flux calibrator not found. #
+01/24/2017 03:59:53 PM - CROSSCAL - INFO : # Deriving bandpass from polarised calibrator using mfcal. #
+01/24/2017 03:59:53 PM - masher - DEBUG : mfcal vis=3C138.mir 
+01/24/2017 03:59:53 PM - basher - DEBUG : mfcal vis=3C138.mir 
+01/24/2017 03:59:56 PM - basher - DEBUG : Command = mfcal vis=3C138.mir 
+01/24/2017 03:59:56 PM - basher - DEBUG : 
+MfCal: $Revision: 1.17 $, $Date: 2016/05/01 22:31:05 $
+Selecting parallel-hand polarisations
+Reading the data ...
+Number correlations accepted: 679040
+Number of frequency bands/settings: 4
+Number of polarisations selected: 2
+Number of solution intervals: 3
+Number of passband solution intervals: 1
+Initialising ...
+Using known frequency variation of 3c138
+Generating initial solution estimate ...
+Doing solution refinement ...
+Iter= 1, Solution Error:  0.445
+Iter= 2, Solution Error:  0.046
+Iter= 3, Solution Error:  0.042
+Iter= 4, Solution Error:  0.040
+Iter= 5, Solution Error:  0.032
+Iter= 6, Solution Error:  0.023
+Iter= 7, Solution Error:  0.019
+Iter= 8, Solution Error:  0.010
+Iter= 9, Solution Error:  0.009
+Iter=10, Solution Error:  0.008
+Iter=11, Solution Error:  0.007
+Iter=12, Solution Error:  0.006
+Iter=13, Solution Error:  0.005
+Iter=14, Solution Error:  0.005
+Iter=15, Solution Error:  0.004
+Iter=16, Solution Error:  0.004
+Iter=17, Solution Error:  0.003
+Iter=18, Solution Error:  0.003
+Iter=19, Solution Error:  0.003
+Iter=20, Solution Error:  0.002
+Iter=21, Solution Error:  0.002
+Iter=22, Solution Error:  0.002
+Iter=23, Solution Error:  0.002
+Iter=24, Solution Error:  0.001
+Iter=25, Solution Error:  0.001
+Iter=26, Solution Error:  0.001
+Iter=27, Solution Error:  0.001
+Iter=28, Solution Error:  0.001
+Saving solution ...
+
+01/24/2017 03:59:56 PM - basher - DEBUG : ### Warning:  Correlations flagged or edge-rejected: 19840
+
+01/24/2017 03:59:56 PM - basher - DEBUG : Returning output.
+01/24/2017 03:59:56 PM - CROSSCAL - INFO : # Bandpass solutions from polarised calibrator derived. #
+01/24/2017 03:59:56 PM - CROSSCAL - INFO : # Continuing with polarisation calibration (leakage, angle) from polarised calibrator data. #
+01/24/2017 03:59:56 PM - masher - DEBUG : gpcal vis=3C138.mir nfbin=256.0 options=xyphase,linear 
+01/24/2017 03:59:56 PM - basher - DEBUG : gpcal vis=3C138.mir nfbin=256.0 options=xyphase,linear 
+01/24/2017 03:59:56 PM - basher - DEBUG : Command = gpcal vis=3C138.mir nfbin=256.0 options=xyphase,linear 
+01/24/2017 03:59:56 PM - basher - DEBUG : 
+
+gpcal: Revision 1.22, 2016/05/01 22:31:05 UTC
+
+
+01/24/2017 03:59:56 PM - basher - DEBUG : ### Fatal Error:  Unrecognised option xyphase
+
+01/24/2017 03:59:56 PM - basher - DEBUG : Returning output.
+01/24/2017 03:59:56 PM - CROSSCAL - INFO : # Solved for polarisation leakage and angle on polarised calibrator. #
+01/24/2017 03:59:56 PM - CROSSCAL - INFO : ### Polarisation calibration on the polarised calibrator data done ###
+01/24/2017 04:00:43 PM - root - INFO : Logging started!
+01/24/2017 04:00:43 PM - root - INFO : To see the log in a bash window use the following command:
+01/24/2017 04:00:43 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A1.log
+01/24/2017 04:00:50 PM - CROSSCAL - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A1.cfg successfully read! ###
+01/24/2017 04:00:54 PM - CROSSCAL - INFO : # Moved to directory /data/adebahr/apertif/tutorial/NGC4062/crosscal #
+01/24/2017 04:00:54 PM - CROSSCAL - INFO : ### Polarisation calibration on the polarised calibrator data started ###
+01/24/2017 04:00:54 PM - CROSSCAL - INFO : # Bandpass solutions from flux calibrator not found. #
+01/24/2017 04:00:54 PM - CROSSCAL - INFO : # Deriving bandpass from polarised calibrator using mfcal. #
+01/24/2017 04:00:54 PM - masher - DEBUG : mfcal vis=3C138.mir 
+01/24/2017 04:00:54 PM - basher - DEBUG : mfcal vis=3C138.mir 
+01/24/2017 04:00:56 PM - basher - DEBUG : Command = mfcal vis=3C138.mir 
+01/24/2017 04:00:56 PM - basher - DEBUG : 
+MfCal: $Revision: 1.17 $, $Date: 2016/05/01 22:31:05 $
+Selecting parallel-hand polarisations
+Reading the data ...
+Number correlations accepted: 679040
+Number of frequency bands/settings: 4
+Number of polarisations selected: 2
+Number of solution intervals: 3
+Number of passband solution intervals: 1
+Initialising ...
+Using known frequency variation of 3c138
+Generating initial solution estimate ...
+Doing solution refinement ...
+Iter= 1, Solution Error:  0.445
+Iter= 2, Solution Error:  0.046
+Iter= 3, Solution Error:  0.042
+Iter= 4, Solution Error:  0.040
+Iter= 5, Solution Error:  0.032
+Iter= 6, Solution Error:  0.023
+Iter= 7, Solution Error:  0.019
+Iter= 8, Solution Error:  0.010
+Iter= 9, Solution Error:  0.009
+Iter=10, Solution Error:  0.008
+Iter=11, Solution Error:  0.007
+Iter=12, Solution Error:  0.006
+Iter=13, Solution Error:  0.005
+Iter=14, Solution Error:  0.005
+Iter=15, Solution Error:  0.004
+Iter=16, Solution Error:  0.004
+Iter=17, Solution Error:  0.003
+Iter=18, Solution Error:  0.003
+Iter=19, Solution Error:  0.003
+Iter=20, Solution Error:  0.002
+Iter=21, Solution Error:  0.002
+Iter=22, Solution Error:  0.002
+Iter=23, Solution Error:  0.002
+Iter=24, Solution Error:  0.001
+Iter=25, Solution Error:  0.001
+Iter=26, Solution Error:  0.001
+Iter=27, Solution Error:  0.001
+Iter=28, Solution Error:  0.001
+Saving solution ...
+
+01/24/2017 04:00:56 PM - basher - DEBUG : ### Warning:  Correlations flagged or edge-rejected: 19840
+
+01/24/2017 04:00:56 PM - basher - DEBUG : Returning output.
+01/24/2017 04:00:56 PM - CROSSCAL - INFO : # Bandpass solutions from polarised calibrator derived. #
+01/24/2017 04:00:56 PM - CROSSCAL - INFO : # Continuing with polarisation calibration (leakage, angle) from polarised calibrator data. #
+01/24/2017 04:00:56 PM - masher - DEBUG : gpcal vis=3C138.mir nfbin=256.0 options=xyphase,linear 
+01/24/2017 04:00:56 PM - basher - DEBUG : gpcal vis=3C138.mir nfbin=256.0 options=xyphase,linear 
+01/24/2017 04:00:57 PM - basher - DEBUG : Command = gpcal vis=3C138.mir nfbin=256.0 options=xyphase,linear 
+01/24/2017 04:00:57 PM - basher - DEBUG : 
+
+gpcal: Revision 1.22, 2016/05/01 22:31:05 UTC
+
+
+01/24/2017 04:00:57 PM - basher - DEBUG : ### Fatal Error:  Unrecognised option xyphase
+
+01/24/2017 04:00:57 PM - basher - DEBUG : Returning output.
+01/24/2017 04:00:57 PM - CROSSCAL - INFO : # Solved for polarisation leakage and angle on polarised calibrator. #
+01/24/2017 04:00:57 PM - CROSSCAL - INFO : ### Polarisation calibration on the polarised calibrator data done ###
+01/24/2017 04:04:53 PM - root - INFO : Logging started!
+01/24/2017 04:04:53 PM - root - INFO : To see the log in a bash window use the following command:
+01/24/2017 04:04:53 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A1.log
+01/24/2017 04:04:54 PM - CONVERT - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A1.cfg successfully read! ###
+01/24/2017 04:04:56 PM - CONVERT - INFO : ########## FILE CONVERSION started ##########
+01/24/2017 04:04:56 PM - CONVERT - INFO : ### Starting conversion from UVFITS to MIRIAD format ###
+01/24/2017 04:04:56 PM - CONVERT - INFO : # Moved to directory /data/adebahr/apertif/tutorial/NGC4062/crosscal #
+01/24/2017 04:04:56 PM - CONVERT - INFO : ### Using MIRIAD wsrtfits task to convert data from UVFITS to MIRIAD format ###
+01/24/2017 04:04:56 PM - masher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/NGC4062/crosscal/3C147.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/NGC4062/crosscal/3C147.mir 
+01/24/2017 04:04:56 PM - basher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/NGC4062/crosscal/3C147.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/NGC4062/crosscal/3C147.mir 
+01/24/2017 04:04:56 PM - basher - DEBUG : Command = wsrtfits in=/data/adebahr/apertif/tutorial/NGC4062/crosscal/3C147.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/NGC4062/crosscal/3C147.mir 
+01/24/2017 04:04:56 PM - basher - DEBUG : 
+wsrtfits: version 1.3.1 21-Jul-04
+ /data/adebahr/apertif/tutorial/NGC4062/crosscal/3C147.UVFITS                                                                    
+Assuming systemp=30
+Assuming jyperk=8
+Reading AIPS AN table
+ freqref    1406803587.0000000     
+Decrementing times for configration  1 by  0.14 seconds (UTC-UT1).
+ Mount type :           1
+Reading AIPS FQ table
+Reading AIPS SU table
+ 3C147               
+Doppler tracking..
+Data are linearly polarized
+Reading the correlation data
+The estimated integration time of a sample is 60 seconds
+Number of antennas: 14
+Number of antenna configurations: 1
+
+01/24/2017 04:04:56 PM - basher - DEBUG : ### Warning [wsrtfits]:  Ignored random parameter INTTIM
+### Warning [wsrtfits]:  Some visibilities had zero weight
+
+01/24/2017 04:04:56 PM - basher - DEBUG : Returning output.
+01/24/2017 04:04:56 PM - basher - DEBUG : rm -r /data/adebahr/apertif/tutorial/NGC4062/crosscal/3C147.UVFITS
+01/24/2017 04:04:56 PM - basher - DEBUG : Returning output.
+01/24/2017 04:04:56 PM - CONVERT - INFO : ### Converted UVFITS file 3C147.MS to MIRIAD format using MIRIAD task wsrtfits! ###
+01/24/2017 04:04:56 PM - masher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/NGC4062/crosscal/3C138.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/NGC4062/crosscal/3C138.mir 
+01/24/2017 04:04:56 PM - basher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/NGC4062/crosscal/3C138.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/NGC4062/crosscal/3C138.mir 
+01/24/2017 04:04:56 PM - basher - DEBUG : Command = wsrtfits in=/data/adebahr/apertif/tutorial/NGC4062/crosscal/3C138.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/NGC4062/crosscal/3C138.mir 
+01/24/2017 04:04:56 PM - basher - DEBUG : 
+wsrtfits: version 1.3.1 21-Jul-04
+ /data/adebahr/apertif/tutorial/NGC4062/crosscal/3C138.UVFITS                                                                    
+Assuming systemp=30
+Assuming jyperk=8
+Reading AIPS AN table
+ freqref    1406803587.0000000     
+Decrementing times for configration  1 by  0.14 seconds (UTC-UT1).
+ Mount type :           1
+Reading AIPS FQ table
+Reading AIPS SU table
+ 3C138               
+Doppler tracking..
+Data are linearly polarized
+Reading the correlation data
+The estimated integration time of a sample is 60 seconds
+Number of antennas: 14
+Number of antenna configurations: 1
+
+01/24/2017 04:04:56 PM - basher - DEBUG : ### Warning [wsrtfits]:  Ignored random parameter INTTIM
+### Warning [wsrtfits]:  Some visibilities had zero weight
+
+01/24/2017 04:04:56 PM - basher - DEBUG : Returning output.
+01/24/2017 04:04:56 PM - basher - DEBUG : rm -r /data/adebahr/apertif/tutorial/NGC4062/crosscal/3C138.UVFITS
+01/24/2017 04:04:56 PM - basher - DEBUG : Returning output.
+01/24/2017 04:04:56 PM - CONVERT - INFO : ### Converted UVFITS file 3C138.MS to MIRIAD format using MIRIAD task wsrtfits! ###
+01/24/2017 04:04:56 PM - masher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/NGC4062/crosscal/NGC4062.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/NGC4062/crosscal/NGC4062.mir 
+01/24/2017 04:04:56 PM - basher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/NGC4062/crosscal/NGC4062.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/NGC4062/crosscal/NGC4062.mir 
+01/24/2017 04:04:59 PM - basher - DEBUG : Command = wsrtfits in=/data/adebahr/apertif/tutorial/NGC4062/crosscal/NGC4062.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/NGC4062/crosscal/NGC4062.mir 
+01/24/2017 04:04:59 PM - basher - DEBUG : 
+wsrtfits: version 1.3.1 21-Jul-04
+ /data/adebahr/apertif/tutorial/NGC4062/crosscal/NGC4062.UVFITS                                                                  
+Assuming systemp=30
+Assuming jyperk=8
+Reading AIPS AN table
+ freqref    1406803587.0000000     
+Decrementing times for configration  1 by  0.14 seconds (UTC-UT1).
+ Mount type :           1
+Reading AIPS FQ table
+Reading AIPS SU table
+ NGC4062             
+Doppler tracking..
+Data are linearly polarized
+Reading the correlation data
+The estimated integration time of a sample is 60 seconds
+Number of antennas: 14
+Number of antenna configurations: 1
+
+01/24/2017 04:04:59 PM - basher - DEBUG : ### Warning [wsrtfits]:  Ignored random parameter INTTIM
+### Warning [wsrtfits]:  Some apparent RA/DECs looked bad -- they were recomputed
+### Warning [wsrtfits]:  Some visibilities had zero weight
+
+01/24/2017 04:04:59 PM - basher - DEBUG : Returning output.
+01/24/2017 04:04:59 PM - basher - DEBUG : rm -r /data/adebahr/apertif/tutorial/NGC4062/crosscal/NGC4062.UVFITS
+01/24/2017 04:04:59 PM - basher - DEBUG : Returning output.
+01/24/2017 04:04:59 PM - CONVERT - INFO : ### Converted UVFITS file NGC4062.MS to MIRIAD format using MIRIAD task wsrtfits! ###
+01/24/2017 04:04:59 PM - CONVERT - INFO : ### Conversion from UVFITS to MIRIAD format done! ###
+01/24/2017 04:04:59 PM - CONVERT - INFO : ### Conversion from UVFITS to MIRIAD format done! ###
+01/24/2017 04:04:59 PM - CONVERT - INFO : ########## FILE CONVERSION done ##########
+01/24/2017 04:05:43 PM - CROSSCAL - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A1.cfg successfully read! ###
+01/24/2017 04:05:45 PM - CROSSCAL - INFO : ### Bandpass calibration on the flux calibrator data started ###
+01/24/2017 04:05:45 PM - masher - DEBUG : mfcal vis=3C147.mir 
+01/24/2017 04:05:45 PM - basher - DEBUG : mfcal vis=3C147.mir 
+01/24/2017 04:05:48 PM - basher - DEBUG : Command = mfcal vis=3C147.mir 
+01/24/2017 04:05:48 PM - basher - DEBUG : 
+MfCal: $Revision: 1.17 $, $Date: 2016/05/01 22:31:05 $
+Selecting parallel-hand polarisations
+Reading the data ...
+Number correlations accepted: 662720
+Number of frequency bands/settings: 4
+Number of polarisations selected: 2
+Number of solution intervals: 3
+Number of passband solution intervals: 1
+Initialising ...
+Using known frequency variation of 3c147
+Generating initial solution estimate ...
+Doing solution refinement ...
+Iter= 1, Solution Error:  0.447
+Iter= 2, Solution Error:  0.032
+Iter= 3, Solution Error:  0.019
+Iter= 4, Solution Error:  0.017
+Iter= 5, Solution Error:  0.016
+Iter= 6, Solution Error:  0.015
+Iter= 7, Solution Error:  0.014
+Iter= 8, Solution Error:  0.013
+Iter= 9, Solution Error:  0.013
+Iter=10, Solution Error:  0.013
+Iter=11, Solution Error:  0.013
+Iter=12, Solution Error:  0.013
+Iter=13, Solution Error:  0.013
+Iter=14, Solution Error:  0.013
+Iter=15, Solution Error:  0.013
+Iter=16, Solution Error:  0.013
+Iter=17, Solution Error:  0.013
+Iter=18, Solution Error:  0.013
+Iter=19, Solution Error:  0.013
+Iter=20, Solution Error:  0.012
+Iter=21, Solution Error:  0.012
+Iter=22, Solution Error:  0.011
+Iter=23, Solution Error:  0.010
+Iter=24, Solution Error:  0.010
+Iter=25, Solution Error:  0.009
+Iter=26, Solution Error:  0.008
+Iter=27, Solution Error:  0.008
+Iter=28, Solution Error:  0.007
+Iter=29, Solution Error:  0.007
+Iter=30, Solution Error:  0.006
+Saving solution ...
+
+01/24/2017 04:05:48 PM - basher - DEBUG : ### Warning:  Correlations flagged or edge-rejected: 36160
+### Warning:  Failed to converge
+
+01/24/2017 04:05:48 PM - basher - DEBUG : Returning output.
+01/24/2017 04:05:48 PM - CROSSCAL - INFO : ### Bandpass calibration on the flux calibrator data done ###
+01/24/2017 04:05:50 PM - CROSSCAL - INFO : ### Polarisation calibration on the polarised calibrator data started ###
+01/24/2017 04:05:50 PM - CROSSCAL - INFO : # Bandpass solutions in flux calibrator data found. Using them! #
+01/24/2017 04:05:50 PM - masher - DEBUG : gpcaopy vis=3C147.mir out=3C138.mir options=nopol mode=copy 
+01/24/2017 04:05:50 PM - basher - DEBUG : gpcaopy vis=3C147.mir out=3C138.mir options=nopol mode=copy 
+01/24/2017 04:05:50 PM - basher - DEBUG : /bin/sh: 1: gpcaopy: not found
+
+01/24/2017 04:05:50 PM - basher - DEBUG : Returning output.
+01/24/2017 04:05:50 PM - CROSSCAL - INFO : # Bandpass from flux calibrator data copied to polarised calibrator data. #
+01/24/2017 04:05:50 PM - masher - DEBUG : gpcal vis=3C138.mir nfbin=256.0 options=xyphase,linear 
+01/24/2017 04:05:50 PM - basher - DEBUG : gpcal vis=3C138.mir nfbin=256.0 options=xyphase,linear 
+01/24/2017 04:05:50 PM - basher - DEBUG : Command = gpcal vis=3C138.mir nfbin=256.0 options=xyphase,linear 
+01/24/2017 04:05:50 PM - basher - DEBUG : 
+
+gpcal: Revision 1.22, 2016/05/01 22:31:05 UTC
+
+
+01/24/2017 04:05:50 PM - basher - DEBUG : ### Fatal Error:  Unrecognised option xyphase§
+
+01/24/2017 04:05:50 PM - basher - DEBUG : Returning output.
+01/24/2017 04:05:50 PM - CROSSCAL - INFO : # Solved for polarisation leakage and angle on polarised calibrator. #
+01/24/2017 04:05:50 PM - CROSSCAL - INFO : ### Polarisation calibration on the polarised calibrator data done ###
+01/24/2017 04:08:34 PM - root - INFO : Logging started!
+01/24/2017 04:08:34 PM - root - INFO : To see the log in a bash window use the following command:
+01/24/2017 04:08:34 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A1.log
+01/24/2017 04:08:37 PM - CONVERT - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A1.cfg successfully read! ###
+01/24/2017 04:08:38 PM - CONVERT - INFO : ########## FILE CONVERSION started ##########
+01/24/2017 04:08:38 PM - CONVERT - INFO : ### Starting conversion from UVFITS to MIRIAD format ###
+01/24/2017 04:08:38 PM - CONVERT - INFO : # Moved to directory /data/adebahr/apertif/tutorial/NGC4062/crosscal #
+01/24/2017 04:08:38 PM - CONVERT - INFO : ### Using MIRIAD wsrtfits task to convert data from UVFITS to MIRIAD format ###
+01/24/2017 04:08:38 PM - masher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/NGC4062/crosscal/3C147.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/NGC4062/crosscal/3C147.mir 
+01/24/2017 04:08:38 PM - basher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/NGC4062/crosscal/3C147.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/NGC4062/crosscal/3C147.mir 
+01/24/2017 04:08:38 PM - basher - DEBUG : Command = wsrtfits in=/data/adebahr/apertif/tutorial/NGC4062/crosscal/3C147.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/NGC4062/crosscal/3C147.mir 
+01/24/2017 04:08:38 PM - basher - DEBUG : 
+wsrtfits: version 1.3.1 21-Jul-04
+ /data/adebahr/apertif/tutorial/NGC4062/crosscal/3C147.UVFITS                                                                    
+Assuming systemp=30
+Assuming jyperk=8
+Reading AIPS AN table
+ freqref    1406803587.0000000     
+Decrementing times for configration  1 by  0.14 seconds (UTC-UT1).
+ Mount type :           1
+Reading AIPS FQ table
+Reading AIPS SU table
+ 3C147               
+Doppler tracking..
+Data are linearly polarized
+Reading the correlation data
+The estimated integration time of a sample is 60 seconds
+Number of antennas: 14
+Number of antenna configurations: 1
+
+01/24/2017 04:08:38 PM - basher - DEBUG : ### Warning [wsrtfits]:  Ignored random parameter INTTIM
+### Warning [wsrtfits]:  Some visibilities had zero weight
+
+01/24/2017 04:08:38 PM - basher - DEBUG : Returning output.
+01/24/2017 04:08:38 PM - basher - DEBUG : rm -r /data/adebahr/apertif/tutorial/NGC4062/crosscal/3C147.UVFITS
+01/24/2017 04:08:38 PM - basher - DEBUG : Returning output.
+01/24/2017 04:08:38 PM - CONVERT - INFO : ### Converted UVFITS file 3C147.MS to MIRIAD format using MIRIAD task wsrtfits! ###
+01/24/2017 04:08:38 PM - masher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/NGC4062/crosscal/3C138.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/NGC4062/crosscal/3C138.mir 
+01/24/2017 04:08:38 PM - basher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/NGC4062/crosscal/3C138.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/NGC4062/crosscal/3C138.mir 
+01/24/2017 04:08:38 PM - basher - DEBUG : Command = wsrtfits in=/data/adebahr/apertif/tutorial/NGC4062/crosscal/3C138.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/NGC4062/crosscal/3C138.mir 
+01/24/2017 04:08:38 PM - basher - DEBUG : 
+wsrtfits: version 1.3.1 21-Jul-04
+ /data/adebahr/apertif/tutorial/NGC4062/crosscal/3C138.UVFITS                                                                    
+Assuming systemp=30
+Assuming jyperk=8
+Reading AIPS AN table
+ freqref    1406803587.0000000     
+Decrementing times for configration  1 by  0.14 seconds (UTC-UT1).
+ Mount type :           1
+Reading AIPS FQ table
+Reading AIPS SU table
+ 3C138               
+Doppler tracking..
+Data are linearly polarized
+Reading the correlation data
+The estimated integration time of a sample is 60 seconds
+Number of antennas: 14
+Number of antenna configurations: 1
+
+01/24/2017 04:08:38 PM - basher - DEBUG : ### Warning [wsrtfits]:  Ignored random parameter INTTIM
+### Warning [wsrtfits]:  Some visibilities had zero weight
+
+01/24/2017 04:08:38 PM - basher - DEBUG : Returning output.
+01/24/2017 04:08:38 PM - basher - DEBUG : rm -r /data/adebahr/apertif/tutorial/NGC4062/crosscal/3C138.UVFITS
+01/24/2017 04:08:38 PM - basher - DEBUG : Returning output.
+01/24/2017 04:08:38 PM - CONVERT - INFO : ### Converted UVFITS file 3C138.MS to MIRIAD format using MIRIAD task wsrtfits! ###
+01/24/2017 04:08:38 PM - masher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/NGC4062/crosscal/NGC4062.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/NGC4062/crosscal/NGC4062.mir 
+01/24/2017 04:08:38 PM - basher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/NGC4062/crosscal/NGC4062.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/NGC4062/crosscal/NGC4062.mir 
+01/24/2017 04:08:41 PM - basher - DEBUG : Command = wsrtfits in=/data/adebahr/apertif/tutorial/NGC4062/crosscal/NGC4062.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/NGC4062/crosscal/NGC4062.mir 
+01/24/2017 04:08:41 PM - basher - DEBUG : 
+wsrtfits: version 1.3.1 21-Jul-04
+ /data/adebahr/apertif/tutorial/NGC4062/crosscal/NGC4062.UVFITS                                                                  
+Assuming systemp=30
+Assuming jyperk=8
+Reading AIPS AN table
+ freqref    1406803587.0000000     
+Decrementing times for configration  1 by  0.14 seconds (UTC-UT1).
+ Mount type :           1
+Reading AIPS FQ table
+Reading AIPS SU table
+ NGC4062             
+Doppler tracking..
+Data are linearly polarized
+Reading the correlation data
+The estimated integration time of a sample is 60 seconds
+Number of antennas: 14
+Number of antenna configurations: 1
+
+01/24/2017 04:08:41 PM - basher - DEBUG : ### Warning [wsrtfits]:  Ignored random parameter INTTIM
+### Warning [wsrtfits]:  Some apparent RA/DECs looked bad -- they were recomputed
+### Warning [wsrtfits]:  Some visibilities had zero weight
+
+01/24/2017 04:08:41 PM - basher - DEBUG : Returning output.
+01/24/2017 04:08:41 PM - basher - DEBUG : rm -r /data/adebahr/apertif/tutorial/NGC4062/crosscal/NGC4062.UVFITS
+01/24/2017 04:08:41 PM - basher - DEBUG : Returning output.
+01/24/2017 04:08:41 PM - CONVERT - INFO : ### Converted UVFITS file NGC4062.MS to MIRIAD format using MIRIAD task wsrtfits! ###
+01/24/2017 04:08:41 PM - CONVERT - INFO : ### Conversion from UVFITS to MIRIAD format done! ###
+01/24/2017 04:08:41 PM - CONVERT - INFO : ########## FILE CONVERSION done ##########
+01/24/2017 04:08:45 PM - CROSSCAL - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A1.cfg successfully read! ###
+01/24/2017 04:08:46 PM - CROSSCAL - INFO : ### Bandpass calibration on the flux calibrator data started ###
+01/24/2017 04:08:46 PM - masher - DEBUG : mfcal vis=3C147.mir 
+01/24/2017 04:08:46 PM - basher - DEBUG : mfcal vis=3C147.mir 
+01/24/2017 04:08:49 PM - basher - DEBUG : Command = mfcal vis=3C147.mir 
+01/24/2017 04:08:49 PM - basher - DEBUG : 
+MfCal: $Revision: 1.17 $, $Date: 2016/05/01 22:31:05 $
+Selecting parallel-hand polarisations
+Reading the data ...
+Number correlations accepted: 662720
+Number of frequency bands/settings: 4
+Number of polarisations selected: 2
+Number of solution intervals: 3
+Number of passband solution intervals: 1
+Initialising ...
+Using known frequency variation of 3c147
+Generating initial solution estimate ...
+Doing solution refinement ...
+Iter= 1, Solution Error:  0.447
+Iter= 2, Solution Error:  0.032
+Iter= 3, Solution Error:  0.019
+Iter= 4, Solution Error:  0.017
+Iter= 5, Solution Error:  0.016
+Iter= 6, Solution Error:  0.015
+Iter= 7, Solution Error:  0.014
+Iter= 8, Solution Error:  0.013
+Iter= 9, Solution Error:  0.013
+Iter=10, Solution Error:  0.013
+Iter=11, Solution Error:  0.013
+Iter=12, Solution Error:  0.013
+Iter=13, Solution Error:  0.013
+Iter=14, Solution Error:  0.013
+Iter=15, Solution Error:  0.013
+Iter=16, Solution Error:  0.013
+Iter=17, Solution Error:  0.013
+Iter=18, Solution Error:  0.013
+Iter=19, Solution Error:  0.013
+Iter=20, Solution Error:  0.012
+Iter=21, Solution Error:  0.012
+Iter=22, Solution Error:  0.011
+Iter=23, Solution Error:  0.010
+Iter=24, Solution Error:  0.010
+Iter=25, Solution Error:  0.009
+Iter=26, Solution Error:  0.008
+Iter=27, Solution Error:  0.008
+Iter=28, Solution Error:  0.007
+Iter=29, Solution Error:  0.007
+Iter=30, Solution Error:  0.006
+Saving solution ...
+
+01/24/2017 04:08:49 PM - basher - DEBUG : ### Warning:  Correlations flagged or edge-rejected: 36160
+### Warning:  Failed to converge
+
+01/24/2017 04:08:49 PM - basher - DEBUG : Returning output.
+01/24/2017 04:08:49 PM - CROSSCAL - INFO : ### Bandpass calibration on the flux calibrator data done ###
+01/24/2017 04:08:50 PM - CROSSCAL - INFO : ### Polarisation calibration on the polarised calibrator data started ###
+01/24/2017 04:08:50 PM - CROSSCAL - INFO : # Bandpass solutions in flux calibrator data found. Using them! #
+01/24/2017 04:08:50 PM - masher - DEBUG : gpcaopy vis=3C147.mir out=3C138.mir options=nopol mode=copy 
+01/24/2017 04:08:50 PM - basher - DEBUG : gpcaopy vis=3C147.mir out=3C138.mir options=nopol mode=copy 
+01/24/2017 04:08:50 PM - basher - DEBUG : /bin/sh: 1: gpcaopy: not found
+
+01/24/2017 04:08:50 PM - basher - DEBUG : Returning output.
+01/24/2017 04:08:50 PM - CROSSCAL - INFO : # Bandpass from flux calibrator data copied to polarised calibrator data. #
+01/24/2017 04:08:50 PM - masher - DEBUG : gpcal vis=3C138.mir nfbin=256.0 options=xyvary,linear 
+01/24/2017 04:08:50 PM - basher - DEBUG : gpcal vis=3C138.mir nfbin=256.0 options=xyvary,linear 
+01/24/2017 04:08:51 PM - basher - DEBUG : Command = gpcal vis=3C138.mir nfbin=256.0 options=xyvary,linear 
+01/24/2017 04:08:51 PM - basher - DEBUG : 
+
+gpcal: Revision 1.22, 2016/05/01 22:31:05 UTC
+
+Number of antennae: 14
+Reading the data ...
+Number of solution intervals: 3
+Total visibilities read: 1365
+Number visibilities accepted: 1365
+3c138 is a recognised flux calibrator.
+Using IQUV =  8.6196,  0.5992, -0.2691,  0.0000 at   1.3905 GHz.
+3c138 is a recognised flux calibrator.
+Using IQUV =  8.5662,  0.5978, -0.2682,  0.0000 at   1.4045 GHz.
+3c138 is a recognised flux calibrator.
+Using IQUV =  8.5852,  0.5983, -0.2686,  0.0000 at   1.3995 GHz.
+3c138 is a recognised flux calibrator.
+Using IQUV =  8.6043,  0.5988, -0.2689,  0.0000 at   1.3945 GHz.
+3c138 is a recognised flux calibrator.
+Using IQUV =  8.6235,  0.5993, -0.2692,  0.0000 at   1.3895 GHz.
+3c138 is a recognised flux calibrator.
+Using IQUV =  8.6427,  0.5999, -0.2695,  0.0000 at   1.3845 GHz.
+3c138 is a recognised flux calibrator.
+Using IQUV =  8.6621,  0.6004, -0.2699,  0.0000 at   1.3795 GHz.
+3c138 is a recognised flux calibrator.
+Using IQUV =  8.6816,  0.6009, -0.2702,  0.0000 at   1.3745 GHz.
+3c138 is a recognised flux calibrator.
+Using IQUV =  8.7012,  0.6015, -0.2705,  0.0000 at   1.3695 GHz.
+3c138 is a recognised flux calibrator.
+Using IQUV =  8.7209,  0.6020, -0.2708,  0.0000 at   1.3645 GHz.
+3c138 is a recognised flux calibrator.
+Using IQUV =  8.7407,  0.6025, -0.2712,  0.0000 at   1.3595 GHz.
+3c138 is a recognised flux calibrator.
+Using IQUV =  8.7607,  0.6031, -0.2715,  0.0000 at   1.3545 GHz.
+3c138 is a recognised flux calibrator.
+Using IQUV =  8.7807,  0.6036, -0.2718,  0.0000 at   1.3495 GHz.
+3c138 is a recognised flux calibrator.
+Using IQUV =  8.4181,  0.5936, -0.2657,  0.0000 at   1.4445 GHz.
+3c138 is a recognised flux calibrator.
+Using IQUV =  8.4363,  0.5941, -0.2660,  0.0000 at   1.4395 GHz.
+3c138 is a recognised flux calibrator.
+Using IQUV =  8.4545,  0.5947, -0.2663,  0.0000 at   1.4345 GHz.
+3c138 is a recognised flux calibrator.
+Using IQUV =  8.4729,  0.5952, -0.2667,  0.0000 at   1.4295 GHz.
+Iter= 1, Amplit/Phase Solution Error:   0.992
+Iter= 1, Polarisation Solution Error:  -1.000
+I flux density:   8.6196
+Leakage terms:
+ Ant 1:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 2:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 3:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 4:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 5:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 6:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 7:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 8:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 9:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant10:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant11:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant12:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant13:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant14:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+Solution for freq bin  1
+Iter= 1, Amplit/Phase Solution Error:   1.090
+Iter= 1, Polarisation Solution Error:   0.715
+Iter= 1, Overall Solution Error:      277.025
+Iter= 2, Amplit/Phase Solution Error:   0.208
+Iter= 2, Polarisation Solution Error:   0.413
+Iter= 2, Overall Solution Error:        0.511
+Iter= 3, Amplit/Phase Solution Error:   0.137
+Iter= 3, Polarisation Solution Error:   0.305
+Iter= 3, Overall Solution Error:        0.805
+Iter= 4, Amplit/Phase Solution Error:   0.174
+Iter= 4, Polarisation Solution Error:   0.308
+Iter= 4, Overall Solution Error:        0.378
+Iter= 5, Amplit/Phase Solution Error:   0.136
+Iter= 5, Polarisation Solution Error:   0.311
+Iter= 5, Overall Solution Error:        0.494
+Iter= 6, Amplit/Phase Solution Error:   0.150
+Iter= 6, Polarisation Solution Error:   0.485
+Iter= 6, Overall Solution Error:        0.725
+Iter= 7, Amplit/Phase Solution Error:   0.143
+Iter= 7, Polarisation Solution Error:   0.309
+Iter= 7, Overall Solution Error:        0.710
+Iter= 8, Amplit/Phase Solution Error:   0.173
+Iter= 8, Polarisation Solution Error:   0.303
+Iter= 8, Overall Solution Error:        0.404
+Iter= 9, Amplit/Phase Solution Error:   0.135
+Iter= 9, Polarisation Solution Error:   0.441
+Iter= 9, Overall Solution Error:        0.563
+Iter=10, Amplit/Phase Solution Error:   0.145
+Iter=10, Polarisation Solution Error:   0.308
+Iter=10, Overall Solution Error:        0.565
+Iter=11, Amplit/Phase Solution Error:   0.168
+Iter=11, Polarisation Solution Error:   0.302
+Iter=11, Overall Solution Error:        0.349
+Iter=12, Amplit/Phase Solution Error:   0.135
+Iter=12, Polarisation Solution Error:   0.309
+Iter=12, Overall Solution Error:        0.483
+Iter=13, Amplit/Phase Solution Error:   0.147
+Iter=13, Polarisation Solution Error:   0.433
+Iter=13, Overall Solution Error:        0.668
+Iter=14, Amplit/Phase Solution Error:   0.142
+Iter=14, Polarisation Solution Error:   0.308
+Iter=14, Overall Solution Error:        0.573
+Iter=15, Amplit/Phase Solution Error:   0.165
+Iter=15, Polarisation Solution Error:   0.300
+Iter=15, Overall Solution Error:        0.336
+Iter=16, Amplit/Phase Solution Error:   0.135
+Iter=16, Polarisation Solution Error:   0.308
+Iter=16, Overall Solution Error:        0.477
+Iter=17, Amplit/Phase Solution Error:   0.146
+Iter=17, Polarisation Solution Error:   0.412
+Iter=17, Overall Solution Error:        0.643
+Iter=18, Amplit/Phase Solution Error:   0.142
+Iter=18, Polarisation Solution Error:   0.307
+Iter=18, Overall Solution Error:        0.521
+Iter=19, Amplit/Phase Solution Error:   0.162
+Iter=19, Polarisation Solution Error:   0.299
+Iter=19, Overall Solution Error:        0.316
+Iter=20, Amplit/Phase Solution Error:   0.135
+Iter=20, Polarisation Solution Error:   0.307
+Iter=20, Overall Solution Error:        0.466
+Iter=21, Amplit/Phase Solution Error:   0.145
+Iter=21, Polarisation Solution Error:   0.392
+Iter=21, Overall Solution Error:        0.616
+Iter=22, Amplit/Phase Solution Error:   0.142
+Iter=22, Polarisation Solution Error:   0.307
+Iter=22, Overall Solution Error:        0.477
+Iter=23, Amplit/Phase Solution Error:   0.160
+Iter=23, Polarisation Solution Error:   0.299
+Iter=23, Overall Solution Error:        0.298
+Iter=24, Amplit/Phase Solution Error:   0.135
+Iter=24, Polarisation Solution Error:   0.306
+Iter=24, Overall Solution Error:        0.163
+Iter=25, Amplit/Phase Solution Error:   0.144
+Iter=25, Polarisation Solution Error:   0.304
+Iter=25, Overall Solution Error:        0.495
+Iter=26, Amplit/Phase Solution Error:   0.141
+Iter=26, Polarisation Solution Error:   0.380
+Iter=26, Overall Solution Error:        0.611
+Iter=27, Amplit/Phase Solution Error:   0.143
+Iter=27, Polarisation Solution Error:   0.307
+Iter=27, Overall Solution Error:        0.417
+Iter=28, Amplit/Phase Solution Error:   0.157
+Iter=28, Polarisation Solution Error:   0.298
+Iter=28, Overall Solution Error:        0.275
+Iter=29, Amplit/Phase Solution Error:   0.136
+Iter=29, Polarisation Solution Error:   0.305
+Iter=29, Overall Solution Error:        0.149
+Iter=30, Amplit/Phase Solution Error:   0.143
+Iter=30, Polarisation Solution Error:   0.303
+Iter=30, Overall Solution Error:        0.488
+I flux density:   8.5662
+Leakage terms:
+ Ant 1:Dx,Dy = (-0.13404, 0.26410),( 0.05556, 0.02095)
+ Ant 2:Dx,Dy = ( 0.01591, 0.13788),( 0.08154, 0.32574)
+ Ant 3:Dx,Dy = (-0.03110, 0.14919),( 0.02996, 0.18933)
+ Ant 4:Dx,Dy = ( 0.00759, 0.09779),( 0.23202, 0.18339)
+ Ant 5:Dx,Dy = (-0.17234, 0.20044),(-0.14519, 0.19823)
+ Ant 6:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 7:Dx,Dy = (-0.00592, 0.06452),( 0.03391, 0.21847)
+ Ant 8:Dx,Dy = ( 0.23453, 0.08292),( 0.05938, 0.04349)
+ Ant 9:Dx,Dy = (-0.08332, 0.07504),( 0.06633, 0.06679)
+ Ant10:Dx,Dy = (-0.14703, 0.18009),( 0.08897, 0.19872)
+ Ant11:Dx,Dy = (-0.14035, 0.09477),( 0.03943, 0.23349)
+ Ant12:Dx,Dy = ( 0.00626, 0.16031),( 0.26692,-0.02956)
+ Ant13:Dx,Dy = ( 0.00676, 0.13724),( 0.02237, 0.02289)
+ Ant14:Dx,Dy = (-0.23110, 0.01054),(-0.06461, 0.17899)
+Solution for freq bin  2
+Iter= 1, Amplit/Phase Solution Error:   1.053
+Iter= 1, Polarisation Solution Error:  -1.000
+I flux density:   8.5852
+Leakage terms:
+ Ant 1:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 2:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 3:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 4:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 5:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 6:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 7:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 8:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 9:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant10:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant11:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant12:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant13:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant14:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+Solution for freq bin  3
+Iter= 1, Amplit/Phase Solution Error:   1.080
+Iter= 1, Polarisation Solution Error:   0.512
+Iter= 1, Overall Solution Error:      320.621
+Iter= 2, Amplit/Phase Solution Error:   0.113
+Iter= 2, Polarisation Solution Error:   0.416
+Iter= 2, Overall Solution Error:        0.383
+Iter= 3, Amplit/Phase Solution Error:   0.077
+Iter= 3, Polarisation Solution Error:   0.275
+Iter= 3, Overall Solution Error:        0.330
+Iter= 4, Amplit/Phase Solution Error:   0.079
+Iter= 4, Polarisation Solution Error:   0.275
+Iter= 4, Overall Solution Error:        0.158
+Iter= 5, Amplit/Phase Solution Error:   0.079
+Iter= 5, Polarisation Solution Error:   0.276
+Iter= 5, Overall Solution Error:        0.094
+Iter= 6, Amplit/Phase Solution Error:   0.079
+Iter= 6, Polarisation Solution Error:   0.276
+Iter= 6, Overall Solution Error:        0.050
+Iter= 7, Amplit/Phase Solution Error:   0.079
+Iter= 7, Polarisation Solution Error:   0.276
+Iter= 7, Overall Solution Error:        0.032
+Iter= 8, Amplit/Phase Solution Error:   0.079
+Iter= 8, Polarisation Solution Error:   0.276
+Iter= 8, Overall Solution Error:        0.021
+Iter= 9, Amplit/Phase Solution Error:   0.079
+Iter= 9, Polarisation Solution Error:   0.276
+Iter= 9, Overall Solution Error:        0.015
+Iter=10, Amplit/Phase Solution Error:   0.079
+Iter=10, Polarisation Solution Error:   0.276
+Iter=10, Overall Solution Error:        0.011
+Iter=11, Amplit/Phase Solution Error:   0.079
+Iter=11, Polarisation Solution Error:   0.276
+Iter=11, Overall Solution Error:        0.008
+Iter=12, Amplit/Phase Solution Error:   0.079
+Iter=12, Polarisation Solution Error:   0.276
+Iter=12, Overall Solution Error:        0.006
+Iter=13, Amplit/Phase Solution Error:   0.079
+Iter=13, Polarisation Solution Error:   0.276
+Iter=13, Overall Solution Error:        0.005
+Iter=14, Amplit/Phase Solution Error:   0.079
+Iter=14, Polarisation Solution Error:   0.276
+Iter=14, Overall Solution Error:        0.003
+Iter=15, Amplit/Phase Solution Error:   0.079
+Iter=15, Polarisation Solution Error:   0.276
+Iter=15, Overall Solution Error:        0.003
+Iter=16, Amplit/Phase Solution Error:   0.079
+Iter=16, Polarisation Solution Error:   0.276
+Iter=16, Overall Solution Error:        0.002
+Iter=17, Amplit/Phase Solution Error:   0.079
+Iter=17, Polarisation Solution Error:   0.276
+Iter=17, Overall Solution Error:        0.001
+Iter=18, Amplit/Phase Solution Error:   0.079
+Iter=18, Polarisation Solution Error:   0.276
+Iter=18, Overall Solution Error:        0.001
+Iter=19, Amplit/Phase Solution Error:   0.079
+Iter=19, Polarisation Solution Error:   0.276
+Iter=19, Overall Solution Error:        0.001
+I flux density:   8.6043
+Leakage terms:
+ Ant 1:Dx,Dy = ( 0.06458, 0.04135),( 0.17507, 0.05954)
+ Ant 2:Dx,Dy = (-0.02669,-0.17404),( 0.02875, 0.07963)
+ Ant 3:Dx,Dy = (-0.08273, 0.06600),(-0.08466,-0.05971)
+ Ant 4:Dx,Dy = ( 0.00499,-0.03965),( 0.05155,-0.00489)
+ Ant 5:Dx,Dy = (-0.01945,-0.00537),(-0.15414,-0.06705)
+ Ant 6:Dx,Dy = (-0.06716, 0.38582),(-0.08156,-0.16616)
+ Ant 7:Dx,Dy = ( 0.10723, 0.02576),(-0.04545, 0.01200)
+ Ant 8:Dx,Dy = ( 0.11351, 0.08683),( 0.05119,-0.04283)
+ Ant 9:Dx,Dy = (-0.06036,-0.05645),(-0.00380,-0.16671)
+ Ant10:Dx,Dy = ( 0.03344, 0.06024),(-0.08028, 0.03091)
+ Ant11:Dx,Dy = (-0.01514,-0.09415),( 0.02458, 0.01079)
+ Ant12:Dx,Dy = ( 0.05829,-0.06824),( 0.03972,-0.16030)
+ Ant13:Dx,Dy = (-0.00108,-0.01891),(-0.10085,-0.04350)
+ Ant14:Dx,Dy = ( 0.00610, 0.03991),(-0.12475,-0.02872)
+Solution for freq bin  4
+Iter= 1, Amplit/Phase Solution Error:   1.006
+Iter= 1, Polarisation Solution Error:   0.747
+Iter= 1, Overall Solution Error:      672.403
+Iter= 2, Amplit/Phase Solution Error:   0.262
+Iter= 2, Polarisation Solution Error:   0.467
+Iter= 2, Overall Solution Error:        0.680
+Iter= 3, Amplit/Phase Solution Error:   0.160
+Iter= 3, Polarisation Solution Error:   0.464
+Iter= 3, Overall Solution Error:        0.600
+Iter= 4, Amplit/Phase Solution Error:   0.157
+Iter= 4, Polarisation Solution Error:   0.474
+Iter= 4, Overall Solution Error:        0.183
+Iter= 5, Amplit/Phase Solution Error:   0.154
+Iter= 5, Polarisation Solution Error:   0.463
+Iter= 5, Overall Solution Error:        0.105
+Iter= 6, Amplit/Phase Solution Error:   0.154
+Iter= 6, Polarisation Solution Error:   0.465
+Iter= 6, Overall Solution Error:        0.496
+Iter= 7, Amplit/Phase Solution Error:   0.153
+Iter= 7, Polarisation Solution Error:   0.462
+Iter= 7, Overall Solution Error:        0.350
+Iter= 8, Amplit/Phase Solution Error:   0.154
+Iter= 8, Polarisation Solution Error:   0.462
+Iter= 8, Overall Solution Error:        0.235
+Iter= 9, Amplit/Phase Solution Error:   0.153
+Iter= 9, Polarisation Solution Error:   0.465
+Iter= 9, Overall Solution Error:        0.095
+Iter=10, Amplit/Phase Solution Error:   0.153
+Iter=10, Polarisation Solution Error:   0.462
+Iter=10, Overall Solution Error:        0.055
+Iter=11, Amplit/Phase Solution Error:   0.153
+Iter=11, Polarisation Solution Error:   0.463
+Iter=11, Overall Solution Error:        0.486
+Iter=12, Amplit/Phase Solution Error:   0.153
+Iter=12, Polarisation Solution Error:   0.464
+Iter=12, Overall Solution Error:        0.347
+Iter=13, Amplit/Phase Solution Error:   0.155
+Iter=13, Polarisation Solution Error:   0.462
+Iter=13, Overall Solution Error:        0.226
+Iter=14, Amplit/Phase Solution Error:   0.154
+Iter=14, Polarisation Solution Error:   0.466
+Iter=14, Overall Solution Error:        0.092
+Iter=15, Amplit/Phase Solution Error:   0.154
+Iter=15, Polarisation Solution Error:   0.463
+Iter=15, Overall Solution Error:        0.053
+Iter=16, Amplit/Phase Solution Error:   0.154
+Iter=16, Polarisation Solution Error:   0.464
+Iter=16, Overall Solution Error:        0.033
+Iter=17, Amplit/Phase Solution Error:   0.154
+Iter=17, Polarisation Solution Error:   0.463
+Iter=17, Overall Solution Error:        0.490
+Iter=18, Amplit/Phase Solution Error:   0.154
+Iter=18, Polarisation Solution Error:   0.466
+Iter=18, Overall Solution Error:        0.354
+Iter=19, Amplit/Phase Solution Error:   0.155
+Iter=19, Polarisation Solution Error:   0.463
+Iter=19, Overall Solution Error:        0.219
+Iter=20, Amplit/Phase Solution Error:   0.154
+Iter=20, Polarisation Solution Error:   0.467
+Iter=20, Overall Solution Error:        0.090
+Iter=21, Amplit/Phase Solution Error:   0.154
+Iter=21, Polarisation Solution Error:   0.465
+Iter=21, Overall Solution Error:        0.052
+Iter=22, Amplit/Phase Solution Error:   0.154
+Iter=22, Polarisation Solution Error:   0.465
+Iter=22, Overall Solution Error:        0.032
+Iter=23, Amplit/Phase Solution Error:   0.154
+Iter=23, Polarisation Solution Error:   0.464
+Iter=23, Overall Solution Error:        0.021
+Iter=24, Amplit/Phase Solution Error:   0.154
+Iter=24, Polarisation Solution Error:   0.464
+Iter=24, Overall Solution Error:        0.014
+Iter=25, Amplit/Phase Solution Error:   0.154
+Iter=25, Polarisation Solution Error:   0.464
+Iter=25, Overall Solution Error:        0.497
+Iter=26, Amplit/Phase Solution Error:   0.154
+Iter=26, Polarisation Solution Error:   0.468
+Iter=26, Overall Solution Error:        0.364
+Iter=27, Amplit/Phase Solution Error:   0.156
+Iter=27, Polarisation Solution Error:   0.464
+Iter=27, Overall Solution Error:        0.212
+Iter=28, Amplit/Phase Solution Error:   0.154
+Iter=28, Polarisation Solution Error:   0.469
+Iter=28, Overall Solution Error:        0.087
+Iter=29, Amplit/Phase Solution Error:   0.154
+Iter=29, Polarisation Solution Error:   0.466
+Iter=29, Overall Solution Error:        0.050
+Iter=30, Amplit/Phase Solution Error:   0.154
+Iter=30, Polarisation Solution Error:   0.467
+Iter=30, Overall Solution Error:        0.031
+I flux density:   8.6235
+Leakage terms:
+ Ant 1:Dx,Dy = (-0.13719,-0.03504),(-0.03933,-0.18981)
+ Ant 2:Dx,Dy = ( 0.12462, 0.01111),(-0.03996,-0.26196)
+ Ant 3:Dx,Dy = ( 0.31553,-0.12565),( 0.20152,-0.24245)
+ Ant 4:Dx,Dy = (-0.20304,-0.33770),(-0.15023, 0.09547)
+ Ant 5:Dx,Dy = ( 0.06539, 0.06915),( 0.07885,-0.15361)
+ Ant 6:Dx,Dy = ( 0.18307, 0.42290),( 0.09934,-0.04186)
+ Ant 7:Dx,Dy = (-0.13813,-0.11443),( 0.10043, 0.00721)
+ Ant 8:Dx,Dy = (-0.11003,-0.15453),( 0.02349,-0.06921)
+ Ant 9:Dx,Dy = (-0.19350,-0.33299),( 0.03423,-0.01094)
+ Ant10:Dx,Dy = (-0.08492,-0.01421),(-0.04783,-0.18730)
+ Ant11:Dx,Dy = (-0.08271,-0.19359),( 0.27535,-0.20547)
+ Ant12:Dx,Dy = ( 0.01965, 0.08456),(-0.12640,-0.26376)
+ Ant13:Dx,Dy = ( 0.05674, 0.02275),( 0.05834,-0.12585)
+ Ant14:Dx,Dy = ( 0.02038, 0.01285),( 0.00484, 0.00311)
+Solution for freq bin  5
+Iter= 1, Amplit/Phase Solution Error:   1.071
+Iter= 1, Polarisation Solution Error:   0.750
+Iter= 1, Overall Solution Error:      166.245
+Iter= 2, Amplit/Phase Solution Error:   0.146
+Iter= 2, Polarisation Solution Error:   0.538
+Iter= 2, Overall Solution Error:        0.647
+Iter= 3, Amplit/Phase Solution Error:   0.128
+Iter= 3, Polarisation Solution Error:   0.199
+Iter= 3, Overall Solution Error:        0.456
+Iter= 4, Amplit/Phase Solution Error:   0.093
+Iter= 4, Polarisation Solution Error:   0.223
+Iter= 4, Overall Solution Error:        0.201
+Iter= 5, Amplit/Phase Solution Error:   0.092
+Iter= 5, Polarisation Solution Error:   0.214
+Iter= 5, Overall Solution Error:        0.146
+Iter= 6, Amplit/Phase Solution Error:   0.092
+Iter= 6, Polarisation Solution Error:   0.221
+Iter= 6, Overall Solution Error:        0.076
+Iter= 7, Amplit/Phase Solution Error:   0.091
+Iter= 7, Polarisation Solution Error:   0.217
+Iter= 7, Overall Solution Error:        0.048
+Iter= 8, Amplit/Phase Solution Error:   0.091
+Iter= 8, Polarisation Solution Error:   0.220
+Iter= 8, Overall Solution Error:        0.027
+Iter= 9, Amplit/Phase Solution Error:   0.091
+Iter= 9, Polarisation Solution Error:   0.219
+Iter= 9, Overall Solution Error:        0.017
+Iter=10, Amplit/Phase Solution Error:   0.091
+Iter=10, Polarisation Solution Error:   0.220
+Iter=10, Overall Solution Error:        0.009
+Iter=11, Amplit/Phase Solution Error:   0.091
+Iter=11, Polarisation Solution Error:   0.219
+Iter=11, Overall Solution Error:        0.006
+Iter=12, Amplit/Phase Solution Error:   0.091
+Iter=12, Polarisation Solution Error:   0.220
+Iter=12, Overall Solution Error:        0.003
+Iter=13, Amplit/Phase Solution Error:   0.091
+Iter=13, Polarisation Solution Error:   0.219
+Iter=13, Overall Solution Error:        0.002
+Iter=14, Amplit/Phase Solution Error:   0.091
+Iter=14, Polarisation Solution Error:   0.219
+Iter=14, Overall Solution Error:        0.001
+Iter=15, Amplit/Phase Solution Error:   0.091
+Iter=15, Polarisation Solution Error:   0.219
+Iter=15, Overall Solution Error:        0.001
+I flux density:   8.6427
+Leakage terms:
+ Ant 1:Dx,Dy = (-0.13162,-0.07770),( 0.02180,-0.09132)
+ Ant 2:Dx,Dy = ( 0.00882, 0.02895),( 0.01627,-0.01740)
+ Ant 3:Dx,Dy = ( 0.04196, 0.07045),( 0.14387, 0.06753)
+ Ant 4:Dx,Dy = (-0.01346, 0.18149),(-0.00650,-0.03981)
+ Ant 5:Dx,Dy = ( 0.12680, 0.00864),(-0.04681, 0.00211)
+ Ant 6:Dx,Dy = (-0.08139, 0.40160),( 0.22991, 0.15008)
+ Ant 7:Dx,Dy = ( 0.01857,-0.07918),( 0.04153,-0.08626)
+ Ant 8:Dx,Dy = (-0.06736,-0.07063),(-0.15844,-0.02159)
+ Ant 9:Dx,Dy = ( 0.05751, 0.09750),(-0.02828,-0.02071)
+ Ant10:Dx,Dy = (-0.14217, 0.01667),(-0.08117,-0.05868)
+ Ant11:Dx,Dy = ( 0.05029, 0.08854),( 0.03290, 0.03819)
+ Ant12:Dx,Dy = (-0.00890,-0.40357),( 0.05532, 0.08388)
+ Ant13:Dx,Dy = ( 0.01759, 0.10874),(-0.07577, 0.09826)
+ Ant14:Dx,Dy = ( 0.16382,-0.03961),(-0.05604, 0.04767)
+Solution for freq bin  6
+Iter= 1, Amplit/Phase Solution Error:   1.058
+Iter= 1, Polarisation Solution Error:   0.709
+Iter= 1, Overall Solution Error:      190.139
+Iter= 2, Amplit/Phase Solution Error:   0.170
+Iter= 2, Polarisation Solution Error:   0.450
+Iter= 2, Overall Solution Error:        0.484
+Iter= 3, Amplit/Phase Solution Error:   0.097
+Iter= 3, Polarisation Solution Error:   0.348
+Iter= 3, Overall Solution Error:        0.511
+Iter= 4, Amplit/Phase Solution Error:   0.112
+Iter= 4, Polarisation Solution Error:   0.339
+Iter= 4, Overall Solution Error:        0.498
+Iter= 5, Amplit/Phase Solution Error:   0.110
+Iter= 5, Polarisation Solution Error:   0.481
+Iter= 5, Overall Solution Error:        0.459
+Iter= 6, Amplit/Phase Solution Error:   0.104
+Iter= 6, Polarisation Solution Error:   0.350
+Iter= 6, Overall Solution Error:        0.426
+Iter= 7, Amplit/Phase Solution Error:   0.112
+Iter= 7, Polarisation Solution Error:   0.337
+Iter= 7, Overall Solution Error:        0.099
+Iter= 8, Amplit/Phase Solution Error:   0.110
+Iter= 8, Polarisation Solution Error:   0.341
+Iter= 8, Overall Solution Error:        0.496
+Iter= 9, Amplit/Phase Solution Error:   0.111
+Iter= 9, Polarisation Solution Error:   0.446
+Iter= 9, Overall Solution Error:        0.426
+Iter=10, Amplit/Phase Solution Error:   0.103
+Iter=10, Polarisation Solution Error:   0.345
+Iter=10, Overall Solution Error:        0.386
+Iter=11, Amplit/Phase Solution Error:   0.111
+Iter=11, Polarisation Solution Error:   0.333
+Iter=11, Overall Solution Error:        0.090
+Iter=12, Amplit/Phase Solution Error:   0.109
+Iter=12, Polarisation Solution Error:   0.338
+Iter=12, Overall Solution Error:        0.021
+Iter=13, Amplit/Phase Solution Error:   0.110
+Iter=13, Polarisation Solution Error:   0.338
+Iter=13, Overall Solution Error:        0.008
+Iter=14, Amplit/Phase Solution Error:   0.110
+Iter=14, Polarisation Solution Error:   0.339
+Iter=14, Overall Solution Error:        0.003
+Iter=15, Amplit/Phase Solution Error:   0.110
+Iter=15, Polarisation Solution Error:   0.339
+Iter=15, Overall Solution Error:        0.002
+Iter=16, Amplit/Phase Solution Error:   0.110
+Iter=16, Polarisation Solution Error:   0.339
+Iter=16, Overall Solution Error:        0.001
+I flux density:   8.6621
+Leakage terms:
+ Ant 1:Dx,Dy = (-0.05493, 0.04771),( 0.11649,-0.07449)
+ Ant 2:Dx,Dy = (-0.23024, 0.10708),( 0.40474,-0.02916)
+ Ant 3:Dx,Dy = (-0.02912, 0.05537),( 0.09867,-0.02040)
+ Ant 4:Dx,Dy = (-0.08810,-0.00212),( 0.07355, 0.31803)
+ Ant 5:Dx,Dy = (-0.00406, 0.10226),( 0.23601, 0.15598)
+ Ant 6:Dx,Dy = ( 0.36843,-0.30622),(-0.23931,-0.16472)
+ Ant 7:Dx,Dy = (-0.11764, 0.14126),( 0.03214, 0.10013)
+ Ant 8:Dx,Dy = (-0.10240, 0.08276),( 0.18630, 0.19772)
+ Ant 9:Dx,Dy = (-0.16149, 0.09967),( 0.04622,-0.01818)
+ Ant10:Dx,Dy = (-0.06943, 0.07252),(-0.01399, 0.17930)
+ Ant11:Dx,Dy = (-0.13727, 0.15185),( 0.15713, 0.17453)
+ Ant12:Dx,Dy = (-0.16277, 0.08710),( 0.10090,-0.02086)
+ Ant13:Dx,Dy = ( 0.03497, 0.03048),( 0.19690,-0.00108)
+ Ant14:Dx,Dy = (-0.27924,-0.06018),(-0.03243, 0.14224)
+Solution for freq bin  7
+Iter= 1, Amplit/Phase Solution Error:   1.089
+Iter= 1, Polarisation Solution Error:  -1.000
+I flux density:   8.6816
+Leakage terms:
+ Ant 1:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 2:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 3:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 4:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 5:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 6:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 7:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 8:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 9:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant10:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant11:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant12:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant13:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant14:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+Solution for freq bin  8
+Iter= 1, Amplit/Phase Solution Error:   0.986
+Iter= 1, Polarisation Solution Error:   0.344
+Iter= 1, Overall Solution Error:      100.330
+Iter= 2, Amplit/Phase Solution Error:   0.068
+Iter= 2, Polarisation Solution Error:   0.155
+Iter= 2, Overall Solution Error:        0.269
+Iter= 3, Amplit/Phase Solution Error:   0.049
+Iter= 3, Polarisation Solution Error:   0.164
+Iter= 3, Overall Solution Error:        0.075
+Iter= 4, Amplit/Phase Solution Error:   0.053
+Iter= 4, Polarisation Solution Error:   0.161
+Iter= 4, Overall Solution Error:        0.016
+Iter= 5, Amplit/Phase Solution Error:   0.052
+Iter= 5, Polarisation Solution Error:   0.162
+Iter= 5, Overall Solution Error:        0.004
+Iter= 6, Amplit/Phase Solution Error:   0.052
+Iter= 6, Polarisation Solution Error:   0.162
+Iter= 6, Overall Solution Error:        0.001
+Iter= 7, Amplit/Phase Solution Error:   0.052
+Iter= 7, Polarisation Solution Error:   0.162
+Iter= 7, Overall Solution Error:        0.000
+I flux density:   8.7012
+Leakage terms:
+ Ant 1:Dx,Dy = ( 0.01691, 0.08697),( 0.05877, 0.00515)
+ Ant 2:Dx,Dy = (-0.05487,-0.01874),(-0.07165, 0.17578)
+ Ant 3:Dx,Dy = ( 0.04082, 0.03796),(-0.03939,-0.03370)
+ Ant 4:Dx,Dy = (-0.02072, 0.07452),( 0.11100,-0.07149)
+ Ant 5:Dx,Dy = (-0.01203,-0.00989),(-0.03390, 0.00992)
+ Ant 6:Dx,Dy = ( 0.10151,-0.17947),(-0.06739, 0.17523)
+ Ant 7:Dx,Dy = ( 0.01562, 0.01752),(-0.01615,-0.00072)
+ Ant 8:Dx,Dy = (-0.18055,-0.15410),(-0.09839, 0.05134)
+ Ant 9:Dx,Dy = (-0.01905,-0.11353),( 0.00519,-0.03543)
+ Ant10:Dx,Dy = ( 0.07740, 0.02265),(-0.00155, 0.04632)
+ Ant11:Dx,Dy = (-0.01228,-0.05453),(-0.02536,-0.06611)
+ Ant12:Dx,Dy = ( 0.02273, 0.06932),( 0.02954,-0.01710)
+ Ant13:Dx,Dy = ( 0.02156,-0.02117),( 0.05578, 0.01302)
+ Ant14:Dx,Dy = ( 0.01290, 0.01410),( 0.10344,-0.02383)
+Solution for freq bin  9
+Iter= 1, Amplit/Phase Solution Error:   1.041
+Iter= 1, Polarisation Solution Error:  -1.000
+I flux density:   8.7209
+Leakage terms:
+ Ant 1:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 2:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 3:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 4:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 5:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 6:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 7:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 8:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 9:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant10:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant11:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant12:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant13:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant14:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+Solution for freq bin 10
+Iter= 1, Amplit/Phase Solution Error:   1.085
+Iter= 1, Polarisation Solution Error:  -1.000
+I flux density:   8.7407
+Leakage terms:
+ Ant 1:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 2:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 3:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 4:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 5:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 6:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 7:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 8:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 9:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant10:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant11:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant12:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant13:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant14:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+Solution for freq bin 11
+Iter= 1, Amplit/Phase Solution Error:   1.033
+Iter= 1, Polarisation Solution Error:   0.920
+Iter= 1, Overall Solution Error:      269.049
+Iter= 2, Amplit/Phase Solution Error:   0.116
+Iter= 2, Polarisation Solution Error:   0.415
+Iter= 2, Overall Solution Error:        0.667
+Iter= 3, Amplit/Phase Solution Error:   0.062
+Iter= 3, Polarisation Solution Error:   0.197
+Iter= 3, Overall Solution Error:        0.479
+Iter= 4, Amplit/Phase Solution Error:   0.060
+Iter= 4, Polarisation Solution Error:   0.532
+Iter= 4, Overall Solution Error:        0.363
+Iter= 5, Amplit/Phase Solution Error:   0.064
+Iter= 5, Polarisation Solution Error:   0.475
+Iter= 5, Overall Solution Error:        0.470
+Iter= 6, Amplit/Phase Solution Error:   0.059
+Iter= 6, Polarisation Solution Error:   0.147
+Iter= 6, Overall Solution Error:        0.470
+Iter= 7, Amplit/Phase Solution Error:   0.064
+Iter= 7, Polarisation Solution Error:   0.529
+Iter= 7, Overall Solution Error:        0.524
+Iter= 8, Amplit/Phase Solution Error:   0.065
+Iter= 8, Polarisation Solution Error:   0.462
+Iter= 8, Overall Solution Error:        0.453
+Iter= 9, Amplit/Phase Solution Error:   0.058
+Iter= 9, Polarisation Solution Error:   0.129
+Iter= 9, Overall Solution Error:        0.453
+Iter=10, Amplit/Phase Solution Error:   0.062
+Iter=10, Polarisation Solution Error:   0.507
+Iter=10, Overall Solution Error:        0.477
+Iter=11, Amplit/Phase Solution Error:   0.063
+Iter=11, Polarisation Solution Error:   0.452
+Iter=11, Overall Solution Error:        0.444
+Iter=12, Amplit/Phase Solution Error:   0.057
+Iter=12, Polarisation Solution Error:   0.122
+Iter=12, Overall Solution Error:        0.444
+Iter=13, Amplit/Phase Solution Error:   0.062
+Iter=13, Polarisation Solution Error:   0.487
+Iter=13, Overall Solution Error:        0.447
+Iter=14, Amplit/Phase Solution Error:   0.061
+Iter=14, Polarisation Solution Error:   0.441
+Iter=14, Overall Solution Error:        0.434
+Iter=15, Amplit/Phase Solution Error:   0.056
+Iter=15, Polarisation Solution Error:   0.124
+Iter=15, Overall Solution Error:        0.333
+Iter=16, Amplit/Phase Solution Error:   0.061
+Iter=16, Polarisation Solution Error:   0.122
+Iter=16, Overall Solution Error:        0.492
+Iter=17, Amplit/Phase Solution Error:   0.063
+Iter=17, Polarisation Solution Error:   0.457
+Iter=17, Overall Solution Error:        0.480
+Iter=18, Amplit/Phase Solution Error:   0.058
+Iter=18, Polarisation Solution Error:   0.122
+Iter=18, Overall Solution Error:        0.480
+Iter=19, Amplit/Phase Solution Error:   0.063
+Iter=19, Polarisation Solution Error:   0.459
+Iter=19, Overall Solution Error:        0.480
+Iter=20, Amplit/Phase Solution Error:   0.059
+Iter=20, Polarisation Solution Error:   0.123
+Iter=20, Overall Solution Error:        0.480
+Iter=21, Amplit/Phase Solution Error:   0.063
+Iter=21, Polarisation Solution Error:   0.456
+Iter=21, Overall Solution Error:        0.475
+Iter=22, Amplit/Phase Solution Error:   0.059
+Iter=22, Polarisation Solution Error:   0.123
+Iter=22, Overall Solution Error:        0.368
+Iter=23, Amplit/Phase Solution Error:   0.062
+Iter=23, Polarisation Solution Error:   0.124
+Iter=23, Overall Solution Error:        0.498
+Iter=24, Amplit/Phase Solution Error:   0.062
+Iter=24, Polarisation Solution Error:   0.436
+Iter=24, Overall Solution Error:        0.462
+Iter=25, Amplit/Phase Solution Error:   0.057
+Iter=25, Polarisation Solution Error:   0.122
+Iter=25, Overall Solution Error:        0.310
+Iter=26, Amplit/Phase Solution Error:   0.061
+Iter=26, Polarisation Solution Error:   0.124
+Iter=26, Overall Solution Error:        0.493
+Iter=27, Amplit/Phase Solution Error:   0.062
+Iter=27, Polarisation Solution Error:   0.430
+Iter=27, Overall Solution Error:        0.458
+Iter=28, Amplit/Phase Solution Error:   0.057
+Iter=28, Polarisation Solution Error:   0.122
+Iter=28, Overall Solution Error:        0.304
+Iter=29, Amplit/Phase Solution Error:   0.061
+Iter=29, Polarisation Solution Error:   0.124
+Iter=29, Overall Solution Error:        0.488
+Iter=30, Amplit/Phase Solution Error:   0.061
+Iter=30, Polarisation Solution Error:   0.425
+Iter=30, Overall Solution Error:        0.454
+I flux density:   8.7607
+Leakage terms:
+ Ant 1:Dx,Dy = (-0.23913, 0.03639),( 0.36993,-0.14639)
+ Ant 2:Dx,Dy = (-0.17145,-0.09335),( 0.27108,-0.14778)
+ Ant 3:Dx,Dy = (-0.12657,-0.05774),( 0.20045, 0.09519)
+ Ant 4:Dx,Dy = (-0.11474, 0.00478),( 0.32782,-0.02420)
+ Ant 5:Dx,Dy = (-0.17340, 0.05329),( 0.05023,-0.07282)
+ Ant 6:Dx,Dy = ( 0.41594,-0.18076),( 0.19664, 0.18741)
+ Ant 7:Dx,Dy = (-0.20499,-0.00551),( 0.28812,-0.09843)
+ Ant 8:Dx,Dy = (-0.15350,-0.09273),( 0.37503, 0.01419)
+ Ant 9:Dx,Dy = (-0.26663,-0.13905),( 0.26078, 0.01447)
+ Ant10:Dx,Dy = (-0.19937, 0.02068),( 0.14289,-0.03128)
+ Ant11:Dx,Dy = (-0.28085,-0.03609),( 0.33724,-0.01925)
+ Ant12:Dx,Dy = (-0.26180,-0.00957),( 0.21339,-0.05216)
+ Ant13:Dx,Dy = (-0.31100,-0.10349),( 0.20539,-0.10411)
+ Ant14:Dx,Dy = (-0.26352,-0.06214),( 0.18908, 0.02113)
+Solution for freq bin 12
+Iter= 1, Amplit/Phase Solution Error:   1.072
+Iter= 1, Polarisation Solution Error:   0.810
+Iter= 1, Overall Solution Error:      243.798
+Iter= 2, Amplit/Phase Solution Error:   0.175
+Iter= 2, Polarisation Solution Error:   0.668
+Iter= 2, Overall Solution Error:        0.391
+Iter= 3, Amplit/Phase Solution Error:   0.109
+Iter= 3, Polarisation Solution Error:   0.618
+Iter= 3, Overall Solution Error:        0.126
+Iter= 4, Amplit/Phase Solution Error:   0.121
+Iter= 4, Polarisation Solution Error:   0.578
+Iter= 4, Overall Solution Error:        0.057
+Iter= 5, Amplit/Phase Solution Error:   0.118
+Iter= 5, Polarisation Solution Error:   0.541
+Iter= 5, Overall Solution Error:        0.033
+Iter= 6, Amplit/Phase Solution Error:   0.118
+Iter= 6, Polarisation Solution Error:   0.509
+Iter= 6, Overall Solution Error:        0.489
+Iter= 7, Amplit/Phase Solution Error:   0.118
+Iter= 7, Polarisation Solution Error:   0.253
+Iter= 7, Overall Solution Error:        0.182
+Iter= 8, Amplit/Phase Solution Error:   0.118
+Iter= 8, Polarisation Solution Error:   0.264
+Iter= 8, Overall Solution Error:        0.101
+Iter= 9, Amplit/Phase Solution Error:   0.119
+Iter= 9, Polarisation Solution Error:   0.271
+Iter= 9, Overall Solution Error:        0.048
+Iter=10, Amplit/Phase Solution Error:   0.120
+Iter=10, Polarisation Solution Error:   0.274
+Iter=10, Overall Solution Error:        0.026
+Iter=11, Amplit/Phase Solution Error:   0.120
+Iter=11, Polarisation Solution Error:   0.276
+Iter=11, Overall Solution Error:        0.013
+Iter=12, Amplit/Phase Solution Error:   0.120
+Iter=12, Polarisation Solution Error:   0.277
+Iter=12, Overall Solution Error:        0.007
+Iter=13, Amplit/Phase Solution Error:   0.120
+Iter=13, Polarisation Solution Error:   0.278
+Iter=13, Overall Solution Error:        0.004
+Iter=14, Amplit/Phase Solution Error:   0.120
+Iter=14, Polarisation Solution Error:   0.278
+Iter=14, Overall Solution Error:        0.002
+Iter=15, Amplit/Phase Solution Error:   0.120
+Iter=15, Polarisation Solution Error:   0.278
+Iter=15, Overall Solution Error:        0.001
+Iter=16, Amplit/Phase Solution Error:   0.120
+Iter=16, Polarisation Solution Error:   0.278
+Iter=16, Overall Solution Error:        0.001
+I flux density:   8.7807
+Leakage terms:
+ Ant 1:Dx,Dy = ( 0.00835, 0.13956),(-0.20197, 0.08344)
+ Ant 2:Dx,Dy = ( 0.16086, 0.08480),(-0.03156, 0.15565)
+ Ant 3:Dx,Dy = ( 0.16110, 0.05687),(-0.14908, 0.02389)
+ Ant 4:Dx,Dy = ( 0.11104, 0.09099),(-0.05093, 0.10554)
+ Ant 5:Dx,Dy = ( 0.20220, 0.10212),(-0.10724, 0.11222)
+ Ant 6:Dx,Dy = (-0.19494, 0.10377),( 0.30965,-0.33123)
+ Ant 7:Dx,Dy = ( 0.11230, 0.18118),( 0.01316, 0.05439)
+ Ant 8:Dx,Dy = ( 0.14576, 0.01826),(-0.26116, 0.10519)
+ Ant 9:Dx,Dy = ( 0.12160, 0.02250),(-0.24534, 0.16657)
+ Ant10:Dx,Dy = ( 0.11738, 0.04343),(-0.04063, 0.11419)
+ Ant11:Dx,Dy = ( 0.14958, 0.17025),(-0.16762, 0.11121)
+ Ant12:Dx,Dy = ( 0.18550, 0.13925),(-0.17380, 0.23791)
+ Ant13:Dx,Dy = ( 0.16563, 0.09912),(-0.27031, 0.14623)
+ Ant14:Dx,Dy = ( 0.12314, 0.09650),(-0.34217,-0.00604)
+Solution for freq bin 13
+Iter= 1, Amplit/Phase Solution Error:   1.095
+Iter= 1, Polarisation Solution Error:  -1.000
+I flux density:   8.4181
+Leakage terms:
+ Ant 1:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 2:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 3:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 4:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 5:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 6:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 7:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 8:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 9:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant10:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant11:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant12:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant13:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant14:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+Solution for freq bin 14
+Iter= 1, Amplit/Phase Solution Error:   1.049
+Iter= 1, Polarisation Solution Error:  -1.000
+I flux density:   8.4363
+Leakage terms:
+ Ant 1:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 2:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 3:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 4:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 5:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 6:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 7:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 8:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 9:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant10:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant11:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant12:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant13:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant14:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+Solution for freq bin 15
+Iter= 1, Amplit/Phase Solution Error:   1.057
+Iter= 1, Polarisation Solution Error:  -1.000
+I flux density:   8.4545
+Leakage terms:
+ Ant 1:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 2:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 3:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 4:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 5:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 6:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 7:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 8:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 9:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant10:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant11:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant12:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant13:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant14:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+Solution for freq bin 16
+Iter= 1, Amplit/Phase Solution Error:   1.101
+Iter= 1, Polarisation Solution Error:  -1.000
+I flux density:   8.4729
+Leakage terms:
+ Ant 1:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 2:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 3:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 4:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 5:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 6:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 7:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 8:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant 9:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant10:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant11:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant12:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant13:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+ Ant14:Dx,Dy = ( 0.00000, 0.00000),( 0.00000, 0.00000)
+
+01/24/2017 04:08:51 PM - basher - DEBUG : ### Warning:  Max number of frequency bins exceeded
+### Warning:  Scatter in estimating XY phase for antenna 6 was 107 degrees
+### Error:  Polarisation solution failed
+### Warning:  Scatter in estimating XY phase for antenna 6 was  43 degrees
+### Warning:  Leakage term >0.5 for antenna 6   : solution invalid
+### Warning:  Scatter in estimating XY phase for antenna 6 was  53 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  36 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  34 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  33 degrees
+### Warning:  Leakage term >0.5 for antenna 6   : solution invalid
+### Warning:  Scatter in estimating XY phase for antenna 6 was  48 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  35 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  34 degrees
+### Warning:  Leakage term >0.5 for antenna 6   : solution invalid
+### Warning:  Scatter in estimating XY phase for antenna 6 was  47 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  35 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  34 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  33 degrees
+### Warning:  Leakage term >0.5 for antenna 6   : solution invalid
+### Warning:  Scatter in estimating XY phase for antenna 6 was  46 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  34 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  34 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  33 degrees
+### Warning:  Leakage term >0.5 for antenna 6   : solution invalid
+### Warning:  Scatter in estimating XY phase for antenna 6 was  45 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  34 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  34 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  33 degrees
+### Warning:  Leakage term >0.5 for antenna 6   : solution invalid
+### Warning:  Scatter in estimating XY phase for antenna 6 was  44 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  34 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  34 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  33 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  33 degrees
+### Warning:  Leakage term >0.5 for antenna 6   : solution invalid
+### Warning:  Scatter in estimating XY phase for antenna 6 was  43 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  34 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  34 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  33 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  33 degrees
+### Warning:  Leakage term >0.5 for antenna 6   : solution invalid
+### Warning:  Failed to converge ... saving solution anyway
+### Warning:  Scatter in estimating XY phase for antenna 6 was  96 degrees
+### Error:  Polarisation solution failed
+### Warning:  Scatter in estimating XY phase for antenna 6 was  58 degrees
+### Warning:  Leakage term >0.5 for antenna 6   : solution invalid
+### Warning:  Scatter in estimating XY phase for antenna 6 was  58 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  53 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  52 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  50 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  50 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  49 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  48 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  48 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  48 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  47 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  47 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  47 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  47 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  47 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  47 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  47 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  47 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  47 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  58 degrees
+### Warning:  Leakage term >0.5 for antenna 6   : solution invalid
+### Warning:  Scatter in estimating XY phase for antenna 6 was  60 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  62 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  59 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  59 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  59 degrees
+### Warning:  Leakage term >0.5 for antenna 6   : solution invalid
+### Warning:  Scatter in estimating XY phase for antenna 6 was  60 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  59 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  59 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  59 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  59 degrees
+### Warning:  Leakage term >0.5 for antenna 6   : solution invalid
+### Warning:  Scatter in estimating XY phase for antenna 6 was  60 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  59 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  59 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  59 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  59 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  59 degrees
+### Warning:  Leakage term >0.5 for antenna 6   : solution invalid
+### Warning:  Scatter in estimating XY phase for antenna 6 was  59 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  59 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  59 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  59 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  59 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  59 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  59 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  59 degrees
+### Warning:  Leakage term >0.5 for antenna 6   : solution invalid
+### Warning:  Scatter in estimating XY phase for antenna 6 was  59 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  59 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  59 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  59 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  59 degrees
+### Warning:  Failed to converge ... saving solution anyway
+### Warning:  Scatter in estimating XY phase for antenna 6 was  41 degrees
+### Warning:  Leakage term >0.5 for antenna 12  : solution invalid
+### Warning:  Scatter in estimating XY phase for antenna 6 was  45 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  45 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  46 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  46 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  47 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  47 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  47 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  47 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  47 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  47 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  47 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  47 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  47 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  47 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  26 degrees
+### Warning:  Leakage term >0.5 for antenna 6   : solution invalid
+### Warning:  Scatter in estimating XY phase for antenna 6 was  30 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  31 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  33 degrees
+### Warning:  Leakage term >0.5 for antenna 6   : solution invalid
+### Warning:  Scatter in estimating XY phase for antenna 6 was  31 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  33 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  34 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  34 degrees
+### Warning:  Leakage term >0.5 for antenna 6   : solution invalid
+### Warning:  Scatter in estimating XY phase for antenna 6 was  31 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  33 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  34 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  34 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  34 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  34 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  34 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  34 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  13 degrees
+### Error:  Polarisation solution failed
+### Warning:  Scatter in estimating XY phase for antenna 6 was  37 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  30 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  30 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  30 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  30 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  30 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  30 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  35 degrees
+### Error:  Polarisation solution failed
+### Warning:  Scatter in estimating XY phase for antenna 6 was 100 degrees
+### Error:  Polarisation solution failed
+### Warning:  Scatter in estimating XY phase for antenna 6 was  68 degrees
+### Warning:  Leakage term >0.5 for antenna 6   : solution invalid
+### Warning:  Scatter in estimating XY phase for antenna 6 was  70 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  66 degrees
+### Warning:  Leakage term >0.5 for antenna 6   : solution invalid
+### Warning:  Scatter in estimating XY phase for antenna 6 was  69 degrees
+### Warning:  Leakage term >0.5 for antenna 6   : solution invalid
+### Warning:  Scatter in estimating XY phase for antenna 6 was  71 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  68 degrees
+### Warning:  Leakage term >0.5 for antenna 6   : solution invalid
+### Warning:  Scatter in estimating XY phase for antenna 6 was  70 degrees
+### Warning:  Leakage term >0.5 for antenna 6   : solution invalid
+### Warning:  Scatter in estimating XY phase for antenna 6 was  71 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  69 degrees
+### Warning:  Leakage term >0.5 for antenna 6   : solution invalid
+### Warning:  Scatter in estimating XY phase for antenna 6 was  70 degrees
+### Warning:  Leakage term >0.5 for antenna 6   : solution invalid
+### Warning:  Scatter in estimating XY phase for antenna 6 was  72 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  70 degrees
+### Warning:  Leakage term >0.5 for antenna 6   : solution invalid
+### Warning:  Scatter in estimating XY phase for antenna 6 was  70 degrees
+### Warning:  Leakage term >0.5 for antenna 6   : solution invalid
+### Warning:  Scatter in estimating XY phase for antenna 6 was  72 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  70 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  68 degrees
+### Warning:  Leakage term >0.5 for antenna 6   : solution invalid
+### Warning:  Scatter in estimating XY phase for antenna 6 was  70 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  69 degrees
+### Warning:  Leakage term >0.5 for antenna 6   : solution invalid
+### Warning:  Scatter in estimating XY phase for antenna 6 was  70 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  70 degrees
+### Warning:  Leakage term >0.5 for antenna 6   : solution invalid
+### Warning:  Scatter in estimating XY phase for antenna 6 was  71 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  70 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  68 degrees
+### Warning:  Leakage term >0.5 for antenna 6   : solution invalid
+### Warning:  Scatter in estimating XY phase for antenna 6 was  70 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  70 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  67 degrees
+### Warning:  Leakage term >0.5 for antenna 6   : solution invalid
+### Warning:  Scatter in estimating XY phase for antenna 6 was  70 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  69 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  67 degrees
+### Warning:  Leakage term >0.5 for antenna 6   : solution invalid
+### Warning:  Scatter in estimating XY phase for antenna 6 was  70 degrees
+### Warning:  Failed to converge ... saving solution anyway
+### Warning:  Scatter in estimating XY phase for antenna 6 was  46 degrees
+### Warning:  Leakage term >0.5 for antenna 6   : solution invalid
+### Warning:  Scatter in estimating XY phase for antenna 6 was  53 degrees
+### Warning:  Leakage term >0.5 for antenna 6   : solution invalid
+### Warning:  Scatter in estimating XY phase for antenna 6 was  53 degrees
+### Warning:  Leakage term >0.5 for antenna 6   : solution invalid
+### Warning:  Scatter in estimating XY phase for antenna 6 was  54 degrees
+### Warning:  Leakage term >0.5 for antenna 6   : solution invalid
+### Warning:  Scatter in estimating XY phase for antenna 6 was  54 degrees
+### Warning:  Leakage term >0.5 for antenna 6   : solution invalid
+### Warning:  Scatter in estimating XY phase for antenna 6 was  54 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  59 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  62 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  63 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  64 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  65 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  65 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  65 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  65 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  65 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  65 degrees
+### Warning:  Scatter in estimating XY phase for antenna 6 was  78 degrees
+### Error:  Polarisation solution failed
+### Warning:  Scatter in estimating XY phase for antenna 6 was  85 degrees
+### Error:  Polarisation solution failed
+### Warning:  Scatter in estimating XY phase for antenna 6 was  63 degrees
+### Error:  Polarisation solution failed
+### Warning:  Scatter in estimating XY phase for antenna 6 was  54 degrees
+### Error:  Polarisation solution failed
+
+01/24/2017 04:08:51 PM - basher - DEBUG : Returning output.
+01/24/2017 04:08:51 PM - CROSSCAL - INFO : # Solved for polarisation leakage and angle on polarised calibrator. #
+01/24/2017 04:08:51 PM - CROSSCAL - INFO : ### Polarisation calibration on the polarised calibrator data done ###

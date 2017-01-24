@@ -27,94 +27,98 @@ class convert:
         '''
         Executes the CASA exportuvfits or the command line utility ms2uvfits to convert the data from MS to UVFITS format. Does it for the flux calibrator, polarisation calibrator, and target field independently.
         '''
-        self.director('ch', self.crosscaldir)
-        if self.convert_ms2uvfits_tool == 'casa':
-            self.logger.info('### Using CASA toolkit to convert from MS to UVFITS format! ###')
-            ms = casac.casac.ms()
-            if self.convert_fluxcal == True:
-                ms.open(self.rawdir + '/' + self.fluxcal)
-                ms.tofits(self.crosscaldir + '/' + str(self.fluxcal).rstrip('MS') + 'UVFITS', column='DATA')
-                ms.done()
-                self.logger.info('### Converted MS file ' + self.fluxcal + ' to UVFITS using CASA toolkit! ###')
-            if self.convert_polcal == True:
-                ms.open(self.rawdir + '/' + self.polcal)
-                ms.tofits(self.crosscaldir + '/' + str(self.polcal).rstrip('MS') + 'UVFITS', column='DATA')
-                ms.done()
-                self.logger.info('### Converted MS file ' + self.polcal + ' to UVFITS using CASA toolkit! ###')
-            if self.convert_target == True:
-                ms.open(self.rawdir + '/' + self.target)
-                ms.tofits(self.crosscaldir + '/' + str(self.target).rstrip('MS') + 'UVFITS', column='DATA')
-                ms.done()
-                self.logger.info('### Converted MS file ' + self.target + ' to UVFITS using CASA toolkit! ###')
-        elif self.convert_ms2uvfits_tool == 'ms2uvfits':
-            self.logger.info('### Using ms2uvfits to convert from MS to UVFITS format! ###')
-            if self.convert_fluxcal == True:
-                os.system('ms2uvfits in=' + self.rawdir + '/' + self.fluxcal + ' out=' + self.crosscaldir + '/' + str(self.fluxcal).rstrip('MS') + 'UVFITS')
-                self.logger.info('### Converted MS file ' + self.fluxcal + ' to UVFITS using ms2uvfits! ###')
-            if self.convert_polcal == True:
-                os.system('ms2uvfits in=' + self.rawdir + '/' + self.polcal + ' out=' + self.crosscaldir + '/' + str(self.polcal).rstrip('MS') + 'UVFITS')
-                self.logger.info('### Converted MS file ' + self.polcal + ' to UVFITS using ms2uvfits! ###')
-            if self.convert_fluxcal == True:
-                os.system('ms2uvfits in=' + self.rawdir + '/' + self.target + ' out=' + self.crosscaldir + '/' + str(self.target).rstrip('MS') + 'UVFITS')
-                self.logger.info('### Converted MS file ' + self.target + ' to UVFITS using ms2uvfits! ###')
-        else:
-            self.logger.error('### Conversion tool not supported! Exiting pipeline! ###')
-            sys.exit(1)
+        if self.convert_ms2uvfits:
+            self.logger.info('### Starting conversion from MS to UVFITS format ###')
+            self.director('ch', self.crosscaldir)
+            if self.convert_ms2uvfits_tool == 'casa':
+                self.logger.info('### Using CASA toolkit to convert from MS to UVFITS format! ###')
+                ms = casac.casac.ms()
+                if self.convert_fluxcal == True:
+                    ms.open(self.rawdir + '/' + self.fluxcal)
+                    ms.tofits(self.crosscaldir + '/' + str(self.fluxcal).rstrip('MS') + 'UVFITS', column='DATA')
+                    ms.done()
+                    self.logger.info('### Converted MS file ' + self.fluxcal + ' to UVFITS using CASA toolkit! ###')
+                if self.convert_polcal == True:
+                    ms.open(self.rawdir + '/' + self.polcal)
+                    ms.tofits(self.crosscaldir + '/' + str(self.polcal).rstrip('MS') + 'UVFITS', column='DATA')
+                    ms.done()
+                    self.logger.info('### Converted MS file ' + self.polcal + ' to UVFITS using CASA toolkit! ###')
+                if self.convert_target == True:
+                    ms.open(self.rawdir + '/' + self.target)
+                    ms.tofits(self.crosscaldir + '/' + str(self.target).rstrip('MS') + 'UVFITS', column='DATA')
+                    ms.done()
+                    self.logger.info('### Converted MS file ' + self.target + ' to UVFITS using CASA toolkit! ###')
+            elif self.convert_ms2uvfits_tool == 'ms2uvfits':
+                self.logger.info('### Using ms2uvfits to convert from MS to UVFITS format! ###')
+                if self.convert_fluxcal == True:
+                    os.system('ms2uvfits in=' + self.rawdir + '/' + self.fluxcal + ' out=' + self.crosscaldir + '/' + str(self.fluxcal).rstrip('MS') + 'UVFITS')
+                    self.logger.info('### Converted MS file ' + self.fluxcal + ' to UVFITS using ms2uvfits! ###')
+                if self.convert_polcal == True:
+                    os.system('ms2uvfits in=' + self.rawdir + '/' + self.polcal + ' out=' + self.crosscaldir + '/' + str(self.polcal).rstrip('MS') + 'UVFITS')
+                    self.logger.info('### Converted MS file ' + self.polcal + ' to UVFITS using ms2uvfits! ###')
+                if self.convert_fluxcal == True:
+                    os.system('ms2uvfits in=' + self.rawdir + '/' + self.target + ' out=' + self.crosscaldir + '/' + str(self.target).rstrip('MS') + 'UVFITS')
+                    self.logger.info('### Converted MS file ' + self.target + ' to UVFITS using ms2uvfits! ###')
+            else:
+                self.logger.error('### Conversion tool not supported! Exiting pipeline! ###')
+                sys.exit(1)
+            self.logger.info('### Conversion from MS to UVFITS format done! ###')
 
     def uvfits2miriad(self):
         '''
         Executes the selected miriad task (fits or wsrtfits) to convert the data from UVFITS to MIRIAD format. Does it for the flux calibrator, polarisation calibrator, and target field independently.
         '''
-        self.director('ch', self.crosscaldir)
-        if self.convert_uvfits2mir_tool == 'fits':
-            self.logger.info('### Using MIRIAD fits task to convert data from UVFITS to MIRIAD format ###')
-            fits = lib.miriad('fits')
-            fits.op = 'uvin'
-            if self.convert_fluxcal == True:
-                fits.in_ = self.crosscaldir + '/' + str(self.fluxcal).rstrip('MS') + 'UVFITS'
-                fits.out = self.crosscaldir + '/' + str(self.fluxcal).rstrip('MS') + 'mir'
-                fits.go()
-                self.director('rm', self.crosscaldir + '/' + str(self.fluxcal).rstrip('MS') + 'UVFITS')
-                self.logger.info('### Converted UVFITS file ' + self.fluxcal + ' to MIRIAD format using MIRIAD task fits! ###')
-            if self.convert_polcal == True:
-                fits.in_ = self.crosscaldir + '/' + str(self.polcal).rstrip('MS') + 'UVFITS'
-                fits.out = self.crosscaldir + '/' + str(self.polcal).rstrip('MS') + 'mir'
-                fits.go()
-                self.director('rm', self.crosscaldir + '/' + str(self.polcal).rstrip('MS') + 'UVFITS')
-                self.logger.info('### Converted UVFITS file ' + self.polcal + ' to MIRIAD format using MIRIAD task fits! ###')
-            if self.convert_target == True:
-                fits.in_ = self.crosscaldir + '/' + str(self.target).rstrip('MS') + 'UVFITS'
-                fits.out = self.crosscaldir + '/' + str(self.target).rstrip('MS') + 'mir'
-                fits.go()
-                self.director('rm', self.crosscaldir + '/' + str(self.target).rstrip('MS') + 'UVFITS')
-                self.logger.info('### Converted UVFITS file ' + self.target + ' to MIRIAD format using MIRIAD task fits! ###')
-            self.logger.info('### Conversion from UVFITS to MIRIAD fromat done! ###')
-        elif self.convert_uvfits2mir_tool == 'wsrtfits':
-            self.logger.info('### Using MIRIAD wsrtfits task to convert data from UVFITS to MIRIAD format ###')
-            wsrtfits = lib.miriad('wsrtfits')
-            wsrtfits.op = 'uvin'
-            if self.convert_fluxcal == True:
-                wsrtfits.in_ = self.crosscaldir + '/' + str(self.fluxcal).rstrip('MS') + 'UVFITS'
-                wsrtfits.out = self.crosscaldir + '/' + str(self.fluxcal).rstrip('MS') + 'mir'
-                wsrtfits.go()
-                self.director('rm', self.crosscaldir + '/' + str(self.fluxcal).rstrip('MS') + 'UVFITS')
-                self.logger.info('### Converted UVFITS file ' + self.fluxcal + ' to MIRIAD format using MIRIAD task wsrtfits! ###')
-            if self.convert_polcal == True:
-                wsrtfits.in_ = self.crosscaldir + '/' + str(self.polcal).rstrip('MS') + 'UVFITS'
-                wsrtfits.out = self.crosscaldir + '/' + str(self.polcal).rstrip('MS') + 'mir'
-                wsrtfits.go()
-                self.director('rm', self.crosscaldir + '/' + str(self.polcal).rstrip('MS') + 'UVFITS')
-                self.logger.info('### Converted UVFITS file ' + self.polcal + ' to MIRIAD format using MIRIAD task wsrtfits! ###')
-            if self.convert_target == True:
-                wsrtfits.in_ = self.crosscaldir + '/' + str(self.target).rstrip('MS') + 'UVFITS'
-                wsrtfits.out = self.crosscaldir + '/' + str(self.target).rstrip('MS') + 'mir'
-                wsrtfits.go()
-                self.director('rm', self.crosscaldir + '/' + str(self.target).rstrip('MS') + 'UVFITS')
-                self.logger.info('### Converted UVFITS file ' + self.target + ' to MIRIAD format using MIRIAD task wsrtfits! ###')
+        if self.convert_uvfits2mir:
+            self.logger.info('### Starting conversion from UVFITS to MIRIAD format ###')
+            self.director('ch', self.crosscaldir)
+            if self.convert_uvfits2mir_tool == 'fits':
+                self.logger.info('### Using MIRIAD fits task to convert data from UVFITS to MIRIAD format ###')
+                fits = lib.miriad('fits')
+                fits.op = 'uvin'
+                if self.convert_fluxcal == True:
+                    fits.in_ = self.crosscaldir + '/' + str(self.fluxcal).rstrip('MS') + 'UVFITS'
+                    fits.out = self.crosscaldir + '/' + str(self.fluxcal).rstrip('MS') + 'mir'
+                    fits.go()
+                    self.director('rm', self.crosscaldir + '/' + str(self.fluxcal).rstrip('MS') + 'UVFITS')
+                    self.logger.info('### Converted UVFITS file ' + self.fluxcal + ' to MIRIAD format using MIRIAD task fits! ###')
+                if self.convert_polcal == True:
+                    fits.in_ = self.crosscaldir + '/' + str(self.polcal).rstrip('MS') + 'UVFITS'
+                    fits.out = self.crosscaldir + '/' + str(self.polcal).rstrip('MS') + 'mir'
+                    fits.go()
+                    self.director('rm', self.crosscaldir + '/' + str(self.polcal).rstrip('MS') + 'UVFITS')
+                    self.logger.info('### Converted UVFITS file ' + self.polcal + ' to MIRIAD format using MIRIAD task fits! ###')
+                if self.convert_target == True:
+                    fits.in_ = self.crosscaldir + '/' + str(self.target).rstrip('MS') + 'UVFITS'
+                    fits.out = self.crosscaldir + '/' + str(self.target).rstrip('MS') + 'mir'
+                    fits.go()
+                    self.director('rm', self.crosscaldir + '/' + str(self.target).rstrip('MS') + 'UVFITS')
+                    self.logger.info('### Converted UVFITS file ' + self.target + ' to MIRIAD format using MIRIAD task fits! ###')
+            elif self.convert_uvfits2mir_tool == 'wsrtfits':
+                self.logger.info('### Using MIRIAD wsrtfits task to convert data from UVFITS to MIRIAD format ###')
+                wsrtfits = lib.miriad('wsrtfits')
+                wsrtfits.op = 'uvin'
+                if self.convert_fluxcal == True:
+                    wsrtfits.in_ = self.crosscaldir + '/' + str(self.fluxcal).rstrip('MS') + 'UVFITS'
+                    wsrtfits.out = self.crosscaldir + '/' + str(self.fluxcal).rstrip('MS') + 'mir'
+                    wsrtfits.go()
+                    self.director('rm', self.crosscaldir + '/' + str(self.fluxcal).rstrip('MS') + 'UVFITS')
+                    self.logger.info('### Converted UVFITS file ' + self.fluxcal + ' to MIRIAD format using MIRIAD task wsrtfits! ###')
+                if self.convert_polcal == True:
+                    wsrtfits.in_ = self.crosscaldir + '/' + str(self.polcal).rstrip('MS') + 'UVFITS'
+                    wsrtfits.out = self.crosscaldir + '/' + str(self.polcal).rstrip('MS') + 'mir'
+                    wsrtfits.go()
+                    self.director('rm', self.crosscaldir + '/' + str(self.polcal).rstrip('MS') + 'UVFITS')
+                    self.logger.info('### Converted UVFITS file ' + self.polcal + ' to MIRIAD format using MIRIAD task wsrtfits! ###')
+                if self.convert_target == True:
+                    wsrtfits.in_ = self.crosscaldir + '/' + str(self.target).rstrip('MS') + 'UVFITS'
+                    wsrtfits.out = self.crosscaldir + '/' + str(self.target).rstrip('MS') + 'mir'
+                    wsrtfits.go()
+                    self.director('rm', self.crosscaldir + '/' + str(self.target).rstrip('MS') + 'UVFITS')
+                    self.logger.info('### Converted UVFITS file ' + self.target + ' to MIRIAD format using MIRIAD task wsrtfits! ###')
+            else:
+                self.logger.error('### Conversion tool not supported! Exiting pipeline! ###')
+                sys.exit(1)
             self.logger.info('### Conversion from UVFITS to MIRIAD format done! ###')
-        else:
-            self.logger.error('### Conversion tool not supported! Exiting pipeline! ###')
-            sys.exit(1)
 
     def go(self):
         '''

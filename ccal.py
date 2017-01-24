@@ -7,6 +7,7 @@ import lib
 import logging
 import os, sys
 import ConfigParser
+import aipy
 from datetime import datetime
 import calendar
 import astropy.units as u
@@ -48,22 +49,15 @@ class ccal:
     ##### Functions to execute the different modes of the self-calibration process #####
     ####################################################################################
 
-    def copy_gains(self):
-        self.logger.info('### Copying gains to target dataset ###')
-        gpcopy = lib.miriad('gpcopy')
-        gpcopy.vis = self.fluxcal
-        gpcopy.out = self.target
-        self.logger.info('# ' + str(self.fluxcal) + ' => ' + str(self.target) + ' #')
-        self.logger.info('### Gains copied ###')
-        gpcopy.go()
-
     def go(self):
         '''
         Execute the full cross calibration process
         '''
         self.logger.info("########## Starting CROSS CALIBRATION ##########")
         self.fringe_stop()
-        self.cal_bandpass()
+        self.bandpass()
+        self.polarisation()
+        self.transfer_to_target()
         self.logger.info("########## CROSS CALIBRATION done ##########")
 
     ###########################################################################################
@@ -77,6 +71,14 @@ class ccal:
     #     puthd.value = self.obsfreq
     #     self.logger.info('# New frequency is ' + str(puthd.value) + ' #')
     #     puthd.go()
+
+    # def calc_np_offset(self, coords):
+    #     '''
+    #     Calculates the offset of the actual position towards the North Pole
+    #     infile: The coords to calculate the offset for
+    #     '''
+    #     dec_off = (90.0 - coords.dec.deg) * 3600.0
+    #     return dec_off
 
     # def comp_fstop(self):
     #     '''
@@ -116,48 +118,49 @@ class ccal:
     #     self.logger.info('### Fringe stopping done! ###')
 
     def fringe_stop(self):
-        if self.crosscal_fringestop:
-            self.logger.info('### Fringe stopping started ###')
-            self.director('ch', self.crosscaldir)
-            if self.crosscal_fringestop_mode == 'direct':
-                self.logger.info('# Doing fringe stopping by using the integration time of the observation and a point source model #')
-                selfcal = lib.miriad('selfcal')
-                selfcal.vis = self.fluxcal
-                selfcal.interval = 0.016666
-                selfcal.options = 'phase'
-                selfcal.go()
-                self.logger.info('# Self calibrating flux calibrator dataset ' + self.fluxcal + ' with solution interval ' + str(selfcal.interval) + ' #')
-                uvcat = lib.miriad('uvcat')
-                uvcat.vis = self.fluxcal
-                uvcat.out = self.fluxcal + '.copy'
-                uvcat.go()
-                self.director('rm', self.fluxcal)
-                self.director('rn', self.fluxcal, file=uvcat.out)
-            # elif self.crosscal_fringestop_mode == 'northpole':
-            #     self.correct_freq()
-            #     self.logger.info('# Dividing by model at the north pole of unit amplitude #')
-            #     uvmodel = lib.miriad('uvmodel')
-            #     uvmodel.vis = self.vis
-            #     uvmodel.options = 'divide'
-            #     uvmodel.offset = '0,' + str(offset)
-            #     uvmodel.out = self.vis.rstrip('.mir') + '_fs.mir'
-            #     uvmodel.go()
-            #     self.director('rm', self.vis)
-            #     self.director('rn', self.vis, file=uvmodel.out)
-            else:
-                self.logger.error('# Fringe stopping mode not supported! Exiting! #')
-                sys.exit(1)
-            self.logger.info('### Fringe stopping done ###')
+        if self.crosscal_mode == 'APERTIF':
+            if self.crosscal_fringestop:
+                self.logger.info('### Fringe stopping started ###')
+                self.director('ch', self.crosscaldir)
+                if self.crosscal_fringestop_mode == 'direct':
+                    self.logger.info('# Doing fringe stopping by using the integration time of the observation and a point source model #')
+                    selfcal = lib.miriad('selfcal')
+                    selfcal.vis = self.fluxcal
+                    selfcal.interval = 0.016666
+                    selfcal.options = 'phase'
+                    selfcal.go()
+                    self.logger.info('# Self calibrating flux calibrator dataset ' + self.fluxcal + ' with solution interval ' + str(selfcal.interval) + ' #')
+                    uvcat = lib.miriad('uvcat')
+                    uvcat.vis = self.fluxcal
+                    uvcat.out = self.fluxcal + '.copy'
+                    uvcat.go()
+                    self.director('rm', self.fluxcal)
+                    self.director('rn', self.fluxcal, file=uvcat.out)
+                # elif self.crosscal_fringestop_mode == 'northpole':
+                #     self.correct_freq()
+                #     self.logger.info('# Dividing by model at the north pole of unit amplitude #')
+                #     uvmodel = lib.miriad('uvmodel')
+                #     uvmodel.vis = self.vis
+                #     uvmodel.options = 'divide'
+                #     uvmodel.offset = '0,' + str(offset)
+                #     uvmodel.out = self.vis.rstrip('.mir') + '_fs.mir'
+                #     uvmodel.go()
+                #     self.director('rm', self.vis)
+                #     self.director('rn', self.vis, file=uvmodel.out)
+                else:
+                    self.logger.error('# Fringe stopping mode not supported! Exiting! #')
+                    sys.exit(1)
+                self.logger.info('### Fringe stopping done ###')
+        elif self.crosscal_mode == 'WSRT':
+            self.logger.info('### WSRT data set. Fringe stopping was done online! ###')
+        else:
+            self.logger.error('### Crosscal mode not known! Exiting!')
+            sys.exit(1)
 
-    # def calc_np_offset(self, coords):
-    #     '''
-    #     Calculates the offset of the actual position towards the North Pole
-    #     infile: The coords to calculate the offset for
-    #     '''
-    #     dec_off = (90.0 - coords.dec.deg) * 3600.0
-    #     return dec_off
-
-    def cal_bandpass(self):
+    def bandpass(self):
+        '''
+        Calibrates the bandpass for the flux calibrator using mfcal in MIRIAD
+        '''
         if self.crosscal_bandpass:
             self.director('ch', self.crosscaldir)
             self.logger.info('### Bandpass calibration on the flux calibrator data started ###')
@@ -166,6 +169,70 @@ class ccal:
             mfcal.go()
             self.logger.info('### Bandpass calibration on the flux calibrator data done ###')
 
+    def polarisation(self):
+        '''
+        Derives the polarisation corrections (leakage, angle) from the polarised calibrator. Uses the bandpass from the bandpass calibrator.
+        '''
+        if self.crosscal_polarisation:
+            self.director('ch', self.crosscaldir)
+            self.logger.info('### Polarisation calibration on the polarised calibrator data started ###')
+            if os.path.isfile(self.crosscaldir + '/' + self.fluxcal + '/' + 'bandpass'):
+                self.logger.info('# Bandpass solutions in flux calibrator data found. Using them! #')
+                gpcopy = lib.miriad('gpcaopy')
+                gpcopy.vis = self.fluxcal
+                gpcopy.out = self.polcal
+                gpcopy.mode = 'copy'
+                gpcopy.options = 'nopol'
+                gpcopy.go()
+                self.logger.info('# Bandpass from flux calibrator data copied to polarised calibrator data. #')
+                gpcal = lib.miriad('gpcal')
+                gpcal.vis = self.polcal
+                uv = aipy.miriad.UV(self.polcal)
+                nchan = uv['nchan']
+                gpcal.nfbin = round(nchan / self.crosscal_polarisation_nchan)
+                gpcal.options = 'xyvary,linear'
+                gpcal.go()
+                self.logger.info('# Solved for polarisation leakage and angle on polarised calibrator. #')
+            else:
+                self.logger.info('# Bandpass solutions from flux calibrator not found. #')
+                self.logger.info('# Deriving bandpass from polarised calibrator using mfcal. #')
+                mfcal = lib.miriad('mfcal')
+                mfcal.vis = self.polcal
+                mfcal.go()
+                self.logger.info('# Bandpass solutions from polarised calibrator derived. #')
+                self.logger.info('# Continuing with polarisation calibration (leakage, angle) from polarised calibrator data. #')
+                gpcal = lib.miriad('gpcal')
+                gpcal.vis = self.polcal
+                uv = aipy.miriad.UV(self.polcal)
+                nchan = uv['nchan']
+                gpcal.nfbin = round(nchan / self.crosscal_polarisation_nchan)
+                gpcal.options = 'xyvary,linear'
+                gpcal.go()
+                self.logger.info('# Solved for polarisation leakage and angle on polarised calibrator. #')
+            self.logger.info('### Polarisation calibration on the polarised calibrator data done ###')
+        else:
+            self.logger.info('### No polarisation calibration done! ###')
+
+    def transfer_to_target(self):
+        if self.crosscal_transfer_to_target:
+            self.director('ch', self.crosscaldir)
+            self.logger.info('### Copying calibrator solutions to target dataset ###')
+            gpcopy = lib.miriad('gpcopy')
+            if os.path.isfile(self.crosscaldir + '/' + self.polcal + '/' + 'bandpass') and os.path.isfile(self.crosscaldir + '/' + self.polcal + '/' + 'gainsf') and os.path.isfile(self.crosscaldir + '/' + self.polcal + '/' + 'leakagef'):
+                gpcopy.vis = self.polcal
+                self.logger.info('# Copying calibrator solutions (bandpass, gains, leakage, angle) from polarised calibrator. #')
+            elif os.path.isfile(self.crosscaldir + '/' + self.fluxcal + '/' + 'bandpass') and os.path.isfile(self.crosscaldir + '/' + self.fluxcal + '/' + 'gains'):
+                gpcopy.vis = self.fluxcal
+                self.logger.info('# Copying calibrator solutions (bandpass, gains) from flux calibrator. #')
+                self.logger.info('# Polarisation calibration solutions (leakage, angle) not found. #')
+            else:
+                self.logger.error('# No calibrator solutions found! Exiting! #')
+                sys.exit(1)
+            gpcopy.out = self.target
+            gpcopy.go()
+            self.logger.info('### All solutions copied to target data ###')
+        else:
+            self.logger.info('### No copying of calibrator solutions to target data done! ###')
 
     ##################################################################################################################
     ##### Helper functions to get coordinates and central frequency of a dataset and fix the coordinate notation #####
