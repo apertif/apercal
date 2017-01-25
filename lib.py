@@ -32,7 +32,7 @@ def qimplot(image=None, rmin=-2, rmax=2, cmap='gray'):
     logger = logging.getLogger('QIMPLOT')
     logger.info("Quick Image Plot")
     if image is None:
-        logger.critical("Please prvide input image!")
+        logger.critical("Please provide input image!")
     pl.figure(figsize=(10,10))
     fits = miriad('fits')
     if not os.path.exists(image):

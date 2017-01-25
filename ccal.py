@@ -45,13 +45,13 @@ class ccal:
         self.polcal = self.polcal.rstrip('MS') + 'mir'
         self.target = self.target.rstrip('MS') + 'mir'
 
-    ####################################################################################
-    ##### Functions to execute the different modes of the self-calibration process #####
-    ####################################################################################
+    #############################################################
+    ##### Function to execute the cross-calibration process #####
+    #############################################################
 
     def go(self):
         '''
-        Execute the full cross calibration process
+        Executes the full cross calibration process.
         '''
         self.logger.info("########## Starting CROSS CALIBRATION ##########")
         self.fringe_stop()
@@ -118,6 +118,9 @@ class ccal:
     #     self.logger.info('### Fringe stopping done! ###')
 
     def fringe_stop(self):
+        '''
+        Does the fringe stopping for APERTIF data. Only usable for strong point sources at the moment like 3C147. Moves the source to the right position by calibrating on phase for each integration (mostly 1s).
+        '''
         if self.crosscal_mode == 'APERTIF':
             if self.crosscal_fringestop:
                 self.logger.info('### Fringe stopping started ###')
@@ -159,7 +162,7 @@ class ccal:
 
     def bandpass(self):
         '''
-        Calibrates the bandpass for the flux calibrator using mfcal in MIRIAD
+        Calibrates the bandpass for the flux calibrator using mfcal in MIRIAD.
         '''
         if self.crosscal_bandpass:
             self.director('ch', self.crosscaldir)
@@ -171,7 +174,7 @@ class ccal:
 
     def polarisation(self):
         '''
-        Derives the polarisation corrections (leakage, angle) from the polarised calibrator. Uses the bandpass from the bandpass calibrator.
+        Derives the polarisation corrections (leakage, angle) from the polarised calibrator. Uses the bandpass from the bandpass calibrator. Does not account for freqeuncy dependent solutions at the moment.
         '''
         if self.crosscal_polarisation:
             self.director('ch', self.crosscaldir)
@@ -214,6 +217,9 @@ class ccal:
             self.logger.info('### No polarisation calibration done! ###')
 
     def transfer_to_target(self):
+        '''
+        Transfers the gains of the calibrators to the target field. Automatically checks if polarisation calibration has been done.
+        '''
         if self.crosscal_transfer_to_target:
             self.director('ch', self.crosscaldir)
             self.logger.info('### Copying calibrator solutions to target dataset ###')
@@ -309,7 +315,6 @@ class ccal:
             o = config.options(s)
             for o in config.items(s):
                 print('\t' + str(o[0]) + ' = ' + str(self.__dict__.__getitem__(o[0])))
-
 
     def director(self, option, dest, file=None, verbose=True):
         '''
