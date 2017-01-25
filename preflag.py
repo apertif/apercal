@@ -123,7 +123,7 @@ class preflag:
                 self.logger.info('# Flagging antenna(s) ' + self.preflag_manualflag_antenna + ' for polarised calibrator data #')
                 af.open(self.polcal)
                 af.selectdata()
-                for ant in self.preflag_manualflag_antennas.split(','):
+                for ant in self.preflag_manualflag_antenna.split(','):
                     af.parsemanualparameters(antenna=str(ant) + '&&' + str(ant))
                 af.parsemanualparameters(antenna=str(self.preflag_manualflag_antenna))
                 af.init()

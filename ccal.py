@@ -178,37 +178,37 @@ class ccal:
             self.logger.info('### Polarisation calibration on the polarised calibrator data started ###')
             if os.path.isfile(self.crosscaldir + '/' + self.fluxcal + '/' + 'bandpass'):
                 self.logger.info('# Bandpass solutions in flux calibrator data found. Using them! #')
-                gpcopy = lib.miriad('gpcaopy')
+                gpcopy = lib.miriad('gpcopy')
                 gpcopy.vis = self.fluxcal
                 gpcopy.out = self.polcal
                 gpcopy.mode = 'copy'
                 gpcopy.options = 'nopol'
                 gpcopy.go()
-                self.logger.info('# Bandpass from flux calibrator data copied to polarised calibrator data. #')
+                self.logger.info('# Bandpass from flux calibrator data copied to polarised calibrator data #')
                 gpcal = lib.miriad('gpcal')
                 gpcal.vis = self.polcal
-                uv = aipy.miriad.UV(self.polcal)
-                nchan = uv['nchan']
-                gpcal.nfbin = round(nchan / self.crosscal_polarisation_nchan)
+                # uv = aipy.miriad.UV(self.polcal)
+                # nchan = uv['nchan']
+                # gpcal.nfbin = round(nchan / self.crosscal_polarisation_nchan)
                 gpcal.options = 'xyvary,linear'
                 gpcal.go()
-                self.logger.info('# Solved for polarisation leakage and angle on polarised calibrator. #')
+                self.logger.info('# Solved for polarisation leakage and angle on polarised calibrator #')
             else:
-                self.logger.info('# Bandpass solutions from flux calibrator not found. #')
-                self.logger.info('# Deriving bandpass from polarised calibrator using mfcal. #')
+                self.logger.info('# Bandpass solutions from flux calibrator not found #')
+                self.logger.info('# Deriving bandpass from polarised calibrator using mfcal #')
                 mfcal = lib.miriad('mfcal')
                 mfcal.vis = self.polcal
                 mfcal.go()
-                self.logger.info('# Bandpass solutions from polarised calibrator derived. #')
-                self.logger.info('# Continuing with polarisation calibration (leakage, angle) from polarised calibrator data. #')
+                self.logger.info('# Bandpass solutions from polarised calibrator derived #')
+                self.logger.info('# Continuing with polarisation calibration (leakage, angle) from polarised calibrator data #')
                 gpcal = lib.miriad('gpcal')
                 gpcal.vis = self.polcal
-                uv = aipy.miriad.UV(self.polcal)
-                nchan = uv['nchan']
-                gpcal.nfbin = round(nchan / self.crosscal_polarisation_nchan)
+                # uv = aipy.miriad.UV(self.polcal)
+                # nchan = uv['nchan']
+                # gpcal.nfbin = round(nchan / self.crosscal_polarisation_nchan)
                 gpcal.options = 'xyvary,linear'
                 gpcal.go()
-                self.logger.info('# Solved for polarisation leakage and angle on polarised calibrator. #')
+                self.logger.info('# Solved for polarisation leakage and angle on polarised calibrator #')
             self.logger.info('### Polarisation calibration on the polarised calibrator data done ###')
         else:
             self.logger.info('### No polarisation calibration done! ###')
@@ -218,13 +218,13 @@ class ccal:
             self.director('ch', self.crosscaldir)
             self.logger.info('### Copying calibrator solutions to target dataset ###')
             gpcopy = lib.miriad('gpcopy')
-            if os.path.isfile(self.crosscaldir + '/' + self.polcal + '/' + 'bandpass') and os.path.isfile(self.crosscaldir + '/' + self.polcal + '/' + 'gainsf') and os.path.isfile(self.crosscaldir + '/' + self.polcal + '/' + 'leakagef'):
+            if os.path.isfile(self.crosscaldir + '/' + self.polcal + '/' + 'bandpass') and os.path.isfile(self.crosscaldir + '/' + self.polcal + '/' + 'gains') and os.path.isfile(self.crosscaldir + '/' + self.polcal + '/' + 'leakage'):
                 gpcopy.vis = self.polcal
-                self.logger.info('# Copying calibrator solutions (bandpass, gains, leakage, angle) from polarised calibrator. #')
+                self.logger.info('# Copying calibrator solutions (bandpass, gains, leakage, angle) from polarised calibrator #')
             elif os.path.isfile(self.crosscaldir + '/' + self.fluxcal + '/' + 'bandpass') and os.path.isfile(self.crosscaldir + '/' + self.fluxcal + '/' + 'gains'):
                 gpcopy.vis = self.fluxcal
-                self.logger.info('# Copying calibrator solutions (bandpass, gains) from flux calibrator. #')
-                self.logger.info('# Polarisation calibration solutions (leakage, angle) not found. #')
+                self.logger.info('# Copying calibrator solutions (bandpass, gains) from flux calibrator #')
+                self.logger.info('# Polarisation calibration solutions (leakage, angle) not found #')
             else:
                 self.logger.error('# No calibrator solutions found! Exiting! #')
                 sys.exit(1)
