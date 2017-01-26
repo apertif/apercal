@@ -53,19 +53,17 @@ class scal:
         Executes the whole self-calibration process.
         '''
         self.logger.info("########## Starting SELF CALIBRATION ##########")
-        self.split_data()
-        self.flag_line()
-        self.init_parameters()
-        self.execute_selfcal()
-        self.transfer_gains()
-        self.subtract_cont()
+        self.splitdata()
+        self.flagline()
+        self.initparameters()
+        self.executeselfcal()
         self.logger.info("########## SELF CALIBRATION done ##########")
 
-    def split_data(self):
+    def splitdata(self):
         '''
-        Splits the data into chunks in frequency and bins to 1 MHz channels for the self-calibration
+        Splits the data into chunks in frequency and bins it to the given frequency resolution for the self-calibration
         '''
-        if self.split_data:
+        if self.splitdata:
             self.director('ch', self.selfcaldir)
             uv = aipy.miriad.UV(self.crosscaldir + '/' + self.target)
             nchan = np.sum(uv['freqs'][1::3])

@@ -55,6 +55,7 @@ class ccal:
         '''
         self.logger.info("########## Starting CROSS CALIBRATION ##########")
         self.fringe_stop()
+        self.applysys()
         self.bandpass()
         self.polarisation()
         self.transfer_to_target()
@@ -159,6 +160,38 @@ class ccal:
         else:
             self.logger.error('### Crosscal mode not known! Exiting!')
             sys.exit(1)
+
+    def applysys(self):
+        '''
+        Apply the system temperatures to the data if it is old WSRT data
+        '''
+        if self.applysys:
+            self.director('ch', self.crosscaldir)
+            self.logger.info('### Applying system temperatures corrections ###')
+            attsys = lib.miriad('attsys')
+            self.logger.info('# Applying system temperature corrections to flux calibrator data #')
+            attsys.vis = self.fluxcal
+            attsys.out = self.fluxcal + '_temp'
+            attsys.go()
+            self.director('rm', self.fluxcal)
+            self.director('rn', self.fluxcal, file=attsys.out)
+            self.logger.info('# System temperatures corrections to flux calibrator data applied #')
+            if os.path.isfile(self.crosscaldir + '/' + self.polcal):
+                self.logger.info('# Applying system temperature corrections to polarised calibrator data #')
+                attsys.vis = self.polcal
+                attsys.out = self.polcal + '_temp'
+                attsys.go()
+                self.director('rm', self.polcal)
+                self.director('rn', self.polcal, file=attsys.out)
+                self.logger.info('# System temperatures corrections to polarised calibrator data applied #')
+            self.logger.info('# Applying system temperature corrections to target data #')
+            attsys.vis = self.target
+            attsys.out = self.target + '_temp'
+            attsys.go()
+            self.director('rm', self.target)
+            self.director('rn', self.target, file=attsys.out)
+            self.logger.info('# System temperatures corrections to target data applied #')
+            self.logger.info('### System temperatures corrections applied ###')
 
     def bandpass(self):
         '''

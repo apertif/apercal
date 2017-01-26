@@ -35,17 +35,17 @@ class convert:
                 ms = casac.casac.ms()
                 if self.convert_fluxcal == True:
                     ms.open(self.rawdir + '/' + self.fluxcal)
-                    ms.tofits(self.crosscaldir + '/' + str(self.fluxcal).rstrip('MS') + 'UVFITS', column='DATA', combinespw=True)
+                    ms.tofits(self.crosscaldir + '/' + str(self.fluxcal).rstrip('MS') + 'UVFITS', column='DATA', combinespw=True, writesyscal=True)
                     ms.done()
                     self.logger.info('### Converted MS file ' + self.fluxcal + ' to UVFITS using CASA toolkit! ###')
                 if self.convert_polcal == True:
                     ms.open(self.rawdir + '/' + self.polcal)
-                    ms.tofits(self.crosscaldir + '/' + str(self.polcal).rstrip('MS') + 'UVFITS', column='DATA', combinespw=True)
+                    ms.tofits(self.crosscaldir + '/' + str(self.polcal).rstrip('MS') + 'UVFITS', column='DATA', combinespw=True, writesyscal=True)
                     ms.done()
                     self.logger.info('### Converted MS file ' + self.polcal + ' to UVFITS using CASA toolkit! ###')
                 if self.convert_target == True:
                     ms.open(self.rawdir + '/' + self.target)
-                    ms.tofits(self.crosscaldir + '/' + str(self.target).rstrip('MS') + 'UVFITS', column='DATA', combinespw=True)
+                    ms.tofits(self.crosscaldir + '/' + str(self.target).rstrip('MS') + 'UVFITS', column='DATA', combinespw=True, writesyscal=True)
                     ms.done()
                     self.logger.info('### Converted MS file ' + self.target + ' to UVFITS using CASA toolkit! ###')
             elif self.convert_ms2uvfits_tool == 'ms2uvfits':

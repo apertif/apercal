@@ -211,3 +211,586 @@ Number of antenna configurations: 1
 01/25/2017 04:36:27 PM - basher - DEBUG : Returning output.
 01/25/2017 04:36:27 PM - CONVERT - INFO : ### Converted UVFITS file NGC4062.MS to MIRIAD format using MIRIAD task wsrtfits! ###
 01/25/2017 04:36:27 PM - CONVERT - INFO : ### Conversion from UVFITS to MIRIAD format done! ###
+01/26/2017 11:53:57 AM - root - INFO : Logging started!
+01/26/2017 11:53:57 AM - root - INFO : To see the log in a bash window use the following command:
+01/26/2017 11:53:57 AM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/tutorials/logs/A2.log
+01/26/2017 11:54:00 AM - PREFLAG - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A2.cfg successfully read! ###
+01/26/2017 11:54:01 AM - PREFLAG - INFO : ########## PRE-FLAGGING started ##########
+01/26/2017 11:54:01 AM - PREFLAG - INFO : # Moved to directory /data/adebahr/apertif/tutorial/A2/raw #
+01/26/2017 11:54:01 AM - PREFLAG - INFO : ### Doing pre-flagging with AOFlagger ###
+01/26/2017 11:54:02 AM - PREFLAG - INFO : ### Flagging of 3C147.MS using fluxcal.rfis done ###
+01/26/2017 11:54:24 AM - PREFLAG - INFO : ### Flagging of NGC4062.MS using target.rfis done ###
+01/26/2017 11:54:24 AM - PREFLAG - INFO : ### Starting pre-flagging of known flags ###
+01/26/2017 11:54:24 AM - PREFLAG - INFO : # Flagging auto-correlations for flux calibrator data #
+01/26/2017 11:54:25 AM - PREFLAG - INFO : # Auto-correlation flagging for flux calibrator data done #
+01/26/2017 11:54:25 AM - PREFLAG - INFO : # Flagging auto-correlations for target data #
+01/26/2017 11:54:29 AM - PREFLAG - INFO : # Auto-correlation flagging for target data done #
+01/26/2017 11:54:29 AM - PREFLAG - INFO : # Flagging shadowed antennas for flux calibrator data #
+01/26/2017 11:54:29 AM - PREFLAG - INFO : # Flagging of shadowed antennas for flux calibrator data done #
+01/26/2017 11:54:29 AM - PREFLAG - INFO : # Flagging of shadowed antennas for target data #
+01/26/2017 11:54:32 AM - PREFLAG - INFO : # Flagging of shadowed antennas for target data done #
+01/26/2017 11:54:32 AM - PREFLAG - INFO : ### Pre-flagging of known flags done ###
+01/26/2017 11:54:32 AM - PREFLAG - INFO : ########## PRE-FLAGGING done ##########
+01/26/2017 11:55:57 AM - CONVERT - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A2.cfg successfully read! ###
+01/26/2017 11:55:59 AM - CONVERT - INFO : ########## FILE CONVERSION started ##########
+01/26/2017 11:55:59 AM - CONVERT - INFO : ### Starting conversion from MS to UVFITS format ###
+01/26/2017 11:55:59 AM - CONVERT - INFO : # Creating directory /data/adebahr/apertif/tutorial/A2/crosscal #
+01/26/2017 11:55:59 AM - CONVERT - INFO : # Moved to directory /data/adebahr/apertif/tutorial/A2/crosscal #
+01/26/2017 11:55:59 AM - CONVERT - INFO : ### Using CASA toolkit to convert from MS to UVFITS format! ###
+01/26/2017 11:55:59 AM - CONVERT - INFO : ### Converted MS file 3C147.MS to UVFITS using CASA toolkit! ###
+01/26/2017 11:56:18 AM - CONVERT - INFO : ### Converted MS file NGC4062.MS to UVFITS using CASA toolkit! ###
+01/26/2017 11:56:18 AM - CONVERT - INFO : ### Conversion from MS to UVFITS format done! ###
+01/26/2017 11:56:18 AM - CONVERT - INFO : ### Starting conversion from UVFITS to MIRIAD format ###
+01/26/2017 11:56:18 AM - CONVERT - INFO : ### Using MIRIAD wsrtfits task to convert data from UVFITS to MIRIAD format ###
+01/26/2017 11:56:18 AM - masher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/A2/crosscal/3C147.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/A2/crosscal/3C147.mir 
+01/26/2017 11:56:18 AM - basher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/A2/crosscal/3C147.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/A2/crosscal/3C147.mir 
+01/26/2017 11:56:18 AM - basher - DEBUG : Command = wsrtfits in=/data/adebahr/apertif/tutorial/A2/crosscal/3C147.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/A2/crosscal/3C147.mir 
+01/26/2017 11:56:18 AM - basher - DEBUG : 
+wsrtfits: version 1.3.1 21-Jul-04
+ /data/adebahr/apertif/tutorial/A2/crosscal/3C147.UVFITS                                                                         
+Assuming systemp=30
+Assuming jyperk=8
+Reading AIPS AN table
+ freqref    1416494706.9999995     
+Decrementing times for configration  1 by  0.14 seconds (UTC-UT1).
+ Mount type :           1
+Reading AIPS FQ table
+swapping frequency axis
+Doppler tracking..
+Data are linearly polarized
+Reading the correlation data
+The estimated integration time of a sample is 60 seconds
+Number of antennas: 14
+Number of antenna configurations: 1
+
+01/26/2017 11:56:18 AM - basher - DEBUG : ### Warning [wsrtfits]:  Some unrecognised cards were written to the history file
+### Warning [wsrtfits]:  Some visibilities had zero weight
+
+01/26/2017 11:56:18 AM - basher - DEBUG : Returning output.
+01/26/2017 11:56:18 AM - basher - DEBUG : rm -r /data/adebahr/apertif/tutorial/A2/crosscal/3C147.UVFITS
+01/26/2017 11:56:18 AM - basher - DEBUG : Returning output.
+01/26/2017 11:56:18 AM - CONVERT - INFO : ### Converted UVFITS file 3C147.MS to MIRIAD format using MIRIAD task wsrtfits! ###
+01/26/2017 11:56:18 AM - masher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.mir 
+01/26/2017 11:56:18 AM - basher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.mir 
+01/26/2017 11:56:24 AM - basher - DEBUG : Command = wsrtfits in=/data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.mir 
+01/26/2017 11:56:24 AM - basher - DEBUG : 
+wsrtfits: version 1.3.1 21-Jul-04
+ /data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.UVFITS                                                                       
+Assuming systemp=30
+Assuming jyperk=8
+Reading AIPS AN table
+ freqref    1416494706.8089998     
+Decrementing times for configration  1 by  0.14 seconds (UTC-UT1).
+ Mount type :           1
+Reading AIPS FQ table
+swapping frequency axis
+Doppler tracking..
+Data are linearly polarized
+Reading the correlation data
+The estimated integration time of a sample is 60 seconds
+Number of antennas: 14
+Number of antenna configurations: 1
+
+01/26/2017 11:56:24 AM - basher - DEBUG : ### Warning [wsrtfits]:  Some unrecognised cards were written to the history file
+### Warning [wsrtfits]:  Some visibilities had zero weight
+
+01/26/2017 11:56:24 AM - basher - DEBUG : Returning output.
+01/26/2017 11:56:24 AM - basher - DEBUG : rm -r /data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.UVFITS
+01/26/2017 11:56:25 AM - basher - DEBUG : Returning output.
+01/26/2017 11:56:25 AM - CONVERT - INFO : ### Converted UVFITS file NGC4062.MS to MIRIAD format using MIRIAD task wsrtfits! ###
+01/26/2017 11:56:25 AM - CONVERT - INFO : ### Conversion from UVFITS to MIRIAD format done! ###
+01/26/2017 11:56:25 AM - CONVERT - INFO : ########## FILE CONVERSION done ##########
+01/26/2017 11:57:55 AM - CROSSCAL - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A2.cfg successfully read! ###
+01/26/2017 11:57:56 AM - CROSSCAL - INFO : ########## Starting CROSS CALIBRATION ##########
+01/26/2017 11:57:56 AM - CROSSCAL - INFO : ### WSRT data set. Fringe stopping was done online! ###
+01/26/2017 11:57:56 AM - CROSSCAL - INFO : ### Applying system temperatures corrections ###
+01/26/2017 11:57:56 AM - CROSSCAL - INFO : # Applying system temperature corrections to flux calibrator data #
+01/26/2017 11:57:56 AM - masher - DEBUG : attsys vis=3C147.mir out=3C147.mir_temp 
+01/26/2017 11:57:56 AM - basher - DEBUG : attsys vis=3C147.mir out=3C147.mir_temp 
+01/26/2017 11:57:56 AM - basher - DEBUG : Command = attsys vis=3C147.mir out=3C147.mir_temp 
+01/26/2017 11:57:56 AM - basher - DEBUG : 
+
+attsys: Revision 1.9, 2013/08/30 01:49:21 UTC
+
+
+01/26/2017 11:57:56 AM - basher - DEBUG : ### Fatal Error:  Invalid tsys parameter
+
+01/26/2017 11:57:56 AM - basher - DEBUG : Returning output.
+01/26/2017 11:57:56 AM - basher - DEBUG : rm -r 3C147.mir
+01/26/2017 11:57:56 AM - basher - DEBUG : Returning output.
+01/26/2017 11:57:56 AM - basher - DEBUG : mv 3C147.mir_temp 3C147.mir
+01/26/2017 11:57:56 AM - basher - DEBUG : mv: cannot stat '3C147.mir_temp': No such file or directory
+
+01/26/2017 11:57:56 AM - basher - DEBUG : Returning output.
+01/26/2017 11:57:56 AM - CROSSCAL - INFO : # System temperatures corrections to flux calibrator data applied #
+01/26/2017 11:57:56 AM - CROSSCAL - INFO : # Applying system temperature corrections to target data #
+01/26/2017 11:57:56 AM - masher - DEBUG : attsys vis=NGC4062.mir out=NGC4062.mir_temp 
+01/26/2017 11:57:56 AM - basher - DEBUG : attsys vis=NGC4062.mir out=NGC4062.mir_temp 
+01/26/2017 11:57:57 AM - basher - DEBUG : Command = attsys vis=NGC4062.mir out=NGC4062.mir_temp 
+01/26/2017 11:57:57 AM - basher - DEBUG : 
+
+attsys: Revision 1.9, 2013/08/30 01:49:21 UTC
+
+
+01/26/2017 11:57:57 AM - basher - DEBUG : ### Fatal Error:  Invalid tsys parameter
+
+01/26/2017 11:57:57 AM - basher - DEBUG : Returning output.
+01/26/2017 11:57:57 AM - basher - DEBUG : rm -r NGC4062.mir
+01/26/2017 11:57:57 AM - basher - DEBUG : Returning output.
+01/26/2017 11:57:57 AM - basher - DEBUG : mv NGC4062.mir_temp NGC4062.mir
+01/26/2017 11:57:57 AM - basher - DEBUG : mv: cannot stat 'NGC4062.mir_temp': No such file or directory
+
+01/26/2017 11:57:57 AM - basher - DEBUG : Returning output.
+01/26/2017 11:57:57 AM - CROSSCAL - INFO : # System temperatures corrections to target data applied #
+01/26/2017 11:57:57 AM - CROSSCAL - INFO : ### System temperatures corrections applied ###
+01/26/2017 11:57:57 AM - CROSSCAL - INFO : ### Bandpass calibration on the flux calibrator data started ###
+01/26/2017 11:57:57 AM - masher - DEBUG : mfcal vis=3C147.mir 
+01/26/2017 11:57:57 AM - basher - DEBUG : mfcal vis=3C147.mir 
+01/26/2017 11:57:57 AM - basher - DEBUG : Command = mfcal vis=3C147.mir 
+01/26/2017 11:57:57 AM - basher - DEBUG : 
+MfCal: $Revision: 1.17 $, $Date: 2016/05/01 22:31:05 $
+
+01/26/2017 11:57:57 AM - basher - DEBUG : ### Fatal Error:  File does not exist: 3C147.mir
+
+01/26/2017 11:57:57 AM - basher - DEBUG : Returning output.
+01/26/2017 11:57:57 AM - CROSSCAL - INFO : ### Bandpass calibration on the flux calibrator data done ###
+01/26/2017 11:57:57 AM - CROSSCAL - INFO : ### No polarisation calibration done! ###
+01/26/2017 11:57:57 AM - CROSSCAL - INFO : ### Copying calibrator solutions to target dataset ###
+01/26/2017 11:57:57 AM - CROSSCAL - ERROR : # No calibrator solutions found! Exiting! #
+01/26/2017 12:43:23 PM - root - INFO : Logging started!
+01/26/2017 12:43:23 PM - root - INFO : To see the log in a bash window use the following command:
+01/26/2017 12:43:23 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/tutorials/logs/A2.log
+01/26/2017 12:43:26 PM - PREFLAG - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A2.cfg successfully read! ###
+01/26/2017 12:43:27 PM - PREFLAG - INFO : ########## PRE-FLAGGING started ##########
+01/26/2017 12:43:27 PM - PREFLAG - INFO : # Moved to directory /data/adebahr/apertif/tutorial/A2/raw #
+01/26/2017 12:43:27 PM - PREFLAG - INFO : ### Doing pre-flagging with AOFlagger ###
+01/26/2017 12:43:28 PM - PREFLAG - INFO : ### Flagging of 3C147.MS using fluxcal.rfis done ###
+01/26/2017 12:43:52 PM - PREFLAG - INFO : ### Flagging of NGC4062.MS using target.rfis done ###
+01/26/2017 12:43:52 PM - PREFLAG - INFO : ### Starting pre-flagging of known flags ###
+01/26/2017 12:43:52 PM - PREFLAG - INFO : # Flagging auto-correlations for flux calibrator data #
+01/26/2017 12:43:52 PM - PREFLAG - INFO : # Auto-correlation flagging for flux calibrator data done #
+01/26/2017 12:43:52 PM - PREFLAG - INFO : # Flagging auto-correlations for target data #
+01/26/2017 12:43:56 PM - PREFLAG - INFO : # Auto-correlation flagging for target data done #
+01/26/2017 12:43:56 PM - PREFLAG - INFO : # Flagging shadowed antennas for flux calibrator data #
+01/26/2017 12:43:57 PM - PREFLAG - INFO : # Flagging of shadowed antennas for flux calibrator data done #
+01/26/2017 12:43:57 PM - PREFLAG - INFO : # Flagging of shadowed antennas for target data #
+01/26/2017 12:44:00 PM - PREFLAG - INFO : # Flagging of shadowed antennas for target data done #
+01/26/2017 12:44:00 PM - PREFLAG - INFO : ### Pre-flagging of known flags done ###
+01/26/2017 12:44:00 PM - PREFLAG - INFO : ########## PRE-FLAGGING done ##########
+01/26/2017 12:44:05 PM - CONVERT - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A2.cfg successfully read! ###
+01/26/2017 12:44:06 PM - CONVERT - INFO : ########## FILE CONVERSION started ##########
+01/26/2017 12:44:06 PM - CONVERT - INFO : ### Starting conversion from MS to UVFITS format ###
+01/26/2017 12:44:06 PM - CONVERT - INFO : # Creating directory /data/adebahr/apertif/tutorial/A2/crosscal #
+01/26/2017 12:44:06 PM - CONVERT - INFO : # Moved to directory /data/adebahr/apertif/tutorial/A2/crosscal #
+01/26/2017 12:44:06 PM - CONVERT - INFO : ### Using ms2uvfits to convert from MS to UVFITS format! ###
+01/26/2017 12:44:07 PM - CONVERT - INFO : ### Converted MS file 3C147.MS to UVFITS using ms2uvfits! ###
+01/26/2017 12:44:24 PM - CONVERT - INFO : ### Converted MS file NGC4062.MS to UVFITS using ms2uvfits! ###
+01/26/2017 12:44:24 PM - CONVERT - INFO : ### Conversion from MS to UVFITS format done! ###
+01/26/2017 12:44:24 PM - CONVERT - INFO : ### Starting conversion from UVFITS to MIRIAD format ###
+01/26/2017 12:44:24 PM - CONVERT - INFO : ### Using MIRIAD wsrtfits task to convert data from UVFITS to MIRIAD format ###
+01/26/2017 12:44:24 PM - masher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/A2/crosscal/3C147.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/A2/crosscal/3C147.mir 
+01/26/2017 12:44:24 PM - basher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/A2/crosscal/3C147.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/A2/crosscal/3C147.mir 
+01/26/2017 12:44:24 PM - basher - DEBUG : Command = wsrtfits in=/data/adebahr/apertif/tutorial/A2/crosscal/3C147.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/A2/crosscal/3C147.mir 
+01/26/2017 12:44:24 PM - basher - DEBUG : 
+wsrtfits: version 1.3.1 21-Jul-04
+ /data/adebahr/apertif/tutorial/A2/crosscal/3C147.UVFITS                                                                         
+
+01/26/2017 12:44:24 PM - basher - DEBUG : ### Fatal Error [wsrtfits]:  Serious inconsistency in file size
+
+01/26/2017 12:44:24 PM - basher - DEBUG : Returning output.
+01/26/2017 12:44:24 PM - basher - DEBUG : rm -r /data/adebahr/apertif/tutorial/A2/crosscal/3C147.UVFITS
+01/26/2017 12:44:24 PM - basher - DEBUG : Returning output.
+01/26/2017 12:44:24 PM - CONVERT - INFO : ### Converted UVFITS file 3C147.MS to MIRIAD format using MIRIAD task wsrtfits! ###
+01/26/2017 12:44:24 PM - masher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.mir 
+01/26/2017 12:44:24 PM - basher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.mir 
+01/26/2017 12:44:24 PM - basher - DEBUG : Command = wsrtfits in=/data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.mir 
+01/26/2017 12:44:24 PM - basher - DEBUG : 
+wsrtfits: version 1.3.1 21-Jul-04
+ /data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.UVFITS                                                                       
+
+01/26/2017 12:44:24 PM - basher - DEBUG : ### Fatal Error [wsrtfits]:  Serious inconsistency in file size
+
+01/26/2017 12:44:24 PM - basher - DEBUG : Returning output.
+01/26/2017 12:44:24 PM - basher - DEBUG : rm -r /data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.UVFITS
+01/26/2017 12:44:25 PM - basher - DEBUG : Returning output.
+01/26/2017 12:44:25 PM - CONVERT - INFO : ### Converted UVFITS file NGC4062.MS to MIRIAD format using MIRIAD task wsrtfits! ###
+01/26/2017 12:44:25 PM - CONVERT - INFO : ### Conversion from UVFITS to MIRIAD format done! ###
+01/26/2017 12:44:25 PM - CONVERT - INFO : ########## FILE CONVERSION done ##########
+01/26/2017 12:47:45 PM - root - INFO : Logging started!
+01/26/2017 12:47:45 PM - root - INFO : To see the log in a bash window use the following command:
+01/26/2017 12:47:45 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/tutorials/logs/A2.log
+01/26/2017 12:47:47 PM - PREFLAG - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A2.cfg successfully read! ###
+01/26/2017 12:47:48 PM - PREFLAG - INFO : ########## PRE-FLAGGING started ##########
+01/26/2017 12:47:48 PM - PREFLAG - INFO : # Moved to directory /data/adebahr/apertif/tutorial/A2/raw #
+01/26/2017 12:47:48 PM - PREFLAG - INFO : ### Doing pre-flagging with AOFlagger ###
+01/26/2017 12:47:49 PM - PREFLAG - INFO : ### Flagging of 3C147.MS using fluxcal.rfis done ###
+01/26/2017 12:48:11 PM - PREFLAG - INFO : ### Flagging of NGC4062.MS using target.rfis done ###
+01/26/2017 12:48:11 PM - PREFLAG - INFO : ### Starting pre-flagging of known flags ###
+01/26/2017 12:48:11 PM - PREFLAG - INFO : # Flagging auto-correlations for flux calibrator data #
+01/26/2017 12:48:11 PM - PREFLAG - INFO : # Auto-correlation flagging for flux calibrator data done #
+01/26/2017 12:48:11 PM - PREFLAG - INFO : # Flagging auto-correlations for target data #
+01/26/2017 12:48:15 PM - PREFLAG - INFO : # Auto-correlation flagging for target data done #
+01/26/2017 12:48:15 PM - PREFLAG - INFO : # Flagging shadowed antennas for flux calibrator data #
+01/26/2017 12:48:15 PM - PREFLAG - INFO : # Flagging of shadowed antennas for flux calibrator data done #
+01/26/2017 12:48:15 PM - PREFLAG - INFO : # Flagging of shadowed antennas for target data #
+01/26/2017 12:48:19 PM - PREFLAG - INFO : # Flagging of shadowed antennas for target data done #
+01/26/2017 12:48:19 PM - PREFLAG - INFO : ### Pre-flagging of known flags done ###
+01/26/2017 12:48:19 PM - PREFLAG - INFO : ########## PRE-FLAGGING done ##########
+01/26/2017 12:48:21 PM - CONVERT - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A2.cfg successfully read! ###
+01/26/2017 12:48:22 PM - CONVERT - INFO : ########## FILE CONVERSION started ##########
+01/26/2017 12:48:22 PM - CONVERT - INFO : ### Starting conversion from MS to UVFITS format ###
+01/26/2017 12:48:22 PM - CONVERT - INFO : # Creating directory /data/adebahr/apertif/tutorial/A2/crosscal #
+01/26/2017 12:48:22 PM - CONVERT - INFO : # Moved to directory /data/adebahr/apertif/tutorial/A2/crosscal #
+01/26/2017 12:48:22 PM - CONVERT - INFO : ### Using CASA toolkit to convert from MS to UVFITS format! ###
+01/26/2017 12:48:22 PM - CONVERT - INFO : ### Converted MS file 3C147.MS to UVFITS using CASA toolkit! ###
+01/26/2017 12:48:41 PM - CONVERT - INFO : ### Converted MS file NGC4062.MS to UVFITS using CASA toolkit! ###
+01/26/2017 12:48:41 PM - CONVERT - INFO : ### Conversion from MS to UVFITS format done! ###
+01/26/2017 12:48:41 PM - CONVERT - INFO : ### Starting conversion from UVFITS to MIRIAD format ###
+01/26/2017 12:48:41 PM - CONVERT - INFO : ### Using MIRIAD wsrtfits task to convert data from UVFITS to MIRIAD format ###
+01/26/2017 12:48:41 PM - masher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/A2/crosscal/3C147.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/A2/crosscal/3C147.mir 
+01/26/2017 12:48:41 PM - basher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/A2/crosscal/3C147.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/A2/crosscal/3C147.mir 
+01/26/2017 12:48:41 PM - basher - DEBUG : Command = wsrtfits in=/data/adebahr/apertif/tutorial/A2/crosscal/3C147.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/A2/crosscal/3C147.mir 
+01/26/2017 12:48:41 PM - basher - DEBUG : 
+wsrtfits: version 1.3.1 21-Jul-04
+ /data/adebahr/apertif/tutorial/A2/crosscal/3C147.UVFITS                                                                         
+Assuming systemp=30
+Assuming jyperk=8
+Reading AIPS TY table
+Reading AIPS AN table
+ freqref    1416494706.9999995     
+Decrementing times for configration  1 by  0.14 seconds (UTC-UT1).
+ Mount type :           1
+Reading AIPS FQ table
+swapping frequency axis
+Doppler tracking..
+Data are linearly polarized
+Reading the correlation data
+The estimated integration time of a sample is 60 seconds
+Number of antennas: 14
+Number of antenna configurations: 1
+
+01/26/2017 12:48:41 PM - basher - DEBUG : ### Warning [wsrtfits]:  Some unrecognised cards were written to the history file
+### Warning [wsrtfits]:  Some visibilities had zero weight
+
+01/26/2017 12:48:41 PM - basher - DEBUG : Returning output.
+01/26/2017 12:48:41 PM - basher - DEBUG : rm -r /data/adebahr/apertif/tutorial/A2/crosscal/3C147.UVFITS
+01/26/2017 12:48:41 PM - basher - DEBUG : Returning output.
+01/26/2017 12:48:41 PM - CONVERT - INFO : ### Converted UVFITS file 3C147.MS to MIRIAD format using MIRIAD task wsrtfits! ###
+01/26/2017 12:48:41 PM - masher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.mir 
+01/26/2017 12:48:41 PM - basher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.mir 
+01/26/2017 12:48:47 PM - basher - DEBUG : Command = wsrtfits in=/data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.mir 
+01/26/2017 12:48:47 PM - basher - DEBUG : 
+wsrtfits: version 1.3.1 21-Jul-04
+ /data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.UVFITS                                                                       
+Assuming systemp=30
+Assuming jyperk=8
+Reading AIPS TY table
+Reading AIPS AN table
+ freqref    1416494706.8089998     
+Decrementing times for configration  1 by  0.14 seconds (UTC-UT1).
+ Mount type :           1
+Reading AIPS FQ table
+swapping frequency axis
+Doppler tracking..
+Data are linearly polarized
+Reading the correlation data
+The estimated integration time of a sample is 60 seconds
+Number of antennas: 14
+Number of antenna configurations: 1
+
+01/26/2017 12:48:47 PM - basher - DEBUG : ### Warning [wsrtfits]:  Some unrecognised cards were written to the history file
+### Warning [wsrtfits]:  Some visibilities had zero weight
+
+01/26/2017 12:48:47 PM - basher - DEBUG : Returning output.
+01/26/2017 12:48:47 PM - basher - DEBUG : rm -r /data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.UVFITS
+01/26/2017 12:48:48 PM - basher - DEBUG : Returning output.
+01/26/2017 12:48:48 PM - CONVERT - INFO : ### Converted UVFITS file NGC4062.MS to MIRIAD format using MIRIAD task wsrtfits! ###
+01/26/2017 12:48:48 PM - CONVERT - INFO : ### Conversion from UVFITS to MIRIAD format done! ###
+01/26/2017 12:48:48 PM - CONVERT - INFO : ########## FILE CONVERSION done ##########
+01/26/2017 12:49:01 PM - CROSSCAL - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A2.cfg successfully read! ###
+01/26/2017 12:49:02 PM - CROSSCAL - INFO : ########## Starting CROSS CALIBRATION ##########
+01/26/2017 12:49:02 PM - CROSSCAL - INFO : ### WSRT data set. Fringe stopping was done online! ###
+01/26/2017 12:49:02 PM - CROSSCAL - INFO : ### Applying system temperatures corrections ###
+01/26/2017 12:49:02 PM - CROSSCAL - INFO : # Applying system temperature corrections to flux calibrator data #
+01/26/2017 12:49:02 PM - masher - DEBUG : attsys vis=3C147.mir out=3C147.mir_temp 
+01/26/2017 12:49:02 PM - basher - DEBUG : attsys vis=3C147.mir out=3C147.mir_temp 
+01/26/2017 12:49:02 PM - basher - DEBUG : Command = attsys vis=3C147.mir out=3C147.mir_temp 
+01/26/2017 12:49:02 PM - basher - DEBUG : 
+
+attsys: Revision 1.9, 2013/08/30 01:49:21 UTC
+
+
+01/26/2017 12:49:02 PM - basher - DEBUG : Returning output.
+01/26/2017 12:49:02 PM - basher - DEBUG : rm -r 3C147.mir
+01/26/2017 12:49:02 PM - basher - DEBUG : Returning output.
+01/26/2017 12:49:02 PM - basher - DEBUG : mv 3C147.mir_temp 3C147.mir
+01/26/2017 12:49:02 PM - basher - DEBUG : Returning output.
+01/26/2017 12:49:02 PM - CROSSCAL - INFO : # System temperatures corrections to flux calibrator data applied #
+01/26/2017 12:49:02 PM - CROSSCAL - INFO : # Applying system temperature corrections to target data #
+01/26/2017 12:49:02 PM - masher - DEBUG : attsys vis=NGC4062.mir out=NGC4062.mir_temp 
+01/26/2017 12:49:02 PM - basher - DEBUG : attsys vis=NGC4062.mir out=NGC4062.mir_temp 
+01/26/2017 12:49:09 PM - basher - DEBUG : Command = attsys vis=NGC4062.mir out=NGC4062.mir_temp 
+01/26/2017 12:49:09 PM - basher - DEBUG : 
+
+attsys: Revision 1.9, 2013/08/30 01:49:21 UTC
+
+
+01/26/2017 12:49:09 PM - basher - DEBUG : Returning output.
+01/26/2017 12:49:09 PM - basher - DEBUG : rm -r NGC4062.mir
+01/26/2017 12:49:10 PM - basher - DEBUG : Returning output.
+01/26/2017 12:49:10 PM - basher - DEBUG : mv NGC4062.mir_temp NGC4062.mir
+01/26/2017 12:49:10 PM - basher - DEBUG : Returning output.
+01/26/2017 12:49:10 PM - CROSSCAL - INFO : # System temperatures corrections to target data applied #
+01/26/2017 12:49:10 PM - CROSSCAL - INFO : ### System temperatures corrections applied ###
+01/26/2017 12:49:10 PM - CROSSCAL - INFO : ### Bandpass calibration on the flux calibrator data started ###
+01/26/2017 12:49:10 PM - masher - DEBUG : mfcal vis=3C147.mir 
+01/26/2017 12:49:10 PM - basher - DEBUG : mfcal vis=3C147.mir 
+01/26/2017 12:49:15 PM - basher - DEBUG : Command = mfcal vis=3C147.mir 
+01/26/2017 12:49:15 PM - basher - DEBUG : 
+MfCal: $Revision: 1.17 $, $Date: 2016/05/01 22:31:05 $
+Selecting parallel-hand polarisations
+Reading the data ...
+Number correlations accepted: 2765226
+Number of frequency bands/settings: 1
+Number of polarisations selected: 2
+Number of solution intervals: 3
+Number of passband solution intervals: 1
+Initialising ...
+Using known frequency variation of 3c147
+Generating initial solution estimate ...
+Doing solution refinement ...
+Iter= 1, Solution Error: 18.911
+Iter= 2, Solution Error:  0.013
+Iter= 3, Solution Error:  0.012
+Iter= 4, Solution Error:  0.011
+Iter= 5, Solution Error:  0.011
+Iter= 6, Solution Error:  0.011
+Iter= 7, Solution Error:  0.010
+Iter= 8, Solution Error:  0.010
+Iter= 9, Solution Error:  0.010
+Iter=10, Solution Error:  0.010
+Iter=11, Solution Error:  0.010
+Iter=12, Solution Error:  0.010
+Iter=13, Solution Error:  0.010
+Iter=14, Solution Error:  0.010
+Iter=15, Solution Error:  0.010
+Iter=16, Solution Error:  0.010
+Iter=17, Solution Error:  0.010
+Iter=18, Solution Error:  0.010
+Iter=19, Solution Error:  0.010
+Iter=20, Solution Error:  0.010
+Iter=21, Solution Error:  0.010
+Iter=22, Solution Error:  0.010
+Iter=23, Solution Error:  0.010
+Iter=24, Solution Error:  0.010
+Iter=25, Solution Error:  0.010
+Iter=26, Solution Error:  0.010
+Iter=27, Solution Error:  0.010
+Iter=28, Solution Error:  0.010
+Iter=29, Solution Error:  0.010
+Iter=30, Solution Error:  0.010
+Saving solution ...
+
+01/26/2017 12:49:15 PM - basher - DEBUG : ### Warning:  Correlations flagged or edge-rejected: 30294
+### Warning:  Failed to converge
+
+01/26/2017 12:49:15 PM - basher - DEBUG : Returning output.
+01/26/2017 12:49:15 PM - CROSSCAL - INFO : ### Bandpass calibration on the flux calibrator data done ###
+01/26/2017 12:49:15 PM - CROSSCAL - INFO : ### No polarisation calibration done! ###
+01/26/2017 12:49:15 PM - CROSSCAL - INFO : ### Copying calibrator solutions to target dataset ###
+01/26/2017 12:49:15 PM - CROSSCAL - INFO : # Copying calibrator solutions (bandpass, gains) from flux calibrator #
+01/26/2017 12:49:15 PM - CROSSCAL - INFO : # Polarisation calibration solutions (leakage, angle) not found #
+01/26/2017 12:49:15 PM - masher - DEBUG : gpcopy vis=3C147.mir out=NGC4062.mir 
+01/26/2017 12:49:15 PM - basher - DEBUG : gpcopy vis=3C147.mir out=NGC4062.mir 
+01/26/2017 12:49:15 PM - basher - DEBUG : Command = gpcopy vis=3C147.mir out=NGC4062.mir 
+01/26/2017 12:49:15 PM - basher - DEBUG : 
+
+gpcopy: Revision 1.13, 2015/10/29 01:31:39 UTC
+
+Copying gain table
+Interpolation tolerance set to (minutes): 720.00
+Copying bandpass table
+
+01/26/2017 12:49:15 PM - basher - DEBUG : Returning output.
+01/26/2017 12:49:15 PM - CROSSCAL - INFO : ### All solutions copied to target data ###
+01/26/2017 12:49:15 PM - CROSSCAL - INFO : ########## CROSS CALIBRATION done ##########
+01/26/2017 12:55:24 PM - root - INFO : Logging started!
+01/26/2017 12:55:24 PM - root - INFO : To see the log in a bash window use the following command:
+01/26/2017 12:55:24 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/tutorials/logs/A2.log
+01/26/2017 12:55:26 PM - PREFLAG - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A2.cfg successfully read! ###
+01/26/2017 12:55:28 PM - PREFLAG - INFO : ########## PRE-FLAGGING started ##########
+01/26/2017 12:55:28 PM - PREFLAG - INFO : # Moved to directory /data/adebahr/apertif/tutorial/A2/raw #
+01/26/2017 12:55:28 PM - PREFLAG - INFO : ### Doing pre-flagging with AOFlagger ###
+01/26/2017 12:55:29 PM - PREFLAG - INFO : ### Flagging of 3C147.MS using fluxcal.rfis done ###
+01/26/2017 12:55:49 PM - PREFLAG - INFO : ### Flagging of NGC4062.MS using target.rfis done ###
+01/26/2017 12:55:49 PM - PREFLAG - INFO : ### Starting pre-flagging of known flags ###
+01/26/2017 12:55:49 PM - PREFLAG - INFO : # Flagging auto-correlations for flux calibrator data #
+01/26/2017 12:55:50 PM - PREFLAG - INFO : # Auto-correlation flagging for flux calibrator data done #
+01/26/2017 12:55:50 PM - PREFLAG - INFO : # Flagging auto-correlations for target data #
+01/26/2017 12:55:54 PM - PREFLAG - INFO : # Auto-correlation flagging for target data done #
+01/26/2017 12:55:54 PM - PREFLAG - INFO : # Flagging antenna(s) RT5 for flux calibrator data #
+01/26/2017 12:55:54 PM - PREFLAG - INFO : # Flagging of antenna(s) RT5 for flux calibrator data done #
+01/26/2017 12:55:54 PM - PREFLAG - INFO : # Flagging antenna(s) RT5 for target data #
+01/26/2017 12:55:58 PM - PREFLAG - INFO : # Flagging of antenna(s) RT5 for target data done #
+01/26/2017 12:55:58 PM - PREFLAG - INFO : # Flagging shadowed antennas for flux calibrator data #
+01/26/2017 12:55:58 PM - PREFLAG - INFO : # Flagging of shadowed antennas for flux calibrator data done #
+01/26/2017 12:55:58 PM - PREFLAG - INFO : # Flagging of shadowed antennas for target data #
+01/26/2017 12:56:02 PM - PREFLAG - INFO : # Flagging of shadowed antennas for target data done #
+01/26/2017 12:56:02 PM - PREFLAG - INFO : ### Pre-flagging of known flags done ###
+01/26/2017 12:56:02 PM - PREFLAG - INFO : ########## PRE-FLAGGING done ##########
+01/26/2017 12:56:04 PM - CONVERT - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A2.cfg successfully read! ###
+01/26/2017 12:56:04 PM - CONVERT - INFO : ########## FILE CONVERSION started ##########
+01/26/2017 12:56:04 PM - CONVERT - INFO : ### Starting conversion from MS to UVFITS format ###
+01/26/2017 12:56:04 PM - CONVERT - INFO : # Creating directory /data/adebahr/apertif/tutorial/A2/crosscal #
+01/26/2017 12:56:04 PM - CONVERT - INFO : # Moved to directory /data/adebahr/apertif/tutorial/A2/crosscal #
+01/26/2017 12:56:04 PM - CONVERT - INFO : ### Using CASA toolkit to convert from MS to UVFITS format! ###
+01/26/2017 12:56:05 PM - CONVERT - INFO : ### Converted MS file 3C147.MS to UVFITS using CASA toolkit! ###
+01/26/2017 12:56:24 PM - CONVERT - INFO : ### Converted MS file NGC4062.MS to UVFITS using CASA toolkit! ###
+01/26/2017 12:56:24 PM - CONVERT - INFO : ### Conversion from MS to UVFITS format done! ###
+01/26/2017 12:56:24 PM - CONVERT - INFO : ### Starting conversion from UVFITS to MIRIAD format ###
+01/26/2017 12:56:24 PM - CONVERT - INFO : ### Using MIRIAD wsrtfits task to convert data from UVFITS to MIRIAD format ###
+01/26/2017 12:56:24 PM - masher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/A2/crosscal/3C147.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/A2/crosscal/3C147.mir 
+01/26/2017 12:56:24 PM - basher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/A2/crosscal/3C147.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/A2/crosscal/3C147.mir 
+01/26/2017 12:56:24 PM - basher - DEBUG : Command = wsrtfits in=/data/adebahr/apertif/tutorial/A2/crosscal/3C147.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/A2/crosscal/3C147.mir 
+01/26/2017 12:56:24 PM - basher - DEBUG : 
+wsrtfits: version 1.3.1 21-Jul-04
+ /data/adebahr/apertif/tutorial/A2/crosscal/3C147.UVFITS                                                                         
+Assuming systemp=30
+Assuming jyperk=8
+Reading AIPS TY table
+Reading AIPS AN table
+ freqref    1416494706.9999995     
+Decrementing times for configration  1 by  0.14 seconds (UTC-UT1).
+ Mount type :           1
+Reading AIPS FQ table
+swapping frequency axis
+Doppler tracking..
+Data are linearly polarized
+Reading the correlation data
+The estimated integration time of a sample is 60 seconds
+Number of antennas: 14
+Number of antenna configurations: 1
+
+01/26/2017 12:56:24 PM - basher - DEBUG : ### Warning [wsrtfits]:  Some unrecognised cards were written to the history file
+### Warning [wsrtfits]:  Some visibilities had zero weight
+
+01/26/2017 12:56:24 PM - basher - DEBUG : Returning output.
+01/26/2017 12:56:24 PM - basher - DEBUG : rm -r /data/adebahr/apertif/tutorial/A2/crosscal/3C147.UVFITS
+01/26/2017 12:56:24 PM - basher - DEBUG : Returning output.
+01/26/2017 12:56:24 PM - CONVERT - INFO : ### Converted UVFITS file 3C147.MS to MIRIAD format using MIRIAD task wsrtfits! ###
+01/26/2017 12:56:24 PM - masher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.mir 
+01/26/2017 12:56:24 PM - basher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.mir 
+01/26/2017 12:56:30 PM - basher - DEBUG : Command = wsrtfits in=/data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.mir 
+01/26/2017 12:56:30 PM - basher - DEBUG : 
+wsrtfits: version 1.3.1 21-Jul-04
+ /data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.UVFITS                                                                       
+Assuming systemp=30
+Assuming jyperk=8
+Reading AIPS TY table
+Reading AIPS AN table
+ freqref    1416494706.8089998     
+Decrementing times for configration  1 by  0.14 seconds (UTC-UT1).
+ Mount type :           1
+Reading AIPS FQ table
+swapping frequency axis
+Doppler tracking..
+Data are linearly polarized
+Reading the correlation data
+The estimated integration time of a sample is 60 seconds
+Number of antennas: 14
+Number of antenna configurations: 1
+
+01/26/2017 12:56:30 PM - basher - DEBUG : ### Warning [wsrtfits]:  Some unrecognised cards were written to the history file
+### Warning [wsrtfits]:  Some visibilities had zero weight
+
+01/26/2017 12:56:30 PM - basher - DEBUG : Returning output.
+01/26/2017 12:56:30 PM - basher - DEBUG : rm -r /data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.UVFITS
+01/26/2017 12:56:31 PM - basher - DEBUG : Returning output.
+01/26/2017 12:56:31 PM - CONVERT - INFO : ### Converted UVFITS file NGC4062.MS to MIRIAD format using MIRIAD task wsrtfits! ###
+01/26/2017 12:56:31 PM - CONVERT - INFO : ### Conversion from UVFITS to MIRIAD format done! ###
+01/26/2017 12:56:31 PM - CONVERT - INFO : ########## FILE CONVERSION done ##########
+01/26/2017 12:56:35 PM - CROSSCAL - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A2.cfg successfully read! ###
+01/26/2017 12:56:36 PM - CROSSCAL - INFO : ########## Starting CROSS CALIBRATION ##########
+01/26/2017 12:56:36 PM - CROSSCAL - INFO : ### WSRT data set. Fringe stopping was done online! ###
+01/26/2017 12:56:36 PM - CROSSCAL - INFO : ### Applying system temperatures corrections ###
+01/26/2017 12:56:36 PM - CROSSCAL - INFO : # Applying system temperature corrections to flux calibrator data #
+01/26/2017 12:56:36 PM - masher - DEBUG : attsys vis=3C147.mir out=3C147.mir_temp 
+01/26/2017 12:56:36 PM - basher - DEBUG : attsys vis=3C147.mir out=3C147.mir_temp 
+01/26/2017 12:56:36 PM - basher - DEBUG : Command = attsys vis=3C147.mir out=3C147.mir_temp 
+01/26/2017 12:56:36 PM - basher - DEBUG : 
+
+attsys: Revision 1.9, 2013/08/30 01:49:21 UTC
+
+
+01/26/2017 12:56:36 PM - basher - DEBUG : Returning output.
+01/26/2017 12:56:36 PM - basher - DEBUG : rm -r 3C147.mir
+01/26/2017 12:56:36 PM - basher - DEBUG : Returning output.
+01/26/2017 12:56:36 PM - basher - DEBUG : mv 3C147.mir_temp 3C147.mir
+01/26/2017 12:56:36 PM - basher - DEBUG : Returning output.
+01/26/2017 12:56:36 PM - CROSSCAL - INFO : # System temperatures corrections to flux calibrator data applied #
+01/26/2017 12:56:36 PM - CROSSCAL - INFO : # Applying system temperature corrections to target data #
+01/26/2017 12:56:36 PM - masher - DEBUG : attsys vis=NGC4062.mir out=NGC4062.mir_temp 
+01/26/2017 12:56:36 PM - basher - DEBUG : attsys vis=NGC4062.mir out=NGC4062.mir_temp 
+01/26/2017 12:56:43 PM - basher - DEBUG : Command = attsys vis=NGC4062.mir out=NGC4062.mir_temp 
+01/26/2017 12:56:43 PM - basher - DEBUG : 
+
+attsys: Revision 1.9, 2013/08/30 01:49:21 UTC
+
+
+01/26/2017 12:56:43 PM - basher - DEBUG : Returning output.
+01/26/2017 12:56:43 PM - basher - DEBUG : rm -r NGC4062.mir
+01/26/2017 12:56:43 PM - basher - DEBUG : Returning output.
+01/26/2017 12:56:43 PM - basher - DEBUG : mv NGC4062.mir_temp NGC4062.mir
+01/26/2017 12:56:43 PM - basher - DEBUG : Returning output.
+01/26/2017 12:56:43 PM - CROSSCAL - INFO : # System temperatures corrections to target data applied #
+01/26/2017 12:56:43 PM - CROSSCAL - INFO : ### System temperatures corrections applied ###
+01/26/2017 12:56:43 PM - CROSSCAL - INFO : ### Bandpass calibration on the flux calibrator data started ###
+01/26/2017 12:56:43 PM - masher - DEBUG : mfcal vis=3C147.mir 
+01/26/2017 12:56:43 PM - basher - DEBUG : mfcal vis=3C147.mir 
+01/26/2017 12:56:46 PM - basher - DEBUG : Command = mfcal vis=3C147.mir 
+01/26/2017 12:56:46 PM - basher - DEBUG : 
+MfCal: $Revision: 1.17 $, $Date: 2016/05/01 22:31:05 $
+Selecting parallel-hand polarisations
+Reading the data ...
+Number correlations accepted: 2366200
+Number of frequency bands/settings: 1
+Number of polarisations selected: 2
+Number of solution intervals: 3
+Number of passband solution intervals: 1
+Initialising ...
+Using known frequency variation of 3c147
+Generating initial solution estimate ...
+Doing solution refinement ...
+Iter= 1, Solution Error:  0.264
+Iter= 2, Solution Error:  0.000
+Saving solution ...
+
+01/26/2017 12:56:46 PM - basher - DEBUG : ### Warning:  Correlations flagged or edge-rejected: 429320
+
+01/26/2017 12:56:46 PM - basher - DEBUG : Returning output.
+01/26/2017 12:56:46 PM - CROSSCAL - INFO : ### Bandpass calibration on the flux calibrator data done ###
+01/26/2017 12:56:46 PM - CROSSCAL - INFO : ### No polarisation calibration done! ###
+01/26/2017 12:56:46 PM - CROSSCAL - INFO : ### Copying calibrator solutions to target dataset ###
+01/26/2017 12:56:46 PM - CROSSCAL - INFO : # Copying calibrator solutions (bandpass, gains) from flux calibrator #
+01/26/2017 12:56:46 PM - CROSSCAL - INFO : # Polarisation calibration solutions (leakage, angle) not found #
+01/26/2017 12:56:46 PM - masher - DEBUG : gpcopy vis=3C147.mir out=NGC4062.mir 
+01/26/2017 12:56:46 PM - basher - DEBUG : gpcopy vis=3C147.mir out=NGC4062.mir 
+01/26/2017 12:56:46 PM - basher - DEBUG : Command = gpcopy vis=3C147.mir out=NGC4062.mir 
+01/26/2017 12:56:46 PM - basher - DEBUG : 
+
+gpcopy: Revision 1.13, 2015/10/29 01:31:39 UTC
+
+Copying gain table
+Interpolation tolerance set to (minutes): 720.00
+Copying bandpass table
+
+01/26/2017 12:56:46 PM - basher - DEBUG : Returning output.
+01/26/2017 12:56:46 PM - CROSSCAL - INFO : ### All solutions copied to target data ###
+01/26/2017 12:56:46 PM - CROSSCAL - INFO : ########## CROSS CALIBRATION done ##########
+01/26/2017 12:59:11 PM - SELFCAL - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A2.cfg successfully read! ###
+01/26/2017 12:59:56 PM - root - INFO : Logging started!
+01/26/2017 12:59:56 PM - root - INFO : To see the log in a bash window use the following command:
+01/26/2017 12:59:56 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/tutorials/logs/A2.log
+01/26/2017 01:00:03 PM - SELFCAL - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A2.cfg successfully read! ###
+01/26/2017 01:00:16 PM - SELFCAL - INFO : # Creating directory /data/adebahr/apertif/tutorial/A2/selfcal #
+01/26/2017 01:00:16 PM - SELFCAL - INFO : # Moved to directory /data/adebahr/apertif/tutorial/A2/selfcal #
