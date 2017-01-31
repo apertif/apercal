@@ -2863,3 +2863,111 @@ UvAver: version 1.0 17-Nov-08
 01/31/2017 12:59:25 PM - SELFCAL - INFO : # Splitting of data chunk 0 for subband 0 done #
 01/31/2017 12:59:25 PM - SELFCAL - INFO : # Splitting of data for subband 0 done #
 01/31/2017 12:59:25 PM - SELFCAL - INFO : ### Splitting of target data into individual frequency chunks done ###
+01/31/2017 01:16:00 PM - root - INFO : Logging started!
+01/31/2017 01:16:00 PM - root - INFO : To see the log in a bash window use the following command:
+01/31/2017 01:16:00 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/tutorials/logs/A2.log
+01/31/2017 01:16:25 PM - root - INFO : Logging started!
+01/31/2017 01:16:25 PM - root - INFO : To see the log in a bash window use the following command:
+01/31/2017 01:16:25 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/tutorials/logs/A2.log
+01/31/2017 01:16:29 PM - CONVERT - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A2.cfg successfully read! ###
+01/31/2017 01:16:30 PM - CONVERT - INFO : ### Starting conversion from MS to UVFITS format ###
+01/31/2017 01:16:30 PM - CONVERT - INFO : # Moved to directory /data/adebahr/apertif/tutorial/A2/crosscal #
+01/31/2017 01:16:30 PM - CONVERT - INFO : ### Using CASA toolkit to convert from MS to UVFITS format! ###
+01/31/2017 01:16:32 PM - CONVERT - INFO : ### Converted MS file 3C147.MS to UVFITS using CASA toolkit! ###
+01/31/2017 01:16:51 PM - CONVERT - INFO : ### Converted MS file NGC4062.MS to UVFITS using CASA toolkit! ###
+01/31/2017 01:16:51 PM - CONVERT - INFO : ### Conversion from MS to UVFITS format done! ###
+01/31/2017 02:45:55 PM - root - INFO : Logging started!
+01/31/2017 02:45:55 PM - root - INFO : To see the log in a bash window use the following command:
+01/31/2017 02:45:55 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/tutorials/logs/A2.log
+01/31/2017 02:45:58 PM - PREFLAG - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A2.cfg successfully read! ###
+01/31/2017 02:45:59 PM - PREFLAG - INFO : ########## PRE-FLAGGING started ##########
+01/31/2017 02:45:59 PM - PREFLAG - INFO : # Moved to directory /data/adebahr/apertif/tutorial/A2/raw #
+01/31/2017 02:45:59 PM - PREFLAG - INFO : ### Doing pre-flagging with AOFlagger ###
+01/31/2017 02:46:00 PM - PREFLAG - INFO : ### Flagging of 3C147.MS using fluxcal.rfis done ###
+01/31/2017 02:46:22 PM - PREFLAG - INFO : ### Flagging of NGC4062.MS using target.rfis done ###
+01/31/2017 02:46:22 PM - PREFLAG - INFO : ### Starting pre-flagging of known flags ###
+01/31/2017 02:46:22 PM - PREFLAG - INFO : # Flagging auto-correlations for flux calibrator data #
+01/31/2017 02:46:22 PM - PREFLAG - INFO : # Auto-correlation flagging for flux calibrator data done #
+01/31/2017 02:46:22 PM - PREFLAG - INFO : # Flagging auto-correlations for target data #
+01/31/2017 02:46:27 PM - PREFLAG - INFO : # Auto-correlation flagging for target data done #
+01/31/2017 02:46:27 PM - PREFLAG - INFO : # Flagging antenna(s) RT5 for flux calibrator data #
+01/31/2017 02:46:27 PM - PREFLAG - INFO : # Flagging of antenna(s) RT5 for flux calibrator data done #
+01/31/2017 02:46:27 PM - PREFLAG - INFO : # Flagging antenna(s) RT5 for target data #
+01/31/2017 02:46:31 PM - PREFLAG - INFO : # Flagging of antenna(s) RT5 for target data done #
+01/31/2017 02:46:31 PM - PREFLAG - INFO : # Flagging shadowed antennas for flux calibrator data #
+01/31/2017 02:46:31 PM - PREFLAG - INFO : # Flagging of shadowed antennas for flux calibrator data done #
+01/31/2017 02:46:31 PM - PREFLAG - INFO : # Flagging of shadowed antennas for target data #
+01/31/2017 02:46:35 PM - PREFLAG - INFO : # Flagging of shadowed antennas for target data done #
+01/31/2017 02:46:35 PM - PREFLAG - INFO : ### Pre-flagging of known flags done ###
+01/31/2017 02:46:35 PM - PREFLAG - INFO : ########## PRE-FLAGGING done ##########
+01/31/2017 02:46:51 PM - CONVERT - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A2.cfg successfully read! ###
+01/31/2017 02:46:52 PM - CONVERT - INFO : ########## FILE CONVERSION started ##########
+01/31/2017 02:46:52 PM - CONVERT - INFO : ### Starting conversion from MS to UVFITS format ###
+01/31/2017 02:46:52 PM - CONVERT - INFO : # Creating directory /data/adebahr/apertif/tutorial/A2/crosscal #
+01/31/2017 02:46:52 PM - CONVERT - INFO : # Moved to directory /data/adebahr/apertif/tutorial/A2/crosscal #
+01/31/2017 02:46:52 PM - CONVERT - INFO : ### Using CASA toolkit to convert from MS to UVFITS format! ###
+01/31/2017 02:46:53 PM - CONVERT - INFO : ### Converted MS file 3C147.MS to UVFITS using CASA toolkit! ###
+01/31/2017 02:47:10 PM - CONVERT - INFO : ### Converted MS file NGC4062.MS to UVFITS using CASA toolkit! ###
+01/31/2017 02:47:10 PM - CONVERT - INFO : ### Conversion from MS to UVFITS format done! ###
+01/31/2017 02:47:10 PM - CONVERT - INFO : ### Starting conversion from UVFITS to MIRIAD format ###
+01/31/2017 02:47:10 PM - CONVERT - INFO : ### Using MIRIAD wsrtfits task to convert data from UVFITS to MIRIAD format ###
+01/31/2017 02:47:10 PM - masher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/A2/crosscal/3C147.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/A2/crosscal/3C147.mir 
+01/31/2017 02:47:10 PM - basher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/A2/crosscal/3C147.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/A2/crosscal/3C147.mir 
+01/31/2017 02:47:10 PM - basher - DEBUG : Command = wsrtfits in=/data/adebahr/apertif/tutorial/A2/crosscal/3C147.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/A2/crosscal/3C147.mir 
+01/31/2017 02:47:10 PM - basher - DEBUG : 
+wsrtfits: version 1.3.1 21-Jul-04
+ /data/adebahr/apertif/tutorial/A2/crosscal/3C147.UVFITS                                                                         
+Assuming systemp=30
+Assuming jyperk=8
+Reading AIPS TY table
+Reading AIPS AN table
+ freqref    1416494706.9999995     
+Decrementing times for configration  1 by  0.14 seconds (UTC-UT1).
+ Mount type :           1
+Reading AIPS FQ table
+swapping frequency axis
+Doppler tracking..
+Data are linearly polarized
+Reading the correlation data
+The estimated integration time of a sample is 60 seconds
+Number of antennas: 14
+Number of antenna configurations: 1
+
+01/31/2017 02:47:10 PM - basher - DEBUG : ### Warning [wsrtfits]:  Some unrecognised cards were written to the history file
+### Warning [wsrtfits]:  Some visibilities had zero weight
+
+01/31/2017 02:47:10 PM - basher - DEBUG : Returning output.
+01/31/2017 02:47:10 PM - basher - DEBUG : rm -r /data/adebahr/apertif/tutorial/A2/crosscal/3C147.UVFITS
+01/31/2017 02:47:10 PM - basher - DEBUG : Returning output.
+01/31/2017 02:47:10 PM - CONVERT - INFO : ### Converted UVFITS file 3C147.MS to MIRIAD format using MIRIAD task wsrtfits! ###
+01/31/2017 02:47:10 PM - masher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.mir 
+01/31/2017 02:47:10 PM - basher - DEBUG : wsrtfits in=/data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.mir 
+01/31/2017 02:47:15 PM - basher - DEBUG : Command = wsrtfits in=/data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.UVFITS op=uvin out=/data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.mir 
+01/31/2017 02:47:15 PM - basher - DEBUG : 
+wsrtfits: version 1.3.1 21-Jul-04
+ /data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.UVFITS                                                                       
+Assuming systemp=30
+Assuming jyperk=8
+Reading AIPS TY table
+Reading AIPS AN table
+ freqref    1416494706.8089998     
+Decrementing times for configration  1 by  0.14 seconds (UTC-UT1).
+ Mount type :           1
+Reading AIPS FQ table
+swapping frequency axis
+Doppler tracking..
+Data are linearly polarized
+Reading the correlation data
+The estimated integration time of a sample is 60 seconds
+Number of antennas: 14
+Number of antenna configurations: 1
+
+01/31/2017 02:47:15 PM - basher - DEBUG : ### Warning [wsrtfits]:  Some unrecognised cards were written to the history file
+### Warning [wsrtfits]:  Some visibilities had zero weight
+
+01/31/2017 02:47:15 PM - basher - DEBUG : Returning output.
+01/31/2017 02:47:15 PM - basher - DEBUG : rm -r /data/adebahr/apertif/tutorial/A2/crosscal/NGC4062.UVFITS
+01/31/2017 02:47:16 PM - basher - DEBUG : Returning output.
+01/31/2017 02:47:16 PM - CONVERT - INFO : ### Converted UVFITS file NGC4062.MS to MIRIAD format using MIRIAD task wsrtfits! ###
+01/31/2017 02:47:16 PM - CONVERT - INFO : ### Conversion from UVFITS to MIRIAD format done! ###
+01/31/2017 02:47:16 PM - CONVERT - INFO : ########## FILE CONVERSION done ##########

@@ -129,6 +129,9 @@ class scal:
                 self.logger.info('# Splitting of data for subband ' + str(subband) + ' done #')
             self.logger.info('### Splitting of target data into individual frequency chunks done ###')
 
+    # def flagline(self):
+
+
     # def go(self):
     #     '''
     #     go: Splits the dataset into subbands of equal size and runs the selfcal cycle with the chosen mode. Handles parametric and amplitude calibration as well as deep single subband imaging.
