@@ -199,8 +199,20 @@ def basher(cmd, showasinfo=False):
     logger.debug(cmd)
     # Replacing brackets so that bash won't complain.
     #cmd = cmd.replace('""','"')
-    cmd = cmd.replace("(", "\(")
-    cmd = cmd.replace(")", "\)")
+    if 'window' in cmd:
+        # pos = cmd.find('window')
+        # cmdlist = list(cmd)
+        # cmdlist.insert(pos, '')
+        # cmd = ''.join(cmdlist)
+        # br = cmd.find(')')
+        # cmdlist = list(cmd)
+        # cmdlist.insert(br+1, '')
+        # cmd = ''.join(cmdlist)
+        # print(cmd)
+        pass
+    else:
+        cmd = cmd.replace("(", "\(")
+        cmd = cmd.replace(")", "\)")
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
             stderr = subprocess.PIPE, shell=True)
     out, err = proc.communicate()
