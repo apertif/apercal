@@ -165,7 +165,7 @@ class ccal:
         '''
         Apply the system temperatures to the data if it is old WSRT data
         '''
-        if self.applysys:
+        if self.crosscal_applysys:
             self.director('ch', self.crosscaldir)
             self.logger.info('### Applying system temperatures corrections ###')
             attsys = lib.miriad('attsys')
@@ -176,7 +176,7 @@ class ccal:
             self.director('rm', self.fluxcal)
             self.director('rn', self.fluxcal, file=attsys.out)
             self.logger.info('# System temperatures corrections to flux calibrator data applied #')
-            if os.path.isfile(self.crosscaldir + '/' + self.polcal):
+            if os.path.isdir(self.crosscaldir + '/' + self.polcal):
                 self.logger.info('# Applying system temperature corrections to polarised calibrator data #')
                 attsys.vis = self.polcal
                 attsys.out = self.polcal + '_temp'
@@ -218,7 +218,7 @@ class ccal:
                 gpcopy.vis = self.fluxcal
                 gpcopy.out = self.polcal
                 gpcopy.mode = 'copy'
-                gpcopy.options = 'nopol'
+                gpcopy.options = 'nopol,relax'
                 gpcopy.go()
                 self.logger.info('# Bandpass from flux calibrator data copied to polarised calibrator data #')
                 gpcal = lib.miriad('gpcal')
@@ -268,6 +268,7 @@ class ccal:
                 self.logger.error('# No calibrator solutions found! Exiting! #')
                 sys.exit(1)
             gpcopy.out = self.target
+            gpcopy.options = 'relax'
             gpcopy.go()
             self.logger.info('### All solutions copied to target data ###')
         else:

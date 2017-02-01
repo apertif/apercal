@@ -36,25 +36,25 @@ class convert:
                 if self.convert_fluxcal == True:
                     ms.open(self.rawdir + '/' + self.fluxcal)
                     if self.convert_ms2uvfits_tool_casa_autocorr:
-                        ms.tofits(self.crosscaldir + '/' + str(self.fluxcal).rstrip('MS') + 'UVFITS', column='DATA', combinespw=True, writesyscal=True)
+                        ms.tofits(self.crosscaldir + '/' + str(self.fluxcal).rstrip('MS') + 'UVFITS', column='DATA', combinespw=True, writesyscal=True, padwithflags=True, multisource=True, writestation=True)
                     else:
-                        ms.tofits(self.crosscaldir + '/' + str(self.fluxcal).rstrip('MS') + 'UVFITS', column='DATA', combinespw=True, writesyscal=True, uvrange='>0m')
+                        ms.tofits(self.crosscaldir + '/' + str(self.fluxcal).rstrip('MS') + 'UVFITS', column='DATA', combinespw=True, writesyscal=True, padwithflags=True, multisource=True, writestation=True, uvrange='>0m')
                     ms.done()
                     self.logger.info('### Converted MS file ' + self.fluxcal + ' to UVFITS using CASA toolkit! ###')
                 if self.convert_polcal == True:
                     ms.open(self.rawdir + '/' + self.polcal)
                     if self.convert_ms2uvfits_tool_casa_autocorr:
-                        ms.tofits(self.crosscaldir + '/' + str(self.polcal).rstrip('MS') + 'UVFITS', column='DATA', combinespw=True, writesyscal=True)
+                        ms.tofits(self.crosscaldir + '/' + str(self.polcal).rstrip('MS') + 'UVFITS', column='DATA', combinespw=True, writesyscal=True, padwithflags=True, multisource=True, writestation=True)
                     else:
-                        ms.tofits(self.crosscaldir + '/' + str(self.polcal).rstrip('MS') + 'UVFITS', column='DATA', combinespw=True, writesyscal=True, uvrange='>0m')
+                        ms.tofits(self.crosscaldir + '/' + str(self.polcal).rstrip('MS') + 'UVFITS', column='DATA', combinespw=True, writesyscal=True, padwithflags=True, multisource=True, writestation=True, uvrange='>0m')
                     ms.done()
                     self.logger.info('### Converted MS file ' + self.polcal + ' to UVFITS using CASA toolkit! ###')
                 if self.convert_target == True:
                     ms.open(self.rawdir + '/' + self.target)
                     if self.convert_ms2uvfits_tool_casa_autocorr:
-                        ms.tofits(self.crosscaldir + '/' + str(self.target).rstrip('MS') + 'UVFITS', column='DATA', combinespw=True, writesyscal=True)
+                        ms.tofits(self.crosscaldir + '/' + str(self.target).rstrip('MS') + 'UVFITS', column='DATA', combinespw=True, writesyscal=True, padwithflags=True, multisource=True, writestation=True)
                     else:
-                        ms.tofits(self.crosscaldir + '/' + str(self.target).rstrip('MS') + 'UVFITS', column='DATA', combinespw=True, writesyscal=True, uvrange='>0m')
+                        ms.tofits(self.crosscaldir + '/' + str(self.target).rstrip('MS') + 'UVFITS', column='DATA', combinespw=True, writesyscal=True, padwithflags=True, multisource=True, writestation=True, uvrange='>0m')
                     ms.done()
                     self.logger.info('### Converted MS file ' + self.target + ' to UVFITS using CASA toolkit! ###')
             elif self.convert_ms2uvfits_tool == 'ms2uvfits':

@@ -11,6 +11,7 @@ import qa
 import lsm
 import aipy
 import numpy as np
+import astropy.io.fits as pyfits
 
 ####################################################################################################
 
@@ -129,8 +130,61 @@ class scal:
                 self.logger.info('# Splitting of data for subband ' + str(subband) + ' done #')
             self.logger.info('### Splitting of target data into individual frequency chunks done ###')
 
-    # def flagline(self):
+    def flagline(self):
+        '''
+        Creates an image cube of the different chunks and measures the rms in each channel. All channels with an rms outside of a given sigma interval are flagged in the continuum calibration
+        '''
+        if self.selfcal_flagline:
+            self.logger.info('### Automatic flagging of HI-line/RFI started ###')
+            for chunk in self.list_chunks():
+                self.director('ch', self.selfcaldir + '/' + str(chunk))
+                self.logger.info('# Looking through data chunk ' + str(chunk) + ' #')
+                invert = lib.miriad('invert')
+                invert.vis = chunk + '.mir'
+                invert.map = 'map'
+                invert.beam = 'beam'
+                invert.imsize = self.selfcal_image_imsize
+                invert.cellsize = self.selfcal_image_cellsize
+                invert.stokes = 'i'
+                invert.slop = 1
+                invert.go()
+                fits = lib.miriad('fits')
+                fits.in_ = 'map'
+                fits.op = 'xyout'
+                fits.out = 'map.fits'
+                fits.go()
+                cube = pyfits.open('map.fits')
+                data = cube[0].data
+                std = np.std(data, axis=(0,2,3))
+                median = np.median(std)
+                stdall = np.std(std)
+                diff = std-median
+                detections = np.where(self.selfcal_flagline_sigma * diff > stdall)[0]
+                if len(detections) > 0:
+                    self.logger.info('# Found high noise in channel(s) ' + str(detections).lstrip('[').rstrip(']') + ' #')
+                    for d in detections:
+                        uvflag = lib.miriad('uvflag')
+                        uvflag.vis = chunk + '.mir'
+                        uvflag.flagval = 'flag'
+                        uvflag.line = "'" + 'channel,1,' + str(d+1) + "'"
+                        uvflag.go()
+                    self.logger.info('# Flagged channel(s) ' + str(detections).lstrip('[').rstrip(']') + ' in data chunk ' + str(chunk) + ' #')
+                else:
+                    self.logger.info('# No hiogh noise found in data chunk ' + str(chunk) + ' #')
+            self.logger.info('### Automatic flagging of HI-line/RFI done ###')
 
+    def list_chunks(self):
+        '''
+        Checks how many chunk directories exist and returns a list of them
+        '''
+        for n in range(100):
+            if os.path.exists(self.selfcaldir + '/' + str(n).zfill(2)):
+                pass
+            else:
+                break # Stop the counting loop at the directory you cannot find anymore
+        chunks = range(n)
+        chunkstr = [str(i).zfill(2) for i in chunks]
+        return chunkstr
 
     # def go(self):
     #     '''
