@@ -199,7 +199,7 @@ def basher(cmd, showasinfo=False):
     logger.debug(cmd)
     # Replacing brackets so that bash won't complain.
     #cmd = cmd.replace('""','"')
-    if 'window' in cmd:
+    if 'window' or 'uvrange' in cmd:
         # pos = cmd.find('window')
         # cmdlist = list(cmd)
         # cmdlist.insert(pos, '')

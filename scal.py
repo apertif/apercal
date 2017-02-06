@@ -56,7 +56,7 @@ class scal:
         self.logger.info("########## Starting SELF CALIBRATION ##########")
         self.splitdata()
         self.flagline()
-        self.initparameters()
+        self.parametric()
         self.executeselfcal()
         self.logger.info("########## SELF CALIBRATION done ##########")
 
@@ -170,8 +170,206 @@ class scal:
                         uvflag.go()
                     self.logger.info('# Flagged channel(s) ' + str(detections).lstrip('[').rstrip(']') + ' in data chunk ' + str(chunk) + ' #')
                 else:
-                    self.logger.info('# No hiogh noise found in data chunk ' + str(chunk) + ' #')
+                    self.logger.info('# No high noise found in data chunk ' + str(chunk) + ' #')
+                self.director('rm', self.selfcaldir + '/' + str(chunk) + '/' + 'map')
+                self.director('rm', self.selfcaldir + '/' + str(chunk) + '/' + 'map.fits')
+                self.director('rm', self.selfcaldir + '/' + str(chunk) + '/' + 'beam')
             self.logger.info('### Automatic flagging of HI-line/RFI done ###')
+
+    def parametric(self):
+        if self.selfcal_parametric:
+            self.logger.info('### Doing parametric self calibration ###')
+            for chunk in self.list_chunks():
+                self.logger.info('# Starting parametric self calibration routine on chunk ' + chunk + ' #')
+                self.director('ch', self.selfcaldir + '/' + chunk)
+                self.director('mk', self.selfcaldir + '/' + chunk + '/' + 'pm')
+                parametric_textfile = lsm.lsm_model(chunk + '.mir', self.selfcal_parametric_skymodel_radius, self.selfcal_parametric_skymodel_cutoff, self.selfcal_parametric_skymodel_distance)
+                lsm.write_model(self.selfcaldir + '/' + chunk + '/' + 'pm' + '/model.txt', parametric_textfile)
+                self.logger.info('# Creating model from textfile model.txt for chunk ' + chunk + ' #')
+                uv = aipy.miriad.UV(self.selfcaldir + '/' + chunk + '/' + chunk + '.mir')
+                freq = uv['sfreq']
+                uvmodel = lib.miriad('uvmodel')
+                uvmodel.vis = chunk + '.mir'
+                parametric_modelfile = open(self.selfcaldir + '/' + str(chunk) + '/' + 'pm' + '/model.txt', 'r')
+                for n, source in enumerate(parametric_modelfile.readlines()):
+                    if n == 0:
+                        uvmodel.options = 'replace,mfs'
+                    else:
+                        uvmodel.options = 'add,mfs'
+                    uvmodel.offset = source.split(',')[0] + ',' + source.split(',')[1]
+                    uvmodel.flux = source.split(',')[2] + ',i,' + str(freq) + ',' + source.split(',')[4].rstrip('\n') + ',0,0'
+                    uvmodel.out = 'pm/tmp' + str(n)
+                    uvmodel.go()
+                    uvmodel.vis = uvmodel.out
+                self.director('rn', 'pm/model', uvmodel.out) # Rename the last modelfile to model
+                self.director('rm', 'pm/tmp*') # Remove all the obsolete modelfiles
+                self.logger.info('# Doing parametric self-calibration on ' + chunk + ' with solution interval ' + str(self.selfcal_parametric_interval) + ' min and uvrange limits of ' + str(self.selfcal_parametric_minuvrange) + '~' + str(self.selfcal_parametric_maxuvrange) + ' klambda #')
+                selfcal = lib.miriad('selfcal')
+                selfcal.vis = chunk + '.mir'
+                selfcal.model = 'pm/model'
+                selfcal.interval = self.selfcal_parametric_interval
+                selfcal.select = "'" + 'uvrange(' + str(self.selfcal_parametric_minuvrange) + ',' + str(self.selfcal_parametric_maxuvrange) + ')' + "'"
+                selfcal.go()
+                self.logger.info('# Parametric self calibration routine on chunk ' + chunk + ' done! #')
+            self.logger.info('### Parametric self calibration done ###')
+        else:
+            self.logger.info('### Parametric self calibration disabled ###')
+
+    # def create_parmodel(self):
+    #     '''
+    #     create_parmodel: Creates the textfile for the LSM using NVSS/FIRST and WENSS catalogues. To be read by par_cal.
+    #     '''
+    #     self.director('ch', self.cwd + '/parametric')
+    #     self.vis = '../' + self.vis.split('/')[-1]
+    #     parmodel = lsm.lsm_model(self.vis, self.parametric_radius[self.nsubband], self.parametric_cutoff[self.nsubband], self.parametric_distance[self.nsubband])
+    #     lsm.write_model(self.cwd + '/model.txt', parmodel)
+    #
+    # def par_cal(self):
+    #     '''
+    #     par_cal: Executes the parametric selfcal (Traditional way at the moment. No implementation in MIRIAD). Makes a copy of the dataset to calibrate and adds consecutively the sources including their offsets.
+    #     '''
+    #     self.logger.info("########## Doing parametric self calibration! ##########")
+    #     self.handle_inputs('parametric')
+    #     self.subbands = self.get_uvfiles(self.selfcaldir)  # Reset the self.subbands list
+    #     self.subbands = [self.subbands[i] for i in self.parametric_nif]  # Filter which datasets you want to calibrate
+    #     for x,sb in enumerate(self.subbands):
+    #         self.logger.info('##### Starting parametric self calibration of subband ' + str(sb) + '! #####')
+    #         self.nsubband = x  # Just short for self.nsubband to use for log output
+    #         x = self.parametric_nif[x]  # This is defining the name of the subdirectory for the subband to calibrate
+    #         self.director('ch',self.selfcaldir + '/' + str(x+1).zfill(2))
+    #         self.vis = str(sb)
+    #         self.create_parmodel()
+    #         freq = lsm.getfreq(self.vis)
+    #         uvmodel = lib.miriad('uvmodel')
+    #         uvmodel.vis = self.vis
+    #         mdlfile = open(self.cwd + '/model.txt', 'r')
+    #         for n, source in enumerate(mdlfile.readlines()):
+    #             if n == 0:
+    #                 uvmodel.options = 'replace,mfs'
+    #             else:
+    #                 uvmodel.options = 'add,mfs'
+    #             uvmodel.offset = source.split(',')[0] + ',' + source.split(',')[1]
+    #             uvmodel.flux = source.split(',')[2] + ',i,' + str(freq) + ',' + source.split(',')[4].rstrip('\n') + ',0,0'
+    #             uvmodel.out = 'tmp' + str(n)
+    #             uvmodel.go()
+    #             uvmodel.vis = uvmodel.out
+    #         self.director('rn', 'model', str(uvmodel.out))
+    #         self.director('rm', 'tmp*')
+    #         selfcal = lib.miriad('selfcal')
+    #         selfcal.vis = self.vis
+    #         selfcal.model = 'model'
+    #         selfcal.interval = self.parametric_interval[self.nsubband]
+    #         selfcal.select = 'uvrange(' + str(self.parametric_minuvrange[self.nsubband]) + ',' + str(self.parametric_maxuvrange[self.nsubband]) + ')'
+    #         if self.parametric_amp == True: # Do a parametric selfcal on amplitude and phase knowing that the skymodel provides the whole and right flux
+    #             selfcal.options = 'amplitude'
+    #             selfcal.nfbin = self.parametric_amp_freqbins
+    #         selfcal.go()
+    #         self.logger.info('##### Parametric self calibration of subband ' + str(sb) + ' done! #####')
+    #     self.logger.info("########## Parametric self calibration done! ##########")
+
+    def execute_selfcal(self):
+        '''
+        Executes the self calibration with the mode set. Does parametric selfcal if wanted.
+        '''
+        if self.selfcal_parametric:
+            self.parametric()
+        else:
+            pass
+        if self.selfcal_mode == 'standard':
+            self.selfcal_standard()
+        elif self.selfcal_mode == 'manual':
+            self.selfcal_manual()
+        elif self.selfcal_mode == 'adaptive':
+            self.selfcal_adaptive()
+        else:
+            self.logger.error('# Self-calibration mode not known. Exiting! #')
+            sys.exit(1)
+
+### Routines for the standard self calibration method ###
+
+    def selfcal_standard(self):
+        '''
+        Executes the standard method of self-calibration with the given parameters as implemented by Nicolas Vilchez
+        '''
+        self.logger.info('### Starting standard self calibration routine ###')
+        for chunk in self.list_chunks():
+            self.logger.info('# Starting standard self-calibration routine on chunk ' + str(chunk) + ' #')
+            self.director('ch', self.selfcaldir + '/' + str(chunk))
+            theoretical_noise = self.calc_theoretical_noise(self.selfcaldir + '/' + str(chunk) + '/' + str(chunk) + '.mir')
+            self.logger.info('# Theoretical noise for chunk ' + str(chunk) + ' is ' + str(theoretical_noise/1000) + ' Jy/beam #')
+            for majc in range(self.selfcal_mode_standard_majorcycle):
+                self.logger.info('# Major self-calibration cycle ' + str(majc) + ' for ' + str(chunk) + ' started #')
+                for minc in range(self.selfcal_mode_standard_minorcycle):
+                    self.logger.info('# Minor self-calibration cycle ' + str(minc) + ' for ' + str(chunk) + ' started #')
+                    self.logger.info('# Minor self-calibration cycle ' + str(minc) + ' for ' + str(chunk) + ' finished #')
+                self.logger.info('# Major self-calibration cycle ' + str(majc) + ' for ' + str(chunk) + ' finished #')
+            self.logger.info('# Standard self-calibration routine on chunk ' + str(chunk) + ' finished #')
+        self.logger.info('### Standard self calibration routine finished ###')
+
+    def calc_mask_threshold(self, imax, minor_cycle, major_cycle):
+        '''
+        Calculates the mask threshold
+        imax: the maximum in the input image
+        minor_cycle: the current minor cycle the self-calibration is in
+        major_cycle: the current major cycle the self-calibration is in
+        returns: the mask threshold
+        '''
+        mask_threshold = imax / ((self.selfcal_mode_standard_c0 + (minor_cycle) * self.selfcal_mode_standard_c0) * (major_cycle + 1))
+        return mask_threshold
+
+    def calc_clean_noise_threshold(self, imax, minor_cycle, major_cycle):
+        '''
+        Calculates the clean nosie threshold
+        imax: the maximum in the input image
+        minor_cycle: the current minor cycle the self-calibration is in
+        major_cycle: the current major cycle the self-calibration is in
+        returns: the clean noise threshold
+        '''
+        clean_noise_threshold = imax / (((self.selfcal_mode_standard_c0 + (minor_cycle) * self.selfcal_mode_standard_c0) * (major_cycle + 1)) * self.selfcal_mode_standard_c1)
+        return clean_noise_threshold
+
+    def calc_dynamic_range_threshold(self, imax, major_cycle):
+        '''
+        Calculates the dynamic range threshold
+        imax: the maximum in the input image
+        major_cycle: the current major cycle the self-calibration is in
+        returns: the dynamic range threshold
+        '''
+        dynamic_range_threshold = imax / (((major_cycle) * self.selfcal_mode_standard_dr0 * self.selfcal_mode_standard_drinit) + self.selfcal_mode_standard_drinit)
+        return dynamic_range_threshold
+
+    def calc_theoretical_noise_threshold(self, theoretical_noise):
+        '''
+        Calculates the theoretical noise threshold from the theoretical noise
+        theoretical_noise: the theoretical noise of the observation
+        returns: the theoretical noise threshold
+        '''
+        theoretical_noise_threshold = self.selfcal_mode_standard_nsigma * theoretical_noise
+        return theoretical_noise_threshold
+
+    def calc_theoretical_noise(self, dataset):
+        '''
+        Calculate the theoretical rms of a given dataset
+        dataset: The input dataset to calculate the theoretical rms from
+        returns: The theoretical rms of the input dataset as a float
+        '''
+        uv = aipy.miriad.UV(dataset)
+        obsrms = lib.miriad('obsrms')
+        tsys = np.median(uv['systemp'])
+        if np.isnan(tsys):
+            obsrms.tsys = 30.0
+        else:
+            obsrms.tsys = tsys
+        obsrms.jyperk = uv['jyperk']
+        obsrms.antdiam = 25
+        obsrms.freq = uv['sfreq']
+        obsrms.theta = 15
+        obsrms.nants = uv['nants']
+        obsrms.bw = np.abs(uv['sdf']*uv['nschan']) * 1000.0
+        obsrms.inttime = 12.0 * 60.0
+        obsrms.coreta = 0.88
+        theorms = float(obsrms.go()[-1].split()[3])
+        return theorms
 
     def list_chunks(self):
         '''

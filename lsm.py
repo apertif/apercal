@@ -64,7 +64,7 @@ def query_catalogue(infile, catalogue, radius, minflux=0.0):
 	return cat
 
 def calc_offset(infile, cat):
-	ra_off = (cat.RA - getradec(infile).ra.deg) * 3600.0
+	ra_off = (cat.RA - getradec(infile).ra.deg) * 3600.0 * np.cos(getradec(infile).dec.rad)
 	dec_off = (cat.DEC - getradec(infile).dec.deg) * 3600.0
 	cat = mplab.rec_append_fields(cat,['RA_off','DEC_off'],[ra_off,dec_off],dtypes=[float,float])
 	return cat
@@ -112,7 +112,7 @@ def cutoff_catalogue(catalogue, cutoff):
 	limidx = np.delete(np.where(np.cumsum(cat.appflux) > limflux), (0))  # find the index of the sources above the cutoff to remove them from the list
 	cat = np.delete(cat, limidx)  # remove the faint sources from the list
 	usedflux = np.sum(cat.appflux)
-	logging.info('### Found ' + str(len(cat)) + ' sources in the model at a cutoff of ' + str(cutoff * 100) + ' percent with a total flux of ' + str(usedflux) + ' Jy ###')
+	logging.info('### Found ' + str(len(cat)) + ' source(s) in the model at a cutoff of ' + str(cutoff * 100) + ' percent with a total flux of ' + str(usedflux) + ' Jy ###')
 	return cat
 
 def calc_SI(cat1, cat2, limit):
@@ -134,10 +134,10 @@ def calc_SI(cat1, cat2, limit):
 		flux1 = np.delete(cat1.flux, nomatch)  # Array of source fluxes at 20cm for all matches including resolved sources
 		flux2 = np.asarray(cat2.flux)[idx_match]  # Array of source fluxes at 90cm for all matches including multiples
 		src, counts = np.unique(idx_match, return_counts=True)
-		logging.info('### Found ' + str(len(np.asarray(nomatch)[0])) + ' sources with no counterparts. Setting their spectral index to -0.7 ###')
+		logging.info('### Found ' + str(len(np.asarray(nomatch)[0])) + ' source(s) with no counterparts. Setting their spectral index to -0.7 ###')
 		num, occ = np.unique(counts, return_counts=True)
 		for n, g in enumerate(num):
-			logging.info('### Found ' + str(occ[n]) + ' sources with ' + str(num[n]) + ' counterpart(s) ###')
+			logging.info('### Found ' + str(occ[n]) + ' source(s) with ' + str(num[n]) + ' counterpart(s) ###')
 		src_wgt_1 = np.zeros(len(flux2))  # Calculate the fluxes for the matched and resolved sources using weighting
 		for s in src:
 			src_idx = np.where(s == idx_match)
