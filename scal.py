@@ -206,12 +206,12 @@ class scal:
                     uvmodel.vis = uvmodel.out
                 self.director('rn', 'pm/model', uvmodel.out) # Rename the last modelfile to model
                 self.director('rm', 'pm/tmp*') # Remove all the obsolete modelfiles
-                self.logger.info('# Doing parametric self-calibration on ' + chunk + ' with solution interval ' + str(self.selfcal_parametric_interval) + ' min and uvrange limits of ' + str(self.selfcal_parametric_minuvrange) + '~' + str(self.selfcal_parametric_maxuvrange) + ' klambda #')
+                self.logger.info('# Doing parametric self-calibration on ' + chunk + ' with solution interval ' + str(self.selfcal_parametric_solint) + ' min and uvrange limits of ' + str(self.selfcal_parametric_uvmin) + '~' + str(self.selfcal_parametric_uvmax) + ' klambda #')
                 selfcal = lib.miriad('selfcal')
                 selfcal.vis = chunk + '.mir'
                 selfcal.model = 'pm/model'
-                selfcal.interval = self.selfcal_parametric_interval
-                selfcal.select = "'" + 'uvrange(' + str(self.selfcal_parametric_minuvrange) + ',' + str(self.selfcal_parametric_maxuvrange) + ')' + "'"
+                selfcal.interval = self.selfcal_parametric_solint
+                selfcal.select = "'" + 'uvrange(' + str(self.selfcal_parametric_uvmin) + ',' + str(self.selfcal_parametric_uvmax) + ')' + "'"
                 selfcal.go()
                 self.logger.info('# Parametric self calibration routine on chunk ' + chunk + ' done! #')
             self.logger.info('### Parametric self calibration done ###')
@@ -220,7 +220,7 @@ class scal:
 
     def execute_selfcal(self):
         '''
-        Executes the self calibration with the mode set. Does parametric selfcal if wanted.
+        Executes the self calibration with the mode set.
         '''
         self.director('ch', self.selfcaldir)
         if self.selfcal_mode == 'standard':
@@ -233,7 +233,7 @@ class scal:
             self.logger.error('# Self-calibration mode not known. Exiting! #')
             sys.exit(1)
 
-### Routines for the standard self calibration method ###
+### Routine for the standard self calibration method ###
 
     def selfcal_standard(self):
         '''
@@ -367,6 +367,8 @@ class scal:
                 self.logger.info('# Major self-calibration cycle ' + str(majc) + ' for chunk ' + chunk + ' finished #')
             self.logger.info('# Standard self-calibration routine for chunk ' + chunk + ' finished #')
         self.logger.info('### Standard self calibration routine finished ###')
+
+### Functions used in the different self calibration options ###
 
     def calc_mask_threshold(self, imax, minor_cycle, major_cycle):
         '''

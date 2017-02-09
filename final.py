@@ -357,6 +357,20 @@ class final:
                     self.logger.info('### Extra iteration cleaning for mfclean image done ###')
             self.logger.info('### Deep continuum imaging of full dataset done ###')
 
+    def line(self):
+        '''
+        Averages the cross calibrated data to the given channel width, copies over the gains from the self-calibration and subtracts the continuum. Produces a line cube in the end.
+        '''
+        if self.final_line:
+            self.logger.info('### Starting line reduction of full dataset ###')
+            self.director('ch', self.finaldir)
+            self.director('ch', self.finaldir + '/line')
+
+
+    # self.logger.info('# Copying calibrated datasets to ' + self.finaldir + '/line')
+    # for n, chunk in enumerate(self.list_chunks()):  # Copy the datasets over to keep pathnames short
+    #     self.director('cp', '.', self.selfcaldir + '/' + chunk + '/' + chunk + '.mir')
+
     def calc_mask_threshold(self, imax, minor_cycle):
         '''
         Calculates the mask threshold

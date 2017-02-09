@@ -1,0 +1,764 @@
+02/08/2017 03:36:49 PM - root - INFO : Logging started!
+02/08/2017 03:36:49 PM - root - INFO : To see the log in a bash window use the following command:
+02/08/2017 03:36:49 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/tutorials/logs/A1.log
+02/08/2017 03:36:52 PM - LINE - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A1.cfg successfully read! ###
+02/08/2017 03:36:52 PM - LINE - INFO : # Creating directory /data/adebahr/apertif/tutorial/A1/line #
+02/08/2017 03:36:52 PM - LINE - INFO : # Moved to directory /data/adebahr/apertif/tutorial/A1/line #
+02/08/2017 03:36:52 PM - LINE - INFO : ### Splitting of target data into individual freqeuncy chunks for continuum subtraction started ###
+02/08/2017 03:36:52 PM - LINE - INFO : # Found 4 subband(s) in target data #
+02/08/2017 03:36:52 PM - LINE - INFO : # Started splitting of subband 0 #
+02/08/2017 03:38:15 PM - root - INFO : Logging started!
+02/08/2017 03:38:15 PM - root - INFO : To see the log in a bash window use the following command:
+02/08/2017 03:38:15 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/tutorials/logs/A1.log
+02/08/2017 03:38:16 PM - LINE - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A1.cfg successfully read! ###
+02/08/2017 03:38:17 PM - LINE - INFO : # Creating directory /data/adebahr/apertif/tutorial/A1/line #
+02/08/2017 03:38:17 PM - LINE - INFO : # Moved to directory /data/adebahr/apertif/tutorial/A1/line #
+02/08/2017 03:38:17 PM - LINE - INFO : ### Splitting of target data into individual freqeuncy chunks for continuum subtraction started ###
+02/08/2017 03:38:17 PM - LINE - INFO : # Found 4 subband(s) in target data #
+02/08/2017 03:38:17 PM - LINE - INFO : # Started splitting of subband 0 #
+02/08/2017 03:38:17 PM - LINE - INFO : # Adjusting chunk size to 0.019999999553 GHz for regular gridding of the data chunks over frequency #
+02/08/2017 03:38:17 PM - LINE - INFO : # Starting splitting of data chunk 0 for subband 0 #
+02/08/2017 03:38:17 PM - LINE - INFO : # Using frequency binning of 0.0002 for all subbands #
+02/08/2017 03:38:17 PM - LINE - INFO : # Creating directory /data/adebahr/apertif/tutorial/A1/line/00 #
+02/08/2017 03:38:17 PM - masher - DEBUG : uvaver vis=/data/adebahr/apertif/tutorial/A1/selfcal/NGC4062.mir line='channel,64,1,1,1' select='window(1)' out=/data/adebahr/apertif/tutorial/A1/line/00/00.mir 
+02/08/2017 03:38:17 PM - basher - DEBUG : uvaver vis=/data/adebahr/apertif/tutorial/A1/selfcal/NGC4062.mir line='channel,64,1,1,1' select='window(1)' out=/data/adebahr/apertif/tutorial/A1/line/00/00.mir 
+02/08/2017 03:38:19 PM - basher - DEBUG : Command = uvaver vis=/data/adebahr/apertif/tutorial/A1/selfcal/NGC4062.mir line='channel,64,1,1,1' select='window(1)' out=/data/adebahr/apertif/tutorial/A1/line/00/00.mir 
+02/08/2017 03:38:19 PM - basher - DEBUG : 
+UvAver: version 1.0 17-Nov-08
+
+02/08/2017 03:38:19 PM - basher - DEBUG : Returning output.
+02/08/2017 03:38:19 PM - LINE - INFO : # Splitting of data chunk 0 for subband 0 done #
+02/08/2017 03:38:19 PM - LINE - INFO : # Splitting of data for subband 0 done #
+02/08/2017 03:38:19 PM - LINE - INFO : # Started splitting of subband 1 #
+02/08/2017 03:38:19 PM - LINE - INFO : # Adjusting chunk size to 0.019999999553 GHz for regular gridding of the data chunks over frequency #
+02/08/2017 03:38:19 PM - LINE - INFO : # Starting splitting of data chunk 0 for subband 1 #
+02/08/2017 03:38:19 PM - LINE - INFO : # Using frequency binning of 0.0002 for all subbands #
+02/08/2017 03:38:19 PM - LINE - INFO : # Creating directory /data/adebahr/apertif/tutorial/A1/line/01 #
+02/08/2017 03:38:19 PM - masher - DEBUG : uvaver vis=/data/adebahr/apertif/tutorial/A1/selfcal/NGC4062.mir line='channel,64,1,1,1' select='window(2)' out=/data/adebahr/apertif/tutorial/A1/line/01/01.mir 
+02/08/2017 03:38:19 PM - basher - DEBUG : uvaver vis=/data/adebahr/apertif/tutorial/A1/selfcal/NGC4062.mir line='channel,64,1,1,1' select='window(2)' out=/data/adebahr/apertif/tutorial/A1/line/01/01.mir 
+02/08/2017 03:38:20 PM - basher - DEBUG : Command = uvaver vis=/data/adebahr/apertif/tutorial/A1/selfcal/NGC4062.mir line='channel,64,1,1,1' select='window(2)' out=/data/adebahr/apertif/tutorial/A1/line/01/01.mir 
+02/08/2017 03:38:20 PM - basher - DEBUG : 
+UvAver: version 1.0 17-Nov-08
+
+02/08/2017 03:38:20 PM - basher - DEBUG : Returning output.
+02/08/2017 03:38:20 PM - LINE - INFO : # Splitting of data chunk 0 for subband 1 done #
+02/08/2017 03:38:20 PM - LINE - INFO : # Splitting of data for subband 1 done #
+02/08/2017 03:38:20 PM - LINE - INFO : # Started splitting of subband 2 #
+02/08/2017 03:38:20 PM - LINE - INFO : # Adjusting chunk size to 0.019999999553 GHz for regular gridding of the data chunks over frequency #
+02/08/2017 03:38:20 PM - LINE - INFO : # Starting splitting of data chunk 0 for subband 2 #
+02/08/2017 03:38:20 PM - LINE - INFO : # Using frequency binning of 0.0002 for all subbands #
+02/08/2017 03:38:20 PM - LINE - INFO : # Creating directory /data/adebahr/apertif/tutorial/A1/line/02 #
+02/08/2017 03:38:20 PM - masher - DEBUG : uvaver vis=/data/adebahr/apertif/tutorial/A1/selfcal/NGC4062.mir line='channel,64,1,1,1' select='window(3)' out=/data/adebahr/apertif/tutorial/A1/line/02/02.mir 
+02/08/2017 03:38:20 PM - basher - DEBUG : uvaver vis=/data/adebahr/apertif/tutorial/A1/selfcal/NGC4062.mir line='channel,64,1,1,1' select='window(3)' out=/data/adebahr/apertif/tutorial/A1/line/02/02.mir 
+02/08/2017 03:38:21 PM - basher - DEBUG : Command = uvaver vis=/data/adebahr/apertif/tutorial/A1/selfcal/NGC4062.mir line='channel,64,1,1,1' select='window(3)' out=/data/adebahr/apertif/tutorial/A1/line/02/02.mir 
+02/08/2017 03:38:21 PM - basher - DEBUG : 
+UvAver: version 1.0 17-Nov-08
+
+02/08/2017 03:38:21 PM - basher - DEBUG : Returning output.
+02/08/2017 03:38:21 PM - LINE - INFO : # Splitting of data chunk 0 for subband 2 done #
+02/08/2017 03:38:21 PM - LINE - INFO : # Splitting of data for subband 2 done #
+02/08/2017 03:38:21 PM - LINE - INFO : # Started splitting of subband 3 #
+02/08/2017 03:38:21 PM - LINE - INFO : # Adjusting chunk size to 0.019999999553 GHz for regular gridding of the data chunks over frequency #
+02/08/2017 03:38:21 PM - LINE - INFO : # Starting splitting of data chunk 0 for subband 3 #
+02/08/2017 03:38:21 PM - LINE - INFO : # Using frequency binning of 0.0002 for all subbands #
+02/08/2017 03:38:21 PM - LINE - INFO : # Creating directory /data/adebahr/apertif/tutorial/A1/line/03 #
+02/08/2017 03:38:21 PM - masher - DEBUG : uvaver vis=/data/adebahr/apertif/tutorial/A1/selfcal/NGC4062.mir line='channel,64,1,1,1' select='window(4)' out=/data/adebahr/apertif/tutorial/A1/line/03/03.mir 
+02/08/2017 03:38:21 PM - basher - DEBUG : uvaver vis=/data/adebahr/apertif/tutorial/A1/selfcal/NGC4062.mir line='channel,64,1,1,1' select='window(4)' out=/data/adebahr/apertif/tutorial/A1/line/03/03.mir 
+02/08/2017 03:38:22 PM - basher - DEBUG : Command = uvaver vis=/data/adebahr/apertif/tutorial/A1/selfcal/NGC4062.mir line='channel,64,1,1,1' select='window(4)' out=/data/adebahr/apertif/tutorial/A1/line/03/03.mir 
+02/08/2017 03:38:22 PM - basher - DEBUG : 
+UvAver: version 1.0 17-Nov-08
+
+02/08/2017 03:38:22 PM - basher - DEBUG : Returning output.
+02/08/2017 03:38:22 PM - LINE - INFO : # Splitting of data chunk 0 for subband 3 done #
+02/08/2017 03:38:22 PM - LINE - INFO : # Splitting of data for subband 3 done #
+02/08/2017 03:38:22 PM - LINE - INFO : ### Splitting of target data into individual frequency chunks done ###
+02/08/2017 04:04:05 PM - root - INFO : Logging started!
+02/08/2017 04:04:05 PM - root - INFO : To see the log in a bash window use the following command:
+02/08/2017 04:04:05 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/tutorials/logs/A1.log
+02/08/2017 04:04:07 PM - LINE - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A1.cfg successfully read! ###
+02/08/2017 04:04:10 PM - LINE - INFO : ### Copying gains from continuum to line data ###
+02/08/2017 04:04:10 PM - LINE - WARNING : # Dataset 00.mir does not seem to have self calibration gains. Cannot copy gains to line data! #
+02/08/2017 04:04:10 PM - LINE - WARNING : # Dataset 01.mir does not seem to have self calibration gains. Cannot copy gains to line data! #
+02/08/2017 04:04:10 PM - LINE - WARNING : # Dataset 02.mir does not seem to have self calibration gains. Cannot copy gains to line data! #
+02/08/2017 04:04:10 PM - LINE - WARNING : # Dataset 03.mir does not seem to have self calibration gains. Cannot copy gains to line data! #
+02/08/2017 04:04:10 PM - LINE - INFO : ### Gains from continuum to line data copied ###
+02/08/2017 04:05:08 PM - root - INFO : Logging started!
+02/08/2017 04:05:08 PM - root - INFO : To see the log in a bash window use the following command:
+02/08/2017 04:05:08 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/tutorials/logs/A1.log
+02/08/2017 04:05:10 PM - LINE - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A1.cfg successfully read! ###
+02/08/2017 04:05:13 PM - LINE - INFO : ### Copying gains from continuum to line data ###
+02/08/2017 04:05:13 PM - masher - DEBUG : gpcopy vis=/data/adebahr/apertif/tutorial/A1/selfcal/00/00.mir out=/data/adebahr/apertif/tutorial/A1/line/00/00.mir 
+02/08/2017 04:05:13 PM - basher - DEBUG : gpcopy vis=/data/adebahr/apertif/tutorial/A1/selfcal/00/00.mir out=/data/adebahr/apertif/tutorial/A1/line/00/00.mir 
+02/08/2017 04:05:13 PM - basher - DEBUG : Command = gpcopy vis=/data/adebahr/apertif/tutorial/A1/selfcal/00/00.mir out=/data/adebahr/apertif/tutorial/A1/line/00/00.mir 
+02/08/2017 04:05:13 PM - basher - DEBUG : 
+
+gpcopy: Revision 1.13, 2015/10/29 01:31:39 UTC
+
+Copying gain table
+Interpolation tolerance set to (minutes):   1.00
+
+02/08/2017 04:05:13 PM - basher - DEBUG : Returning output.
+02/08/2017 04:05:13 PM - masher - DEBUG : gpcopy vis=/data/adebahr/apertif/tutorial/A1/selfcal/01/01.mir out=/data/adebahr/apertif/tutorial/A1/line/01/01.mir 
+02/08/2017 04:05:13 PM - basher - DEBUG : gpcopy vis=/data/adebahr/apertif/tutorial/A1/selfcal/01/01.mir out=/data/adebahr/apertif/tutorial/A1/line/01/01.mir 
+02/08/2017 04:05:13 PM - basher - DEBUG : Command = gpcopy vis=/data/adebahr/apertif/tutorial/A1/selfcal/01/01.mir out=/data/adebahr/apertif/tutorial/A1/line/01/01.mir 
+02/08/2017 04:05:13 PM - basher - DEBUG : 
+
+gpcopy: Revision 1.13, 2015/10/29 01:31:39 UTC
+
+Copying gain table
+Interpolation tolerance set to (minutes):   1.00
+
+02/08/2017 04:05:13 PM - basher - DEBUG : Returning output.
+02/08/2017 04:05:13 PM - masher - DEBUG : gpcopy vis=/data/adebahr/apertif/tutorial/A1/selfcal/02/02.mir out=/data/adebahr/apertif/tutorial/A1/line/02/02.mir 
+02/08/2017 04:05:13 PM - basher - DEBUG : gpcopy vis=/data/adebahr/apertif/tutorial/A1/selfcal/02/02.mir out=/data/adebahr/apertif/tutorial/A1/line/02/02.mir 
+02/08/2017 04:05:13 PM - basher - DEBUG : Command = gpcopy vis=/data/adebahr/apertif/tutorial/A1/selfcal/02/02.mir out=/data/adebahr/apertif/tutorial/A1/line/02/02.mir 
+02/08/2017 04:05:13 PM - basher - DEBUG : 
+
+gpcopy: Revision 1.13, 2015/10/29 01:31:39 UTC
+
+Copying gain table
+Interpolation tolerance set to (minutes):   1.00
+
+02/08/2017 04:05:13 PM - basher - DEBUG : Returning output.
+02/08/2017 04:05:13 PM - masher - DEBUG : gpcopy vis=/data/adebahr/apertif/tutorial/A1/selfcal/03/03.mir out=/data/adebahr/apertif/tutorial/A1/line/03/03.mir 
+02/08/2017 04:05:13 PM - basher - DEBUG : gpcopy vis=/data/adebahr/apertif/tutorial/A1/selfcal/03/03.mir out=/data/adebahr/apertif/tutorial/A1/line/03/03.mir 
+02/08/2017 04:05:13 PM - basher - DEBUG : Command = gpcopy vis=/data/adebahr/apertif/tutorial/A1/selfcal/03/03.mir out=/data/adebahr/apertif/tutorial/A1/line/03/03.mir 
+02/08/2017 04:05:13 PM - basher - DEBUG : 
+
+gpcopy: Revision 1.13, 2015/10/29 01:31:39 UTC
+
+Copying gain table
+Interpolation tolerance set to (minutes):   1.00
+
+02/08/2017 04:05:13 PM - basher - DEBUG : Returning output.
+02/08/2017 04:05:13 PM - LINE - INFO : ### Gains from continuum to line data copied ###
+02/08/2017 04:20:15 PM - root - INFO : Logging started!
+02/08/2017 04:20:15 PM - root - INFO : To see the log in a bash window use the following command:
+02/08/2017 04:20:15 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/tutorials/logs/A1.log
+02/08/2017 04:20:17 PM - LINE - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A1.cfg successfully read! ###
+02/08/2017 04:20:20 PM - LINE - INFO : # Moved to directory /data/adebahr/apertif/tutorial/A1/line #
+02/08/2017 04:20:20 PM - LINE - INFO : ### Starting continuum subtraction of individual chunks using uvlin ###
+02/08/2017 04:20:20 PM - masher - DEBUG : uvlin vis=00/00.mir out=00/00_line.mir 
+02/08/2017 04:20:20 PM - basher - DEBUG : uvlin vis=00/00.mir out=00/00_line.mir 
+02/08/2017 04:20:23 PM - basher - DEBUG : Command = uvlin vis=00/00.mir out=00/00_line.mir 
+02/08/2017 04:20:23 PM - basher - DEBUG : 
+
+uvlin: Revision 1.6, 2015/08/07 01:52:44 UTC
+
+uvlin: Revision 1.6, 2015/08/07 01:52:44 UTC
+Applying gain corrections to 00/00.mir
+Visibilities where continuum fit failed: 540
+Visibilities where 0th  order fit used: 216
+Visibilities where 1st  order fit used: 204872
+
+02/08/2017 04:20:23 PM - basher - DEBUG : Returning output.
+02/08/2017 04:20:23 PM - LINE - INFO : # Doing continuum subtraction using uvlin method for chunk 00 #
+02/08/2017 04:20:23 PM - masher - DEBUG : uvlin vis=01/01.mir out=01/01_line.mir 
+02/08/2017 04:20:23 PM - basher - DEBUG : uvlin vis=01/01.mir out=01/01_line.mir 
+02/08/2017 04:20:25 PM - basher - DEBUG : Command = uvlin vis=01/01.mir out=01/01_line.mir 
+02/08/2017 04:20:25 PM - basher - DEBUG : 
+
+uvlin: Revision 1.6, 2015/08/07 01:52:44 UTC
+
+uvlin: Revision 1.6, 2015/08/07 01:52:44 UTC
+Applying gain corrections to 01/01.mir
+Visibilities where continuum fit failed: 616
+Visibilities where 0th  order fit used: 656
+Visibilities where 1st  order fit used: 205056
+
+02/08/2017 04:20:25 PM - basher - DEBUG : Returning output.
+02/08/2017 04:20:25 PM - LINE - INFO : # Doing continuum subtraction using uvlin method for chunk 01 #
+02/08/2017 04:20:25 PM - masher - DEBUG : uvlin vis=02/02.mir out=02/02_line.mir 
+02/08/2017 04:20:25 PM - basher - DEBUG : uvlin vis=02/02.mir out=02/02_line.mir 
+02/08/2017 04:20:27 PM - basher - DEBUG : Command = uvlin vis=02/02.mir out=02/02_line.mir 
+02/08/2017 04:20:27 PM - basher - DEBUG : 
+
+uvlin: Revision 1.6, 2015/08/07 01:52:44 UTC
+
+uvlin: Revision 1.6, 2015/08/07 01:52:44 UTC
+Applying gain corrections to 02/02.mir
+Visibilities where continuum fit failed: 584
+Visibilities where 0th  order fit used: 320
+Visibilities where 1st  order fit used: 203960
+
+02/08/2017 04:20:27 PM - basher - DEBUG : Returning output.
+02/08/2017 04:20:27 PM - LINE - INFO : # Doing continuum subtraction using uvlin method for chunk 02 #
+02/08/2017 04:20:27 PM - masher - DEBUG : uvlin vis=03/03.mir out=03/03_line.mir 
+02/08/2017 04:20:27 PM - basher - DEBUG : uvlin vis=03/03.mir out=03/03_line.mir 
+02/08/2017 04:20:29 PM - basher - DEBUG : Command = uvlin vis=03/03.mir out=03/03_line.mir 
+02/08/2017 04:20:29 PM - basher - DEBUG : 
+
+uvlin: Revision 1.6, 2015/08/07 01:52:44 UTC
+
+uvlin: Revision 1.6, 2015/08/07 01:52:44 UTC
+Applying gain corrections to 03/03.mir
+Visibilities where continuum fit failed: 31720
+Visibilities where 0th  order fit used: 276
+Visibilities where 1st  order fit used: 174116
+
+02/08/2017 04:20:29 PM - basher - DEBUG : Returning output.
+02/08/2017 04:20:29 PM - LINE - INFO : # Doing continuum subtraction using uvlin method for chunk 03 #
+02/08/2017 05:18:06 PM - root - INFO : Logging started!
+02/08/2017 05:18:06 PM - root - INFO : To see the log in a bash window use the following command:
+02/08/2017 05:18:06 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/tutorials/logs/A1.log
+02/08/2017 05:18:08 PM - LINE - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A1.cfg successfully read! ###
+02/08/2017 05:18:13 PM - LINE - INFO : # Moved to directory /data/adebahr/apertif/tutorial/A1/line #
+02/08/2017 05:18:13 PM - LINE - INFO : ### Starting continuum subtraction of individual chunks using uvmodel ###
+02/08/2017 05:18:13 PM - masher - DEBUG : uvcat vis=00/00.mir out=00/00_uvcat.mir 
+02/08/2017 05:18:13 PM - basher - DEBUG : uvcat vis=00/00.mir out=00/00_uvcat.mir 
+02/08/2017 05:18:13 PM - basher - DEBUG : Command = uvcat vis=00/00.mir out=00/00_uvcat.mir 
+02/08/2017 05:18:13 PM - basher - DEBUG : 
+UvCat: version 15-oct-2012
+Applying gain corrections to 00/00.mir
+
+02/08/2017 05:18:13 PM - basher - DEBUG : Returning output.
+02/08/2017 05:18:13 PM - LINE - INFO : # Applied gains to chunk 00 for subtraction of continuum model #
+02/08/2017 05:19:25 PM - root - INFO : Logging started!
+02/08/2017 05:19:25 PM - root - INFO : To see the log in a bash window use the following command:
+02/08/2017 05:19:25 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/tutorials/logs/A1.log
+02/08/2017 05:19:27 PM - LINE - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A1.cfg successfully read! ###
+02/08/2017 05:19:30 PM - LINE - INFO : # Moved to directory /data/adebahr/apertif/tutorial/A1/line #
+02/08/2017 05:19:30 PM - LINE - INFO : ### Starting continuum subtraction of individual chunks using uvmodel ###
+02/08/2017 05:19:30 PM - masher - DEBUG : uvcat vis=00/00.mir out=00/00_uvcat.mir 
+02/08/2017 05:19:30 PM - basher - DEBUG : uvcat vis=00/00.mir out=00/00_uvcat.mir 
+02/08/2017 05:19:30 PM - basher - DEBUG : Command = uvcat vis=00/00.mir out=00/00_uvcat.mir 
+02/08/2017 05:19:30 PM - basher - DEBUG : 
+UvCat: version 15-oct-2012
+
+02/08/2017 05:19:30 PM - basher - DEBUG : ### Fatal Error:  Error opening 00/00_uvcat.mir, in UVOPEN(new): File exists
+
+02/08/2017 05:19:30 PM - basher - DEBUG : Returning output.
+02/08/2017 05:19:30 PM - LINE - INFO : # Applied gains to chunk 00 for subtraction of continuum model #
+02/08/2017 05:25:51 PM - root - INFO : Logging started!
+02/08/2017 05:25:51 PM - root - INFO : To see the log in a bash window use the following command:
+02/08/2017 05:25:51 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/tutorials/logs/A1.log
+02/08/2017 05:25:53 PM - LINE - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A1.cfg successfully read! ###
+02/08/2017 05:25:56 PM - LINE - INFO : # Moved to directory /data/adebahr/apertif/tutorial/A1/line #
+02/08/2017 05:25:56 PM - LINE - INFO : ### Starting continuum subtraction of individual chunks using uvmodel ###
+02/08/2017 05:25:56 PM - masher - DEBUG : uvcat vis=00/00.mir out=00/00_uvcat.mir 
+02/08/2017 05:25:56 PM - basher - DEBUG : uvcat vis=00/00.mir out=00/00_uvcat.mir 
+02/08/2017 05:25:57 PM - basher - DEBUG : Command = uvcat vis=00/00.mir out=00/00_uvcat.mir 
+02/08/2017 05:25:57 PM - basher - DEBUG : 
+UvCat: version 15-oct-2012
+Applying gain corrections to 00/00.mir
+
+02/08/2017 05:25:57 PM - basher - DEBUG : Returning output.
+02/08/2017 05:25:57 PM - LINE - INFO : # Applied gains to chunk 00 for subtraction of continuum model #
+02/08/2017 05:26:28 PM - root - INFO : Logging started!
+02/08/2017 05:26:28 PM - root - INFO : To see the log in a bash window use the following command:
+02/08/2017 05:26:28 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/tutorials/logs/A1.log
+02/08/2017 05:26:30 PM - LINE - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A1.cfg successfully read! ###
+02/08/2017 05:26:33 PM - LINE - INFO : # Moved to directory /data/adebahr/apertif/tutorial/A1/line #
+02/08/2017 05:26:33 PM - LINE - INFO : ### Starting continuum subtraction of individual chunks using uvmodel ###
+02/08/2017 05:26:33 PM - masher - DEBUG : uvcat vis=00/00.mir out=00/00_uvcat.mir 
+02/08/2017 05:26:33 PM - basher - DEBUG : uvcat vis=00/00.mir out=00/00_uvcat.mir 
+02/08/2017 05:26:34 PM - basher - DEBUG : Command = uvcat vis=00/00.mir out=00/00_uvcat.mir 
+02/08/2017 05:26:34 PM - basher - DEBUG : 
+UvCat: version 15-oct-2012
+Applying gain corrections to 00/00.mir
+
+02/08/2017 05:26:34 PM - basher - DEBUG : Returning output.
+02/08/2017 05:26:34 PM - LINE - INFO : # Applied gains to chunk 00 for subtraction of continuum model #
+02/08/2017 05:26:34 PM - LINE - INFO : # Found most complete model for chunk 00 in /data/adebahr/apertif/tutorial/A1/selfcal/00/99/model_00 #
+02/08/2017 05:26:34 PM - masher - DEBUG : uvmodel vis=00/00_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/00/99/model_00 options=subtract,mfs out=00/00_line.mir 
+02/08/2017 05:26:34 PM - basher - DEBUG : uvmodel vis=00/00_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/00/99/model_00 options=subtract,mfs out=00/00_line.mir 
+02/08/2017 05:26:34 PM - basher - DEBUG : Command = uvmodel vis=00/00_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/00/99/model_00 options=subtract,mfs out=00/00_line.mir 
+02/08/2017 05:26:34 PM - basher - DEBUG : 
+
+uvmodel: Revision 1.8, 2015/03/24 04:56:24 UTC
+
+
+02/08/2017 05:26:34 PM - basher - DEBUG : ### Warning:  Error opening /data/adebahr/apertif/tutorial/A1/selfcal/00/99/model_00, in XYOPEN
+### Fatal Error:  No such file or directory
+
+02/08/2017 05:26:34 PM - basher - DEBUG : Returning output.
+02/08/2017 05:26:34 PM - basher - DEBUG : rm -r 00/00_uvcat.mir
+02/08/2017 05:26:34 PM - basher - DEBUG : Returning output.
+02/08/2017 05:26:34 PM - LINE - INFO : # Continuum subtraction using uvmodel method for chunk 00 done #
+02/08/2017 05:26:34 PM - masher - DEBUG : uvcat vis=01/01.mir out=01/01_uvcat.mir 
+02/08/2017 05:26:34 PM - basher - DEBUG : uvcat vis=01/01.mir out=01/01_uvcat.mir 
+02/08/2017 05:26:35 PM - basher - DEBUG : Command = uvcat vis=01/01.mir out=01/01_uvcat.mir 
+02/08/2017 05:26:35 PM - basher - DEBUG : 
+UvCat: version 15-oct-2012
+Applying gain corrections to 01/01.mir
+
+02/08/2017 05:26:35 PM - basher - DEBUG : Returning output.
+02/08/2017 05:26:35 PM - LINE - INFO : # Applied gains to chunk 01 for subtraction of continuum model #
+02/08/2017 05:26:35 PM - LINE - INFO : # Found most complete model for chunk 01 in /data/adebahr/apertif/tutorial/A1/selfcal/01/99/model_00 #
+02/08/2017 05:26:35 PM - masher - DEBUG : uvmodel vis=01/01_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/01/99/model_00 options=subtract,mfs out=01/01_line.mir 
+02/08/2017 05:26:35 PM - basher - DEBUG : uvmodel vis=01/01_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/01/99/model_00 options=subtract,mfs out=01/01_line.mir 
+02/08/2017 05:26:35 PM - basher - DEBUG : Command = uvmodel vis=01/01_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/01/99/model_00 options=subtract,mfs out=01/01_line.mir 
+02/08/2017 05:26:35 PM - basher - DEBUG : 
+
+uvmodel: Revision 1.8, 2015/03/24 04:56:24 UTC
+
+
+02/08/2017 05:26:35 PM - basher - DEBUG : ### Warning:  Error opening /data/adebahr/apertif/tutorial/A1/selfcal/01/99/model_00, in XYOPEN
+### Fatal Error:  No such file or directory
+
+02/08/2017 05:26:35 PM - basher - DEBUG : Returning output.
+02/08/2017 05:26:35 PM - basher - DEBUG : rm -r 01/01_uvcat.mir
+02/08/2017 05:26:35 PM - basher - DEBUG : Returning output.
+02/08/2017 05:26:35 PM - LINE - INFO : # Continuum subtraction using uvmodel method for chunk 01 done #
+02/08/2017 05:26:35 PM - masher - DEBUG : uvcat vis=02/02.mir out=02/02_uvcat.mir 
+02/08/2017 05:26:35 PM - basher - DEBUG : uvcat vis=02/02.mir out=02/02_uvcat.mir 
+02/08/2017 05:26:36 PM - basher - DEBUG : Command = uvcat vis=02/02.mir out=02/02_uvcat.mir 
+02/08/2017 05:26:36 PM - basher - DEBUG : 
+UvCat: version 15-oct-2012
+Applying gain corrections to 02/02.mir
+
+02/08/2017 05:26:36 PM - basher - DEBUG : Returning output.
+02/08/2017 05:26:36 PM - LINE - INFO : # Applied gains to chunk 02 for subtraction of continuum model #
+02/08/2017 05:26:36 PM - LINE - INFO : # Found most complete model for chunk 02 in /data/adebahr/apertif/tutorial/A1/selfcal/02/99/model_00 #
+02/08/2017 05:26:36 PM - masher - DEBUG : uvmodel vis=02/02_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/02/99/model_00 options=subtract,mfs out=02/02_line.mir 
+02/08/2017 05:26:36 PM - basher - DEBUG : uvmodel vis=02/02_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/02/99/model_00 options=subtract,mfs out=02/02_line.mir 
+02/08/2017 05:26:36 PM - basher - DEBUG : Command = uvmodel vis=02/02_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/02/99/model_00 options=subtract,mfs out=02/02_line.mir 
+02/08/2017 05:26:36 PM - basher - DEBUG : 
+
+uvmodel: Revision 1.8, 2015/03/24 04:56:24 UTC
+
+
+02/08/2017 05:26:36 PM - basher - DEBUG : ### Warning:  Error opening /data/adebahr/apertif/tutorial/A1/selfcal/02/99/model_00, in XYOPEN
+### Fatal Error:  No such file or directory
+
+02/08/2017 05:26:36 PM - basher - DEBUG : Returning output.
+02/08/2017 05:26:36 PM - basher - DEBUG : rm -r 02/02_uvcat.mir
+02/08/2017 05:26:36 PM - basher - DEBUG : Returning output.
+02/08/2017 05:26:36 PM - LINE - INFO : # Continuum subtraction using uvmodel method for chunk 02 done #
+02/08/2017 05:26:36 PM - masher - DEBUG : uvcat vis=03/03.mir out=03/03_uvcat.mir 
+02/08/2017 05:26:36 PM - basher - DEBUG : uvcat vis=03/03.mir out=03/03_uvcat.mir 
+02/08/2017 05:26:37 PM - basher - DEBUG : Command = uvcat vis=03/03.mir out=03/03_uvcat.mir 
+02/08/2017 05:26:37 PM - basher - DEBUG : 
+UvCat: version 15-oct-2012
+Applying gain corrections to 03/03.mir
+
+02/08/2017 05:26:37 PM - basher - DEBUG : Returning output.
+02/08/2017 05:26:37 PM - LINE - INFO : # Applied gains to chunk 03 for subtraction of continuum model #
+02/08/2017 05:26:37 PM - LINE - INFO : # Found most complete model for chunk 03 in /data/adebahr/apertif/tutorial/A1/selfcal/03/99/model_00 #
+02/08/2017 05:26:37 PM - masher - DEBUG : uvmodel vis=03/03_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/03/99/model_00 options=subtract,mfs out=03/03_line.mir 
+02/08/2017 05:26:37 PM - basher - DEBUG : uvmodel vis=03/03_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/03/99/model_00 options=subtract,mfs out=03/03_line.mir 
+02/08/2017 05:26:37 PM - basher - DEBUG : Command = uvmodel vis=03/03_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/03/99/model_00 options=subtract,mfs out=03/03_line.mir 
+02/08/2017 05:26:37 PM - basher - DEBUG : 
+
+uvmodel: Revision 1.8, 2015/03/24 04:56:24 UTC
+
+
+02/08/2017 05:26:37 PM - basher - DEBUG : ### Warning:  Error opening /data/adebahr/apertif/tutorial/A1/selfcal/03/99/model_00, in XYOPEN
+### Fatal Error:  No such file or directory
+
+02/08/2017 05:26:37 PM - basher - DEBUG : Returning output.
+02/08/2017 05:26:37 PM - basher - DEBUG : rm -r 03/03_uvcat.mir
+02/08/2017 05:26:37 PM - basher - DEBUG : Returning output.
+02/08/2017 05:26:37 PM - LINE - INFO : # Continuum subtraction using uvmodel method for chunk 03 done #
+02/09/2017 09:17:32 AM - root - INFO : Logging started!
+02/09/2017 09:17:32 AM - root - INFO : To see the log in a bash window use the following command:
+02/09/2017 09:17:32 AM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/tutorials/logs/A1.log
+02/09/2017 09:17:36 AM - LINE - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A1.cfg successfully read! ###
+02/09/2017 09:17:39 AM - LINE - INFO : # Moved to directory /data/adebahr/apertif/tutorial/A1/line #
+02/09/2017 09:17:39 AM - LINE - INFO : ### Starting continuum subtraction of individual chunks using uvmodel ###
+02/09/2017 09:17:39 AM - masher - DEBUG : uvcat vis=00/00.mir out=00/00_uvcat.mir 
+02/09/2017 09:17:39 AM - basher - DEBUG : uvcat vis=00/00.mir out=00/00_uvcat.mir 
+02/09/2017 09:17:40 AM - basher - DEBUG : Command = uvcat vis=00/00.mir out=00/00_uvcat.mir 
+02/09/2017 09:17:40 AM - basher - DEBUG : 
+UvCat: version 15-oct-2012
+Applying gain corrections to 00/00.mir
+
+02/09/2017 09:17:40 AM - basher - DEBUG : Returning output.
+02/09/2017 09:17:40 AM - LINE - INFO : # Applied gains to chunk 00 for subtraction of continuum model #
+02/09/2017 09:17:40 AM - LINE - INFO : # Found most complete model for chunk 00 in /data/adebahr/apertif/tutorial/A1/selfcal/00/00/model_03 #
+02/09/2017 09:17:40 AM - masher - DEBUG : uvmodel vis=00/00_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/00/00/model_03 options=subtract,mfs out=00/00_line.mir 
+02/09/2017 09:17:40 AM - basher - DEBUG : uvmodel vis=00/00_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/00/00/model_03 options=subtract,mfs out=00/00_line.mir 
+02/09/2017 09:17:40 AM - basher - DEBUG : Command = uvmodel vis=00/00_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/00/00/model_03 options=subtract,mfs out=00/00_line.mir 
+02/09/2017 09:17:40 AM - basher - DEBUG : 
+
+uvmodel: Revision 1.8, 2015/03/24 04:56:24 UTC
+
+
+02/09/2017 09:17:40 AM - basher - DEBUG : ### Warning:  Error opening /data/adebahr/apertif/tutorial/A1/selfcal/00/00/model_03, in XYOPEN
+### Fatal Error:  No such file or directory
+
+02/09/2017 09:17:40 AM - basher - DEBUG : Returning output.
+02/09/2017 09:17:40 AM - basher - DEBUG : rm -r 00/00_uvcat.mir
+02/09/2017 09:17:41 AM - basher - DEBUG : Returning output.
+02/09/2017 09:17:41 AM - LINE - INFO : # Continuum subtraction using uvmodel method for chunk 00 done #
+02/09/2017 09:17:41 AM - masher - DEBUG : uvcat vis=01/01.mir out=01/01_uvcat.mir 
+02/09/2017 09:17:41 AM - basher - DEBUG : uvcat vis=01/01.mir out=01/01_uvcat.mir 
+02/09/2017 09:17:41 AM - basher - DEBUG : Command = uvcat vis=01/01.mir out=01/01_uvcat.mir 
+02/09/2017 09:17:41 AM - basher - DEBUG : 
+UvCat: version 15-oct-2012
+Applying gain corrections to 01/01.mir
+
+02/09/2017 09:17:41 AM - basher - DEBUG : Returning output.
+02/09/2017 09:17:41 AM - LINE - INFO : # Applied gains to chunk 01 for subtraction of continuum model #
+02/09/2017 09:17:41 AM - LINE - INFO : # Found most complete model for chunk 01 in /data/adebahr/apertif/tutorial/A1/selfcal/01/00/model_03 #
+02/09/2017 09:17:41 AM - masher - DEBUG : uvmodel vis=01/01_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/01/00/model_03 options=subtract,mfs out=01/01_line.mir 
+02/09/2017 09:17:41 AM - basher - DEBUG : uvmodel vis=01/01_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/01/00/model_03 options=subtract,mfs out=01/01_line.mir 
+02/09/2017 09:17:41 AM - basher - DEBUG : Command = uvmodel vis=01/01_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/01/00/model_03 options=subtract,mfs out=01/01_line.mir 
+02/09/2017 09:17:41 AM - basher - DEBUG : 
+
+uvmodel: Revision 1.8, 2015/03/24 04:56:24 UTC
+
+
+02/09/2017 09:17:41 AM - basher - DEBUG : ### Warning:  Error opening /data/adebahr/apertif/tutorial/A1/selfcal/01/00/model_03, in XYOPEN
+### Fatal Error:  No such file or directory
+
+02/09/2017 09:17:41 AM - basher - DEBUG : Returning output.
+02/09/2017 09:17:41 AM - basher - DEBUG : rm -r 01/01_uvcat.mir
+02/09/2017 09:17:41 AM - basher - DEBUG : Returning output.
+02/09/2017 09:17:41 AM - LINE - INFO : # Continuum subtraction using uvmodel method for chunk 01 done #
+02/09/2017 09:17:41 AM - masher - DEBUG : uvcat vis=02/02.mir out=02/02_uvcat.mir 
+02/09/2017 09:17:41 AM - basher - DEBUG : uvcat vis=02/02.mir out=02/02_uvcat.mir 
+02/09/2017 09:17:42 AM - basher - DEBUG : Command = uvcat vis=02/02.mir out=02/02_uvcat.mir 
+02/09/2017 09:17:42 AM - basher - DEBUG : 
+UvCat: version 15-oct-2012
+Applying gain corrections to 02/02.mir
+
+02/09/2017 09:17:42 AM - basher - DEBUG : Returning output.
+02/09/2017 09:17:42 AM - LINE - INFO : # Applied gains to chunk 02 for subtraction of continuum model #
+02/09/2017 09:17:42 AM - LINE - INFO : # Found most complete model for chunk 02 in /data/adebahr/apertif/tutorial/A1/selfcal/02/00/model_03 #
+02/09/2017 09:17:42 AM - masher - DEBUG : uvmodel vis=02/02_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/02/00/model_03 options=subtract,mfs out=02/02_line.mir 
+02/09/2017 09:17:42 AM - basher - DEBUG : uvmodel vis=02/02_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/02/00/model_03 options=subtract,mfs out=02/02_line.mir 
+02/09/2017 09:17:42 AM - basher - DEBUG : Command = uvmodel vis=02/02_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/02/00/model_03 options=subtract,mfs out=02/02_line.mir 
+02/09/2017 09:17:42 AM - basher - DEBUG : 
+
+uvmodel: Revision 1.8, 2015/03/24 04:56:24 UTC
+
+
+02/09/2017 09:17:42 AM - basher - DEBUG : ### Warning:  Error opening /data/adebahr/apertif/tutorial/A1/selfcal/02/00/model_03, in XYOPEN
+### Fatal Error:  No such file or directory
+
+02/09/2017 09:17:42 AM - basher - DEBUG : Returning output.
+02/09/2017 09:17:42 AM - basher - DEBUG : rm -r 02/02_uvcat.mir
+02/09/2017 09:17:42 AM - basher - DEBUG : Returning output.
+02/09/2017 09:17:42 AM - LINE - INFO : # Continuum subtraction using uvmodel method for chunk 02 done #
+02/09/2017 09:17:42 AM - masher - DEBUG : uvcat vis=03/03.mir out=03/03_uvcat.mir 
+02/09/2017 09:17:42 AM - basher - DEBUG : uvcat vis=03/03.mir out=03/03_uvcat.mir 
+02/09/2017 09:17:43 AM - basher - DEBUG : Command = uvcat vis=03/03.mir out=03/03_uvcat.mir 
+02/09/2017 09:17:43 AM - basher - DEBUG : 
+UvCat: version 15-oct-2012
+Applying gain corrections to 03/03.mir
+
+02/09/2017 09:17:43 AM - basher - DEBUG : Returning output.
+02/09/2017 09:17:43 AM - LINE - INFO : # Applied gains to chunk 03 for subtraction of continuum model #
+02/09/2017 09:17:43 AM - LINE - INFO : # Found most complete model for chunk 03 in /data/adebahr/apertif/tutorial/A1/selfcal/03/00/model_03 #
+02/09/2017 09:17:43 AM - masher - DEBUG : uvmodel vis=03/03_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/03/00/model_03 options=subtract,mfs out=03/03_line.mir 
+02/09/2017 09:17:43 AM - basher - DEBUG : uvmodel vis=03/03_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/03/00/model_03 options=subtract,mfs out=03/03_line.mir 
+02/09/2017 09:17:43 AM - basher - DEBUG : Command = uvmodel vis=03/03_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/03/00/model_03 options=subtract,mfs out=03/03_line.mir 
+02/09/2017 09:17:43 AM - basher - DEBUG : 
+
+uvmodel: Revision 1.8, 2015/03/24 04:56:24 UTC
+
+
+02/09/2017 09:17:43 AM - basher - DEBUG : ### Warning:  Error opening /data/adebahr/apertif/tutorial/A1/selfcal/03/00/model_03, in XYOPEN
+### Fatal Error:  No such file or directory
+
+02/09/2017 09:17:43 AM - basher - DEBUG : Returning output.
+02/09/2017 09:17:43 AM - basher - DEBUG : rm -r 03/03_uvcat.mir
+02/09/2017 09:17:43 AM - basher - DEBUG : Returning output.
+02/09/2017 09:17:43 AM - LINE - INFO : # Continuum subtraction using uvmodel method for chunk 03 done #
+02/09/2017 09:20:20 AM - root - INFO : Logging started!
+02/09/2017 09:20:20 AM - root - INFO : To see the log in a bash window use the following command:
+02/09/2017 09:20:20 AM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/tutorials/logs/A1.log
+02/09/2017 09:20:25 AM - LINE - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A1.cfg successfully read! ###
+02/09/2017 09:20:27 AM - LINE - INFO : # Moved to directory /data/adebahr/apertif/tutorial/A1/line #
+02/09/2017 09:20:27 AM - LINE - INFO : ### Starting continuum subtraction of individual chunks using uvmodel ###
+02/09/2017 09:20:27 AM - masher - DEBUG : uvcat vis=00/00.mir out=00/00_uvcat.mir 
+02/09/2017 09:20:27 AM - basher - DEBUG : uvcat vis=00/00.mir out=00/00_uvcat.mir 
+02/09/2017 09:20:28 AM - basher - DEBUG : Command = uvcat vis=00/00.mir out=00/00_uvcat.mir 
+02/09/2017 09:20:28 AM - basher - DEBUG : 
+UvCat: version 15-oct-2012
+Applying gain corrections to 00/00.mir
+
+02/09/2017 09:20:28 AM - basher - DEBUG : Returning output.
+02/09/2017 09:20:28 AM - LINE - INFO : # Applied gains to chunk 00 for subtraction of continuum model #
+02/09/2017 09:20:28 AM - LINE - INFO : # Found most complete model for chunk 00 in /data/adebahr/apertif/tutorial/A1/selfcal/00/05/model_00 #
+02/09/2017 09:20:28 AM - masher - DEBUG : uvmodel vis=00/00_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/00/05/model_00 options=subtract,mfs out=00/00_line.mir 
+02/09/2017 09:20:28 AM - basher - DEBUG : uvmodel vis=00/00_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/00/05/model_00 options=subtract,mfs out=00/00_line.mir 
+02/09/2017 09:20:28 AM - basher - DEBUG : Command = uvmodel vis=00/00_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/00/05/model_00 options=subtract,mfs out=00/00_line.mir 
+02/09/2017 09:20:28 AM - basher - DEBUG : 
+
+uvmodel: Revision 1.8, 2015/03/24 04:56:24 UTC
+
+
+02/09/2017 09:20:28 AM - basher - DEBUG : ### Warning:  Error opening /data/adebahr/apertif/tutorial/A1/selfcal/00/05/model_00, in XYOPEN
+### Fatal Error:  No such file or directory
+
+02/09/2017 09:20:28 AM - basher - DEBUG : Returning output.
+02/09/2017 09:20:28 AM - basher - DEBUG : rm -r 00/00_uvcat.mir
+02/09/2017 09:20:28 AM - basher - DEBUG : Returning output.
+02/09/2017 09:20:28 AM - LINE - INFO : # Continuum subtraction using uvmodel method for chunk 00 done #
+02/09/2017 09:20:28 AM - masher - DEBUG : uvcat vis=01/01.mir out=01/01_uvcat.mir 
+02/09/2017 09:20:28 AM - basher - DEBUG : uvcat vis=01/01.mir out=01/01_uvcat.mir 
+02/09/2017 09:20:29 AM - basher - DEBUG : Command = uvcat vis=01/01.mir out=01/01_uvcat.mir 
+02/09/2017 09:20:29 AM - basher - DEBUG : 
+UvCat: version 15-oct-2012
+Applying gain corrections to 01/01.mir
+
+02/09/2017 09:20:29 AM - basher - DEBUG : Returning output.
+02/09/2017 09:20:29 AM - LINE - INFO : # Applied gains to chunk 01 for subtraction of continuum model #
+02/09/2017 09:20:29 AM - LINE - INFO : # Found most complete model for chunk 01 in /data/adebahr/apertif/tutorial/A1/selfcal/01/05/model_00 #
+02/09/2017 09:20:29 AM - masher - DEBUG : uvmodel vis=01/01_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/01/05/model_00 options=subtract,mfs out=01/01_line.mir 
+02/09/2017 09:20:29 AM - basher - DEBUG : uvmodel vis=01/01_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/01/05/model_00 options=subtract,mfs out=01/01_line.mir 
+02/09/2017 09:20:29 AM - basher - DEBUG : Command = uvmodel vis=01/01_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/01/05/model_00 options=subtract,mfs out=01/01_line.mir 
+02/09/2017 09:20:29 AM - basher - DEBUG : 
+
+uvmodel: Revision 1.8, 2015/03/24 04:56:24 UTC
+
+
+02/09/2017 09:20:29 AM - basher - DEBUG : ### Warning:  Error opening /data/adebahr/apertif/tutorial/A1/selfcal/01/05/model_00, in XYOPEN
+### Fatal Error:  No such file or directory
+
+02/09/2017 09:20:29 AM - basher - DEBUG : Returning output.
+02/09/2017 09:20:29 AM - basher - DEBUG : rm -r 01/01_uvcat.mir
+02/09/2017 09:20:29 AM - basher - DEBUG : Returning output.
+02/09/2017 09:20:29 AM - LINE - INFO : # Continuum subtraction using uvmodel method for chunk 01 done #
+02/09/2017 09:20:29 AM - masher - DEBUG : uvcat vis=02/02.mir out=02/02_uvcat.mir 
+02/09/2017 09:20:29 AM - basher - DEBUG : uvcat vis=02/02.mir out=02/02_uvcat.mir 
+02/09/2017 09:20:30 AM - basher - DEBUG : Command = uvcat vis=02/02.mir out=02/02_uvcat.mir 
+02/09/2017 09:20:30 AM - basher - DEBUG : 
+UvCat: version 15-oct-2012
+Applying gain corrections to 02/02.mir
+
+02/09/2017 09:20:30 AM - basher - DEBUG : Returning output.
+02/09/2017 09:20:30 AM - LINE - INFO : # Applied gains to chunk 02 for subtraction of continuum model #
+02/09/2017 09:20:30 AM - LINE - INFO : # Found most complete model for chunk 02 in /data/adebahr/apertif/tutorial/A1/selfcal/02/05/model_00 #
+02/09/2017 09:20:30 AM - masher - DEBUG : uvmodel vis=02/02_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/02/05/model_00 options=subtract,mfs out=02/02_line.mir 
+02/09/2017 09:20:30 AM - basher - DEBUG : uvmodel vis=02/02_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/02/05/model_00 options=subtract,mfs out=02/02_line.mir 
+02/09/2017 09:20:30 AM - basher - DEBUG : Command = uvmodel vis=02/02_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/02/05/model_00 options=subtract,mfs out=02/02_line.mir 
+02/09/2017 09:20:30 AM - basher - DEBUG : 
+
+uvmodel: Revision 1.8, 2015/03/24 04:56:24 UTC
+
+
+02/09/2017 09:20:30 AM - basher - DEBUG : ### Warning:  Error opening /data/adebahr/apertif/tutorial/A1/selfcal/02/05/model_00, in XYOPEN
+### Fatal Error:  No such file or directory
+
+02/09/2017 09:20:30 AM - basher - DEBUG : Returning output.
+02/09/2017 09:20:30 AM - basher - DEBUG : rm -r 02/02_uvcat.mir
+02/09/2017 09:20:30 AM - basher - DEBUG : Returning output.
+02/09/2017 09:20:30 AM - LINE - INFO : # Continuum subtraction using uvmodel method for chunk 02 done #
+02/09/2017 09:20:30 AM - masher - DEBUG : uvcat vis=03/03.mir out=03/03_uvcat.mir 
+02/09/2017 09:20:30 AM - basher - DEBUG : uvcat vis=03/03.mir out=03/03_uvcat.mir 
+02/09/2017 09:20:31 AM - basher - DEBUG : Command = uvcat vis=03/03.mir out=03/03_uvcat.mir 
+02/09/2017 09:20:31 AM - basher - DEBUG : 
+UvCat: version 15-oct-2012
+Applying gain corrections to 03/03.mir
+
+02/09/2017 09:20:31 AM - basher - DEBUG : Returning output.
+02/09/2017 09:20:31 AM - LINE - INFO : # Applied gains to chunk 03 for subtraction of continuum model #
+02/09/2017 09:20:31 AM - LINE - INFO : # Found most complete model for chunk 03 in /data/adebahr/apertif/tutorial/A1/selfcal/03/05/model_00 #
+02/09/2017 09:20:31 AM - masher - DEBUG : uvmodel vis=03/03_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/03/05/model_00 options=subtract,mfs out=03/03_line.mir 
+02/09/2017 09:20:31 AM - basher - DEBUG : uvmodel vis=03/03_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/03/05/model_00 options=subtract,mfs out=03/03_line.mir 
+02/09/2017 09:20:31 AM - basher - DEBUG : Command = uvmodel vis=03/03_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/03/05/model_00 options=subtract,mfs out=03/03_line.mir 
+02/09/2017 09:20:31 AM - basher - DEBUG : 
+
+uvmodel: Revision 1.8, 2015/03/24 04:56:24 UTC
+
+
+02/09/2017 09:20:31 AM - basher - DEBUG : ### Warning:  Error opening /data/adebahr/apertif/tutorial/A1/selfcal/03/05/model_00, in XYOPEN
+### Fatal Error:  No such file or directory
+
+02/09/2017 09:20:31 AM - basher - DEBUG : Returning output.
+02/09/2017 09:20:31 AM - basher - DEBUG : rm -r 03/03_uvcat.mir
+02/09/2017 09:20:31 AM - basher - DEBUG : Returning output.
+02/09/2017 09:20:31 AM - LINE - INFO : # Continuum subtraction using uvmodel method for chunk 03 done #
+02/09/2017 09:21:35 AM - root - INFO : Logging started!
+02/09/2017 09:21:35 AM - root - INFO : To see the log in a bash window use the following command:
+02/09/2017 09:21:35 AM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/tutorials/logs/A1.log
+02/09/2017 09:21:37 AM - LINE - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A1.cfg successfully read! ###
+02/09/2017 09:21:42 AM - LINE - INFO : # Moved to directory /data/adebahr/apertif/tutorial/A1/line #
+02/09/2017 09:21:42 AM - LINE - INFO : ### Starting continuum subtraction of individual chunks using uvmodel ###
+02/09/2017 09:21:42 AM - masher - DEBUG : uvcat vis=00/00.mir out=00/00_uvcat.mir 
+02/09/2017 09:21:42 AM - basher - DEBUG : uvcat vis=00/00.mir out=00/00_uvcat.mir 
+02/09/2017 09:21:43 AM - basher - DEBUG : Command = uvcat vis=00/00.mir out=00/00_uvcat.mir 
+02/09/2017 09:21:43 AM - basher - DEBUG : 
+UvCat: version 15-oct-2012
+Applying gain corrections to 00/00.mir
+
+02/09/2017 09:21:43 AM - basher - DEBUG : Returning output.
+02/09/2017 09:21:43 AM - LINE - INFO : # Applied gains to chunk 00 for subtraction of continuum model #
+02/09/2017 09:21:43 AM - LINE - INFO : # Found most complete model for chunk 00 in /data/adebahr/apertif/tutorial/A1/selfcal/00/04/model_-1 #
+02/09/2017 09:21:43 AM - masher - DEBUG : uvmodel vis=00/00_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/00/04/model_-1 options=subtract,mfs out=00/00_line.mir 
+02/09/2017 09:21:43 AM - basher - DEBUG : uvmodel vis=00/00_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/00/04/model_-1 options=subtract,mfs out=00/00_line.mir 
+02/09/2017 09:21:43 AM - basher - DEBUG : Command = uvmodel vis=00/00_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/00/04/model_-1 options=subtract,mfs out=00/00_line.mir 
+02/09/2017 09:21:43 AM - basher - DEBUG : 
+
+uvmodel: Revision 1.8, 2015/03/24 04:56:24 UTC
+
+
+02/09/2017 09:21:43 AM - basher - DEBUG : ### Warning:  Error opening /data/adebahr/apertif/tutorial/A1/selfcal/00/04/model_-1, in XYOPEN
+### Fatal Error:  No such file or directory
+
+02/09/2017 09:21:43 AM - basher - DEBUG : Returning output.
+02/09/2017 09:21:43 AM - basher - DEBUG : rm -r 00/00_uvcat.mir
+02/09/2017 09:21:43 AM - basher - DEBUG : Returning output.
+02/09/2017 09:21:43 AM - LINE - INFO : # Continuum subtraction using uvmodel method for chunk 00 done #
+02/09/2017 09:21:43 AM - masher - DEBUG : uvcat vis=01/01.mir out=01/01_uvcat.mir 
+02/09/2017 09:21:43 AM - basher - DEBUG : uvcat vis=01/01.mir out=01/01_uvcat.mir 
+02/09/2017 09:21:44 AM - basher - DEBUG : Command = uvcat vis=01/01.mir out=01/01_uvcat.mir 
+02/09/2017 09:21:44 AM - basher - DEBUG : 
+UvCat: version 15-oct-2012
+Applying gain corrections to 01/01.mir
+
+02/09/2017 09:21:44 AM - basher - DEBUG : Returning output.
+02/09/2017 09:21:44 AM - LINE - INFO : # Applied gains to chunk 01 for subtraction of continuum model #
+02/09/2017 09:21:44 AM - LINE - INFO : # Found most complete model for chunk 01 in /data/adebahr/apertif/tutorial/A1/selfcal/01/04/model_-1 #
+02/09/2017 09:21:44 AM - masher - DEBUG : uvmodel vis=01/01_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/01/04/model_-1 options=subtract,mfs out=01/01_line.mir 
+02/09/2017 09:21:44 AM - basher - DEBUG : uvmodel vis=01/01_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/01/04/model_-1 options=subtract,mfs out=01/01_line.mir 
+02/09/2017 09:21:44 AM - basher - DEBUG : Command = uvmodel vis=01/01_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/01/04/model_-1 options=subtract,mfs out=01/01_line.mir 
+02/09/2017 09:21:44 AM - basher - DEBUG : 
+
+uvmodel: Revision 1.8, 2015/03/24 04:56:24 UTC
+
+
+02/09/2017 09:21:44 AM - basher - DEBUG : ### Warning:  Error opening /data/adebahr/apertif/tutorial/A1/selfcal/01/04/model_-1, in XYOPEN
+### Fatal Error:  No such file or directory
+
+02/09/2017 09:21:44 AM - basher - DEBUG : Returning output.
+02/09/2017 09:21:44 AM - basher - DEBUG : rm -r 01/01_uvcat.mir
+02/09/2017 09:21:44 AM - basher - DEBUG : Returning output.
+02/09/2017 09:21:44 AM - LINE - INFO : # Continuum subtraction using uvmodel method for chunk 01 done #
+02/09/2017 09:21:44 AM - masher - DEBUG : uvcat vis=02/02.mir out=02/02_uvcat.mir 
+02/09/2017 09:21:44 AM - basher - DEBUG : uvcat vis=02/02.mir out=02/02_uvcat.mir 
+02/09/2017 09:21:45 AM - basher - DEBUG : Command = uvcat vis=02/02.mir out=02/02_uvcat.mir 
+02/09/2017 09:21:45 AM - basher - DEBUG : 
+UvCat: version 15-oct-2012
+Applying gain corrections to 02/02.mir
+
+02/09/2017 09:21:45 AM - basher - DEBUG : Returning output.
+02/09/2017 09:21:45 AM - LINE - INFO : # Applied gains to chunk 02 for subtraction of continuum model #
+02/09/2017 09:21:45 AM - LINE - INFO : # Found most complete model for chunk 02 in /data/adebahr/apertif/tutorial/A1/selfcal/02/04/model_-1 #
+02/09/2017 09:21:45 AM - masher - DEBUG : uvmodel vis=02/02_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/02/04/model_-1 options=subtract,mfs out=02/02_line.mir 
+02/09/2017 09:21:45 AM - basher - DEBUG : uvmodel vis=02/02_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/02/04/model_-1 options=subtract,mfs out=02/02_line.mir 
+02/09/2017 09:21:45 AM - basher - DEBUG : Command = uvmodel vis=02/02_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/02/04/model_-1 options=subtract,mfs out=02/02_line.mir 
+02/09/2017 09:21:45 AM - basher - DEBUG : 
+
+uvmodel: Revision 1.8, 2015/03/24 04:56:24 UTC
+
+
+02/09/2017 09:21:45 AM - basher - DEBUG : ### Warning:  Error opening /data/adebahr/apertif/tutorial/A1/selfcal/02/04/model_-1, in XYOPEN
+### Fatal Error:  No such file or directory
+
+02/09/2017 09:21:45 AM - basher - DEBUG : Returning output.
+02/09/2017 09:21:45 AM - basher - DEBUG : rm -r 02/02_uvcat.mir
+02/09/2017 09:21:45 AM - basher - DEBUG : Returning output.
+02/09/2017 09:21:45 AM - LINE - INFO : # Continuum subtraction using uvmodel method for chunk 02 done #
+02/09/2017 09:21:45 AM - masher - DEBUG : uvcat vis=03/03.mir out=03/03_uvcat.mir 
+02/09/2017 09:21:45 AM - basher - DEBUG : uvcat vis=03/03.mir out=03/03_uvcat.mir 
+02/09/2017 09:21:46 AM - basher - DEBUG : Command = uvcat vis=03/03.mir out=03/03_uvcat.mir 
+02/09/2017 09:21:46 AM - basher - DEBUG : 
+UvCat: version 15-oct-2012
+Applying gain corrections to 03/03.mir
+
+02/09/2017 09:21:46 AM - basher - DEBUG : Returning output.
+02/09/2017 09:21:46 AM - LINE - INFO : # Applied gains to chunk 03 for subtraction of continuum model #
+02/09/2017 09:21:46 AM - LINE - INFO : # Found most complete model for chunk 03 in /data/adebahr/apertif/tutorial/A1/selfcal/03/04/model_-1 #
+02/09/2017 09:21:46 AM - masher - DEBUG : uvmodel vis=03/03_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/03/04/model_-1 options=subtract,mfs out=03/03_line.mir 
+02/09/2017 09:21:46 AM - basher - DEBUG : uvmodel vis=03/03_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/03/04/model_-1 options=subtract,mfs out=03/03_line.mir 
+02/09/2017 09:21:46 AM - basher - DEBUG : Command = uvmodel vis=03/03_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/03/04/model_-1 options=subtract,mfs out=03/03_line.mir 
+02/09/2017 09:21:46 AM - basher - DEBUG : 
+
+uvmodel: Revision 1.8, 2015/03/24 04:56:24 UTC
+
+
+02/09/2017 09:21:46 AM - basher - DEBUG : ### Warning:  Error opening /data/adebahr/apertif/tutorial/A1/selfcal/03/04/model_-1, in XYOPEN
+### Fatal Error:  No such file or directory
+
+02/09/2017 09:21:46 AM - basher - DEBUG : Returning output.
+02/09/2017 09:21:46 AM - basher - DEBUG : rm -r 03/03_uvcat.mir
+02/09/2017 09:21:46 AM - basher - DEBUG : Returning output.
+02/09/2017 09:21:46 AM - LINE - INFO : # Continuum subtraction using uvmodel method for chunk 03 done #
+02/09/2017 09:22:37 AM - root - INFO : Logging started!
+02/09/2017 09:22:37 AM - root - INFO : To see the log in a bash window use the following command:
+02/09/2017 09:22:37 AM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/tutorials/logs/A1.log
+02/09/2017 09:22:44 AM - LINE - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/tutorials/cfg/A1.cfg successfully read! ###
+02/09/2017 09:22:48 AM - LINE - INFO : # Moved to directory /data/adebahr/apertif/tutorial/A1/line #
+02/09/2017 09:22:48 AM - LINE - INFO : ### Starting continuum subtraction of individual chunks using uvmodel ###
+02/09/2017 09:22:48 AM - masher - DEBUG : uvcat vis=00/00.mir out=00/00_uvcat.mir 
+02/09/2017 09:22:48 AM - basher - DEBUG : uvcat vis=00/00.mir out=00/00_uvcat.mir 
+02/09/2017 09:22:49 AM - basher - DEBUG : Command = uvcat vis=00/00.mir out=00/00_uvcat.mir 
+02/09/2017 09:22:49 AM - basher - DEBUG : 
+UvCat: version 15-oct-2012
+Applying gain corrections to 00/00.mir
+
+02/09/2017 09:22:49 AM - basher - DEBUG : Returning output.
+02/09/2017 09:22:49 AM - LINE - INFO : # Applied gains to chunk 00 for subtraction of continuum model #
+02/09/2017 09:22:49 AM - LINE - INFO : # Found most complete model for chunk 00 in /data/adebahr/apertif/tutorial/A1/selfcal/00/04/model_01 #
+02/09/2017 09:22:49 AM - masher - DEBUG : uvmodel vis=00/00_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/00/04/model_01 options=subtract,mfs out=00/00_line.mir 
+02/09/2017 09:22:49 AM - basher - DEBUG : uvmodel vis=00/00_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/00/04/model_01 options=subtract,mfs out=00/00_line.mir 
+02/09/2017 09:22:55 AM - basher - DEBUG : Command = uvmodel vis=00/00_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/00/04/model_01 options=subtract,mfs out=00/00_line.mir 
+02/09/2017 09:22:55 AM - basher - DEBUG : 
+
+uvmodel: Revision 1.8, 2015/03/24 04:56:24 UTC
+
+
+02/09/2017 09:22:55 AM - basher - DEBUG : Returning output.
+02/09/2017 09:22:55 AM - basher - DEBUG : rm -r 00/00_uvcat.mir
+02/09/2017 09:22:55 AM - basher - DEBUG : Returning output.
+02/09/2017 09:22:55 AM - LINE - INFO : # Continuum subtraction using uvmodel method for chunk 00 done #
+02/09/2017 09:22:55 AM - masher - DEBUG : uvcat vis=01/01.mir out=01/01_uvcat.mir 
+02/09/2017 09:22:55 AM - basher - DEBUG : uvcat vis=01/01.mir out=01/01_uvcat.mir 
+02/09/2017 09:22:56 AM - basher - DEBUG : Command = uvcat vis=01/01.mir out=01/01_uvcat.mir 
+02/09/2017 09:22:56 AM - basher - DEBUG : 
+UvCat: version 15-oct-2012
+Applying gain corrections to 01/01.mir
+
+02/09/2017 09:22:56 AM - basher - DEBUG : Returning output.
+02/09/2017 09:22:56 AM - LINE - INFO : # Applied gains to chunk 01 for subtraction of continuum model #
+02/09/2017 09:22:56 AM - LINE - INFO : # Found most complete model for chunk 01 in /data/adebahr/apertif/tutorial/A1/selfcal/01/04/model_01 #
+02/09/2017 09:22:56 AM - masher - DEBUG : uvmodel vis=01/01_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/01/04/model_01 options=subtract,mfs out=01/01_line.mir 
+02/09/2017 09:22:56 AM - basher - DEBUG : uvmodel vis=01/01_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/01/04/model_01 options=subtract,mfs out=01/01_line.mir 
+02/09/2017 09:23:01 AM - basher - DEBUG : Command = uvmodel vis=01/01_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/01/04/model_01 options=subtract,mfs out=01/01_line.mir 
+02/09/2017 09:23:01 AM - basher - DEBUG : 
+
+uvmodel: Revision 1.8, 2015/03/24 04:56:24 UTC
+
+
+02/09/2017 09:23:01 AM - basher - DEBUG : Returning output.
+02/09/2017 09:23:01 AM - basher - DEBUG : rm -r 01/01_uvcat.mir
+02/09/2017 09:23:01 AM - basher - DEBUG : Returning output.
+02/09/2017 09:23:01 AM - LINE - INFO : # Continuum subtraction using uvmodel method for chunk 01 done #
+02/09/2017 09:23:01 AM - masher - DEBUG : uvcat vis=02/02.mir out=02/02_uvcat.mir 
+02/09/2017 09:23:01 AM - basher - DEBUG : uvcat vis=02/02.mir out=02/02_uvcat.mir 
+02/09/2017 09:23:02 AM - basher - DEBUG : Command = uvcat vis=02/02.mir out=02/02_uvcat.mir 
+02/09/2017 09:23:02 AM - basher - DEBUG : 
+UvCat: version 15-oct-2012
+Applying gain corrections to 02/02.mir
+
+02/09/2017 09:23:02 AM - basher - DEBUG : Returning output.
+02/09/2017 09:23:02 AM - LINE - INFO : # Applied gains to chunk 02 for subtraction of continuum model #
+02/09/2017 09:23:02 AM - LINE - INFO : # Found most complete model for chunk 02 in /data/adebahr/apertif/tutorial/A1/selfcal/02/04/model_01 #
+02/09/2017 09:23:02 AM - masher - DEBUG : uvmodel vis=02/02_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/02/04/model_01 options=subtract,mfs out=02/02_line.mir 
+02/09/2017 09:23:02 AM - basher - DEBUG : uvmodel vis=02/02_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/02/04/model_01 options=subtract,mfs out=02/02_line.mir 
+02/09/2017 09:23:07 AM - basher - DEBUG : Command = uvmodel vis=02/02_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/02/04/model_01 options=subtract,mfs out=02/02_line.mir 
+02/09/2017 09:23:07 AM - basher - DEBUG : 
+
+uvmodel: Revision 1.8, 2015/03/24 04:56:24 UTC
+
+
+02/09/2017 09:23:07 AM - basher - DEBUG : Returning output.
+02/09/2017 09:23:07 AM - basher - DEBUG : rm -r 02/02_uvcat.mir
+02/09/2017 09:23:07 AM - basher - DEBUG : Returning output.
+02/09/2017 09:23:07 AM - LINE - INFO : # Continuum subtraction using uvmodel method for chunk 02 done #
+02/09/2017 09:23:07 AM - masher - DEBUG : uvcat vis=03/03.mir out=03/03_uvcat.mir 
+02/09/2017 09:23:07 AM - basher - DEBUG : uvcat vis=03/03.mir out=03/03_uvcat.mir 
+02/09/2017 09:23:08 AM - basher - DEBUG : Command = uvcat vis=03/03.mir out=03/03_uvcat.mir 
+02/09/2017 09:23:08 AM - basher - DEBUG : 
+UvCat: version 15-oct-2012
+Applying gain corrections to 03/03.mir
+
+02/09/2017 09:23:08 AM - basher - DEBUG : Returning output.
+02/09/2017 09:23:08 AM - LINE - INFO : # Applied gains to chunk 03 for subtraction of continuum model #
+02/09/2017 09:23:08 AM - LINE - INFO : # Found most complete model for chunk 03 in /data/adebahr/apertif/tutorial/A1/selfcal/03/04/model_01 #
+02/09/2017 09:23:08 AM - masher - DEBUG : uvmodel vis=03/03_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/03/04/model_01 options=subtract,mfs out=03/03_line.mir 
+02/09/2017 09:23:08 AM - basher - DEBUG : uvmodel vis=03/03_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/03/04/model_01 options=subtract,mfs out=03/03_line.mir 
+02/09/2017 09:23:13 AM - basher - DEBUG : Command = uvmodel vis=03/03_uvcat.mir model=/data/adebahr/apertif/tutorial/A1/selfcal/03/04/model_01 options=subtract,mfs out=03/03_line.mir 
+02/09/2017 09:23:13 AM - basher - DEBUG : 
+
+uvmodel: Revision 1.8, 2015/03/24 04:56:24 UTC
+
+
+02/09/2017 09:23:13 AM - basher - DEBUG : Returning output.
+02/09/2017 09:23:13 AM - basher - DEBUG : rm -r 03/03_uvcat.mir
+02/09/2017 09:23:13 AM - basher - DEBUG : Returning output.
+02/09/2017 09:23:13 AM - LINE - INFO : # Continuum subtraction using uvmodel method for chunk 03 done #
