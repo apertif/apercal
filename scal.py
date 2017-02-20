@@ -435,6 +435,10 @@ class scal:
         theorms = float(obsrms.go()[-1].split()[3])/1000.0
         return theorms
 
+    ######################################################################
+    ##### Subfunctions for managing the location and naming of files #####
+    ######################################################################
+
     def list_chunks(self):
         '''
         Checks how many chunk directories exist and returns a list of them

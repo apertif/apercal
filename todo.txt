@@ -1,7 +1,4 @@
 - refactor adaptive selfcal
-- add normal strategy and clean minorcycles
 - implement amp calibration
-- check for blank images/models
-- include automatic flagging of channels with HI/RFI by mean rms
 - help function
 - write flag module to flag during cross-calibration

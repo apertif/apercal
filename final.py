@@ -6,10 +6,10 @@ import lib
 import logging
 import os,sys
 import ConfigParser
-import lsm
 import aipy
 import numpy as np
 import astropy.io.fits as pyfits
+import glob
 
 ####################################################################################################
 
@@ -359,17 +359,88 @@ class final:
 
     def line(self):
         '''
-        Averages the cross calibrated data to the given channel width, copies over the gains from the self-calibration and subtracts the continuum. Produces a line cube in the end.
+        Produces a line cube by imaging the individual frequency chunks (options chunk) or each individual channel (option channel)
         '''
         if self.final_line:
-            self.logger.info('### Starting line reduction of full dataset ###')
+            self.logger.info('### Starting line imaging of full dataset ###')
             self.director('ch', self.finaldir)
             self.director('ch', self.finaldir + '/line')
+            if self.final_line_image_mode == 'chunk': # Image each chunk individually
+                self.logger.info('# Using individual frequency chunks for line imaging #')
+                for chunk in self.list_chunks():
+                    invert = lib.miriad('invert')
+                    invert.vis = self.linedir + '/' + chunk + '/' + chunk + '_line.mir'
+                    invert.map = 'map_' + chunk
+                    invert.beam = 'beam_' + chunk
+                    invert.imsize = self.final_line_image_imsize
+                    invert.cell = self.final_line_image_cellsize
+                    invert.stokes = 'i'
+                    invert.slop = 1
+                    invert.go()
+                    velsw = lib.miriad('velsw')
+                    velsw.in_ = 'map_' + chunk
+                    velsw.axis = 'FREQ'
+                    velsw.go()
+                    fits = lib.miriad('fits')
+                    fits.op = 'xyout'
+                    fits.in_ = 'map_' + chunk
+                    fits.out = 'map_' + chunk + '.fits'
+                    fits.go()
+                    self.logger.info('# Imaging line cube for chunk ' + chunk + ' #')
+            elif self.final_line_image_mode == 'channel': # Image each channel individually
+                self.logger.info('# Imaging each individual channel seperately #')
+                for chunk in self.list_chunks():
+                    uv = aipy.miriad.UV(self.linedir + '/' + chunk + '/' + chunk + '_line.mir')
+                    nchannel = uv['nschan'] # Nmber of channels in the dataset
+                    for channel in range(nchannel):
+                        invert = lib.miriad('invert')
+                        invert.vis = self.linedir + '/' + chunk + '/' + chunk + '_line.mir'
+                        invert.map = 'map_' + chunk + '_' + str(channel).zfill(3)
+                        invert.beam = 'beam_' + chunk + '_' + str(channel).zfill(3)
+                        invert.imsize = self.final_line_image_imsize
+                        invert.cell = self.final_line_image_cellsize
+                        invert.line = '"' + 'channel,1,' + str(channel+1) + ',1,1' + '"'
+                        invert.stokes = 'i'
+                        invert.slop = 1
+                        invert.go()
+                        velsw = lib.miriad('velsw')
+                        velsw.in_ = 'map_' + chunk + '_' + str(channel).zfill(3)
+                        velsw.axis = 'FREQ'
+                        velsw.go()
+                        fits = lib.miriad('fits')
+                        fits.op = 'xyout'
+                        fits.in_ = 'map_' + chunk + '_' + str(channel).zfill(3)
+                        fits.out = 'map_' + chunk + '_' + str(channel).zfill(3) + '.fits'
+                        fits.go()
+                    self.logger.info('# All channels of chunk ' + chunk + ' imaged #')
+            self.logger.info('# Combining images to line cube and writing frequency file #')
+            self.create_cube(self.finaldir + '/line/map_*.fits', self.finaldir + '/line/' + self.target.rstrip('.mir') + '_line.fits', self.finaldir + '/line/' + self.target.rstrip('.mir') + '_freq.txt')
 
-
-    # self.logger.info('# Copying calibrated datasets to ' + self.finaldir + '/line')
-    # for n, chunk in enumerate(self.list_chunks()):  # Copy the datasets over to keep pathnames short
-    #     self.director('cp', '.', self.selfcaldir + '/' + chunk + '/' + chunk + '.mir')
+    def create_cube(self, searchpattern, outcube, outfreq):
+        '''
+        Creates a cube out of a number of input files.
+        searchpattern: Searchpattern for the files to combine in the cube. Uses the usual command line wild cards
+        outcube: Full name and path of the output cube
+        outfreq: Full name and path of the output frequency file
+        '''
+        filelist = glob.glob(searchpattern) # Get a list of the fits files in the directory
+        firstfile = pyfits.open(filelist[0]) # Open the first file to get the header information and array sizes
+        firstheader = firstfile[0].header
+        naxis1 = firstheader['NAXIS1']
+        naxis2 = firstheader['NAXIS2']
+        firstdata = firstfile[0].data
+        firstshape = firstdata.shape
+        print(firstshape)
+        firstfile.close()
+        # print(filelist)
+        for f,file in enumerate(filelist):
+            fitsfile = pyfits.open(file)
+            if f == 0:
+                cubedata = fitsfile[0].data
+                freqfile = open(outfreq, 'w') # Create the frequency file
+            else:
+                pass
+        fitsfile.close()
 
     def calc_mask_threshold(self, imax, minor_cycle):
         '''

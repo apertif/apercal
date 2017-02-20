@@ -1,0 +1,276 @@
+[INITIAL]
+These parameters set the environment for the pipeline and are universal for all following steps. You can change them
+in between, but it is not recommended and might lead to confusion.
+
+apercaldir (string):
+The main directory the apercal python routines are in
+fluxcal (string):
+The name of the flux calibrator data set with an MS ending. Apercal automatically replaces the MS-ending with .UVFITS
+or .mir at the different stages of the pipeline.
+polcal (string):
+The name of the polarisation calibrator data set with an MS ending. Apercal automatically replaces the MS-ending with
+.UVFITS or .mir at the different stages of the pipeline.
+target (string):
+The name of the target field data set with an MS ending. Apercal automatically replaces the MS-ending with .UVFITS or
+.mir at the different stages of the pipeline.
+basedir (string):
+The full pathname to the basic directory where the data is located.
+rawsubdir (string):
+The subdirectory in basedir where the raw uncalibrated MS datasets are located. Usually 'raw'.
+crosscalsubdir (string):
+The subdirectory of basedir where the cross calibration is executed. Usually 'crosscal'.
+selfcalsubdir (string):
+The subdirectory of basedir where the self calibration is executed. Usually 'selfcal'.
+linesubdir (string):
+The subdirectory of basedir where the continuum subtraction and preparation of the line dataset  takes place. Usually
+'line'.
+finalsubdir (string):
+The subdirectoy of basedir where all the final data products (final continuum images, line cubes, polarisation
+images, RM-Synthesis cubes) are placed. Usually 'final'.
+
+
+[PREFLAG]
+This step handles the flagging of the raw data. It uses a combination of aoflagger to automatically identify RFI and
+flag it and manual flags, which are used to flag known issues with the observation like non functioning dishes,
+shadowing etc.
+
+preflag_aoflagger (bool):
+Use aoflagger to flag the data or not.
+preflag_aoflagger_fluxcal (bool):
+Flag the flux calibrator dataset with aoflagger or not.
+preflag_aoflagger_polcal (bool):
+Flag the polarised calibrator dataset with aoflagger or not.
+preflag_aoflagger_target (bool):
+Flag the target dataset with aoflagger or not.
+preflag_aoflagger_fluxcalstrat (string):
+Name of the aoflagger strategy to flag the flux calibrator dataset. The strategies are situated in
+apercaldir/ao_strategies. Usually 'fluxcal.rfis'.
+preflag_aoflagger_polcalstrat (string):
+Name of the aoflagger strategy to flag the polarised calibrator dataset. The strategies are situated in
+apercaldir/ao_strategies. Usually 'polcal.rfis'.
+preflag_aoflagger_targetstrat (string):
+Name of the aoflagger strategy to flag the target dataset. The strategies are situated in  apercaldir/ao_strategies.
+Usually 'target.rfis'.
+preflag_manualflag (bool):
+Do manual flagging on dataset. It is mostly used to flag known issues of the observation like non-functioning
+dishes/baselines, shadowing, auto=correlations.
+preflag_manualflag_fluxcal (bool):
+Do manual flagging on the flux calibrator dataset or not.
+preflag_manualflag_polcal (bool):
+Do manual flagging on the polarised calibrator dataset or not.
+preflag_manualflag_target (bool):
+Do manual flagging on the target dataset or not.
+preflag_manualflag_auto (bool):
+Flag the auto-correlations or not.
+preflag_manualflag_antenna (str):
+List of dishes to flag. Comma-seperated. Same as CASA notation.
+preflag_manualflag_corr (str):
+Flag entire correlations like 'YY,YX,XY'.
+preflag_manualflag_shadow (bool):
+Flag shadowed dishes automatically.
+preflag_manualflag_baseline (str):
+Flag single baselines. Comma seperated. Same as CASA notation.
+
+
+[CONVERT]
+This step is used for the conversion from MS to MIRIAD format.
+
+convert_ms2uvfits (bool):
+Convert the datasets from MS to UVFITS format.
+convert_ms2uvfits_tool (string):
+Tool to use for the conversion from MS to UVFITS format. Two options: 'casa' using the casa toolkit exportuvfits
+routine and 'ms2uvfits' using the command line programme for conversion.
+convert_ms2uvfits_tool_casa_autocorr (bool):
+Keep (True) or remove (False) the auto-correlations during conversion from MS to UVFITS.
+convert_uvfits2mir (bool):
+Convert the dataset from UVFITS to MIRIAD format.
+convert_uvfits2mir_tool (string):
+Tool to use for conversion from UVFITS to MIRIAD format. Two options: 'wsrtfits' (the wsrtfits task of MIRIAD) and
+'fits'
+(the fits task of MIRIAD)
+convert_fluxcal (bool):
+Do the convert step for the flux calibrator dataset or not.
+convert_polcal (bool):
+Do the convert step for the polarised calibrator dataset or not.
+convert_target (bool):
+Do the convert step for the target dataset or not.
+
+
+[CROSSCAL]
+Step to handle the cross calibration of the data. Derives the calibrator gains from the flux or polarised calibrator,
+ optionally solves for leakage and polarisation angle and transfers the solutions to the target data.
+
+crosscal_mode (string):
+Mode of cross calibration. At the moment only the 'WSRT' option is available reliably until we can do proper cross
+calibration for APERTIF. Mode 'APERTIF' is experimental and does not include any application of system temperatures,
+noise source corrections etc.
+crosscal_fringestop (bool):
+Do fringe stopping or not. Only direct fringe stopping is supported, which means a phase calibration on a point
+source model in the phase centre for each individual integration time before deriving bandpass and calibrator gains.
+crosscal_fringestop_mode (string):
+Mode for the fringe stopping correction. At the moment only 'direct' is supported. This mode does a phase calibration
+ on a point source in the field centre before deriving any other calibrator gains.
+crosscal_applysys (bool):
+Apply system temperatures before starting the calibration. There seems to be a bug during conversion or in the attsys
+ task at the moment. It causes blanking of channels during imaging.
+crosscal_bandpass (bool):
+Do a bandpass calibration or not. In case of an non polarisation observation this is done on the flux calibrator. In
+case of a full polarisation observation this is done on the polarised calibrator since MIRIAD blanks the polarisation
+ products Q, U, and V if gains or bandpass are derived from an unpolarised calibrator to a polarised source.
+crosscal_polarisation (bool):
+Do polarisation calibration or not. This derives the polarisation leakage and angle from the polarised calibrator
+source. At the moment it also triggers the derivation of the bandpass from the polarised calibrator.
+crosscal_transfer_to_target (bool):
+Transfer all the calibration solutions from the calibrators to the target field or not.
+
+
+[SELFCAL]
+Step to do self calibration. Several different modes can be triggered (standard (N. Vilchez), manual, adaptive (B.
+Adebahr)). Data can be averaged before self-calibration, channels with high noise can be identified, and a
+aparametric model can be used before the first self-calibration iteration beforehand.
+
+selfcal_image_imsize (int):
+Image size for all self-calibration steps in pixels. All images are square.
+selfcal_image_cellsize (int):
+Cellsize of the pixels for the whole self-calibration process in arcseconds.
+selfcal_splitdata (bool):
+Do the splitting of data into individual freqeuncy chunks or not.
+selfcal_splitdata_chunkbandwidth (float):
+Bandwidth of the single frequency chunks to process in the self-calibration in GHz. Automatically adjusts the
+bandwidth to the next higher number, which guarantees the same number of channels for each chunk.
+selfcal_splitdata_channelbandwidth (float):
+Channel bandwidth to average the data to for the self-calibration in GHz. Automatically adjusts the channel bandwidth
+ to the next higher number, which guarantees the same number of channels for each chunk.
+selfcal_flagline (bool):
+Do automatic flagging of channels with high noise for the averaged continuum data. The algorithm takes the standard
+deviation from each imaged channel and calculates the median over all imaged channels. The standard deviation of this
+ distribution is taken and everything outside of a given sigma level is flagged.
+selfcal_flagline_sigma (float):
+The sigma level for the automatic flagging routine.
+selfcal_parametric (bool):
+Do parametric self calibration before any other iterative self-calibration step. The model is build from an
+NVSS/FIRST model with the spectral index derived from WENSS. Resolved sources in NVSS/FIRST are handled according to
+their flux ratios, if they are unresolved in WENSS.
+selfcal_parametric_skymodel_radius (float):
+The radius around the pointing centre of the observation to include sources from in degrees.
+selfcal_parametric_skymodel_cutoff (float):
+A number between 0.0 and 1.0, which describes the completeness of the derived skymodel. The apparent flux derived from
+the model in the field is summed up and multiplied by this number. Sources are then ordered from strongest to
+faintest. All sources falling below the flux limit are discarded in the skymodel.
+selfcal_parametric_skymodel_distance (float):
+The distance in source positions between NVSS/FIRST and WENSS to assume they are the same source in arcseconds.
+selfcal_parametric_solint (float):
+The solution interval for the parametric self-calibration in minutes.
+selfcal_parametric_uvmin (float):
+The minimum uvrange to include in the parametric self-calibration in klmabda.
+selfcal_parametric_uvmax (float):
+The maximum uvrange to include in the parametric self-calibration in klmabda.
+selfcal_mode (string):
+The mode of the self-calibration to execute. Available modes are 'standard' as described by N. Vilchez, 'manual'
+where all parameters are set manually, and 'adaptive' which adjusts the self-calibration parameters according to the
+field properties. Parameters for all modes can be set individually by the parameters in this section.
+selfcal_mode_standard_majorcycle (int):
+The major self-calibration cycles to use in the standard mode for each frequency chunk.
+selfcal_mode_standard_minorcycle (int):
+The minor self-calibration cycles for masking and cleaning used to produce the model for the self-calibration in each
+ minor cycle for each frequency chunk.
+selfcal_mode_standard_c0 (float):
+Coefficient for mask generation. At each major and minor cycle the maximum value in the image is extracted and a mask
+ generated using the threshold computed with this formula:
+ mask_threshold = (Imax)/((c0 + (minor_cycle-1)*c0)*(major_cycle))
+selfcal_mode_standard_c1 (float):
+Coefficient for mask genaration. After each mask generation, a clean noise threshold is computed with this formula:
+clean_noise_threshold = (Imax)/(mask_threshold*c1)
+selfcal_mode_standard_drinit (float):
+Initial value for dynamic rnage threshold.
+selfcal_mode_standard_dr0 (float):
+Coefficinet for increasing the dynamic range threshold at each major cycle. The dynamic range threshold is computed
+with the following formula:
+dynamic_range_threshold = (Imax)/((((major_cycle)-1)*dr0*drinit))+drinit)
+selfcal_mode_standard_nsigma (float):
+At each major cycle the theoretical noise is computed. nsigma is the value for theoretical noise threshold estimation:
+theoretical_noise_threshold = nsigma*theoretical_noise
+selfcal_mode_standard_uvmin (list of floats):
+The minimum uvrange to use in the major cycles for the standard self-calibration in klambda. The length of the list
+must correspond to the number of major cycles.
+selfcal_mode_standard_uvmax (list of floats):
+The maximum uvrange to use in the major cycles for the standard self-calibration in klambda. The length of the list
+must correspond to the number of major cycles.
+selfcal_mode_standard_solint (list of floats):
+The solution interval to use in the major cycles for the standard self-calibration in minutes. The length of the list
+must correspond to the number of major cycles.
+
+
+[LINE]
+The line step does the continuum subtraction to produce a line dataset. This dataset is also needed for the final
+step to do the line imaging.
+
+line_splitdata (bool):
+Split the dataset in individual frequency chunks for the continuum subtraction and line imaging. The chunk bandwidth
+should be the same as for the self-calibration since gains are copied on a one-by-one basis. The channel bandwidth
+can be any value and determines the frequency resolution of your finally imaged line cube.
+line_splitdata_chunkbandwidth (float):
+Bandwidth of the single frequency chunks for line imaging in GHz. Automatically adjusts the bandwidth to the next
+higher number, which guarantees the same number of channels for each chunk. This should be the same as the one used
+during self-calibration.
+line_splitdata_channelbandwidth (float):
+Channel bandwidth to average the data to for the final line imaging in GHz. Automatically adjusts the channel bandwidth
+ to the next higher number, which guarantees the same number of channels for each chunk.
+line_transfergains (bool):
+Transfer the gains from the self-calibration to the line dataset. Gains are copied on a one-by-one basis. This has to
+ be kept in mind when using different parameters for the chunk bandwidth in the self-calibration and line steps.
+line_subtract (bool):
+Subtract the continuum to produce a line cube or not.
+line_subtract_mode (string):
+Mode to use for subtraction of the continuum. Two choises are available: 'uvlin' using the uvlin task in MIRIAD to
+subtract the continuum and 'uvmodel' using the last model derived during continuum self-calibration.
+
+
+[FINAL]
+Step to do the final imaging step. Can produce deep continuum images by stacking or multi-freqeuncy-synthesis, line
+imaging, and polarisation imaging and calculation of RM-Synthesis cubes as well as RM-Synthesis cleaning.
+
+final_continuum (bool):
+Produce a final deep continuum image of the target field.
+final_continuum_image_imsize (int):
+Image size for the continuum image in pixels. Images are always square.
+final_continuum_image_cellsize (int):
+Cellsize of the pixels for the final imaging process in arcseconds.
+final_continuum_mode (string):
+Mode for the final continuum imaging. Two modes are available: 'mf' using the MIRIAD mfclean task to produce a deep
+continuum image by combining all calibrated datasets and imaging the whole data at once or 'stack' which produces a
+deep continuum image of each frequency chunk individually and stacks the images in the end weighted by their
+theoretical noise.
+final_continuum_minorcycle (int):
+Number of minor cycles for cleaning and mask creation to produce the deep continuum image.
+final_continuum_c0 (float):
+Coefficient for mask generation. Within each minor cycle the maximum value in the image is extracted and a mask
+ generated using the threshold computed with this formula:
+ mask_threshold = (Imax)/((c0 + (minor_cycle-1)*c0))
+final_continuum_c1 (float):
+Coefficient for mask genaration. After each mask generation, a clean noise threshold is computed with this formula:
+clean_noise_threshold = (Imax)/(mask_threshold*c1)
+final_continuum_nsigma (float):
+At each major cycle the theoretical noise is computed. nsigma is the value for theoretical noise threshold estimation:
+theoretical_noise_threshold = nsigma*theoretical_noise
+final_continuum_extraiterations (int):
+Additional iterations for the cleaning after the last minor cycle. This last iterations then do not use any mask and
+clean 80% of the inner part of the image. Very useful if images are confused or very diffuse extended structures are
+present, which are not caught by the masking.
+final_line (bool):
+Produce a final line cube of the dataset. This needs at least one execution of the line step before it can produce
+the cube.
+final_line_image_imsize (int):
+Image size for the line cube in pixels. Images are always square.
+final_line_image_cellsize (int):
+Cellsize of the pixels for the final line imaging process in arcseconds.
+final_line_image_mode (string):
+Mode for the imaging of the line cube. Two modes are available: 'channel' which images each channel individually and
+combines all channels in the end into a final cube or 'chunk' which produces a single cube out of each frequency
+chunk and combines these chunks in the end into a final cube. 'channel' might be needed since MIRIAD assumes a linear
+ behaviour of freqeuncies with velocities.
+final_polarisation = True
+final_polarisation_image_imsize = 1537
+final_polarisation_image_cellsize = 4
+final_polarisation_makecube = True
+final_polarisation_rmsynth = True

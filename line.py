@@ -181,6 +181,10 @@ class line:
                 self.logger.error('### Subtract mode not know. Exiting! ###')
                 sys.exit(1)
 
+    ######################################################################
+    ##### Subfunctions for managing the location and naming of files #####
+    ######################################################################
+
     def list_chunks(self):
         '''
         Checks how many chunk directories exist and returns a list of them
@@ -213,7 +217,7 @@ class line:
     def director(self, option, dest, file=None, verbose=True):
         '''
         director: Function to move, remove, and copy files and directories
-        option: 'mk', 'ch', 'mv', 'rm', and 'cp' are supported
+        option: 'mk', 'ch', 'mv', 'rm', 'rn', and 'cp' are supported
         dest: Destination of a file or directory to move to
         file: Which file to move or copy, otherwise None
         '''
