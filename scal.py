@@ -25,7 +25,7 @@ class scal:
             self.logger.info('### Configuration file ' + file + ' successfully read! ###')
         else:
             config.readfp(open(os.path.realpath(__file__).rstrip('calibrate.pyc') + 'default.cfg'))
-            self.logger.info('### No configuration file given or file not found! Using default values for selfcal! ###')
+            self.logger.info('### No configuration file given or file not found! Using default values! ###')
         for s in config.sections():
             for o in config.items(s):
                 setattr(self, o[0], eval(o[1]))
@@ -49,7 +49,11 @@ class scal:
 
     def go(self):
         '''
-        Executes the whole self-calibration process.
+        Executes the whole self-calibration process in the following order:
+        splitdata
+        flagline
+        parametric
+        executeselfcal
         '''
         self.logger.info("########## Starting SELF CALIBRATION ##########")
         self.splitdata()
@@ -1177,17 +1181,34 @@ class scal:
     ##### Manage the creation and moving of new directories and files #####
     #######################################################################
 
-    def show(self):
+    def show(self, showall=False):
         '''
-        Prints the current settings of the pipeline. Only shows keywords, which are in the default config file default.cfg
+        show: Prints the current settings of the pipeline. Only shows keywords, which are in the default config file default.cfg
+        showall: Set to true if you want to see all current settings instead of only the ones from the current step
         '''
         config = ConfigParser.ConfigParser()
         config.readfp(open(self.apercaldir + '/default.cfg'))
         for s in config.sections():
-            print(s)
-            o = config.options(s)
-            for o in config.items(s):
-                print('\t' + str(o[0]) + ' = ' + str(self.__dict__.__getitem__(o[0])))
+            if showall:
+                print(s)
+                o = config.options(s)
+                for o in config.items(s):
+                    print('\t' + str(o[0]) + ' = ' + str(self.__dict__.__getitem__(o[0])))
+            else:
+                if s == 'SELFCAL':
+                    print(s)
+                    o = config.options(s)
+                    for o in config.items(s):
+                        print('\t' + str(o[0]) + ' = ' + str(self.__dict__.__getitem__(o[0])))
+                else:
+                    pass
+
+    def reset(self):
+        '''
+        Function to reset the current step and remove all generated data. Be careful! Deletes all data generated in this step!
+        '''
+        self.logger.warning('### Deleting all self-calibrated data. ###')
+        self.director('rm', self.selfcaldir + '/*')
 
     def director(self, option, dest, file=None, verbose=True):
         '''
