@@ -1,0 +1,38 @@
+BEAM
+  ┗raw (copy of the original data in MS-format)
+  ┗crosscal
+  ┗selfcal
+    ┗00 (frequency chunk)
+      ┗pm (parametric selfcal)
+      ┗00 (major selfcal iteration)
+      ┗01
+      ┗...
+      ┗0n
+      ┗(peeling)
+        ┗00 (number of peeled source)
+          ┗pm (parametric selfcal)
+          ┗00 (major selfcal iteration for peeled source)
+          ┗01
+          ┗...
+          ┗0n
+        ┗01
+        ┗...
+        ┗0n
+    ┗01
+    ┗...
+    ┗0n
+  ┗line (line data)
+    ┗00 (frequency chunk)
+    ┗01
+    ┗...
+    ┗0n
+  ┗final
+    ┗continuum
+      ┗mf (multi=frequency image)
+      ┗stack (stacked image)
+        ┗00 (final image of frequency chunk n)
+        ┗01
+        ┗...
+        ┗0n
+    ┗line (final cube)
+    ┗polarisation (final Q-/U-cube)
