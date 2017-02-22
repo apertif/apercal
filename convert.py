@@ -5,6 +5,9 @@ import ConfigParser
 import casac
 
 class convert:
+    '''
+    Class to convert data from MS-format into UVFITS, and from UVFITS into MIRIAD format. Resulting datasets will have the endings .MS, .UVFITS, and .mir.
+    '''
     def __init__(self, file=None, **kwargs):
         self.logger = logging.getLogger('CONVERT')
         config = ConfigParser.ConfigParser()  # Initialise the config parser
@@ -156,13 +159,19 @@ class convert:
                 print(s)
                 o = config.options(s)
                 for o in config.items(s):
-                    print('\t' + str(o[0]) + ' = ' + str(self.__dict__.__getitem__(o[0])))
+                    try:
+                        print('\t' + str(o[0]) + ' = ' + str(self.__dict__.__getitem__(o[0])))
+                    except KeyError:
+                        pass
             else:
                 if s == 'CONVERT':
                     print(s)
                     o = config.options(s)
                     for o in config.items(s):
-                        print('\t' + str(o[0]) + ' = ' + str(self.__dict__.__getitem__(o[0])))
+                        try:
+                            print('\t' + str(o[0]) + ' = ' + str(self.__dict__.__getitem__(o[0])))
+                        except KeyError:
+                            pass
                 else:
                     pass
 
@@ -171,6 +180,7 @@ class convert:
         Function to reset the current step and remove all generated data. Be careful! Deletes all data generated in this step!
         '''
         self.logger.warning('### Deleting all converted data. ###')
+        self.director('ch', self.crosscaldir)
         self.director('rm', self.crosscaldir + '/*')
 
     def director(self, option, dest, file=None, verbose=True):

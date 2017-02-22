@@ -278,13 +278,19 @@ class preflag:
                 print(s)
                 o = config.options(s)
                 for o in config.items(s):
-                    print('\t' + str(o[0]) + ' = ' + str(self.__dict__.__getitem__(o[0])))
+                    try:
+                        print('\t' + str(o[0]) + ' = ' + str(self.__dict__.__getitem__(o[0])))
+                    except KeyError:
+                        pass
             else:
                 if s == 'PREFLAG':
                     print(s)
                     o = config.options(s)
                     for o in config.items(s):
-                        print('\t' + str(o[0]) + ' = ' + str(self.__dict__.__getitem__(o[0])))
+                        try:
+                            print('\t' + str(o[0]) + ' = ' + str(self.__dict__.__getitem__(o[0])))
+                        except KeyError:
+                            pass
                 else:
                     pass
 
@@ -293,6 +299,7 @@ class preflag:
         Function to reset the current step and remove all generated data. Be careful! Deletes all data generated in this step!
         '''
         self.logger.warning('### Deleting all preflagged data. You might need to copy over the raw data to the raw subdirectory again. ###')
+        self.director('ch', self.rawdir)
         self.director('rm', self.rawdir + '/*')
 
     def director(self, option, dest, file=None, verbose=True):

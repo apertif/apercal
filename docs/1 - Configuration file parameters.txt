@@ -256,7 +256,7 @@ theoretical_noise_threshold = nsigma*theoretical_noise
 final_continuum_extraiterations (int):
 Additional iterations for the cleaning after the last minor cycle. This last iterations then do not use any mask and
 clean 80% of the inner part of the image. Very useful if images are confused or very diffuse extended structures are
-present, which are not caught by the masking.
+present, which are not caught by the masking. Set to 0 to switch off.
 final_line (bool):
 Produce a final line cube of the dataset. This needs at least one execution of the line step before it can produce
 the cube.

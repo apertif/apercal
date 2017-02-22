@@ -18,7 +18,7 @@ from astropy.coordinates import FK5
 
 class ccal:
     '''
-    ccal: Crosscal class to handle applying the calibrator gains and prepare the dataset for selfcal
+    Crosscal class to handle applying the calibrator gains and prepare the dataset for self-calibration.
     '''
     def __init__(self, file=None, **kwargs):
         self.logger = logging.getLogger('CROSSCAL')
@@ -355,13 +355,19 @@ class ccal:
                 print(s)
                 o = config.options(s)
                 for o in config.items(s):
-                    print('\t' + str(o[0]) + ' = ' + str(self.__dict__.__getitem__(o[0])))
+                    try:
+                        print('\t' + str(o[0]) + ' = ' + str(self.__dict__.__getitem__(o[0])))
+                    except KeyError:
+                        pass
             else:
                 if s == 'CROSSCAL':
                     print(s)
                     o = config.options(s)
                     for o in config.items(s):
-                        print('\t' + str(o[0]) + ' = ' + str(self.__dict__.__getitem__(o[0])))
+                        try:
+                            print('\t' + str(o[0]) + ' = ' + str(self.__dict__.__getitem__(o[0])))
+                        except KeyError:
+                            pass
                 else:
                     pass
 
@@ -370,6 +376,7 @@ class ccal:
         Function to reset the current step and remove all generated data. Be careful! Deletes all data generated in this step!
         '''
         self.logger.warning('### Deleting all cross calibrated data. ###')
+        self.director('ch', self.crosscaldir)
         self.director('rm', self.crosscaldir + '/*')
 
     def director(self, option, dest, file=None, verbose=True):

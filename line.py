@@ -15,7 +15,7 @@ import astropy.io.fits as pyfits
 
 class line:
     '''
-    line: Line class
+    Line class to do continuum subtraction and prepare data for line imaging.
     '''
     def __init__(self, file=None, **kwargs):
         self.logger = logging.getLogger('LINE')
@@ -62,7 +62,7 @@ class line:
 
     def splitdata(self):
         '''
-        Applies calibrator corrections to data, splits the data into chunks in frequency and bins it to the given frequency resolution for continuum subtraction
+        Applies calibrator corrections to data, splits the data into chunks in frequency and bins it to the given frequency resolution for continuum subtraction.
         '''
         if self.line_splitdata:
             self.director('ch', self.linedir)
@@ -123,7 +123,7 @@ class line:
 
     def transfergains(self):
         '''
-        Checks if the continuum datasets have self calibration gains and copies their gains over
+        Checks if the continuum datasets have self calibration gains and copies their gains over.
         '''
         if self.line_transfergains:
             self.director('ch', self.linedir)
@@ -141,7 +141,7 @@ class line:
 
     def subtract(self):
         '''
-        Module for subtracting the continuum from the line data. Supports uvlin and uvmodel (from the last self calibration cycle of each chunk)
+        Module for subtracting the continuum from the line data. Supports uvlin and uvmodel (from the last self calibration cycle of each chunk).
         '''
         if self.line_subtract:
             self.director('ch', self.linedir)
@@ -217,13 +217,19 @@ class line:
                 print(s)
                 o = config.options(s)
                 for o in config.items(s):
-                    print('\t' + str(o[0]) + ' = ' + str(self.__dict__.__getitem__(o[0])))
+                    try:
+                        print('\t' + str(o[0]) + ' = ' + str(self.__dict__.__getitem__(o[0])))
+                    except KeyError:
+                        pass
             else:
                 if s == 'LINE':
                     print(s)
                     o = config.options(s)
                     for o in config.items(s):
-                        print('\t' + str(o[0]) + ' = ' + str(self.__dict__.__getitem__(o[0])))
+                        try:
+                            print('\t' + str(o[0]) + ' = ' + str(self.__dict__.__getitem__(o[0])))
+                        except KeyError:
+                            pass
                 else:
                     pass
 
@@ -232,6 +238,7 @@ class line:
         Function to reset the current step and remove all generated data. Be careful! Deletes all data generated in this step!
         '''
         self.logger.warning('### Deleting all continuum subtracted line data. ###')
+        self.director('ch', self.linedir)
         self.director('rm', self.linedir + '/*')
 
     def director(self, option, dest, file=None, verbose=True):
