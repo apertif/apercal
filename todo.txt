@@ -1,4 +1,4 @@
-- refactor adaptive selfcal
+- implement minor cycle in adaptive selfcal
 - implement transfer adaptive to manual, and standard to manual parameters function
 - implement amp calibration
 - write flag module to flag during cross-calibration
