@@ -199,7 +199,50 @@ must correspond to the number of major cycles.
 selfcal_mode_standard_solint (list of floats):
 The solution interval to use in the major cycles for the standard self-calibration in minutes. The length of the list
 must correspond to the number of major cycles.
-
+selfcal_mode_manual_majorcycle (int):
+Number of major self-calibration cycles for each frequency chunk.
+selfcal_mode_manual_minorcycle (list of ints):
+Number of minor clean/masking cycles for each freqeuncy chunk. List needs to have the length of majorcycles.
+selfcal_mode_manual_uvmin (list of floats):
+Minimum uv-range in klambda for each makor self-calibration cycle to calibrate on. List needs to have the length of majorcycles.
+selfcal_mode_manual_uvmax (list of floats):
+Minimum uv-range in klambda for each makor self-calibration cycle to calibrate on. List needs to have the length of majorcycles.
+selfcal_mode_manual_solint (list of floats):
+Solution interval in minutes for each major self-calibration cycle. List needs to have the length of majorcycles.
+selfcal_mode_manual_niters (list of list of ints):
+Number of maximum clean iterations for each major and minor self-calibration cycle. List needs to have length of
+minorcycles and list of list the length of majorcycles.
+selfcal_mode_manual_cleancutoff (list of list of floats):
+Clean cutoff for each major and minor self-calibration cycle. List needs to have length of minorcycles and list of
+list the length of majorcycles.
+selfcal_mode_manual_mskcutoff (list of list of floats):
+Mask cutoff for each major and minor self-calibration cycle. List needs to have length of minorcycles and list of
+list the length of majorcycles.
+selfcal_mode_manual_cleanstopcriterium (list of list of strings):
+Stop criterium for each individual clean operation. Possible values are 'niters', 'rms', or 'both'. 'niters' enables
+the stop criterium for maximum clean iterations, 'rms' the clean cutoff criterium, 'both' enables both criteria. List
+needs to have length of minorcycles and list of list the length of majorcycles.
+selfcal_mode_adaptive_startsolint (float):
+The solution interval to start the first adaptive self-calibration cycle with in minutes.
+selfcal_mode_adaptive_startuvrange (float):
+The uv-range to start the first adaptive self-calibration cycle with in klambda.
+selfcal_mode_adaptive_maxcycle (int):
+The maximum number of adaptive major self-calibration cycles in case the dynamic range could not be reached in this cycle
+or before.
+selfcal_mode_adaptive_drlim (float):
+The adaptive self-calibration automatically stops if it reaches a DR of drlim*theoretical noise.
+selfcal_mode_adaptive_rmsfactor (float):
+The adaptive self-calibration mode calculates a factor to reduce the solution interval and the minuvrange in each cycle
+based on the residual image of the previous cycle. A high value increases the reduction of these two parameters faster.
+selfcal_mode_adaptive_resirmsfactor (float):
+The adaptive self-calibration mode calculates a factor to reduce the mask threshold and clean threshold for each major
+self-calibration cycle. A high value decreases both thresholds.
+selfcal_mode_adaptive_firstniter (int):
+The first imaging cycle (cycle 0) of the adaptive self-calibration mode is using a mask from the NVSS skymodel and the niters stop
+criterium during clean. This is the number of the iterations for the first clean.
+selfcal_mode_adaptive_firstrmsfactor (float):
+The second imaging cycle (cycle 1) of the adaptive self-calibration mode is using a mask threshold of the maximum residual of
+the cycle 0 image divided by this factor to produce a mask for cycle 1.
 
 [LINE]
 The line step does the continuum subtraction to produce a line dataset. This dataset is also needed for the final
