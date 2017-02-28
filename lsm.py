@@ -64,6 +64,12 @@ def query_catalogue(infile, catalogue, radius, minflux=0.0):
 	return cat
 
 def calc_offset(infile, cat):
+	'''
+	calc_offset: Calculate the offset of the catalogue entries towards the pointing centre
+	infile: Input MIRIAD uv-file
+	cat: Input catalogue of sources to calculate the offset for
+	returns: A catalogue with the offsets for the individual sources
+	'''
 	ra_off = (cat.RA - getradec(infile).ra.deg) * 3600.0 * np.cos(getradec(infile).dec.rad)
 	dec_off = (cat.DEC - getradec(infile).dec.deg) * 3600.0
 	cat = mplab.rec_append_fields(cat,['RA_off','DEC_off'],[ra_off,dec_off],dtypes=[float,float])

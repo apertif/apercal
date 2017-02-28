@@ -210,7 +210,7 @@ class final:
                         pass # Skip the imaging of a chunk which has all data left
                 self.logger.info('### Stacking images of individual frequency chunks ###')
                 self.director('ch', self.finaldir + '/continuum/stack')
-                linmos = lib.miriad('linmos')
+                imcomb = lib.miriad('imcomb')
                 images = ''
                 for n in range(100):
                     if os.path.exists(self.finaldir + '/continuum/stack/' + str(n).zfill(2)):
@@ -221,9 +221,10 @@ class final:
                             pass
                     else:
                         pass
-                linmos.in_ = images.rstrip(',')
-                linmos.out = self.target.rstrip('.mir') + '_stack_linmos'
-                linmos.go()
+                imcomb.in_ = images.rstrip(',')
+                imcomb.out = self.target.rstrip('.mir') + '_stack'
+                imcomb.options = 'fqaver'
+                imcomb.go()
                 self.logger.info('### Final deep continuum image is ' + self.finaldir + '/continuum/stack/' + self.target.rstrip('.mir') + '_stack_linmos ###')
             elif self.final_continuum_mode == 'mf':
                 self.logger.info('### Combining frequency chunks in the (u,v)-plane and creating an mfclean image ###')

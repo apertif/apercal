@@ -177,7 +177,7 @@ The minor self-calibration cycles for masking and cleaning used to produce the m
 selfcal_mode_standard_c0 (float):
 Coefficient for mask generation. At each major and minor cycle the maximum value in the image is extracted and a mask
  generated using the threshold computed with this formula:
- mask_threshold = (Imax)/((c0 + (minor_cycle-1)*c0)*(major_cycle))
+ mask_threshold = (Imax)/((c0 + (minor_cycle)*c0)*(major_cycle+1))
 selfcal_mode_standard_c1 (float):
 Coefficient for mask genaration. After each mask generation, a clean noise threshold is computed with this formula:
 clean_noise_threshold = (Imax)/(mask_threshold*c1)
@@ -186,7 +186,7 @@ Initial value for dynamic rnage threshold.
 selfcal_mode_standard_dr0 (float):
 Coefficinet for increasing the dynamic range threshold at each major cycle. The dynamic range threshold is computed
 with the following formula:
-dynamic_range_threshold = (Imax)/((((major_cycle)-1)*dr0*drinit))+drinit)
+dynamic_range_threshold = (Imax)/(((major_cycle)*dr0*drinit))+drinit)
 selfcal_mode_standard_nsigma (float):
 At each major cycle the theoretical noise is computed. nsigma is the value for theoretical noise threshold estimation:
 theoretical_noise_threshold = nsigma*theoretical_noise
