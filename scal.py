@@ -78,7 +78,11 @@ class scal:
                 uvaver.out = self.selfcaldir + '/' + self.target
                 uvaver.go()
                 self.logger.info('# Calibrator solutions to target data applied #')
-            uv = aipy.miriad.UV(self.selfcaldir + '/' + self.target)
+            try:
+                uv = aipy.miriad.UV(self.selfcaldir + '/' + self.target)
+            except RuntimeError:
+                self.logger.error('### No data in your crosscal directory! Exiting pipeline! ###')
+                sys.exit(1)
             try:
                 nsubband = len(uv['nschan']) # Number of subbands in data
             except TypeError:
@@ -158,9 +162,9 @@ class scal:
                 fits.go()
                 cube = pyfits.open('map.fits')
                 data = cube[0].data
-                std = np.std(data, axis=(0,2,3))
+                std = np.nanstd(data, axis=(0,2,3))
                 median = np.median(std)
-                stdall = np.std(std)
+                stdall = np.nanstd(std)
                 diff = std-median
                 detections = np.where(self.selfcal_flagline_sigma * diff > stdall)[0]
                 if len(detections) > 0:

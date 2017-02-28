@@ -4,6 +4,5 @@
 - write flag module to flag during cross-calibration
 - create cube function for line and polarisation
 - implement rm-synthesis and rm-clean
-- include single task execution in tutorial 0
 - add option to use different parameters for frequnecy chunks in manual mode
 - check if flagline counts nan as low/high noise
