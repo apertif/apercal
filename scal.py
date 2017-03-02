@@ -10,6 +10,7 @@ import lsm
 import aipy
 import numpy as np
 import astropy.io.fits as pyfits
+import time
 
 ####################################################################################################
 
@@ -247,23 +248,29 @@ class scal:
 
     def selfcal_standard(self):
         '''
-        Executes the standard method of self-calibration with the given parameters as implemented by Nicolas Vilchez.
+        Executes the standard method of self-calibration with the given parameters
         '''
         self.logger.info('### Starting standard self calibration routine ###')
         self.director('ch', self.selfcaldir)
         for chunk in self.list_chunks():
-            self.logger.info('# Starting standard self-calibration routine on chunk ' + chunk + ' #')
+            self.logger.info('# Starting standard self-calibration routine on frequency chunk ' + chunk + ' #')
             self.director('ch', self.selfcaldir + '/' + chunk)
             theoretical_noise = self.calc_theoretical_noise(self.selfcaldir + '/' + chunk + '/' + chunk + '.mir')
-            self.logger.info('# Theoretical noise for chunk ' + chunk + ' is ' + str(theoretical_noise/1000) + ' Jy/beam #')
+            self.logger.info('# Theoretical noise for chunk ' + chunk + ' is ' + str(theoretical_noise/1000.0) + ' Jy/beam #')
+            theoretical_noise_threshold = self.calc_theoretical_noise_threshold(theoretical_noise)
+            self.logger.info('# Your theoretical noise threshold will be ' + str(self.selfcal_mode_standard_nsigma) + ' times the theoretical noise corresponding to ' + str(theoretical_noise_threshold) + ' Jy/beam #')
+            dr_list = [self.selfcal_mode_standard_drinit * np.power(self.selfcal_mode_standard_dr0 , m) for m in range(self.selfcal_mode_standard_majorcycle)]
+            self.logger.info('# Your dynamic range limits are set to ' + str(dr_list) + ' for the major self-calibration cycles #')
             for majc in range(self.selfcal_mode_standard_majorcycle):
-                self.logger.info('# Major self-calibration cycle ' + str(majc) + ' for chunk ' + chunk + ' started #')
+                self.logger.info('# Major self-calibration cycle ' + str(majc) + ' for frequency chunk ' + chunk + ' started #')
                 self.director('mk', self.selfcaldir + '/' + str(chunk) + '/' + str(majc).zfill(2))
+                dr_minlist = [np.power(dr_list[majc], 1.0 / (n + 1)) for n in range(self.selfcal_mode_standard_minorcycle)][::-1]  # Calculate the dynamic ranges during minor cycles
+                self.logger.info('# The minor cycle dynamic range limits for major cycle ' + str(majc) + ' are ' + str(dr_minlist) + ' #')
                 for minc in range(self.selfcal_mode_standard_minorcycle):
-                    self.logger.info('# Minor self-calibration cycle ' + str(minc) + ' for chunk ' + chunk + ' started #')
+                    self.logger.info('# Minor self-calibration cycle ' + str(minc) + ' for frequency chunk ' + chunk + ' started #')
                     if minc == 0:
                         try:
-                            invert = lib.miriad('invert') # Create the dirty image
+                            invert = lib.miriad('invert')  # Create the dirty image
                             invert.vis = chunk + '.mir'
                             invert.map = str(majc).zfill(2) + '/map_' + str(minc).zfill(2)
                             invert.beam = str(majc).zfill(2) + '/beam_' + str(minc).zfill(2)
@@ -274,28 +281,24 @@ class scal:
                             invert.slop = 1
                             invert.go()
                             imax = self.calc_imax(str(majc).zfill(2) + '/map_' + str(minc).zfill(2))
-                            self.logger.info('# Maximum value in the image at major/minor cycle ' + str(majc) + '/' + str(minc) + ' is ' + str(imax) + ' Jy/beam #')
-                            self.logger.info('# Maximum value in the image at major/minor cycle ' + str(majc) + '/' + str(minc) + ' is ' + str(imax) + ' Jy/beam #')
-                            self.director('rm', str(majc).zfill(2) + '/map_' + str(minc).zfill(2) + '.fits') # Remove the obsolete fits file
-                            mask_threshold = self.calc_mask_threshold(imax, minc, majc)
-                            self.logger.info('# Mask threshold at major/minor cycle ' + str(majc) + '/' + str(minc) + ' is ' + str(mask_threshold) + ' Jy/beam #')
+                            noise_threshold = self.calc_noise_threshold(imax, minc, majc)
+                            dynamic_range_threshold = self.calc_dynamic_range_threshold(imax, dr_minlist[minc])
+                            mask_threshold, mask_threshold_type = self.calc_mask_threshold(theoretical_noise_threshold, noise_threshold, dynamic_range_threshold)
+                            self.logger.info('# Mask threshold for major/minor cycle ' + str(majc) + '/' + str(minc) + ' set to ' + str(mask_threshold) + ' Jy/beam #')
+                            self.logger.info('# Mask threshold set by ' + str(mask_threshold_type) + ' #')
                             maths = lib.miriad('maths')
                             maths.out = str(majc).zfill(2) + '/mask_' + str(minc).zfill(2)
                             maths.exp = '"<' + str(majc).zfill(2) + '/map_' + str(minc).zfill(2) + '>"'
                             maths.mask = '"<' + str(majc).zfill(2) + '/map_' + str(minc).zfill(2) + '>.gt.' + str(mask_threshold) + '"'
                             maths.go()
                             self.logger.info('# Mask with threshold ' + str(mask_threshold) + ' Jy/beam created #')
-                            clean_noise_threshold = self.calc_clean_noise_threshold(imax, minc, majc)
-                            self.logger.info('# Clean noise threshold at major/minor cycle ' + str(majc) + '/' + str(minc) + ' is ' + str(clean_noise_threshold) + ' Jy/beam #')
-                            dynamic_range_threshold = self.calc_dynamic_range_threshold(imax, majc)
-                            self.logger.info('# Dynamic range threshold at major/minor cycle ' + str(majc) + '/' + str(minc) + ' is ' + str(dynamic_range_threshold) + ' Jy/beam #')
-                            clean_threshold = np.max([clean_noise_threshold, dynamic_range_threshold, theoretical_noise])
-                            self.logger.info('# Clean threshold at major/minor cycle ' + str(majc) + '/' + str(minc) + ' was set to ' + str(clean_threshold) + ' Jy/beam #')
+                            clean_cutoff = self.calc_clean_cutoff(mask_threshold)
+                            self.logger.info('# Clean threshold at major/minor cycle ' + str(majc) + '/' + str(minc) + ' was set to ' + str(clean_cutoff) + ' Jy/beam #')
                             clean = lib.miriad('clean')  # Clean the image down to the calculated threshold
                             clean.map = str(majc).zfill(2) + '/map_' + str(0).zfill(2)
                             clean.beam = str(majc).zfill(2) + '/beam_' + str(0).zfill(2)
                             clean.out = str(majc).zfill(2) + '/model_' + str(minc).zfill(2)
-                            clean.cutoff = clean_threshold
+                            clean.cutoff = clean_cutoff
                             clean.niters = 1000000
                             clean.region = '"' + 'mask(' + str(majc).zfill(2) + '/mask_' + str(minc).zfill(2) + ')' + '"'
                             clean.go()
@@ -312,35 +315,33 @@ class scal:
                             restor.out = str(majc).zfill(2) + '/residual_' + str(minc).zfill(2)
                             restor.go()
                             self.logger.info('# Residual image for major/minor cycle ' + str(majc) + '/' + str(minc) + ' created #')
-                            self.logger.info('# Minor self-calibration cycle ' + str(minc) + ' for chunk ' + chunk + ' finished #')
+                            self.logger.info('# Peak of the residual image is ' + str(self.calc_imax(str(majc).zfill(2) + '/residual_' + str(minc).zfill(2))) + ' Jy/beam #')
+                            self.logger.info('# RMS of the residual image is ' + str(self.calc_irms(str(majc).zfill(2) + '/residual_' + str(minc).zfill(2))) + ' Jy/beam #')
                         except:
                             self.logger.warning('# Chunk ' + chunk + ' does not seem to contain data to image #')
                             break
                     else:
                         try:
-                            imax = self.calc_imax(str(majc).zfill(2) + '/map_' + str(minc).zfill(2))
-                            self.logger.info('# Maximum value in the image at major/minor cycle ' + str(majc) + '/' + str(minc) + ' is ' + str(imax) + ' Jy/beam #')
-                            self.director('rm', str(majc).zfill(2) + '/residual_' + str(minc-1).zfill(2) + '.fits') # Remove the obsolete fits file
-                            mask_threshold = self.calc_mask_threshold(imax, minc, majc)
-                            self.logger.info('# Mask threshold at major/minor cycle ' + str(majc) + '/' + str(minc) + ' is ' + str(mask_threshold) + ' Jy/beam #')
+                            imax = self.calc_imax(str(majc).zfill(2) + '/map_' + str(0).zfill(2))
+                            noise_threshold = self.calc_noise_threshold(imax, minc, majc)
+                            dynamic_range_threshold = self.calc_dynamic_range_threshold(imax, dr_minlist[minc])
+                            mask_threshold, mask_threshold_type = self.calc_mask_threshold(theoretical_noise_threshold, noise_threshold, dynamic_range_threshold)
+                            self.logger.info('# Mask threshold for major/minor cycle ' + str(majc) + '/' + str(minc) + ' set to ' + str(mask_threshold) + ' Jy/beam #')
+                            self.logger.info('# Mask threshold set by ' + str(mask_threshold_type) + ' #')
                             maths = lib.miriad('maths')
                             maths.out = str(majc).zfill(2) + '/mask_' + str(minc).zfill(2)
-                            maths.exp = '"<' + str(majc).zfill(2) + '/residual_' + str(minc-1).zfill(2) + '>"'
-                            maths.mask = '"<' + str(majc).zfill(2) + '/residual_' + str(minc-1).zfill(2) + '>.gt.' + str(mask_threshold) + '"'
+                            maths.exp = '"<' + str(majc).zfill(2) + '/image_' + str(minc-1).zfill(2) + '>"'
+                            maths.mask = '"<' + str(majc).zfill(2) + '/image_' + str(minc-1).zfill(2) + '>.gt.' + str(mask_threshold) + '"'
                             maths.go()
                             self.logger.info('# Mask with threshold ' + str(mask_threshold) + ' Jy/beam created #')
-                            clean_noise_threshold = self.calc_clean_noise_threshold(imax, minc, majc)
-                            self.logger.info('# Clean noise threshold at major/minor cycle ' + str(majc) + '/' + str(minc) + ' is ' + str(clean_noise_threshold) + ' Jy/beam #')
-                            dynamic_range_threshold = self.calc_dynamic_range_threshold(imax, majc)
-                            self.logger.info('# Dynamic range threshold at major/minor cycle ' + str(majc) + '/' + str(minc) + ' is ' + str(dynamic_range_threshold) + ' Jy/beam #')
-                            clean_threshold = np.max([clean_noise_threshold, dynamic_range_threshold, theoretical_noise])
-                            self.logger.info('# Clean threshold at major/minor cycle ' + str(majc) + '/' + str(minc) + ' was set to ' + str(clean_threshold) + ' Jy/beam #')
-                            clean = lib.miriad('clean') # Clean the image down to the calculated threshold
+                            clean_cutoff = self.calc_clean_cutoff(mask_threshold)
+                            self.logger.info('# Clean threshold at major/minor cycle ' + str(majc) + '/' + str(minc) + ' was set to ' + str(clean_cutoff) + ' Jy/beam #')
+                            clean = lib.miriad('clean')  # Clean the image down to the calculated threshold
                             clean.map = str(majc).zfill(2) + '/map_' + str(0).zfill(2)
                             clean.beam = str(majc).zfill(2) + '/beam_' + str(0).zfill(2)
                             clean.model = str(majc).zfill(2) + '/model_' + str(minc-1).zfill(2)
                             clean.out = str(majc).zfill(2) + '/model_' + str(minc).zfill(2)
-                            clean.cutoff = clean_threshold
+                            clean.cutoff = clean_cutoff
                             clean.niters = 1000000
                             clean.region = '"' + 'mask(' + str(majc).zfill(2) + '/mask_' + str(minc).zfill(2) + ')' + '"'
                             clean.go()
@@ -351,26 +352,158 @@ class scal:
                             restor.map = str(majc).zfill(2) + '/map_' + str(0).zfill(2)
                             restor.out = str(majc).zfill(2) + '/image_' + str(minc).zfill(2)
                             restor.mode = 'clean'
-                            restor.go() # Create the cleaned image
+                            restor.go()  # Create the cleaned image
                             self.logger.info('# Cleaned image for major/minor cycle ' + str(majc) + '/' + str(minc) + ' created #')
                             restor.mode = 'residual'
                             restor.out = str(majc).zfill(2) + '/residual_' + str(minc).zfill(2)
                             restor.go()
                             self.logger.info('# Residual image for major/minor cycle ' + str(majc) + '/' + str(minc) + ' created #')
-                            self.logger.info('# Minor self-calibration cycle ' + str(minc) + ' for chunk ' + chunk + ' finished #')
+                            self.logger.info('# Peak of the residual image is ' + str(self.calc_imax(str(majc).zfill(2) + '/residual_' + str(minc).zfill(2))) + ' Jy/beam #')
+                            self.logger.info('# RMS of the residual image is ' + str(self.calc_irms(str(majc).zfill(2) + '/residual_' + str(minc).zfill(2))) + ' Jy/beam #')
                         except:
+                            self.logger.warning('# Chunk ' + chunk + ' does not seem to contain data to image #')
                             break
-                    selfcal = lib.miriad('selfcal')
-                    selfcal.vis = chunk + '.mir'
-                    selfcal.select = '"' + 'uvrange(' + str(self.selfcal_mode_standard_uvmin[majc]) + ',' + str(self.selfcal_mode_standard_uvmax[majc]) + ')"'
-                    selfcal.model = str(majc).zfill(2) + '/model_' + str(minc).zfill(2)
-                    selfcal.interval = self.selfcal_mode_standard_solint[majc]
-                    selfcal.options = 'mfs,phase'
-                    selfcal.refant = '5'
-                    selfcal.go()
-                self.logger.info('# Major self-calibration cycle ' + str(majc) + ' for chunk ' + chunk + ' finished #')
+                    self.logger.info('# Minor self-calibration cycle ' + str(minc) + ' for frequency chunk ' + chunk + ' finished #')
+                self.logger.info('# Doing self-calibration with uvmin=' + str(self.selfcal_mode_standard_uvmin[majc]) + ', uvmax=' + str(self.selfcal_mode_standard_uvmax[majc]) + ', solution interval=' + str(self.selfcal_mode_standard_solint[majc]) + ' minutes for major cycle ' + str(majc).zfill(2) + ' #')
+                selfcal = lib.miriad('selfcal')
+                selfcal.vis = chunk + '.mir'
+                selfcal.select = '"' + 'uvrange(' + str(self.selfcal_mode_standard_uvmin[majc]) + ',' + str(self.selfcal_mode_standard_uvmax[majc]) + ')"'
+                selfcal.model = str(majc).zfill(2) + '/model_' + str(minc).zfill(2)
+                selfcal.interval = self.selfcal_mode_standard_solint[majc]
+                selfcal.options = 'mfs,phase'
+                selfcal.refant = '5'
+                selfcal.go()
+                self.logger.info('# Major self-calibration cycle ' + str(majc) + ' for frequency chunk ' + chunk + ' finished #')
             self.logger.info('# Standard self-calibration routine for chunk ' + chunk + ' finished #')
         self.logger.info('### Standard self calibration routine finished ###')
+
+
+    # def selfcal_standard(self):
+    #     '''
+    #     Executes the standard method of self-calibration with the given parameters as implemented by Nicolas Vilchez.
+    #     '''
+    #     self.logger.info('### Starting standard self calibration routine ###')
+    #     self.director('ch', self.selfcaldir)
+    #     for chunk in self.list_chunks():
+    #         self.logger.info('# Starting standard self-calibration routine on chunk ' + chunk + ' #')
+    #         self.director('ch', self.selfcaldir + '/' + chunk)
+    #         theoretical_noise = self.calc_theoretical_noise(self.selfcaldir + '/' + chunk + '/' + chunk + '.mir')
+    #         self.logger.info('# Theoretical noise for chunk ' + chunk + ' is ' + str(theoretical_noise/1000) + ' Jy/beam #')
+    #         for majc in range(self.selfcal_mode_standard_majorcycle):
+    #             self.logger.info('# Major self-calibration cycle ' + str(majc) + ' for chunk ' + chunk + ' started #')
+    #             self.director('mk', self.selfcaldir + '/' + str(chunk) + '/' + str(majc).zfill(2))
+    #             for minc in range(self.selfcal_mode_standard_minorcycle):
+    #                 self.logger.info('# Minor self-calibration cycle ' + str(minc) + ' for chunk ' + chunk + ' started #')
+    #                 if minc == 0:
+    #                     try:
+    #                         invert = lib.miriad('invert') # Create the dirty image
+    #                         invert.vis = chunk + '.mir'
+    #                         invert.map = str(majc).zfill(2) + '/map_' + str(minc).zfill(2)
+    #                         invert.beam = str(majc).zfill(2) + '/beam_' + str(minc).zfill(2)
+    #                         invert.imsize = self.selfcal_image_imsize
+    #                         invert.cell = self.selfcal_image_cellsize
+    #                         invert.stokes = 'i'
+    #                         invert.options = 'mfs,double'
+    #                         invert.slop = 1
+    #                         invert.go()
+    #                         imax = self.calc_imax(str(majc).zfill(2) + '/map_' + str(minc).zfill(2))
+    #                         self.logger.info('# Maximum value in the image at major/minor cycle ' + str(majc) + '/' + str(minc) + ' is ' + str(imax) + ' Jy/beam #')
+    #                         self.logger.info('# Maximum value in the image at major/minor cycle ' + str(majc) + '/' + str(minc) + ' is ' + str(imax) + ' Jy/beam #')
+    #                         self.director('rm', str(majc).zfill(2) + '/map_' + str(minc).zfill(2) + '.fits') # Remove the obsolete fits file
+    #                         mask_threshold = self.calc_mask_threshold(imax, minc, majc)
+    #                         self.logger.info('# Mask threshold at major/minor cycle ' + str(majc) + '/' + str(minc) + ' is ' + str(mask_threshold) + ' Jy/beam #')
+    #                         maths = lib.miriad('maths')
+    #                         maths.out = str(majc).zfill(2) + '/mask_' + str(minc).zfill(2)
+    #                         maths.exp = '"<' + str(majc).zfill(2) + '/map_' + str(minc).zfill(2) + '>"'
+    #                         maths.mask = '"<' + str(majc).zfill(2) + '/map_' + str(minc).zfill(2) + '>.gt.' + str(mask_threshold) + '"'
+    #                         maths.go()
+    #                         self.logger.info('# Mask with threshold ' + str(mask_threshold) + ' Jy/beam created #')
+    #                         clean_noise_threshold = self.calc_clean_noise_threshold(imax, minc, majc)
+    #                         self.logger.info('# Clean noise threshold at major/minor cycle ' + str(majc) + '/' + str(minc) + ' is ' + str(clean_noise_threshold) + ' Jy/beam #')
+    #                         dynamic_range_threshold = self.calc_dynamic_range_threshold(imax, majc)
+    #                         self.logger.info('# Dynamic range threshold at major/minor cycle ' + str(majc) + '/' + str(minc) + ' is ' + str(dynamic_range_threshold) + ' Jy/beam #')
+    #                         clean_threshold = np.max([clean_noise_threshold, dynamic_range_threshold, theoretical_noise])
+    #                         self.logger.info('# Clean threshold at major/minor cycle ' + str(majc) + '/' + str(minc) + ' was set to ' + str(clean_threshold) + ' Jy/beam #')
+    #                         clean = lib.miriad('clean')  # Clean the image down to the calculated threshold
+    #                         clean.map = str(majc).zfill(2) + '/map_' + str(0).zfill(2)
+    #                         clean.beam = str(majc).zfill(2) + '/beam_' + str(0).zfill(2)
+    #                         clean.out = str(majc).zfill(2) + '/model_' + str(minc).zfill(2)
+    #                         clean.cutoff = clean_threshold
+    #                         clean.niters = 1000000
+    #                         clean.region = '"' + 'mask(' + str(majc).zfill(2) + '/mask_' + str(minc).zfill(2) + ')' + '"'
+    #                         clean.go()
+    #                         self.logger.info('# Major/minor cycle ' + str(majc) + '/' + str(minc) + ' cleaning done #')
+    #                         restor = lib.miriad('restor')
+    #                         restor.model = str(majc).zfill(2) + '/model_' + str(minc).zfill(2)
+    #                         restor.beam = str(majc).zfill(2) + '/beam_' + str(0).zfill(2)
+    #                         restor.map = str(majc).zfill(2) + '/map_' + str(0).zfill(2)
+    #                         restor.out = str(majc).zfill(2) + '/image_' + str(minc).zfill(2)
+    #                         restor.mode = 'clean'
+    #                         restor.go()  # Create the cleaned image
+    #                         self.logger.info('# Cleaned image for major/minor cycle ' + str(majc) + '/' + str(minc) + ' created #')
+    #                         restor.mode = 'residual'
+    #                         restor.out = str(majc).zfill(2) + '/residual_' + str(minc).zfill(2)
+    #                         restor.go()
+    #                         self.logger.info('# Residual image for major/minor cycle ' + str(majc) + '/' + str(minc) + ' created #')
+    #                         self.logger.info('# Minor self-calibration cycle ' + str(minc) + ' for chunk ' + chunk + ' finished #')
+    #                     except:
+    #                         self.logger.warning('# Chunk ' + chunk + ' does not seem to contain data to image #')
+    #                         break
+    #                 else:
+    #                     try:
+    #                         imax = self.calc_imax(str(majc).zfill(2) + '/map_' + str(minc).zfill(2))
+    #                         self.logger.info('# Maximum value in the image at major/minor cycle ' + str(majc) + '/' + str(minc) + ' is ' + str(imax) + ' Jy/beam #')
+    #                         self.director('rm', str(majc).zfill(2) + '/residual_' + str(minc-1).zfill(2) + '.fits') # Remove the obsolete fits file
+    #                         mask_threshold = self.calc_mask_threshold(imax, minc, majc)
+    #                         self.logger.info('# Mask threshold at major/minor cycle ' + str(majc) + '/' + str(minc) + ' is ' + str(mask_threshold) + ' Jy/beam #')
+    #                         maths = lib.miriad('maths')
+    #                         maths.out = str(majc).zfill(2) + '/mask_' + str(minc).zfill(2)
+    #                         maths.exp = '"<' + str(majc).zfill(2) + '/residual_' + str(minc-1).zfill(2) + '>"'
+    #                         maths.mask = '"<' + str(majc).zfill(2) + '/residual_' + str(minc-1).zfill(2) + '>.gt.' + str(mask_threshold) + '"'
+    #                         maths.go()
+    #                         self.logger.info('# Mask with threshold ' + str(mask_threshold) + ' Jy/beam created #')
+    #                         clean_noise_threshold = self.calc_clean_noise_threshold(imax, minc, majc)
+    #                         self.logger.info('# Clean noise threshold at major/minor cycle ' + str(majc) + '/' + str(minc) + ' is ' + str(clean_noise_threshold) + ' Jy/beam #')
+    #                         dynamic_range_threshold = self.calc_dynamic_range_threshold(imax, majc)
+    #                         self.logger.info('# Dynamic range threshold at major/minor cycle ' + str(majc) + '/' + str(minc) + ' is ' + str(dynamic_range_threshold) + ' Jy/beam #')
+    #                         clean_threshold = np.max([clean_noise_threshold, dynamic_range_threshold, theoretical_noise])
+    #                         self.logger.info('# Clean threshold at major/minor cycle ' + str(majc) + '/' + str(minc) + ' was set to ' + str(clean_threshold) + ' Jy/beam #')
+    #                         clean = lib.miriad('clean') # Clean the image down to the calculated threshold
+    #                         clean.map = str(majc).zfill(2) + '/map_' + str(0).zfill(2)
+    #                         clean.beam = str(majc).zfill(2) + '/beam_' + str(0).zfill(2)
+    #                         clean.model = str(majc).zfill(2) + '/model_' + str(minc-1).zfill(2)
+    #                         clean.out = str(majc).zfill(2) + '/model_' + str(minc).zfill(2)
+    #                         clean.cutoff = clean_threshold
+    #                         clean.niters = 1000000
+    #                         clean.region = '"' + 'mask(' + str(majc).zfill(2) + '/mask_' + str(minc).zfill(2) + ')' + '"'
+    #                         clean.go()
+    #                         self.logger.info('# Major/minor cycle ' + str(majc) + '/' + str(minc) + ' cleaning done #')
+    #                         restor = lib.miriad('restor')
+    #                         restor.model = str(majc).zfill(2) + '/model_' + str(minc).zfill(2)
+    #                         restor.beam = str(majc).zfill(2) + '/beam_' + str(0).zfill(2)
+    #                         restor.map = str(majc).zfill(2) + '/map_' + str(0).zfill(2)
+    #                         restor.out = str(majc).zfill(2) + '/image_' + str(minc).zfill(2)
+    #                         restor.mode = 'clean'
+    #                         restor.go() # Create the cleaned image
+    #                         self.logger.info('# Cleaned image for major/minor cycle ' + str(majc) + '/' + str(minc) + ' created #')
+    #                         restor.mode = 'residual'
+    #                         restor.out = str(majc).zfill(2) + '/residual_' + str(minc).zfill(2)
+    #                         restor.go()
+    #                         self.logger.info('# Residual image for major/minor cycle ' + str(majc) + '/' + str(minc) + ' created #')
+    #                         self.logger.info('# Minor self-calibration cycle ' + str(minc) + ' for chunk ' + chunk + ' finished #')
+    #                     except:
+    #                         break
+    #                 selfcal = lib.miriad('selfcal')
+    #                 selfcal.vis = chunk + '.mir'
+    #                 selfcal.select = '"' + 'uvrange(' + str(self.selfcal_mode_standard_uvmin[majc]) + ',' + str(self.selfcal_mode_standard_uvmax[majc]) + ')"'
+    #                 selfcal.model = str(majc).zfill(2) + '/model_' + str(minc).zfill(2)
+    #                 selfcal.interval = self.selfcal_mode_standard_solint[majc]
+    #                 selfcal.options = 'mfs,phase'
+    #                 selfcal.refant = '5'
+    #                 selfcal.go()
+    #             self.logger.info('# Major self-calibration cycle ' + str(majc) + ' for chunk ' + chunk + ' finished #')
+    #         self.logger.info('# Standard self-calibration routine for chunk ' + chunk + ' finished #')
+    #     self.logger.info('### Standard self calibration routine finished ###')
 
     def selfcal_manual(self):
         '''
@@ -438,6 +571,8 @@ class scal:
                         restor.out = str(majc).zfill(2) + '/residual_' + str(minc).zfill(2)
                         restor.go()
                         self.logger.info('# Residual image for major/minor cycle ' + str(majc) + '/' + str(minc) + ' created #')
+                        self.logger.info('# Peak of the residual image is ' + str(self.calc_imax(str(majc).zfill(2) + '/residual_' + str(minc).zfill(2))) + ' Jy/beam #')
+                        self.logger.info('# RMS of the residual image is ' + str(self.calc_irms(str(majc).zfill(2) + '/residual_' + str(minc).zfill(2))) + ' Jy/beam #')
                         self.logger.info('# Minor self-calibration cycle ' + str(minc) + ' for chunk ' + chunk + ' finished #')
                     else:
                         mask_threshold = self.selfcal_mode_manual_mskcutoff[majc][minc]
@@ -484,6 +619,8 @@ class scal:
                         restor.out = str(majc).zfill(2) + '/residual_' + str(minc).zfill(2)
                         restor.go()
                         self.logger.info('# Residual image for major/minor cycle ' + str(majc) + '/' + str(minc) + ' created #')
+                        self.logger.info('# Peak of the residual image is ' + str(self.calc_imax(str(majc).zfill(2) + '/residual_' + str(minc).zfill(2))) + ' Jy/beam #')
+                        self.logger.info('# RMS of the residual image is ' + str(self.calc_irms(str(majc).zfill(2) + '/residual_' + str(minc).zfill(2))) + ' Jy/beam #')
                         self.logger.info('# Minor self-calibration cycle ' + str(minc) + ' for chunk ' + chunk + ' finished #')
                 selfcal = lib.miriad('selfcal')
                 selfcal.vis = chunk + '.mir'
@@ -551,7 +688,9 @@ class scal:
                         restor.mode = 'residual'
                         restor.out = str(majc).zfill(2) + '/residual_' + str(0).zfill(2)
                         restor.go()
-                        self.logger.info('# Created residual image from self-calibration cycle 0 #')
+                        self.logger.info('# Residual image for self-calibration cycle ' + str(majc) + ' created #')
+                        self.logger.info('# Peak of the residual image is ' + str(self.calc_imax(str(majc).zfill(2) + '/residual_' + str(0).zfill(2))) + ' Jy/beam #')
+                        self.logger.info('# RMS of the residual image is ' + str(self.calc_irms(str(majc).zfill(2) + '/residual_' + str(0).zfill(2))) + ' Jy/beam #')
                     else:
                         maths = lib.miriad('maths')
                         maths.exp = '"<' + str(majc-1).zfill(2) + '/image_' + str(0).zfill(2) + '>"' # Use the image from the previous iteration to create the clean mask
@@ -585,7 +724,9 @@ class scal:
                         restor.mode = 'residual'
                         restor.out = str(majc).zfill(2) + '/residual_' + str(0).zfill(2)
                         restor.go()
-                        self.logger.info('# Created residual image from self-calibration cycle ' + str(majc) + ' #')
+                        self.logger.info('# Residual image for self-calibration cycle ' + str(majc) + ' created #')
+                        self.logger.info('# Peak of the residual image is ' + str(self.calc_imax(str(majc).zfill(2) + '/residual_' + str(0).zfill(2))) + ' Jy/beam #')
+                        self.logger.info('# RMS of the residual image is ' + str(self.calc_irms(str(majc).zfill(2) + '/residual_' + str(0).zfill(2))) + ' Jy/beam #')
                     resi_rms, resi_max, perfactorsolint, perfactoruvrange, factor, ratio = self.calc_adaptive_stats(str(majc).zfill(2) + '/map_' + str(0).zfill(2), str(majc).zfill(2) + '/residual_' + str(0).zfill(2), theoretical_noise)
                     if factor >= self.selfcal_mode_adaptive_drlim and majc <= (self.selfcal_mode_adaptive_maxcycle-1):
                         selfcal = lib.miriad('selfcal')
@@ -595,7 +736,7 @@ class scal:
                         selfcal.options = 'mfs,phase'
                         selfcal.model = str(majc).zfill(2) + '/model_' + str(0).zfill(2)
                         minuvrange = (factor - 1) * perfactoruvrange
-                        solint = 1 + (factor -1) * perfactorsolint
+                        solint = 1 + (factor - 1) * perfactorsolint
                         selfcal.select = '"' + 'uvrange(' + str(minuvrange) + ',' + str(1000) + ')' + '"'
                         selfcal.interval = int(solint)
                         selfcal.go()
@@ -606,7 +747,7 @@ class scal:
                         exit_trigger = True
                         if factor <= self.selfcal_mode_adaptive_drlim:
                             self.logger.info('### Self calibration automatically stopped at the DR-limit! DR is ' + str(int(maxdr / self.selfcal_mode_adaptive_drlim)) + ' of the maximum of ' + str(int(maxdr)) + ' ###')
-                        elif majc == (self.selfcal_mode_adaptive_maxcycle -1):
+                        elif majc == (self.selfcal_mode_adaptive_maxcycle):
                             self.logger.info('### Reached the maximum number of ' + str(self.selfcal_mode_adaptive_maxcycle) + ' self-calibration cycles! The DR is ' + str(int(maxdr/factor)) + ' of the maximum of ' + str(int(maxdr)) + ' ###')
                     self.logger.info('# Major self-calibration cycle ' + str(majc) + ' for chunk ' + chunk + ' done #')
                     majc = majc + 1
@@ -614,155 +755,6 @@ class scal:
                 pass
         self.logger.info('# Adaptive self-calibration routine for chunk ' + chunk + ' finished #')
         self.logger.info('### Adaptive self calibration routine finished ###')
-
-    # def selfcal_cal(self):
-    #     '''
-    #     selfcal_cal: Does a self calibration inside a selfcal loop with the given parameters
-    #     '''
-    #     selfcal = lib.miriad('selfcal')
-    #     selfcal.vis = self.vis
-    #     selfcal.minants = 5
-    #     selfcal.refant = '3'
-    #     selfcal.options = 'mfs,phase'
-    #     selfcal.model = self.name_model
-    #     if self.mode == 'manual':
-    #         selfcal.select = 'uvrange(' + str(self.manual_minuvrange[self.nsubband][self.cycle]) + ',' + str(self.manual_maxuvrange[self.nsubband][self.cycle]) + ')'
-    #         selfcal.interval = self.manual_interval[self.nsubband][self.cycle]
-    #     elif self.mode == 'adaptive':
-    #         self.single_minuvrange = (self.factor-1)*self.perfactoruvrange # Save these three variables for passing them to the manual inputs with pass_parameters
-    #         self.single_maxuvrange = 1000
-    #         self.single_interval = 1 + (self.factor - 1) * self.perfactorinterval
-    #         selfcal.select = 'uvrange(' + str(self.single_minuvrange) + ',' + str(self.single_maxuvrange) + ')'
-    #         selfcal.interval = int(self.single_interval)
-    #     selfcal.go()
-
-    # self.resirms, self.resimax, self.perfactorinterval, self.perfactoruvrange, self.factor, self.ratio = self.adaptive_stats()
-
-    #  def selfcal_image(self, residual = False, mode = 'rms'):
-    #     '''
-    #     selfcal_image: Does an automatic invert, clean, restor with the given iterations and cutoffs inside a selfcal loop. Uses clean minorcycles if enabled.
-    #     '''
-    #     invert = lib.miriad('invert')
-    #     invert.vis = self.vis
-    #     invert.map = self.name_map
-    #     invert.beam = self.name_beam
-    #     invert.slop = '1'
-    #     invert.imsize = self.imsize
-    #     invert.cell = self.cell
-    #     invert.options = 'mfs,double'
-    #     invert.select = 'NONE'
-    #     invert.go()
-    #     if self.clean_minorcycle == True:
-    #         print('Not implemented yet!')
-    #     else:
-    #         clean = lib.miriad('clean')
-    #         clean.map = self.name_map
-    #         clean.beam = self.name_beam
-    #         clean.out = self.name_model
-    #         clean.region = 'mask(' + self.name_mask + ')'
-    #         if mode == 'rms':
-    #             if self.mode == 'adaptive':
-    #                 clean.cutoff = 1.75 * self.resirms
-    #                 clean.niters = 10000000
-    #                 self.single_niters = clean.niters # Save these three variables for passing them to the manual inputs with pass_parameters
-    #                 self.single_cleancutoff = clean.cutoff
-    #                 self.single_cleanstop = 'rms'
-    #             else:
-    #                 clean.cutoff = self.manual_cleancutoff[self.nsubband][self.cycle]
-    #                 clean.niters = 10000000 # Set the iterations to a high number since you want the rms cutoff criterium
-    #             self.logger.info('### Clean cutoff criterium set: ' + str(clean.cutoff) + ' Jy/beam ###')
-    #         elif mode == 'niters':
-    #             clean.cutoff = 0.000000001 # Set the rms cutoff to a very low number since you want the niters criterium
-    #             if self.mode == 'adaptive' and self.cycle == 1: # Handle the first iteration of the adaptive selfcal automatically
-    #                 clean.niters = self.adaptive_firstniter[self.nsubband]
-    #                 self.single_niters = clean.niters # Save these three variables for passing them to the manual inputs with pass_parameters
-    #                 self.single_cleancutoff = clean.cutoff
-    #                 self.single_cleanstop = 'niters'
-    #             else:
-    #                 clean.niters = self.manual_niters[self.nsubband][self.cycle]
-    #             self.logger.info('### Clean niters criterium set: ' + str(clean.niters) + ' ###')
-    #         elif mode == 'both':
-    #             clean.cutoff = self.manual_cleancutoff[self.nsubband][self.cycle]
-    #             clean.niters = self.manual_niters[self.nsubband][self.cycle]
-    #             self.logger.info('### Clean cutoff criterium set: ' + str(clean.cutoff) + ' Jy/beam ###')
-    #             self.logger.info('### Clean niters criterium set: ' + str(clean.niters) + ' ###')
-    #         else:
-    #             self.logger.error('### Clean criterium not supported! Exiting! ###')
-    #             sys.exit(1)
-    #         clean.go()
-    #     restor = lib.miriad('restor')
-    #     restor.model = self.name_model
-    #     restor.beam = self.name_beam
-    #     restor.map = self.name_map
-    #     restor.out = self.name_image
-    #     restor.mode = 'clean'
-    #     restor.go()
-    #     if residual == True:
-    #         restor.mode = 'residual'
-    #         restor.out = self.name_residual
-    #         restor.go()
-
-    #     for x,sb in enumerate(self.subbands):
-    #         self.nsubband = x # Just short for self.nsubband to use for log output
-    #         x = self.adaptive_nif[x] # This is defining the name of the subdirectory for the subband to calibrate
-    #         self.logger.info('##### Starting adaptive self calibration of subband ' + str(x+1).zfill(2) + '! #####')
-    #         self.director('ch', self.selfcaldir + '/' + str(x + 1).zfill(2))  # Move to the subband directory
-    #         self.vis = self.cwd + '/' + str(sb)  # Name the split data chunk
-    #         self.init_stats(str(sb)) # We need the stats for this kind of calibration
-    #         self.exit_adaptive = False # Set and reset the self-calibration trigger for further subbands
-    #         self.cycle = 0 # Reset the counter for the next subband
-    #         while self.exit_adaptive == False:
-    #             self.cycle = self.cycle + 1 # Increase the cycle number by 1
-    #             self.logger.info('##### Starting self calibration cycle ' + str(self.cycle) + ' for subband ' + str(x+1).zfill(2) + ' #####')
-    #             self.director('ch', self.selfcaldir + '/' + str(x+1).zfill(2) + '/' + str(self.cycle).zfill(2))  # Move to the next selfcal cycle directory
-    #             if self.cycle == 1: # Create a mask from the catalogue if there is no other
-    #                 if os.path.exists(self.selfcaldir + '/' + str(x+1).zfill(2) + '/' + str(self.cycle).zfill(2) + '/' + self.name_mask):
-    #                     self.logger.info('### Using mask from earlier iterations for cleaning! ###')
-    #                     continue
-    #                 else:
-    #                     self.logger.info('### No mask for cleaning available from earlier iterations! ###')
-    #                     self.logger.info('### Querying NVSS catalogue for producing a mask! ###')
-    #                     lsm.write_mask(self.selfcaldir + '/' + str(x+1).zfill(2) + '/' + str(self.cycle).zfill(2) + '/' + self.name_mask + '.txt', lsm.lsm_mask(self.vis, 0.5, 0.9, 'NVSS'))
-    #                     self.create_parmsk(rmtxt=True)
-    #                 self.selfcal_image(residual=True, mode='niters')
-    #             else:
-    #                 self.create_mask()
-    #                 self.selfcal_image(residual=True, mode='rms')
-    #             self.resirms, self.resimax, self.perfactorinterval, self.perfactoruvrange, self.factor, self.ratio = self.adaptive_stats()
-    #             if self.factor >= self.adaptive_drlim[self.nsubband] and self.cycle <= (self.adaptive_maxcycle[self.nsubband] - 1):
-    #                 self.selfcal_cal()
-    #                 self.logger.info('### Self calibration reached a DR of ' + str(int(self.maxvdr / self.factor)) + ' of the maximum of ' + str(int(self.maxvdr)) + ' ###')
-    #                 self.logger.info('### Stop criterium was set to ' + str(self.adaptive_drlim[self.nsubband]) + ' corresponding to a DR of ' + str(int(self.maxvdr / self.adaptive_drlim[self.nsubband])) + ' ###')
-    #                 self.logger.info('### Continuing self calibration with next cycle... ###')
-    #             else:
-    #                 self.exit_adaptive = True
-    #                 if self.factor <= self.adaptive_drlim[self.nsubband]:
-    #                     self.logger.info('### Self calibration automatically stopped at the DR-limit! DR is ' + str(int(self.maxvdr / self.factor)) + ' of the maximum of ' + str(int(self.maxvdr)) + ' ###')
-    #                 elif self.cycle == (self.adaptive_maxcycle[self.nsubband] - 1):
-    #                     self.logger.info('### Reached the maximum number of ' + str(self.adaptive_maxcycle[self.nsubband]) + ' self-calibration cycles! The DR is ' + str(int(self.maxvdr/self.factor)) + ' of the maximum of ' + str(int(self.maxvdr)) + ' ###')
-    #             self.pass_parameters('cycle') # Pass the parameters to the manual inputs after each calibration cycle
-    #             self.logger.info('##### Adaptive self-calibration cycle ' + str(self.cycle) + ' of subband ' + str(x+1).zfill(2) + ' done! #####')
-    #         self.pass_parameters('subband') # Pass the parameters to the manual inputs after each calibrated subband
-    #         self.logger.info('##### Adaptive self calibration of subband ' + str(x+1).zfill(2) + ' done! #####')
-
-    # def create_mask(self):
-    #     '''
-    #     create_mask: Creates a mask from an image during self calibration using a cutoff of the former cleaned stokes I image
-    #     '''
-    #     cwd = self.cwd
-    #     self.director('ch', self.lwd, verbose=False)
-    #     maths = lib.miriad('maths')
-    #     maths.exp = self.name_image
-    #     maths.out = self.name_mask + '_tmp'
-    #     if self.mode == 'manual':
-    #         self.single_mskcutoff = self.manual_mskcutoff[self.nsubband][self.cycle]
-    #     elif self.mode == 'adaptive':
-    #         self.single_mskcutoff = self.adaptive_mskcutoff()
-    #     maths.mask = self.name_image + '.gt.' + str(self.single_mskcutoff)
-    #     self.logger.info('### Mask cutoff: ' + str(self.single_mskcutoff) + ' Jy/beam ###')
-    #     maths.go()
-    #     self.director('ch', cwd, verbose=False)
-    #     self.director('rn', self.cwd + '/' + self.name_mask, self.lwd + '/' + self.name_mask  + '_tmp')
 
     ###################################################################
     ### Subfunctions used in the different self calibration options ###
@@ -797,18 +789,6 @@ class scal:
         self.director('rm', outputdir + '/imgen')
         self.single_mskcutoff = 1e-6
         self.director('rm', outputdir + '/mask.txt')
-
-    # def calc_stats(self, dataset, image):
-    #     '''
-    #     Calculates and updates statistics using the rms in Stokes V and the brightest pixel in Stokes I as well as calculating it from theoretical parameters
-    #     dataset (string): The dataset to calculate the theoretical rms from
-    #     image (string): The image to calculate the maximum pixel value and maximum dynamic range from
-    #     returns (float, float, float): The theoretical rms of the dataset, the maximum pixel value in the inpiut image, and the maximum dynamic range reachable in the dataset based on the ratio of the maximum pixel value and the theoretical noise
-    #     '''
-    #     theorms = self.calc_theoretical_noise(dataset)
-    #     imax = self.calc_imax(image)
-    #     maxdr = imax/theorms
-    #     return theorms, imax, maxdr
 
     def calc_adaptive_stats(self, dirtyimage, resiimage, theoretical_noise):
         '''
@@ -864,36 +844,52 @@ class scal:
         self.director('rm', image + '.fits')
         return imax
 
-    def calc_mask_threshold(self, imax, minor_cycle, major_cycle):
+    def calc_mask_threshold(self,theoretical_noise_threshold, noise_threshold, dynamic_range_threshold):
         '''
-        Calculates the mask threshold
+        Function to calculate the actual mask_threshold and the type of mask threshold from the theoretical noise threshold, noise threshold, and the dynamic range threshold
+        theoretical_noise_threshold (float): The theoretical noise threshold calculated by calc_theoretical_noise_threshold
+        noise_threshold (float): The noise threshold calculated by calc_noise_threshold
+        dynamic_range_threshold (float): The dynamic range threshold calculated by calc_dynamic_range_threshold
+        returns (float, string): The maximum of the three thresholds, the type of the maximum threshold
+        '''
+        mask_threshold = np.max([theoretical_noise_threshold, noise_threshold, dynamic_range_threshold])
+        mask_argmax = np.argmax([theoretical_noise_threshold, noise_threshold, dynamic_range_threshold])
+        if mask_argmax == 0:
+            mask_threshold_type = 'Theoretical noise threshold'
+        elif mask_argmax == 1:
+            mask_threshold_type = 'Noise threshold'
+        elif mask_argmax == 2:
+            mask_threshold_type = 'Dynamic range Threshold'
+        return mask_threshold, mask_threshold_type
+
+    def calc_noise_threshold(self, imax, minor_cycle, major_cycle):
+        '''
+        Calculates the noise threshold
         imax (float): the maximum in the input image
         minor_cycle (int): the current minor cycle the self-calibration is in
         major_cycle (int): the current major cycle the self-calibration is in
-        returns (float): the mask threshold
+        returns (float): the noise threshold
         '''
-        mask_threshold = imax / ((self.selfcal_mode_standard_c0 + (minor_cycle) * self.selfcal_mode_standard_c0) * (major_cycle + 1))
-        return mask_threshold
+        noise_threshold = imax / ((self.selfcal_mode_standard_c0 + (minor_cycle) * self.selfcal_mode_standard_c0) * (major_cycle + 1))
+        return noise_threshold
 
-    def calc_clean_noise_threshold(self, imax, minor_cycle, major_cycle):
+    def calc_clean_cutoff(self, mask_threshold):
         '''
-        Calculates the clean nosie threshold
-        imax (float): the maximum in the input image
-        minor_cycle (int): the current minor cycle the self-calibration is in
-        major_cycle (int): the current major cycle the self-calibration is in
-        returns (float): the clean noise threshold
+        Calculates the cutoff for the cleaning
+        mask_threshold (float): the mask threshold to calculate the clean cutoff from
+        returns (float): the clean cutoff
         '''
-        clean_noise_threshold = imax / (((self.selfcal_mode_standard_c0 + (minor_cycle) * self.selfcal_mode_standard_c0) * (major_cycle + 1)) * self.selfcal_mode_standard_c1)
-        return clean_noise_threshold
+        clean_cutoff = mask_threshold / self.selfcal_mode_standard_c1
+        return clean_cutoff
 
-    def calc_dynamic_range_threshold(self, imax, major_cycle):
+    def calc_dynamic_range_threshold(self, imax, dynamic_range):
         '''
         Calculates the dynamic range threshold
         imax (float): the maximum in the input image
-        major_cycle (int): the current major cycle the self-calibration is in
+        dynamic_range (float): the dynamic range you want to calculate the threshold fpr
         returns (float): the dynamic range threshold
         '''
-        dynamic_range_threshold = imax / (((major_cycle) * self.selfcal_mode_standard_dr0 * self.selfcal_mode_standard_drinit) + self.selfcal_mode_standard_drinit)
+        dynamic_range_threshold = imax / dynamic_range
         return dynamic_range_threshold
 
     def calc_theoretical_noise_threshold(self, theoretical_noise):
@@ -945,37 +941,6 @@ class scal:
         chunks = range(n)
         chunkstr = [str(i).zfill(2) for i in chunks]
         return chunkstr
-
-    # def go(self):
-    #     '''
-    #     go: Splits the dataset into subbands of equal size and runs the selfcal cycle with the chosen mode. Handles parametric and amplitude calibration as well as deep single subband imaging.
-    #     '''
-    #     self.logger.info("########## Starting SELF CALIBRATION ##########")
-    #     if self.field == 'fluxcal':
-    #         self.target = self.fluxcal.rstrip('MS') + 'mir'  # Rename self.target since MS has already been converted to MIRIAD file
-    #     if self.field == 'polcal':
-    #         self.target = self.polcal.rstrip('MS') + 'mir'  # Rename self.target since MS has already been converted to MIRIAD file
-    #     elif self.field == 'target':
-    #         self.target = self.target.rstrip('MS') + 'mir'  # Rename self.target since MS has already been converted to MIRIAD file
-    #     self.apply_cal()
-    #     # self.turbo_speed() # Use turbo mode if enabled. Switch is inside turbo_speed
-    #     self.split_data() # Split the data. Also checks if the data has already been split
-    #     if self.parametric:  # Do parametric self-calibration if enabled
-    #         self.par_cal()
-    #     if self.mode == 'adaptive':  # Do adaptive self-calibration
-    #         self.adaptive()
-    #     elif self.mode == 'manual':  # Do manual self-calibration
-    #         self.manual()
-    #     elif self.mode == 'none':
-    #         self.logger.info('### No adaptive or manual self-calibration done! ###')
-    #     else:
-    #         self.logger.error('### Self Calibration mode not supported! Exiting programme! ###')
-    #         sys.exit(1)
-    #     # if self.amp == True: # Do amplitude calibration if enabled
-    #     #     self.selfcal_amp()
-    #     # if self.deep == True: # Make a deep image of each calibrated subband
-    #     #     self.deep_image()
-    #     self.logger.info("########## SELF CALIBRATION done ##########")
 
     # def adaptive(self):
     #     self.logger.info("########## Using adaptive mode for self calibration! ##########")
@@ -1031,47 +996,7 @@ class scal:
     # #######################################################
     # ##### Subfunctions to use during self-calibration #####
     # #######################################################
-    #
-    # def apply_cal(self):
-    #     '''
-    #     Applies the calibration from the cross-calibration since uvsplit does not have the option to do that
-    #     '''
-    #     self.director('ch', self.selfcaldir)
-    #     uvcat = lib.miriad('uvcat')
-    #     uvcat.vis = self.crosscaldir + '/' + self.target
-    #     uvcat.out = self.selfcaldir + '/' + self.target
-    #     uvcat.go()
-    #     self.vis = self.target
-#
-    # def init_stats(self, dataset):
-    #     '''
-    #     init_stats: Calculates and updates statistics using the rms in Stokes V and the brightest pixel in Stokes I as well as calculating it from theoretical parameters
-    #     dataset: The dataset to calculate the parameters for
-    #     '''
-    #     self.vmax, self.vrms = qa.imstats(str(dataset), 'v') # Measure the noise from the Stokes V image
-    #     self.logger.info('### Measured noise from Stokes V image is ' + str(self.vrms) + ' Jy/beam ###')
-    #     self.theorms = qa.theostats(str(dataset))
-    #     self.logger.info('### Theoretical noise is ' + str(self.theorms) + ' Jy/beam ###')
-    #     self.imax, self.irms = qa.imstats(str(dataset), 'i')
-    #     self.logger.info('### Maximum in total power image is ' + str(self.imax) + ' Jy/beam ###')
-    #     self.maxvdr = self.imax/self.vrms
-    #     self.logger.info('### Maximum dynamic range calculated from Stokes V is ' + str(self.maxvdr) + ' ###')
-    #     self.maxtheodr = self.imax/self.theorms
-    #     self.logger.info('### Maximum dynamic range calculated from theoretical noise is ' + str(self.maxtheodr) + ' ###')
 
-    # def adaptive_stats(self):
-    #     '''
-    #     adaptive_stats: Calculate the stats needed for each iteration of the adaptive selfcal cycle
-    #     return: The residual rms, the maximum of the residual, the decreasing factor for the solution interval, the decreasing factor for the minimum uvrange, the factor, and the ratio of the dynamic range of the image
-    #     '''
-    #     resirms, resimax = qa.resistats(self.name_residual)
-    #     maxfactor = self.irms/self.vrms
-    #     perfactorinterval = (self.adaptive_startinterval[self.nsubband]-1)/maxfactor
-    #     perfactoruvrange = self.adaptive_startuvrange[self.nsubband]/maxfactor
-    #     factor = resirms/self.vrms
-    #     ratio = factor/maxfactor
-    #     return resirms, resimax, perfactorinterval, perfactoruvrange, factor, ratio
-    #
     # def pass_parameters(self, mode):
     #     '''
     #     pass_parameters: Function to pass the automatically calculated parameters from the adaptive selfcal to the manual inputs. Can be shown with a wselfcal.show() after adaptive calibration
@@ -1122,213 +1047,6 @@ class scal:
     #         self.logger.error('### Mode not supported! Choose init, cycle, or subband! Exiting! ###')
     #         sys.exit(1)
 
-    #
-    # def create_mask(self):
-    #     '''
-    #     create_mask: Creates a mask from an image during self calibration using a cutoff of the former cleaned stokes I image
-    #     '''
-    #     cwd = self.cwd
-    #     self.director('ch', self.lwd, verbose=False)
-    #     maths = lib.miriad('maths')
-    #     maths.exp = self.name_image
-    #     maths.out = self.name_mask + '_tmp'
-    #     if self.mode == 'manual':
-    #         self.single_mskcutoff = self.manual_mskcutoff[self.nsubband][self.cycle]
-    #     elif self.mode == 'adaptive':
-    #         self.single_mskcutoff = self.adaptive_mskcutoff()
-    #     maths.mask = self.name_image + '.gt.' + str(self.single_mskcutoff)
-    #     self.logger.info('### Mask cutoff: ' + str(self.single_mskcutoff) + ' Jy/beam ###')
-    #     maths.go()
-    #     self.director('ch', cwd, verbose=False)
-    #     self.director('rn', self.cwd + '/' + self.name_mask, self.lwd + '/' + self.name_mask  + '_tmp')
-    #
-    # def adaptive_mskcutoff(self):
-    #     if self.cycle == 0 or self.cycle == 1:
-    #         mask_cutoff = self.resimax / 10.0
-    #     else:
-    #         mask_cutoff = self.vrms * 4.0 * self.factor
-    #     return mask_cutoff
-
-    #
-    # def selfcal_image(self, residual = False, mode = 'rms'):
-    #     '''
-    #     selfcal_image: Does an automatic invert, clean, restor with the given iterations and cutoffs inside a selfcal loop. Uses clean minorcycles if enabled.
-    #     '''
-    #     invert = lib.miriad('invert')
-    #     invert.vis = self.vis
-    #     invert.map = self.name_map
-    #     invert.beam = self.name_beam
-    #     invert.slop = '1'
-    #     invert.imsize = self.imsize
-    #     invert.cell = self.cell
-    #     invert.options = 'mfs,double'
-    #     invert.select = 'NONE'
-    #     invert.go()
-    #     if self.clean_minorcycle == True:
-    #         print('Not implemented yet!')
-    #     else:
-    #         clean = lib.miriad('clean')
-    #         clean.map = self.name_map
-    #         clean.beam = self.name_beam
-    #         clean.out = self.name_model
-    #         clean.region = 'mask(' + self.name_mask + ')'
-    #         if mode == 'rms':
-    #             if self.mode == 'adaptive':
-    #                 clean.cutoff = 1.75 * self.resirms
-    #                 clean.niters = 10000000
-    #                 self.single_niters = clean.niters # Save these three variables for passing them to the manual inputs with pass_parameters
-    #                 self.single_cleancutoff = clean.cutoff
-    #                 self.single_cleanstop = 'rms'
-    #             else:
-    #                 clean.cutoff = self.manual_cleancutoff[self.nsubband][self.cycle]
-    #                 clean.niters = 10000000 # Set the iterations to a high number since you want the rms cutoff criterium
-    #             self.logger.info('### Clean cutoff criterium set: ' + str(clean.cutoff) + ' Jy/beam ###')
-    #         elif mode == 'niters':
-    #             clean.cutoff = 0.000000001 # Set the rms cutoff to a very low number since you want the niters criterium
-    #             if self.mode == 'adaptive' and self.cycle == 1: # Handle the first iteration of the adaptive selfcal automatically
-    #                 clean.niters = self.adaptive_firstniter[self.nsubband]
-    #                 self.single_niters = clean.niters # Save these three variables for passing them to the manual inputs with pass_parameters
-    #                 self.single_cleancutoff = clean.cutoff
-    #                 self.single_cleanstop = 'niters'
-    #             else:
-    #                 clean.niters = self.manual_niters[self.nsubband][self.cycle]
-    #             self.logger.info('### Clean niters criterium set: ' + str(clean.niters) + ' ###')
-    #         elif mode == 'both':
-    #             clean.cutoff = self.manual_cleancutoff[self.nsubband][self.cycle]
-    #             clean.niters = self.manual_niters[self.nsubband][self.cycle]
-    #             self.logger.info('### Clean cutoff criterium set: ' + str(clean.cutoff) + ' Jy/beam ###')
-    #             self.logger.info('### Clean niters criterium set: ' + str(clean.niters) + ' ###')
-    #         else:
-    #             self.logger.error('### Clean criterium not supported! Exiting! ###')
-    #             sys.exit(1)
-    #         clean.go()
-    #     restor = lib.miriad('restor')
-    #     restor.model = self.name_model
-    #     restor.beam = self.name_beam
-    #     restor.map = self.name_map
-    #     restor.out = self.name_image
-    #     restor.mode = 'clean'
-    #     restor.go()
-    #     if residual == True:
-    #         restor.mode = 'residual'
-    #         restor.out = self.name_residual
-    #         restor.go()
-    #
-    # def selfcal_cal(self):
-    #     '''
-    #     selfcal_cal: Does a self calibration inside a selfcal loop with the given parameters
-    #     '''
-    #     selfcal = lib.miriad('selfcal')
-    #     selfcal.vis = self.vis
-    #     selfcal.minants = 5
-    #     selfcal.refant = '3'
-    #     selfcal.options = 'mfs,phase'
-    #     selfcal.model = self.name_model
-    #     if self.mode == 'manual':
-    #         selfcal.select = 'uvrange(' + str(self.manual_minuvrange[self.nsubband][self.cycle]) + ',' + str(self.manual_maxuvrange[self.nsubband][self.cycle]) + ')'
-    #         selfcal.interval = self.manual_interval[self.nsubband][self.cycle]
-    #     elif self.mode == 'adaptive':
-    #         self.single_minuvrange = (self.factor-1)*self.perfactoruvrange # Save these three variables for passing them to the manual inputs with pass_parameters
-    #         self.single_maxuvrange = 1000
-    #         self.single_interval = 1 + (self.factor - 1) * self.perfactorinterval
-    #         selfcal.select = 'uvrange(' + str(self.single_minuvrange) + ',' + str(self.single_maxuvrange) + ')'
-    #         selfcal.interval = int(self.single_interval)
-    #     selfcal.go()
-    #
-    # def selfcal_amp(self):
-    #     print('Not supported yet')
-    #
-    # def deep_image(self):
-    #     #     logger.info('########## Creating final deep image for SB ' + str(x+1).zfill(2) + ' ##########')
-    #     #     self.selfcal_deepimage(cycle)
-    #     #     logger.info('########## Final deep image for SB ' + str(x + 1).zfill(2) + ' created successfully ##########')
-    #     print('Doing deep imaging')
-    #
-    # # def selfcal_deepimage(self, cycle):
-    # #     self.chdir('../' + str(cycle + 1).zfill(2))
-    # #     invert.go()
-    # #     clean.niters = 100000
-    # #     clean.cutoff = self.factor * self.resirms
-    # #     clean.go()
-    # #     restor.mode = 'clean'
-    # #     restor.out = 'image'
-    # #     restor.go()
-    # #     fits.in_ = restor.out
-    # #     fits.out = self.filename + '.fits'
-    # #     fits.go()
-    #
-    # #############################################################################################
-    # ##### Helper functions to get information from datasets and clear previous calibrations #####
-    # #############################################################################################
-    #
-    # def get_uvfiles(self, path):
-    #     '''
-    #     get_uvfiles: Scan the path and its subdirectories for datasets split in frequency
-    #     path: The path in which to search for the uv-files
-    #     return: A list of the names of the files without the absolute directory path
-    #     '''
-    #     filesmain = glob.glob(path + '/*.[0-9][0-9][0-9][0-9].[0-9]')
-    #     filessub = glob.glob(path + '/[0-9][0-9]/*.[0-9][0-9][0-9][0-9].[0-9]')
-    #     for n,f in enumerate(filesmain):
-    #         filesmain[n] = os.path.basename(f)
-    #     for n,f in enumerate(filessub):
-    #         filessub[n] = os.path.basename(f)
-    #     lm = len(filesmain)
-    #     ls = len(filessub)
-    #     if lm==0 and ls==0:
-    #         self.splitstatus = -1
-    #         files = []
-    #     elif lm>0 and ls==0:
-    #         files = filesmain
-    #         self.splitstatus = 1
-    #     elif lm==0  and ls>0:
-    #         files = filessub
-    #         self.splitstatus = 2
-    #     elif lm>0 and ls>0:
-    #         self.logger.error('### Subband uv-files in main selfcal directory and sub directories! Clean up your selfcal directory first! ###')
-    #         self.splitstatus = 0
-    #         sys.exit(1)
-    #     return files
-    #
-    # def get_freqs(self, files, setting='starting'):
-    #     '''
-    #     get_freqs: Get the starting, centre, or rest frequencies for a list of uv-files
-    #     files: A list of strings with the names of the uv-files
-    #     setting: starting, centre, or rest frequency
-    #     return: A list of strings with the freqeuncies
-    #     '''
-    #     freqs = []
-    #     for x,f in enumerate(files):
-    #         if setting == 'starting':
-    #             freqs = [f.split('.')[-2] for f in files]
-    #         if setting == 'centre':
-    #             print('Later')
-    #         if setting == 'rest':
-    #             print('Later')
-    #     return freqs
-    #
-    # def clear_all(self):
-    #     '''
-    #     clear_all: Removes the complete selfcal directory
-    #     '''
-    #     self.director('ch', self.crosscaldir)
-    #     self.director('rm', self.selfcaldir)
-    #     self.logger.info('### Removed the complete self calibration from the data! ###')
-    #
-    # def clear_cal(self, ifs=None):
-    #     '''
-    #     clear_cal: Removes the gains and products from self calibration iterations for the given subbands
-    #     ifs: You can give a list of subbands here to remove. If none is given all IFs are cleared from the calibration
-    #     '''
-    #     if ifs == None:
-    #         self.clear_ifs = range(len(self.subbands))
-    #     self.logger.info('### Deleting calibration of subbands ' + str(self.clear_ifs) + ' ###')
-    #     for n,sbfile in enumerate(self.subbands):
-    #         self.director('rn', self.selfcaldir, self.selfcaldir + '/' + str(n+1).zfill(2) + '/' + str(sbfile))
-    #         self.director('rm', self.selfcaldir + '/' + str(n+1).zfill(2) + '/*')
-    #         self.director('rm', self.selfcaldir + '/' + str(sbfile) + '/gains')
-    #         self.director('rn', self.selfcaldir + '/' + str(n+1).zfill(2) + '/' , self.selfcaldir + '/' + str(sbfile))
-    #
     # ###########################################################
     # ##### Handle the config files and check manual inputs #####
     # ###########################################################

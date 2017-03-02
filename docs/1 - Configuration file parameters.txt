@@ -175,20 +175,20 @@ selfcal_mode_standard_minorcycle (int):
 The minor self-calibration cycles for masking and cleaning used to produce the model for the self-calibration in each
  minor cycle for each frequency chunk.
 selfcal_mode_standard_c0 (float):
-Coefficient for mask generation. At each major and minor cycle the maximum value in the image is extracted and a mask
+Coefficient for noise threshold calculation. At each major and minor cycle the maximum value in the image is extracted and a mask
  generated using the threshold computed with this formula:
  mask_threshold = (Imax)/((c0 + (minor_cycle)*c0)*(major_cycle+1))
 selfcal_mode_standard_c1 (float):
-Coefficient for mask genaration. After each mask generation, a clean noise threshold is computed with this formula:
-clean_noise_threshold = (Imax)/(mask_threshold*c1)
+Coefficient for clean cutoff calculation. After each mask generation, a clean noise threshold is computed with this formula:
+clean_noise_threshold = mask_threshold/c1
 selfcal_mode_standard_drinit (float):
-Initial value for dynamic rnage threshold.
+Initial value for dynamic range threshold.
 selfcal_mode_standard_dr0 (float):
-Coefficinet for increasing the dynamic range threshold at each major cycle. The dynamic range threshold is computed
+Coefficient for increasing the dynamic range threshold at each major cycle. The dynamic range threshold is computed
 with the following formula:
 dynamic_range_threshold = (Imax)/(((major_cycle)*dr0*drinit))+drinit)
 selfcal_mode_standard_nsigma (float):
-At each major cycle the theoretical noise is computed. nsigma is the value for theoretical noise threshold estimation:
+The theoretical noise of each dataset is computed in the beginning. nsigma is the value for theoretical noise threshold estimation:
 theoretical_noise_threshold = nsigma*theoretical_noise
 selfcal_mode_standard_uvmin (list of floats):
 The minimum uvrange to use in the major cycles for the standard self-calibration in klambda. The length of the list
@@ -230,7 +230,7 @@ selfcal_mode_adaptive_maxcycle (int):
 The maximum number of adaptive major self-calibration cycles in case the dynamic range could not be reached in this cycle
 or before.
 selfcal_mode_adaptive_drlim (float):
-The adaptive self-calibration automatically stops if it reaches a DR of drlim*theoretical noise.
+The adaptive self-calibration automatically stops if it reaches a DR of theoretical_reachable_dynamic_range/drlim.
 selfcal_mode_adaptive_rmsfactor (float):
 The adaptive self-calibration mode calculates a factor to reduce the solution interval and the minuvrange in each cycle
 based on the residual image of the previous cycle. A high value increases the reduction of these two parameters faster.
@@ -284,22 +284,31 @@ Mode for the final continuum imaging. Two modes are available: 'mf' using the MI
 continuum image by combining all calibrated datasets and imaging the whole data at once or 'stack' which produces a
 deep continuum image of each frequency chunk individually and stacks the images in the end weighted by their
 theoretical noise.
-final_continuum_minorcycle (int):
-Number of minor cycles for cleaning and mask creation to produce the deep continuum image.
-final_continuum_c0 (float):
-Coefficient for mask generation. Within each minor cycle the maximum value in the image is extracted and a mask
+selfcal_mode_standard_minorcycle (int):
+The minor self-calibration cycles for masking and cleaning used to produce the model for the self-calibration in each
+ minor cycle for each frequency chunk.
+selfcal_mode_standard_c0 (float):
+Coefficient for noise threshold calculation. At each major and minor cycle the maximum value in the image is extracted and a mask
  generated using the threshold computed with this formula:
- mask_threshold = (Imax)/((c0 + (minor_cycle-1)*c0))
-final_continuum_c1 (float):
-Coefficient for mask genaration. After each mask generation, a clean noise threshold is computed with this formula:
-clean_noise_threshold = (Imax)/(mask_threshold*c1)
-final_continuum_nsigma (float):
-At each major cycle the theoretical noise is computed. nsigma is the value for theoretical noise threshold estimation:
+ mask_threshold = (Imax)/((c0 + (minor_cycle)*c0)*(major_cycle+1))
+ The vlaue for the major cycle is the last used during self-calibration + 1
+selfcal_mode_standard_c1 (float):
+Coefficient for clean cutoff calculation. After each mask generation, a clean noise threshold is computed with this formula:
+clean_noise_threshold = mask_threshold/c1
+selfcal_mode_standard_drinit (float):
+Initial value for dynamic range threshold.
+selfcal_mode_standard_dr0 (float):
+Coefficient for increasing the dynamic range threshold at each major cycle. The dynamic range threshold is computed
+with the following formula:
+dynamic_range_threshold = (Imax)/(((major_cycle)*dr0*drinit))+drinit)
+selfcal_mode_standard_nsigma (float):
+The theoretical noise of each dataset is computed in the beginning. nsigma is the value for theoretical noise threshold estimation:
 theoretical_noise_threshold = nsigma*theoretical_noise
 final_continuum_extraiterations (int):
 Additional iterations for the cleaning after the last minor cycle. This last iterations then do not use any mask and
 clean 80% of the inner part of the image. Very useful if images are confused or very diffuse extended structures are
-present, which are not caught by the masking. Set to 0 to switch off.
+present, which are not caught by the masking. Set to 0 to switch off. This is not included anymore due to Tom's remark
+on clean bias.
 final_line (bool):
 Produce a final line cube of the dataset. This needs at least one execution of the line step before it can produce
 the cube.
