@@ -152,7 +152,7 @@ class scal:
                 invert.map = 'map'
                 invert.beam = 'beam'
                 invert.imsize = self.selfcal_image_imsize
-                invert.cellsize = self.selfcal_image_cellsize
+                invert.cell = self.selfcal_image_cellsize
                 invert.stokes = 'i'
                 invert.slop = 1
                 invert.go()
