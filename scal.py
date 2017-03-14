@@ -909,11 +909,14 @@ class scal:
         '''
         uv = aipy.miriad.UV(dataset)
         obsrms = lib.miriad('obsrms')
-        tsys = np.median(uv['systemp'])
-        if np.isnan(tsys):
+        try:
+            tsys = np.median(uv['systemp'])
+            if np.isnan(tsys):
+                obsrms.tsys = 30.0
+            else:
+                obsrms.tsys = tsys
+        except KeyError:
             obsrms.tsys = 30.0
-        else:
-            obsrms.tsys = tsys
         obsrms.jyperk = uv['jyperk']
         obsrms.antdiam = 25
         obsrms.freq = uv['sfreq']
