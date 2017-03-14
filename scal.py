@@ -665,7 +665,7 @@ class scal:
                     if majc == 0:
                         maxdr = imax / theoretical_noise  # Calculate the maximum dynamic range
                         self.logger.info('# The maximum dynamic range for chunk ' + str(chunk) + ' is ' + str(maxdr) + ' #')
-                        self.create_parametric_mask(chunk + '.mir', 0.5, 0.9, 'NVSS', str(majc).zfill(2))
+                        self.create_parametric_mask(chunk + '.mir', 0.6, 0.9, 'NVSS', str(majc).zfill(2))
                         self.director('rn', str(majc).zfill(2) + '/mask_' + str(0).zfill(2), str(majc).zfill(2) + '/mask')
                         self.logger.info('# Parametric mask for self-calibration cycle 0 created #')
                         clean = lib.miriad('clean')
