@@ -92,8 +92,12 @@ class final:
                                 invert.imsize = self.final_continuum_image_imsize
                                 invert.cell = self.final_continuum_image_cellsize
                                 invert.stokes = 'i'
-                                invert.options = 'mfs,double'
                                 invert.slop = 1
+                                if self.final_continuum_image_centre != '':
+                                    invert.offset = self.final_continuum_image_centre
+                                    invert.options = 'mfs,double,mosaic'
+                                else:
+                                    invert.options = 'mfs,double'
                                 invert.go()
                                 imax = self.calc_imax('map_' + str(minc).zfill(2))
                                 noise_threshold = self.calc_noise_threshold(imax, minc, majc)
@@ -124,6 +128,12 @@ class final:
                                 restor.map = 'map_' + str(0).zfill(2)
                                 restor.out = 'image_' + str(minc).zfill(2)
                                 restor.mode = 'clean'
+                                if self.final_continuum_image_beam != '':
+                                    beam_parameters = self.final_continuum_image_beam.split(',')
+                                    restor.fwhm = str(beam_parameters[0]) + ',' + str(beam_parameters[1])
+                                    restor.pa = str(beam_parameters[2])
+                                else:
+                                    pass
                                 restor.go()  # Create the cleaned image
                                 self.logger.info('# Cleaned image for minor cycle ' + str(minc) + ' created #')
                                 restor.mode = 'residual'
@@ -163,6 +173,12 @@ class final:
                                 restor.map = 'map_' + str(0).zfill(2)
                                 restor.out = 'image_' + str(minc).zfill(2)
                                 restor.mode = 'clean'
+                                if self.final_continuum_image_beam != '':
+                                    beam_parameters = self.final_continuum_image_beam.split(',')
+                                    restor.fwhm = str(beam_parameters[0]) + ',' + str(beam_parameters[1])
+                                    restor.pa = str(beam_parameters[2])
+                                else:
+                                    pass
                                 restor.go()  # Create the cleaned image
                                 self.logger.info('# Cleaned image for minor cycle ' + str(minc) + ' created #')
                                 restor.mode = 'residual'
@@ -171,38 +187,6 @@ class final:
                                 self.logger.info('# Residual image for minor cycle ' + str(minc) + ' created #')
                                 self.logger.info('# Peak of the residual image is ' + str(self.calc_imax('residual_' + str(minc).zfill(2))) + ' Jy/beam #')
                                 self.logger.info('# RMS of the residual image is ' + str(self.calc_irms('residual_' + str(minc).zfill(2))) + ' Jy/beam #')
-                    # if self.final_continuum_extraiterations != 0:
-                    #     self.logger.info('### Doing ' + str(self.final_continuum_extraiterations) + ' extra clean iterations without a mask for chunk '  + chunk + ' ###')
-                    #     for n in range(100):
-                    #         if os.path.exists(self.finaldir + '/continuum/stack/' + chunk + '/residual_' + str(n).zfill(2)):
-                    #             pass
-                    #         else:
-                    #             break  # Stop the counting loop at the directory you cannot find anymore
-                    #     clean = lib.miriad('clean')
-                    #     clean.map = 'map_' + str(0).zfill(2)
-                    #     clean.beam = 'beam_' + str(0).zfill(2)
-                    #     clean.model = 'model_' + str(n-1).zfill(2)
-                    #     clean.out = 'model_' + str(n).zfill(2)
-                    #     clean.cutoff = 0.0000000001
-                    #     clean.niters = self.final_continuum_extraiterations
-                    #     clean.region = '"' + 'percentage(80,80)' + '"'
-                    #     clean.go()
-                    #     self.logger.info('# Extra iteration cleaning done #')
-                    #     restor = lib.miriad('restor')
-                    #     restor.model = 'model_' + str(n).zfill(2)
-                    #     restor.beam = 'beam_' + str(0).zfill(2)
-                    #     restor.map = 'map_' + str(0).zfill(2)
-                    #     restor.out = 'image_' + str(n).zfill(2)
-                    #     restor.mode = 'clean'
-                    #     restor.go()  # Create the cleaned image
-                    #     self.logger.info('# Cleaned image created #')
-                    #     restor.mode = 'residual'
-                    #     restor.out = 'residual_' + str(n).zfill(2)
-                    #     restor.go()
-                    #     self.logger.info('# Residual image created #')
-                    #     self.logger.info('### Extra iteration cleaning for chunk ' + chunk + ' done ###')
-                    # else:
-                    #     pass # Skip the imaging of a chunk which has all data left
                 self.logger.info('### Stacking images of individual frequency chunks ###')
                 self.director('ch', self.finaldir + '/continuum/stack')
                 imcomb = lib.miriad('imcomb')
@@ -256,8 +240,12 @@ class final:
                         invert.imsize = self.final_continuum_image_imsize
                         invert.cell = self.final_continuum_image_cellsize
                         invert.stokes = 'i'
-                        invert.options = 'mfs,double,sdb'
                         invert.slop = 1
+                        if self.final_continuum_image_centre != '':
+                            invert.offset = self.final_continuum_image_centre
+                            invert.options = 'mfs,double,mosaic,sdb'
+                        else:
+                            invert.options = 'mfs,double,sdb'
                         invert.go()
                         imax = self.calc_imax('map_' + str(minc).zfill(2))
                         noise_threshold = self.calc_noise_threshold(imax, minc, majc)
@@ -288,6 +276,12 @@ class final:
                         restor.map = 'map_' + str(0).zfill(2)
                         restor.out = 'image_' + str(minc).zfill(2)
                         restor.mode = 'clean'
+                        if self.final_continuum_image_beam != '':
+                            beam_parameters = self.final_continuum_image_beam.split(',')
+                            restor.fwhm = str(beam_parameters[0]) + ',' + str(beam_parameters[1])
+                            restor.pa = str(beam_parameters[2])
+                        else:
+                            pass
                         restor.go()  # Create the cleaned image
                         self.logger.info('# Cleaned image for minor cycle ' + str(minc) + ' created #')
                         restor.mode = 'residual'
@@ -327,6 +321,12 @@ class final:
                         restor.map = 'map_' + str(0).zfill(2)
                         restor.out = 'image_' + str(minc).zfill(2)
                         restor.mode = 'clean'
+                        if self.final_continuum_image_beam != '':
+                            beam_parameters = self.final_continuum_image_beam.split(',')
+                            restor.fwhm = str(beam_parameters[0]) + ',' + str(beam_parameters[1])
+                            restor.pa = str(beam_parameters[2])
+                        else:
+                            pass
                         restor.go()  # Create the cleaned image
                         self.logger.info('# Cleaned image for minor cycle ' + str(minc) + ' created #')
                         restor.mode = 'residual'
@@ -338,36 +338,6 @@ class final:
                         self.logger.info('# Peak of the residual image is ' + str(self.calc_imax('residual_' + str(minc).zfill(2))) + ' Jy/beam #')
                         self.logger.info('# RMS of the residual image is ' + str(self.calc_irms('residual_' + str(minc).zfill(2))) + ' Jy/beam #')
                         self.logger.info('### Final deep continuum image is ' + self.finaldir + '/continuum/' + self.target.rstrip('.mir') + '_mf ###')
-                # if self.final_continuum_extraiterations != 0:
-                #     self.logger.info('### Doing ' + str(self.final_continuum_extraiterations) + ' extra clean iterations for mfclean image ###')
-                #     for n in range(100):
-                #         if os.path.exists(self.finaldir + '/continuum/mf/residual_' + str(n).zfill(2)):
-                #             pass
-                #         else:
-                #             break  # Stop the counting loop at the directory you cannot find anymore
-                #     mfclean = lib.miriad('mfclean')
-                #     mfclean.map = 'map_' + str(0).zfill(2)
-                #     mfclean.beam = 'beam_' + str(0).zfill(2)
-                #     mfclean.model = 'model_' + str(n - 1).zfill(2)
-                #     mfclean.out = 'model_' + str(n).zfill(2)
-                #     mfclean.cutoff = 0.0000000001
-                #     mfclean.niters = self.final_continuum_extraiterations
-                #     mfclean.region = '"' + 'percentage(80,80)' + '"'
-                #     mfclean.go()
-                #     self.logger.info('# Extra iteration cleaning done #')
-                #     restor = lib.miriad('restor')
-                #     restor.model = 'model_' + str(n).zfill(2)
-                #     restor.beam = 'beam_' + str(0).zfill(2)
-                #     restor.map = 'map_' + str(0).zfill(2)
-                #     restor.out = 'image_' + str(n).zfill(2)
-                #     restor.mode = 'clean'
-                #     restor.go()  # Create the cleaned image
-                #     self.logger.info('# Cleaned image created #')
-                #     restor.mode = 'residual'
-                #     restor.out = 'residual_' + str(n).zfill(2)
-                #     restor.go()
-                #     self.logger.info('# Residual image created #')
-                #     self.logger.info('### Extra iteration cleaning for mfclean image done ###')
             self.logger.info('### Deep continuum imaging of full dataset done ###')
 
     def line(self):
