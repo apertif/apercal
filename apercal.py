@@ -8,4 +8,5 @@ from ccal import ccal
 from scal import scal
 from final import final
 from line import line
+from iaimage import iaimage
 import lsm
