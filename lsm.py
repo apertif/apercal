@@ -29,38 +29,41 @@ def query_catalogue(infile, catalogue, radius, minflux=0.0):
 	minflux: minimum real source flux to receive from a VIZIER query. Default is 0.0 since for most operations you want all sources in the radius region
 	returns: record array with RA, DEC, Major axis, Minor axis, parallactic angle, and flux of the sources in the catalogue
 	'''
-	if catalogue == 'FIRST':
-		v = Vizier(columns=["*","+_r"], column_filters={"Fint": ">"+str(minflux)})
-		v.ROW_LIMIT=-1
-		sources = v.query_region(getradec(infile), radius=Angle(radius, "deg"), catalog=catalogue)
-		maj_axis = sources[0]['Maj']
-		min_axis = sources[0]['Min']
-		flux = sources[0]['Fint']/1000.0
-	elif catalogue == 'NVSS':
-		v = Vizier(columns=["*","+_r"], column_filters={"S1.4": ">" + str(minflux)})
-		v.ROW_LIMIT = -1
-		sources = v.query_region(getradec(infile), radius=Angle(radius, "deg"), catalog=catalogue)
-		maj_axis = sources[0]['MajAxis']
-		min_axis = sources[0]['MinAxis']
-		flux = sources[0]['S1.4']/1000.0
-	elif catalogue == 'WENSS':
-		v = Vizier(columns=["*","+_r"], column_filters={"Sint": ">" + str(minflux)})
-		v.ROW_LIMIT = -1
-		sources = v.query_region(getradec(infile), radius=Angle(radius, "deg"), catalog=catalogue)
-		maj_axis = sources[0]['MajAxis']
-		min_axis = sources[0]['MinAxis']
-		flux = sources[0]['Sint']/1000.0
-	catlength = len(sources[0])
-	dtype = [('RA', float), ('DEC', float), ('MajAxis', float), ('MinAxis', float), ('PA', float), ('flux', float), ('dist', float)]  # create a structured array with the source data
-	cat = np.zeros((catlength,), dtype=dtype)
-	cat['RA'] = sources[0]['_RAJ2000']
-	cat['DEC'] = sources[0]['_DEJ2000']
-	cat['MajAxis'] = maj_axis
-	cat['MinAxis'] = min_axis
-	cat['PA'] = sources[0]['PA']
-	cat['flux'] = flux
-	cat['dist'] = sources[0]['_r']
-	cat = np.rec.array(cat) # transform the structured array to a record array for easier handling
+	try:
+		if catalogue == 'FIRST':
+			v = Vizier(columns=["*","+_r"], column_filters={"Fint": ">"+str(minflux)})
+			v.ROW_LIMIT=-1
+			sources = v.query_region(getradec(infile), radius=Angle(radius, "deg"), catalog=catalogue)
+			maj_axis = sources[0]['Maj']
+			min_axis = sources[0]['Min']
+			flux = sources[0]['Fint']/1000.0
+		elif catalogue == 'NVSS':
+			v = Vizier(columns=["*","+_r"], column_filters={"S1.4": ">" + str(minflux)})
+			v.ROW_LIMIT = -1
+			sources = v.query_region(getradec(infile), radius=Angle(radius, "deg"), catalog=catalogue)
+			maj_axis = sources[0]['MajAxis']
+			min_axis = sources[0]['MinAxis']
+			flux = sources[0]['S1.4']/1000.0
+		elif catalogue == 'WENSS':
+			v = Vizier(columns=["*","+_r"], column_filters={"Sint": ">" + str(minflux)})
+			v.ROW_LIMIT = -1
+			sources = v.query_region(getradec(infile), radius=Angle(radius, "deg"), catalog=catalogue)
+			maj_axis = sources[0]['MajAxis']
+			min_axis = sources[0]['MinAxis']
+			flux = sources[0]['Sint']/1000.0
+		catlength = len(sources[0])
+		dtype = [('RA', float), ('DEC', float), ('MajAxis', float), ('MinAxis', float), ('PA', float), ('flux', float), ('dist', float)]  # create a structured array with the source data
+		cat = np.zeros((catlength,), dtype=dtype)
+		cat['RA'] = sources[0]['_RAJ2000']
+		cat['DEC'] = sources[0]['_DEJ2000']
+		cat['MajAxis'] = maj_axis
+		cat['MinAxis'] = min_axis
+		cat['PA'] = sources[0]['PA']
+		cat['flux'] = flux
+		cat['dist'] = sources[0]['_r']
+		cat = np.rec.array(cat) # transform the structured array to a record array for easier handling
+	except IndexError:
+		cat = []
 	return cat
 
 def calc_offset(infile, cat):
