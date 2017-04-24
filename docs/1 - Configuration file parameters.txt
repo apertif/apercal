@@ -171,9 +171,13 @@ where all parameters are set manually, and 'adaptive' which adjusts the self-cal
 field properties. Parameters for all modes can be set individually by the parameters in this section.
 selfcal_mode_standard_majorcycle (int):
 The major self-calibration cycles to use in the standard mode for each frequency chunk.
+selfcal_mode_standard_majorcycle_function (str):
+The function to increase the DR for the major cycles. Currently only 'square' is supported.
 selfcal_mode_standard_minorcycle (int):
 The minor self-calibration cycles for masking and cleaning used to produce the model for the self-calibration in each
  minor cycle for each frequency chunk.
+selfcal_mode_standard_minorcycle_function (str):
+The function to increase the DR for the minor cycles. Currently 'square', 'power', and 'linear' are supported.
 selfcal_mode_standard_c0 (float):
 Coefficient for noise threshold calculation. At each major and minor cycle the maximum value in the image is extracted and a mask
  generated using the threshold computed with this formula:
