@@ -771,8 +771,8 @@ class scal:
         dynamic_range_threshold (float): The dynamic range threshold calculated by calc_dynamic_range_threshold
         returns (float, string): The maximum of the three thresholds, the type of the maximum threshold
         '''
-        if np.isinf(dynamic_range_threshold) or np.isnan(dynamic_range_threshold):
-            dynamic_range_threshold = 0.0
+        # if np.isinf(dynamic_range_threshold) or np.isnan(dynamic_range_threshold):
+        #     dynamic_range_threshold = noise_threshold
         mask_threshold = np.max([theoretical_noise_threshold, noise_threshold, dynamic_range_threshold])
         mask_argmax = np.argmax([theoretical_noise_threshold, noise_threshold, dynamic_range_threshold])
         if mask_argmax == 0:
@@ -810,6 +810,8 @@ class scal:
         dynamic_range (float): the dynamic range you want to calculate the threshold for
         returns (float): the dynamic range threshold
         '''
+        if dynamic_range == 0:
+            dynamic_range = 8.0
         dynamic_range_threshold = imax / dynamic_range
         return dynamic_range_threshold
 
