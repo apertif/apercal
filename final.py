@@ -447,7 +447,7 @@ class final:
         fits.go()
         image_data = pyfits.open(image + '.fits')  # Open the image
         data = image_data[0].data
-        imax = np.std(data) # Get the standard deviation
+        imax = np.nanstd(data) # Get the standard deviation
         image_data.close() # Close the image
         self.director('rm', image + '.fits')
         return imax
@@ -465,7 +465,7 @@ class final:
         fits.go()
         image_data = pyfits.open(image + '.fits')  # Open the image
         data = image_data[0].data
-        imax = np.max(data) # Get the maximum
+        imax = np.nanmax(data) # Get the maximum
         image_data.close() # Close the image
         self.director('rm', image + '.fits')
         return imax
