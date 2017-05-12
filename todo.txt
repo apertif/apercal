@@ -5,4 +5,3 @@
 - create cube function for line and polarisation
 - implement rm-synthesis and rm-clean
 - add option to use different parameters for frequency chunks in manual mode
-- check if flagline counts nan as low/high noise

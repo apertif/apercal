@@ -9,4 +9,5 @@ from scal import scal
 from final import final
 from line import line
 from iaimage import iaimage
+from iaplot import iaplot
 import lsm
