@@ -95,6 +95,7 @@ class iaimage:
                     pass
             else:
                 pass
+            print('Minimum/maximum colour range for image: ' + str(imin) + '/' + str(imax))
 
             # Draw the plot
 
@@ -195,6 +196,8 @@ class iaimage:
                     immax, remax, mamax, momax = 3*imstd, 3*restd, mastd, mostd
                 else:
                     immax, remax, mamax, momax = imax, imax, imax, imax
+                print('Minimum colour range for image: ' + str(immin) + ' residual: ' + str(remin) + ' mask: ' + str(mamin) + ' model: ' + str(momin))
+                print('Maximum colour range for image: ' + str(immax) + ' residual: ' + str(remax) + ' mask: ' + str(mamax) + ' model: ' + str(momax))
                 annim1.set_norm(clipmin=immin, clipmax=immax); annim2.set_norm(clipmin=remin, clipmax=remax); annim3.set_norm(clipmin=0.0, clipmax=mamax); annim4.set_norm(clipmin=0.0, clipmax=momax)
                 annim1.Colorbar(); annim2.Colorbar(); annim3.Colorbar(); annim4.Colorbar()
                 annim1.Graticule(); annim2.Graticule(); annim3.Graticule(); annim4.Graticule()
@@ -222,6 +225,7 @@ class iaimage:
                     imin = -1*imstd
                 if imax == None:
                     imax = 3*imstd
+                print('Minimum/maximum colour range for image: ' + str(imin) + '/' + str(imax))
                 annim.set_norm(clipmin=imin,clipmax=imax)
                 annim.Colorbar()
                 annim.Graticule()

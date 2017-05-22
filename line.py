@@ -153,6 +153,7 @@ class line:
                     uvlin.out = chunk + '/' + chunk + '_line.mir'
                     uvlin.go()
                     self.logger.info('# Continuum subtraction using uvlin method for chunk ' + chunk + ' done #')
+                self.logger.info('### Continuum subtraction using uvlin done! ###')
             elif self.line_subtract_mode == 'uvmodel':
                 self.logger.info('### Starting continuum subtraction of individual chunks using uvmodel ###')
                 for chunk in self.list_chunks():
@@ -180,6 +181,7 @@ class line:
                     uvmodel.go()
                     self.director('rm', chunk + '/' + chunk + '_uvcat.mir')
                     self.logger.info('# Continuum subtraction using uvmodel method for chunk ' + chunk + ' done #')
+                self.logger.info('### Continuum subtraction using uvmodel done! ###')
             else:
                 self.logger.error('### Subtract mode not know. Exiting! ###')
                 sys.exit(1)
