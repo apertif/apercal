@@ -72,6 +72,7 @@ class final:
                 self.logger.info('### Creating individual deep images from frequency chunks ###')
                 self.director('ch', self.finaldir + '/continuum/stack')
                 for chunk in self.list_chunks(): # Produce an image for each chunk
+                    self.logger.info('### Final imaging for chunk ' + chunk + ' started ###')
                     majc = int(self.get_last_major_iteration(chunk)+1)
                     self.logger.info('# Last major self-calibration cycle seems to have been ' + str(majc-1) + ' #')
                     if os.path.isfile(self.selfcaldir + '/' + chunk + '/' + chunk + '.mir/gains'): # Check if a chunk could be calibrated and has data left
@@ -85,105 +86,10 @@ class final:
                         self.logger.info('# Dynamic range limits for the final minor iterations to clean are ' + str(dr_minlist) + ' #')
                         try:
                             for minc in range(self.final_continuum_minorcycle): # Iterate over the minor imaging cycles and masking
-                                if minc == 0:
-                                    invert = lib.miriad('invert')  # Create the dirty image
-                                    invert.vis = self.selfcaldir + '/' + chunk + '/' + chunk + '.mir'
-                                    invert.map = 'map_' + str(minc).zfill(2)
-                                    invert.beam = 'beam_' + str(minc).zfill(2)
-                                    invert.imsize = self.final_continuum_image_imsize
-                                    invert.cell = self.final_continuum_image_cellsize
-                                    invert.stokes = 'i'
-                                    invert.slop = 1
-                                    if self.final_continuum_image_centre != '':
-                                        invert.offset = self.final_continuum_image_centre
-                                        invert.options = 'mfs,double,mosaic'
-                                    else:
-                                        invert.options = 'mfs,double'
-                                    invert.go()
-                                    imax = self.calc_imax('map_' + str(minc).zfill(2))
-                                    noise_threshold = self.calc_noise_threshold(imax, minc, majc)
-                                    dynamic_range_threshold = self.calc_dynamic_range_threshold(imax, dr_minlist[minc])
-                                    mask_threshold, mask_threshold_type = self.calc_mask_threshold(theoretical_noise_threshold, noise_threshold, dynamic_range_threshold)
-                                    self.director('cp', 'mask_' + str(minc).zfill(2), file=self.selfcaldir + '/' + chunk + '/' + str(majc - 2).zfill(2) + '/mask_' + str(self.selfcal_mode_standard_minorcycle - 1).zfill(2))
-                                    self.logger.info('# Last mask from self-calibration copied #')
-                                    clean_cutoff = self.calc_clean_cutoff(mask_threshold)
-                                    self.logger.info('# Clean threshold for minor cycle ' + str(minc) + ' was set to ' + str(clean_cutoff) + ' Jy/beam #')
-                                    clean = lib.miriad('clean')  # Clean the image down to the calculated threshold
-                                    clean.map = 'map_' + str(0).zfill(2)
-                                    clean.beam = 'beam_' + str(0).zfill(2)
-                                    clean.out = 'model_' + str(minc).zfill(2)
-                                    clean.cutoff = clean_cutoff
-                                    clean.niters = 100000
-                                    clean.region = '"' + 'mask(mask_' + str(minc).zfill(2) + ')' + '"'
-                                    clean.go()
-                                    self.logger.info('# Minor cycle ' + str(minc) + ' cleaning done #')
-                                    restor = lib.miriad('restor')
-                                    restor.model = 'model_' + str(minc).zfill(2)
-                                    restor.beam = 'beam_' + str(0).zfill(2)
-                                    restor.map = 'map_' + str(0).zfill(2)
-                                    restor.out = 'image_' + str(minc).zfill(2)
-                                    restor.mode = 'clean'
-                                    if self.final_continuum_image_beam != '':
-                                        beam_parameters = self.final_continuum_image_beam.split(',')
-                                        restor.fwhm = str(beam_parameters[0]) + ',' + str(beam_parameters[1])
-                                        restor.pa = str(beam_parameters[2])
-                                    else:
-                                        pass
-                                    restor.go()  # Create the cleaned image
-                                    self.logger.info('# Cleaned image for minor cycle ' + str(minc) + ' created #')
-                                    restor.mode = 'residual'
-                                    restor.out = 'residual_' + str(minc).zfill(2)
-                                    restor.go() # Create the residual image
-                                    self.logger.info('# Residual image for minor cycle ' + str(minc) + ' created #')
-                                    self.logger.info('# Peak of the residual image is ' + str(self.calc_imax('residual_' + str(minc).zfill(2))) + ' Jy/beam #')
-                                    self.logger.info('# RMS of the residual image is ' + str(self.calc_irms('residual_' + str(minc).zfill(2))) + ' Jy/beam #')
-                                else:
-                                    imax = self.calc_imax('map_' + str(0).zfill(2))
-                                    noise_threshold = self.calc_noise_threshold(imax, minc, majc)
-                                    dynamic_range_threshold = self.calc_dynamic_range_threshold(imax, dr_minlist[minc])
-                                    mask_threshold, mask_threshold_type = self.calc_mask_threshold(theoretical_noise_threshold, noise_threshold, dynamic_range_threshold)
-                                    self.logger.info('# Mask threshold for final imaging minor cycle ' + str(minc) + ' set to ' + str(mask_threshold) + ' Jy/beam #')
-                                    self.logger.info('# Mask threshold set by ' + str(mask_threshold_type) + ' #')
-                                    maths = lib.miriad('maths')
-                                    maths.out = 'mask_' + str(minc).zfill(2)
-                                    maths.exp = '"<' + 'image_' + str(minc - 1).zfill(2) + '>"'
-                                    maths.mask = '"<' + 'image_' + str(minc - 1).zfill(2) + '>.gt.' + str(mask_threshold) + '"'
-                                    maths.go()
-                                    self.logger.info('# Mask with threshold ' + str(mask_threshold) + ' Jy/beam created #')
-                                    clean_cutoff = self.calc_clean_cutoff(mask_threshold)
-                                    self.logger.info('# Clean threshold for minor cycle ' + str(minc) + ' was set to ' + str(clean_cutoff) + ' Jy/beam #')
-                                    clean = lib.miriad('clean')  # Clean the image down to the calculated threshold
-                                    clean.map = 'map_' + str(0).zfill(2)
-                                    clean.beam = 'beam_' + str(0).zfill(2)
-                                    clean.model = 'model_' + str(minc - 1).zfill(2)
-                                    clean.out = 'model_' + str(minc).zfill(2)
-                                    clean.cutoff = clean_cutoff
-                                    clean.niters = 100000
-                                    clean.region = '"' + 'mask(' + 'mask_' + str(minc).zfill(2) + ')' + '"'
-                                    clean.go()
-                                    self.logger.info('# Minor cycle ' + str(minc) + ' cleaning done #')
-                                    restor = lib.miriad('restor')
-                                    restor.model = 'model_' + str(minc).zfill(2)
-                                    restor.beam = 'beam_' + str(0).zfill(2)
-                                    restor.map = 'map_' + str(0).zfill(2)
-                                    restor.out = 'image_' + str(minc).zfill(2)
-                                    restor.mode = 'clean'
-                                    if self.final_continuum_image_beam != '':
-                                        beam_parameters = self.final_continuum_image_beam.split(',')
-                                        restor.fwhm = str(beam_parameters[0]) + ',' + str(beam_parameters[1])
-                                        restor.pa = str(beam_parameters[2])
-                                    else:
-                                        pass
-                                    restor.go()  # Create the cleaned image
-                                    self.logger.info('# Cleaned image for minor cycle ' + str(minc) + ' created #')
-                                    restor.mode = 'residual'
-                                    restor.out = 'residual_' + str(minc).zfill(2)
-                                    restor.go()
-                                    self.logger.info('# Residual image for minor cycle ' + str(minc) + ' created #')
-                                    self.logger.info('# Peak of the residual image is ' + str(self.calc_imax('residual_' + str(minc).zfill(2))) + ' Jy/beam #')
-                                    self.logger.info('# RMS of the residual image is ' + str(self.calc_irms('residual_' + str(minc).zfill(2))) + ' Jy/beam #')
+                                self.run_continuum_minoriteration(chunk, majc, minc, dr_minlist[minc], theoretical_noise_threshold)
+                            self.logger.info('### Final imaging for chunk ' + chunk + ' successful ###')
                         except:
-                            self.logger.warning('### Final continuum imaging of chunk ' + str(chunk) + ' was not successful! ###')
+                            self.logger.warning('### Final imaging for chunk ' + chunk + ' NOT successful ###')
                 self.logger.info('### Stacking images of individual frequency chunks ###')
                 self.director('ch', self.finaldir + '/continuum/stack')
                 imcomb = lib.miriad('imcomb')
@@ -387,100 +293,122 @@ class final:
     ### Subroutines for the final imaging ###
     #########################################
 
-    def selfcal_standard_minoriteration(self, chunk, majc, minc, drmin, theoretical_noise_threshold):
+    def run_continuum_minoriteration(self, chunk, majc, minc, drmin, theoretical_noise_threshold):
         '''
         Does a minor clean iteration cycle for the standard mode
         chunk: The frequency chunk to image and calibrate
-        maj: Current major iteration
-        min: Current minor iteration
+        majc: Current major iteration
+        minc: Current minor iteration
         drmin: maximum dynamic range for minor iteration
         theoretical_noise_threshold: calculated theoretical noise threshold
         '''
-        self.logger.info('# Minor imaging cycle ' + str(minc) + ' for frequency chunk ' + chunk + ' started #')
         if minc == 0:
             invert = lib.miriad('invert')  # Create the dirty image
-            invert.vis = chunk + '.mir'
-            invert.map = str(majc).zfill(2) + '/map_' + str(minc).zfill(2)
-            invert.beam = str(majc).zfill(2) + '/beam_' + str(minc).zfill(2)
-            invert.imsize = self.selfcal_image_imsize
-            invert.cell = self.selfcal_image_cellsize
+            invert.vis = self.selfcaldir + '/' + chunk + '/' + chunk + '.mir'
+            invert.map = 'map_' + str(minc).zfill(2)
+            invert.beam = 'beam_' + str(minc).zfill(2)
+            invert.imsize = self.final_continuum_image_imsize
+            invert.cell = self.final_continuum_image_cellsize
             invert.stokes = 'i'
-            invert.options = 'mfs,double'
             invert.slop = 1
+            if self.final_continuum_image_centre != '':
+                invert.offset = self.final_continuum_image_centre
+                invert.options = 'mfs,double,mosaic'
+            else:
+                invert.options = 'mfs,double'
             invert.go()
-            imax = self.calc_imax(str(majc).zfill(2) + '/map_' + str(minc).zfill(2))
+            imax = self.calc_imax('map_' + str(minc).zfill(2))
             noise_threshold = self.calc_noise_threshold(imax, minc, majc)
             dynamic_range_threshold = self.calc_dynamic_range_threshold(imax, drmin)
             mask_threshold, mask_threshold_type = self.calc_mask_threshold(theoretical_noise_threshold, noise_threshold, dynamic_range_threshold)
-            self.logger.info('# Mask threshold for final minor cycle ' + str(majc) + '/' + str(minc) + ' set to ' + str(mask_threshold) + ' Jy/beam #')
+            self.logger.info('# Mask threshold for final minor cycle ' + str(minc) + ' set to ' + str(mask_threshold) + ' Jy/beam #')
             self.logger.info('# Mask threshold set by ' + str(mask_threshold_type) + ' #')
-            self.director('cp', str(majc).zfill(2) + '/mask_' + str(minc).zfill(2), file=str(majc - 1).zfill(2) + '/mask_' + str(self.selfcal_mode_standard_minorcycle - 1).zfill(2))
-            self.logger.info('# Mask from last selfcal cycle copied #')
+            self.director('cp', 'mask_' + str(minc).zfill(2), file=self.selfcaldir + '/' + chunk + '/' + str(majc - 2).zfill(2) + '/mask_' + str(self.final_continuum_minorcycle - 1).zfill(2))
+            regrid = lib.miriad('regrid')
+            regrid.in_ = 'mask_' + str(minc).zfill(2)
+            regrid.out = 'mask_regrid'
+            regrid.tin = 'map_' + str(minc).zfill(2)
+            regrid.axes = '1,2'
+            regrid.go()
+            self.director('rm', 'mask_' + str(minc).zfill(2))
+            self.director('rn', 'mask_' + str(minc).zfill(2), file='mask_regrid')
+            self.logger.info('# Mask from last selfcal cycle copied and regridded to common grid #')
             clean_cutoff = self.calc_clean_cutoff(mask_threshold)
             self.logger.info('# Clean threshold for minor cycle ' + str(minc) + ' was set to ' + str(clean_cutoff) + ' Jy/beam #')
             clean = lib.miriad('clean')  # Clean the image down to the calculated threshold
-            clean.map = str(majc).zfill(2) + '/map_' + str(0).zfill(2)
-            clean.beam = str(majc).zfill(2) + '/beam_' + str(0).zfill(2)
-            clean.out = str(majc).zfill(2) + '/model_' + str(minc).zfill(2)
+            clean.map = 'map_' + str(0).zfill(2)
+            clean.beam = 'beam_' + str(0).zfill(2)
+            clean.out = 'model_' + str(minc).zfill(2)
             clean.cutoff = clean_cutoff
-            clean.niters = 1000000
-            clean.region = '"' + 'mask(' + str(majc).zfill(2) + '/mask_' + str(minc).zfill(2) + ')' + '"'
+            clean.niters = 100000
+            clean.region = '"' + 'mask(mask_' + str(minc).zfill(2) + ')' + '"'
             clean.go()
             self.logger.info('# Minor cycle ' + str(minc) + ' cleaning done #')
             restor = lib.miriad('restor')
-            restor.model = str(majc).zfill(2) + '/model_' + str(minc).zfill(2)
-            restor.beam = str(majc).zfill(2) + '/beam_' + str(0).zfill(2)
-            restor.map = str(majc).zfill(2) + '/map_' + str(0).zfill(2)
-            restor.out = str(majc).zfill(2) + '/image_' + str(minc).zfill(2)
+            restor.model = 'model_' + str(minc).zfill(2)
+            restor.beam = 'beam_' + str(0).zfill(2)
+            restor.map = 'map_' + str(0).zfill(2)
+            restor.out = 'image_' + str(minc).zfill(2)
             restor.mode = 'clean'
+            if self.final_continuum_image_beam != '':
+                beam_parameters = self.final_continuum_image_beam.split(',')
+                restor.fwhm = str(beam_parameters[0]) + ',' + str(beam_parameters[1])
+                restor.pa = str(beam_parameters[2])
+            else:
+                pass
             restor.go()  # Create the cleaned image
             self.logger.info('# Cleaned image for minor cycle ' + str(minc) + ' created #')
             restor.mode = 'residual'
-            restor.out = str(majc).zfill(2) + '/residual_' + str(minc).zfill(2)
-            restor.go()
+            restor.out = 'residual_' + str(minc).zfill(2)
+            restor.go()  # Create the residual image
             self.logger.info('# Residual image for minor cycle ' + str(minc) + ' created #')
-            self.logger.info('# Peak of the residual image is ' + str(self.calc_imax(str(majc).zfill(2) + '/residual_' + str(minc).zfill(2))) + ' Jy/beam #')
-            self.logger.info('# RMS of the residual image is ' + str(self.calc_irms(str(majc).zfill(2) + '/residual_' + str(minc).zfill(2))) + ' Jy/beam #')
+            self.logger.info('# Peak of the residual image is ' + str(self.calc_imax('residual_' + str(minc).zfill(2))) + ' Jy/beam #')
+            self.logger.info('# RMS of the residual image is ' + str(self.calc_irms('residual_' + str(minc).zfill(2))) + ' Jy/beam #')
         else:
-            imax = self.calc_imax(str(majc).zfill(2) + '/map_' + str(0).zfill(2))
+            imax = self.calc_imax('map_' + str(0).zfill(2))
             noise_threshold = self.calc_noise_threshold(imax, minc, majc)
             dynamic_range_threshold = self.calc_dynamic_range_threshold(imax, drmin)
             mask_threshold, mask_threshold_type = self.calc_mask_threshold(theoretical_noise_threshold, noise_threshold, dynamic_range_threshold)
-            self.logger.info('# Mask threshold for major/minor cycle ' + str(majc) + '/' + str(minc) + ' set to ' + str(mask_threshold) + ' Jy/beam #')
+            self.logger.info('# Mask threshold for final imaging minor cycle ' + str(minc) + ' set to ' + str(mask_threshold) + ' Jy/beam #')
             self.logger.info('# Mask threshold set by ' + str(mask_threshold_type) + ' #')
             maths = lib.miriad('maths')
-            maths.out = str(majc).zfill(2) + '/mask_' + str(minc).zfill(2)
-            maths.exp = '"<' + str(majc).zfill(2) + '/image_' + str(minc - 1).zfill(2) + '>"'
-            maths.mask = '"<' + str(majc).zfill(2) + '/image_' + str(minc - 1).zfill(2) + '>.gt.' + str(mask_threshold) + '"'
+            maths.out = 'mask_' + str(minc).zfill(2)
+            maths.exp = '"<' + 'image_' + str(minc - 1).zfill(2) + '>"'
+            maths.mask = '"<' + 'image_' + str(minc - 1).zfill(2) + '>.gt.' + str(mask_threshold) + '"'
             maths.go()
             self.logger.info('# Mask with threshold ' + str(mask_threshold) + ' Jy/beam created #')
             clean_cutoff = self.calc_clean_cutoff(mask_threshold)
-            self.logger.info('# Clean threshold at major/minor cycle ' + str(majc) + '/' + str(minc) + ' was set to ' + str(clean_cutoff) + ' Jy/beam #')
+            self.logger.info('# Clean threshold for minor cycle ' + str(minc) + ' was set to ' + str(clean_cutoff) + ' Jy/beam #')
             clean = lib.miriad('clean')  # Clean the image down to the calculated threshold
-            clean.map = str(majc).zfill(2) + '/map_' + str(0).zfill(2)
-            clean.beam = str(majc).zfill(2) + '/beam_' + str(0).zfill(2)
-            clean.model = str(majc).zfill(2) + '/model_' + str(minc - 1).zfill(2)
-            clean.out = str(majc).zfill(2) + '/model_' + str(minc).zfill(2)
+            clean.map = 'map_' + str(0).zfill(2)
+            clean.beam = 'beam_' + str(0).zfill(2)
+            clean.model = 'model_' + str(minc - 1).zfill(2)
+            clean.out = 'model_' + str(minc).zfill(2)
             clean.cutoff = clean_cutoff
-            clean.niters = 1000000
-            clean.region = '"' + 'mask(' + str(majc).zfill(2) + '/mask_' + str(minc).zfill(2) + ')' + '"'
+            clean.niters = 100000
+            clean.region = '"' + 'mask(' + 'mask_' + str(minc).zfill(2) + ')' + '"'
             clean.go()
-            self.logger.info('# Major/minor cycle ' + str(majc) + '/' + str(minc) + ' cleaning done #')
+            self.logger.info('# Minor cycle ' + str(minc) + ' cleaning done #')
             restor = lib.miriad('restor')
-            restor.model = str(majc).zfill(2) + '/model_' + str(minc).zfill(2)
-            restor.beam = str(majc).zfill(2) + '/beam_' + str(0).zfill(2)
-            restor.map = str(majc).zfill(2) + '/map_' + str(0).zfill(2)
-            restor.out = str(majc).zfill(2) + '/image_' + str(minc).zfill(2)
+            restor.model = 'model_' + str(minc).zfill(2)
+            restor.beam = 'beam_' + str(0).zfill(2)
+            restor.map = 'map_' + str(0).zfill(2)
+            restor.out = 'image_' + str(minc).zfill(2)
             restor.mode = 'clean'
+            if self.final_continuum_image_beam != '':
+                beam_parameters = self.final_continuum_image_beam.split(',')
+                restor.fwhm = str(beam_parameters[0]) + ',' + str(beam_parameters[1])
+                restor.pa = str(beam_parameters[2])
+            else:
+                pass
             restor.go()  # Create the cleaned image
-            self.logger.info('# Cleaned image for major/minor cycle ' + str(majc) + '/' + str(minc) + ' created #')
+            self.logger.info('# Cleaned image for minor cycle ' + str(minc) + ' created #')
             restor.mode = 'residual'
-            restor.out = str(majc).zfill(2) + '/residual_' + str(minc).zfill(2)
+            restor.out = 'residual_' + str(minc).zfill(2)
             restor.go()
-            self.logger.info('# Residual image for major/minor cycle ' + str(majc) + '/' + str(minc) + ' created #')
-            self.logger.info('# Peak of the residual image is ' + str(self.calc_imax(str(majc).zfill(2) + '/residual_' + str(minc).zfill(2))) + ' Jy/beam #')
-            self.logger.info('# RMS of the residual image is ' + str(self.calc_irms(str(majc).zfill(2) + '/residual_' + str(minc).zfill(2))) + ' Jy/beam #')
-        self.logger.info('# Minor self-calibration cycle ' + str(minc) + ' for frequency chunk ' + chunk + ' finished #')
+            self.logger.info('# Residual image for minor cycle ' + str(minc) + ' created #')
+            self.logger.info('# Peak of the residual image is ' + str(self.calc_imax('residual_' + str(minc).zfill(2))) + ' Jy/beam #')
+            self.logger.info('# RMS of the residual image is ' + str(self.calc_irms('residual_' + str(minc).zfill(2))) + ' Jy/beam #')
 
     ########################
     ### Helper functions ###
@@ -635,7 +563,7 @@ class final:
         major_cycle (int): the current major cycle the self-calibration is in
         returns (float): the noise threshold
         '''
-        noise_threshold = imax / ((self.selfcal_mode_standard_c0 + (minor_cycle) * self.selfcal_mode_standard_c0) * (major_cycle + 1))
+        noise_threshold = imax / ((self.final_continuum_c0 + (minor_cycle) * self.final_continuum_c0) * (major_cycle + 1))
         return noise_threshold
 
     def calc_clean_cutoff(self, mask_threshold):
@@ -644,7 +572,7 @@ class final:
         mask_threshold (float): the mask threshold to calculate the clean cutoff from
         returns (float): the clean cutoff
         '''
-        clean_cutoff = mask_threshold / self.selfcal_mode_standard_c1
+        clean_cutoff = mask_threshold / self.final_continuum_c1
         return clean_cutoff
 
     def calc_dynamic_range_threshold(self, imax, dynamic_range):
@@ -665,7 +593,7 @@ class final:
         theoretical_noise (float): the theoretical noise of the observation
         returns (float): the theoretical noise threshold
         '''
-        theoretical_noise_threshold = (self.selfcal_mode_standard_nsigma * theoretical_noise)
+        theoretical_noise_threshold = (self.final_continuum_nsigma * theoretical_noise)
         return theoretical_noise_threshold
 
     def calc_theoretical_noise(self, dataset):

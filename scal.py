@@ -272,7 +272,7 @@ class scal:
                 self.logger.info('# The minor cycle dynamic range limits for major cycle ' + str(majc) + ' are ' + str(dr_minlist) + ' #')
                 for minc in range(self.selfcal_mode_standard_minorcycle):
                     try:
-                        self.selfcal_standard_minoriteration(chunk, majc, minc, dr_minlist[minc], theoretical_noise_threshold)
+                        self.run_continuum_minoriteration(chunk, majc, minc, dr_minlist[minc], theoretical_noise_threshold)
                     except:
                         self.logger.warning('# Chunk ' + chunk + ' does not seem to contain data to image #')
                         break
@@ -558,7 +558,7 @@ class scal:
     ### Subroutines for the different self calibration modes ###
     ############################################################
 
-    def selfcal_standard_minoriteration(self, chunk, majc, minc, drmin, theoretical_noise_threshold):
+    def run_continuum_minoriteration(self, chunk, majc, minc, drmin, theoretical_noise_threshold):
         '''
         Does a selfcal minor iteration for the standard mode
         chunk: The frequency chunk to image and calibrate
