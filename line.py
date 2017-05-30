@@ -62,64 +62,138 @@ class line:
 
     def splitdata(self):
         '''
-        Applies calibrator corrections to data, splits the data into chunks in frequency and bins it to the given frequency resolution for continuum subtraction.
+        Applies calibrator corrections to data, splits the data into chunks in frequency and bins it to the given frequency resolution for the self-calibration
         '''
-        if self.line_splitdata:
-            self.director('ch', self.linedir)
-            self.logger.info('### Splitting of target data into individual freqeuncy chunks for continuum subtraction started ###')
-            uv = aipy.miriad.UV(self.selfcaldir + '/' + self.target)
+        if self.splitdata:
+            self.director('ch', self.selfcaldir)
+            self.logger.info('### Splitting of target data into individual frequency chunks started ###')
+            if os.path.isfile(self.linedir + '/' + self.target):
+                self.logger.info('# Calibrator corrections already seem to have been applied #')
+            else:
+                self.logger.info('# Applying calibrator solutions to target data before averaging #')
+                uvaver = lib.miriad('uvaver')
+                uvaver.vis = self.crosscaldir + '/' + self.target
+                uvaver.out = self.linedir + '/' + self.target
+                uvaver.go()
+                self.logger.info('# Calibrator solutions to target data applied #')
             try:
-                nsubband = len(uv['nschan'])  # Number of subbands in data
+                uv = aipy.miriad.UV(self.linedir + '/' + self.target)
+            except RuntimeError:
+                self.logger.error('### No data in your crosscal directory! Exiting pipeline! ###')
+                sys.exit(1)
+            try:
+                nsubband = len(uv['nschan']) # Number of subbands in data
             except TypeError:
-                nsubband = 1  # Only one subband in data since exception was triggered
+                nsubband = 1 # Only one subband in data since exception was triggered
             self.logger.info('# Found ' + str(nsubband) + ' subband(s) in target data #')
-            counter = 0  # Counter for naming the chunks and directories
+            counter = 0 # Counter for naming the chunks and directories
             for subband in range(nsubband):
                 self.logger.info('# Started splitting of subband ' + str(subband) + ' #')
                 if nsubband == 1:
                     numchan = uv['nschan']
                     finc = np.fabs(uv['sdf'])
                 else:
-                    numchan = uv['nschan'][subband]  # Number of channels per subband
+                    numchan = uv['nschan'][subband] # Number of channels per subband
                     finc = np.fabs(uv['sdf'][subband])  # Frequency increment for each channel
-                subband_bw = numchan * finc  # Bandwidth of one subband
+                subband_bw = numchan * finc # Bandwidth of one subband
                 subband_chunks = round(subband_bw / self.line_splitdata_chunkbandwidth)
-                subband_chunks = int(np.power(2, np.ceil(np.log(subband_chunks) / np.log(2))))  # Round to the closest power of 2 for frequency chunks with the same bandwidth over the frequency range of a subband
+                subband_chunks = int(np.power(2, np.ceil(np.log(subband_chunks) / np.log(2)))) # Round to the closest power of 2 for frequency chunks with the same bandwidth over the frequency range of a subband
                 if subband_chunks == 0:
                     subband_chunks = 1
-                chunkbandwidth = (numchan / subband_chunks) * finc
+                chunkbandwidth = (numchan/subband_chunks)*finc
                 self.logger.info('# Adjusting chunk size to ' + str(chunkbandwidth) + ' GHz for regular gridding of the data chunks over frequency #')
                 for chunk in range(subband_chunks):
                     self.logger.info('# Starting splitting of data chunk ' + str(chunk) + ' for subband ' + str(subband) + ' #')
                     binchan = round(self.line_splitdata_channelbandwidth / finc)  # Number of channels per frequency bin
                     chan_per_chunk = numchan / subband_chunks
-                    if chan_per_chunk % binchan == 0:  # Check if the freqeuncy bin exactly fits
+                    if chan_per_chunk % binchan == 0: # Check if the freqeuncy bin exactly fits
                         self.logger.info('# Using frequency binning of ' + str(self.line_splitdata_channelbandwidth) + ' for all subbands #')
                     else:
-                        while chan_per_chunk % binchan != 0:  # Increase the frequency bin to keep a regular grid for the chunks
+                        while chan_per_chunk % binchan != 0: # Increase the frequency bin to keep a regular grid for the chunks
                             binchan = binchan + 1
                         else:
-                            if chan_per_chunk >= binchan:  # Check if the calculated bin is not larger than the subband channel number
+                            if chan_per_chunk >= binchan: # Check if the calculated bin is not larger than the subband channel number
                                 pass
                             else:
-                                binchan = chan_per_chunk  # Set the frequency bin to the number of channels in the chunk of the subband
+                                binchan = chan_per_chunk # Set the frequency bin to the number of channels in the chunk of the subband
                         self.logger.info('# Increasing frequency bin of data chunk ' + str(chunk) + ' to keep bandwidth of chunks equal over the whole bandwidth #')
                         self.logger.info('# New frequency bin is ' + str(binchan * finc) + ' GHz #')
-                    nchan = int(chan_per_chunk / binchan)  # Total number of output channels per chunk
+                    nchan = int(chan_per_chunk/binchan) # Total number of output channels per chunk
                     start = 1 + chunk * chan_per_chunk
                     width = int(binchan)
                     step = int(width)
                     self.director('mk', self.linedir + '/' + str(counter).zfill(2))
                     uvaver = lib.miriad('uvaver')
-                    uvaver.vis = self.selfcaldir + '/' + self.target
+                    uvaver.vis = self.linedir + '/' + self.target
                     uvaver.out = self.linedir + '/' + str(counter).zfill(2) + '/' + str(counter).zfill(2) + '.mir'
-                    uvaver.select = "'" + 'window(' + str(subband + 1) + ')' + "'"
+                    uvaver.select = "'" + 'window(' + str(subband+1) + ')' + "'"
                     uvaver.line = "'" + 'channel,' + str(nchan) + ',' + str(start) + ',' + str(width) + ',' + str(step) + "'"
                     uvaver.go()
                     counter = counter + 1
                     self.logger.info('# Splitting of data chunk ' + str(chunk) + ' for subband ' + str(subband) + ' done #')
                 self.logger.info('# Splitting of data for subband ' + str(subband) + ' done #')
             self.logger.info('### Splitting of target data into individual frequency chunks done ###')
+
+    # def splitdata(self):
+    #     '''
+    #     Applies calibrator corrections to data, splits the data into chunks in frequency and bins it to the given frequency resolution for continuum subtraction.
+    #     '''
+    #     if self.line_splitdata:
+    #         self.director('ch', self.linedir)
+    #         self.logger.info('### Splitting of target data into individual freqeuncy chunks for continuum subtraction started ###')
+    #         uv = aipy.miriad.UV(self.selfcaldir + '/' + self.target)
+    #         try:
+    #             nsubband = len(uv['nschan'])  # Number of subbands in data
+    #         except TypeError:
+    #             nsubband = 1  # Only one subband in data since exception was triggered
+    #         self.logger.info('# Found ' + str(nsubband) + ' subband(s) in target data #')
+    #         counter = 0  # Counter for naming the chunks and directories
+    #         for subband in range(nsubband):
+    #             self.logger.info('# Started splitting of subband ' + str(subband) + ' #')
+    #             if nsubband == 1:
+    #                 numchan = uv['nschan']
+    #                 finc = np.fabs(uv['sdf'])
+    #             else:
+    #                 numchan = uv['nschan'][subband]  # Number of channels per subband
+    #                 finc = np.fabs(uv['sdf'][subband])  # Frequency increment for each channel
+    #             subband_bw = numchan * finc  # Bandwidth of one subband
+    #             subband_chunks = round(subband_bw / self.line_splitdata_chunkbandwidth)
+    #             subband_chunks = int(np.power(2, np.ceil(np.log(subband_chunks) / np.log(2))))  # Round to the closest power of 2 for frequency chunks with the same bandwidth over the frequency range of a subband
+    #             if subband_chunks == 0:
+    #                 subband_chunks = 1
+    #             chunkbandwidth = (numchan / subband_chunks) * finc
+    #             self.logger.info('# Adjusting chunk size to ' + str(chunkbandwidth) + ' GHz for regular gridding of the data chunks over frequency #')
+    #             for chunk in range(subband_chunks):
+    #                 self.logger.info('# Starting splitting of data chunk ' + str(chunk) + ' for subband ' + str(subband) + ' #')
+    #                 binchan = round(self.line_splitdata_channelbandwidth / finc)  # Number of channels per frequency bin
+    #                 chan_per_chunk = numchan / subband_chunks
+    #                 if chan_per_chunk % binchan == 0:  # Check if the freqeuncy bin exactly fits
+    #                     self.logger.info('# Using frequency binning of ' + str(self.line_splitdata_channelbandwidth) + ' for all subbands #')
+    #                 else:
+    #                     while chan_per_chunk % binchan != 0:  # Increase the frequency bin to keep a regular grid for the chunks
+    #                         binchan = binchan + 1
+    #                     else:
+    #                         if chan_per_chunk >= binchan:  # Check if the calculated bin is not larger than the subband channel number
+    #                             pass
+    #                         else:
+    #                             binchan = chan_per_chunk  # Set the frequency bin to the number of channels in the chunk of the subband
+    #                     self.logger.info('# Increasing frequency bin of data chunk ' + str(chunk) + ' to keep bandwidth of chunks equal over the whole bandwidth #')
+    #                     self.logger.info('# New frequency bin is ' + str(binchan * finc) + ' GHz #')
+    #                 nchan = int(chan_per_chunk / binchan)  # Total number of output channels per chunk
+    #                 start = 1 + chunk * chan_per_chunk
+    #                 width = int(binchan)
+    #                 step = int(width)
+    #                 self.director('mk', self.linedir + '/' + str(counter).zfill(2))
+    #                 uvaver = lib.miriad('uvaver')
+    #                 uvaver.vis = self.selfcaldir + '/' + self.target
+    #                 uvaver.out = self.linedir + '/' + str(counter).zfill(2) + '/' + str(counter).zfill(2) + '.mir'
+    #                 uvaver.select = "'" + 'window(' + str(subband + 1) + ')' + "'"
+    #                 uvaver.line = "'" + 'channel,' + str(nchan) + ',' + str(start) + ',' + str(width) + ',' + str(step) + "'"
+    #                 uvaver.go()
+    #                 counter = counter + 1
+    #                 self.logger.info('# Splitting of data chunk ' + str(chunk) + ' for subband ' + str(subband) + ' done #')
+    #             self.logger.info('# Splitting of data for subband ' + str(subband) + ' done #')
+    #         self.logger.info('### Splitting of target data into individual frequency chunks done ###')
 
     def transfergains(self):
         '''
@@ -157,13 +231,18 @@ class line:
             elif self.line_subtract_mode == 'uvmodel':
                 self.logger.info('### Starting continuum subtraction of individual chunks using uvmodel ###')
                 for chunk in self.list_chunks():
-                    try:
+                    self.director('ch', self.linedir + '/' + chunk)
+                    uvcat = lib.miriad('uvcat')
+                    uvcat.vis = chunk + '.mir'
+                    uvcat.out = chunk + '_uvcat.mir'
+                    uvcat.go()
+                    self.logger.info('# Applied gains to chunk ' + chunk + ' for subtraction of continuum model #')
+                    if os.path.isdir(self.finaldir + '/continuum/stack/' + chunk + '/model_' + str(self.line_subtract_mode_uvmodel_minorcycle-1).zfill(2)):
+                        self.logger.info('# Found model for subtraction in final continuum directory. No need to redo continuum imaging #')
+                        self.director('cp', self.linedir + '/' + chunk, file=self.finaldir + '/continuum/stack/' + chunk + '/model_' + str(self.line_subtract_mode_uvmodel_minorcycle-1).zfill(2))
+                    else:
                         self.create_uvmodel(chunk)
-                        uvcat = lib.miriad('uvcat')
-                        uvcat.vis = chunk + '.mir'
-                        uvcat.out = chunk + '_uvcat.mir'
-                        uvcat.go()
-                        self.logger.info('# Applied gains to chunk ' + chunk + ' for subtraction of continuum model #')
+                    try:
                         uvmodel = lib.miriad('uvmodel')
                         uvmodel.vis = chunk + '_uvcat.mir'
                         uvmodel.model = 'model_' + str(self.line_subtract_mode_uvmodel_minorcycle-1).zfill(2)
@@ -190,7 +269,6 @@ class line:
         majc = int(self.get_last_major_iteration(chunk) + 1)
         self.logger.info('# Last major self-calibration cycle seems to have been ' + str(majc - 1) + ' #')
         if os.path.isfile(self.linedir + '/' + chunk + '/' + chunk + '.mir/gains'):  # Check if a chunk could be calibrated and has data left
-            self.director('ch', self.linedir + '/' + chunk)
             theoretical_noise = self.calc_theoretical_noise(self.linedir + '/' + chunk + '/' + chunk + '.mir')
             self.logger.info('# Theoretical noise for chunk ' + chunk + ' is ' + str(theoretical_noise / 1000) + ' Jy/beam #')
             theoretical_noise_threshold = self.calc_theoretical_noise_threshold(theoretical_noise)

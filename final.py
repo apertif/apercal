@@ -254,31 +254,39 @@ class final:
             self.director('ch', self.finaldir + '/line')
             self.logger.info('# Imaging each individual channel seperately #')
             for chunk in self.list_chunks():
-                uv = aipy.miriad.UV(self.linedir + '/' + chunk + '/' + chunk + '_line.mir')
-                nchannel = uv['nschan'] # Nmber of channels in the dataset
-                for channel in range(nchannel):
-                    invert = lib.miriad('invert')
-                    invert.vis = self.linedir + '/' + chunk + '/' + chunk + '_line.mir'
-                    invert.map = 'map_' + chunk + '_' + str(channel).zfill(3)
-                    invert.beam = 'beam_' + chunk + '_' + str(channel).zfill(3)
-                    invert.imsize = self.final_line_image_imsize
-                    invert.cell = self.final_line_image_cellsize
-                    invert.line = '"' + 'channel,1,' + str(channel+1) + ',1,1' + '"'
-                    invert.stokes = 'i'
-                    invert.slop = 1
-                    invert.go()
-                    velsw = lib.miriad('velsw')
-                    velsw.in_ = 'map_' + chunk + '_' + str(channel).zfill(3)
-                    velsw.axis = 'FREQ'
-                    velsw.go()
-                    fits = lib.miriad('fits')
-                    fits.op = 'xyout'
-                    fits.in_ = 'map_' + chunk + '_' + str(channel).zfill(3)
-                    fits.out = 'map_' + chunk + '_' + str(channel).zfill(3) + '.fits'
-                    fits.go()
-                self.logger.info('# All channels of chunk ' + chunk + ' imaged #')
-            self.logger.info('# Combining images to line cube and writing frequency file #')
-            self.create_cube(self.finaldir + '/line/map_*.fits', self.finaldir + '/line/' + self.target.rstrip('.mir') + '_line.fits', self.finaldir + '/line/' + self.target.rstrip('.mir') + '_freq.txt')
+                if os.path.exists(self.linedir + '/' + chunk + '/' + chunk + '_line.mir'):
+                    uv = aipy.miriad.UV(self.linedir + '/' + chunk + '/' + chunk + '_line.mir')
+                    nchannel = uv['nschan'] # Number of channels in the dataset
+                    for channel in range(nchannel):
+                        invert = lib.miriad('invert')
+                        invert.vis = self.linedir + '/' + chunk + '/' + chunk + '_line.mir'
+                        invert.map = 'map_' + chunk + '_' + str(channel).zfill(3)
+                        invert.beam = 'beam_' + chunk + '_' + str(channel).zfill(3)
+                        invert.imsize = self.final_line_image_imsize
+                        invert.cell = self.final_line_image_cellsize
+                        invert.line = '"' + 'channel,1,' + str(channel+1) + ',1,1' + '"'
+                        invert.stokes = 'i'
+                        invert.slop = 1
+                        invert.go()
+                        velsw = lib.miriad('velsw')
+                        velsw.in_ = 'map_' + chunk + '_' + str(channel).zfill(3)
+                        velsw.axis = 'FREQ'
+                        velsw.go()
+                        ratio = self.calc_max_min_ratio('map_' + chunk + '_' + str(channel).zfill(3))
+                        if ratio >= self.final_line_clean_ratio_limit:
+                            self.run_line_minoriteration()
+                        else:
+                            pass
+                        fits = lib.miriad('fits')
+                        fits.op = 'xyout'
+                        fits.in_ = 'map_' + chunk + '_' + str(channel).zfill(3)
+                        fits.out = 'map_' + chunk + '_' + str(channel).zfill(3) + '.fits'
+                        fits.go()
+                    self.logger.info('# All channels of chunk ' + chunk + ' imaged #')
+                else:
+                    self.logger.warning('### No continuum subtracted data available for chunk ' + chunk + '! ###')
+            # self.logger.info('# Combining images to line cube and writing frequency file #')
+            # self.create_cube(self.finaldir + '/line/map_*.fits', self.finaldir + '/line/' + self.target.rstrip('.mir') + '_line.fits', self.finaldir + '/line/' + self.target.rstrip('.mir') + '_freq.txt')
 
     def polarisation(self):
         '''
@@ -475,6 +483,28 @@ class final:
         image_data.close()  # Close the image
         self.director('rm', image + '.fits')
         return imax
+
+    def calc_max_min_ratio(self, image):
+        '''
+        Function to calculate the absolute maximum of the ratio max/min and min/max
+        image (string): The name of the image file. Must be in MIRIAD-format
+        returns (float): the ratio
+        '''
+        fits = lib.miriad('fits')
+        fits.op = 'xyout'
+        fits.in_ = image
+        fits.out = image + '.fits'
+        fits.go()
+        image_data = pyfits.open(image + '.fits')  # Open the image
+        data = image_data[0].data
+        imax = np.nanmax(data)  # Get the maximum
+        imin = np.nanmin(data) # Get the minimum
+        max_min = np.abs(imax/imin) # Calculate the ratios
+        min_max = np.abs(imin/imax)
+        ratio = np.nanmax([max_min,min_max]) # Take the maximum of both ratios and return it
+        image_data.close()  # Close the image
+        self.director('rm', image + '.fits')
+        return ratio
 
     def calc_isum(self, image):
         '''

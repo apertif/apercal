@@ -69,7 +69,7 @@ class scal:
         '''
         if self.splitdata:
             self.director('ch', self.selfcaldir)
-            self.logger.info('### Splitting of target data into individual freqeuncy chunks started ###')
+            self.logger.info('### Splitting of target data into individual frequency chunks started ###')
             if os.path.isfile(self.selfcaldir + '/' + self.target):
                 self.logger.info('# Calibrator corrections already seem to have been applied #')
             else:
