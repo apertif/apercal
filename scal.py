@@ -153,7 +153,7 @@ class scal:
                 invert.beam = 'beam'
                 invert.imsize = self.selfcal_image_imsize
                 invert.cell = self.selfcal_image_cellsize
-                invert.stokes = 'i'
+                invert.stokes = 'ii'
                 invert.slop = 1
                 invert.go()
                 fits = lib.miriad('fits')
@@ -324,7 +324,7 @@ class scal:
                         invert.beam = str(majc).zfill(2) + '/beam_' + str(minc).zfill(2)
                         invert.imsize = self.selfcal_image_imsize
                         invert.cell = self.selfcal_image_cellsize
-                        invert.stokes = 'i'
+                        invert.stokes = 'ii'
                         invert.options = 'mfs,double'
                         invert.slop = 1
                         invert.go()
@@ -455,7 +455,7 @@ class scal:
                     invert.beam = str(majc).zfill(2) + '/beam_' + str(0).zfill(2)
                     invert.imsize = self.selfcal_image_imsize
                     invert.cell = self.selfcal_image_cellsize
-                    invert.stokes = 'i'
+                    invert.stokes = 'ii'
                     invert.options = 'mfs,double'
                     invert.slop = 1
                     invert.go()
@@ -575,7 +575,7 @@ class scal:
             invert.beam = str(majc).zfill(2) + '/beam_' + str(minc).zfill(2)
             invert.imsize = self.selfcal_image_imsize
             invert.cell = self.selfcal_image_cellsize
-            invert.stokes = 'i'
+            invert.stokes = 'ii'
             invert.options = 'mfs,double'
             invert.slop = 1
             invert.go()

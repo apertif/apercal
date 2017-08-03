@@ -207,6 +207,11 @@ class ccal:
             self.logger.info('### Bandpass calibration on the flux calibrator data started ###')
             mfcal = lib.miriad('mfcal')
             mfcal.vis = self.fluxcal
+            if self.crosscal_delay:
+                mfcal.options = 'delay'
+            else:
+                pass
+            mfcal.interval = 1000
             mfcal.go()
             self.logger.info('### Bandpass calibration on the flux calibrator data done ###')
 

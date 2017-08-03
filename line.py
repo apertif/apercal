@@ -299,7 +299,7 @@ class line:
             invert.beam = 'beam_' + str(minc).zfill(2)
             invert.imsize = self.line_subtract_mode_uvmodel_imsize
             invert.cell = self.line_subtract_mode_uvmodel_cellsize
-            invert.stokes = 'i'
+            invert.stokes = 'ii'
             invert.slop = 1
             invert.options = 'mfs,double'
             invert.go()

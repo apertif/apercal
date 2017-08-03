@@ -143,8 +143,12 @@ class final:
                         invert.beam = 'beam_' + str(minc).zfill(2)
                         invert.imsize = self.final_continuum_image_imsize
                         invert.cell = self.final_continuum_image_cellsize
-                        invert.stokes = 'i'
+                        invert.stokes = 'ii'
                         invert.slop = 1
+                        if self.final_continuum_image_robust == '':
+                            continue
+                        else:
+                            invert.robust = self.final_continuum_image_robust
                         if self.final_continuum_image_centre != '':
                             invert.offset = self.final_continuum_image_centre
                             invert.options = 'mfs,double,mosaic,sdb'
@@ -265,7 +269,7 @@ class final:
                         invert.imsize = self.final_line_image_imsize
                         invert.cell = self.final_line_image_cellsize
                         invert.line = '"' + 'channel,1,' + str(channel+1) + ',1,1' + '"'
-                        invert.stokes = 'i'
+                        invert.stokes = 'ii'
                         invert.slop = 1
                         invert.go()
                         velsw = lib.miriad('velsw')
@@ -317,7 +321,7 @@ class final:
             invert.beam = 'beam_' + str(minc).zfill(2)
             invert.imsize = self.final_continuum_image_imsize
             invert.cell = self.final_continuum_image_cellsize
-            invert.stokes = 'i'
+            invert.stokes = 'ii'
             invert.slop = 1
             if self.final_continuum_image_centre != '':
                 invert.offset = self.final_continuum_image_centre
