@@ -65,7 +65,7 @@ class line:
         Applies calibrator corrections to data, splits the data into chunks in frequency and bins it to the given frequency resolution for the self-calibration
         '''
         if self.splitdata:
-            self.director('ch', self.selfcaldir)
+            self.director('ch', self.linedir)
             self.logger.info('### Splitting of target data into individual frequency chunks started ###')
             if os.path.isfile(self.linedir + '/' + self.target):
                 self.logger.info('# Calibrator corrections already seem to have been applied #')
@@ -305,7 +305,7 @@ class line:
             invert.go()
             imax = self.calc_imax('map_' + str(minc).zfill(2))
             noise_threshold = self.calc_noise_threshold(imax, minc, majc)
-            dynamic_range_threshold = self.calc_dynamic_range_threshold(imax, drmin)
+            dynamic_range_threshold = self.calc_dynamic_range_threshold(imax, drmin, self.line_subtract_mode_uvmodel_minorcycle0_dr)
             mask_threshold, mask_threshold_type = self.calc_mask_threshold(theoretical_noise_threshold, noise_threshold, dynamic_range_threshold)
             self.director('cp', 'mask_' + str(minc).zfill(2), file=self.selfcaldir + '/' + chunk + '/' + str(majc - 2).zfill(2) + '/mask_' + str(self.line_subtract_mode_uvmodel_minorcycle - 1).zfill(2))
             self.logger.info('# Last mask from self-calibration copied #')
@@ -337,7 +337,7 @@ class line:
         else:
             imax = self.calc_imax('map_' + str(0).zfill(2))
             noise_threshold = self.calc_noise_threshold(imax, minc, majc)
-            dynamic_range_threshold = self.calc_dynamic_range_threshold(imax, drmin)
+            dynamic_range_threshold = self.calc_dynamic_range_threshold(imax, drmin, self.line_subtract_mode_uvmodel_minorcycle0_dr)
             mask_threshold, mask_threshold_type = self.calc_mask_threshold(theoretical_noise_threshold, noise_threshold, dynamic_range_threshold)
             self.logger.info('# Mask threshold for final imaging minor cycle ' + str(minc) + ' set to ' + str(mask_threshold) + ' Jy/beam #')
             self.logger.info('# Mask threshold set by ' + str(mask_threshold_type) + ' #')
@@ -513,7 +513,7 @@ class line:
         clean_cutoff = mask_threshold / self.line_subtract_mode_uvmodel_c1
         return clean_cutoff
 
-    def calc_dynamic_range_threshold(self, imax, dynamic_range):
+    def calc_dynamic_range_threshold(self, imax, dynamic_range, minorcycle0_dr):
         '''
         Calculates the dynamic range threshold
         imax (float): the maximum in the input image
@@ -521,7 +521,7 @@ class line:
         returns (float): the dynamic range threshold
         '''
         if dynamic_range == 0:
-            dynamic_range = 8.0
+            dynamic_range = minorcycle0_dr
         dynamic_range_threshold = imax / dynamic_range
         return dynamic_range_threshold
 

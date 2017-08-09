@@ -260,7 +260,7 @@ class scal:
             self.logger.info('# Starting standard self-calibration routine on frequency chunk ' + chunk + ' #')
             self.director('ch', self.selfcaldir + '/' + chunk)
             theoretical_noise = self.calc_theoretical_noise(self.selfcaldir + '/' + chunk + '/' + chunk + '.mir')
-            self.logger.info('# Theoretical noise for chunk ' + chunk + ' is ' + str(theoretical_noise/1000.0) + ' Jy/beam #')
+            self.logger.info('# Theoretical noise for chunk ' + chunk + ' is ' + str(theoretical_noise) + ' Jy/beam #')
             theoretical_noise_threshold = self.calc_theoretical_noise_threshold(theoretical_noise)
             self.logger.info('# Your theoretical noise threshold will be ' + str(self.selfcal_mode_standard_nsigma) + ' times the theoretical noise corresponding to ' + str(theoretical_noise_threshold) + ' Jy/beam #')
             dr_list = self.calc_dr_maj(self.selfcal_mode_standard_drinit, self.selfcal_mode_standard_dr0, self.selfcal_mode_standard_majorcycle, self.selfcal_mode_standard_majorcycle_function)
@@ -581,7 +581,7 @@ class scal:
             invert.go()
             imax = self.calc_imax(str(majc).zfill(2) + '/map_' + str(minc).zfill(2))
             noise_threshold = self.calc_noise_threshold(imax, minc, majc)
-            dynamic_range_threshold = self.calc_dynamic_range_threshold(imax, drmin)
+            dynamic_range_threshold = self.calc_dynamic_range_threshold(imax, drmin, self.selfcal_mode_standard_minorcycle0_dr)
             mask_threshold, mask_threshold_type = self.calc_mask_threshold(theoretical_noise_threshold, noise_threshold, dynamic_range_threshold)
             self.logger.info('# Mask threshold for major/minor cycle ' + str(majc) + '/' + str(minc) + ' set to ' + str(mask_threshold) + ' Jy/beam #')
             self.logger.info('# Mask threshold set by ' + str(mask_threshold_type) + ' #')
@@ -623,7 +623,7 @@ class scal:
         else:
             imax = self.calc_imax(str(majc).zfill(2) + '/map_' + str(0).zfill(2))
             noise_threshold = self.calc_noise_threshold(imax, minc, majc)
-            dynamic_range_threshold = self.calc_dynamic_range_threshold(imax, drmin)
+            dynamic_range_threshold = self.calc_dynamic_range_threshold(imax, drmin, self.selfcal_mode_standard_minorcycle0_dr)
             mask_threshold, mask_threshold_type = self.calc_mask_threshold(theoretical_noise_threshold, noise_threshold, dynamic_range_threshold)
             self.logger.info('# Mask threshold for major/minor cycle ' + str(majc) + '/' + str(minc) + ' set to ' + str(mask_threshold) + ' Jy/beam #')
             self.logger.info('# Mask threshold set by ' + str(mask_threshold_type) + ' #')
@@ -858,7 +858,7 @@ class scal:
         returns (float): the dynamic range threshold
         '''
         if dynamic_range == 0:
-            dynamic_range = 8.0
+            dynamic_range = self.selfcal_mode_standard_minorcycle0_dr
         dynamic_range_threshold = imax / dynamic_range
         return dynamic_range_threshold
 
