@@ -54,6 +54,7 @@ class preflag:
             self.manualflag_corr()
             self.manualflag_shadow()
             self.manualflag_baseline()
+            self.manualflag_channel()
         self.logger.info('### Pre-flagging of known flags done ###')
 
     def go(self):
@@ -261,6 +262,40 @@ class preflag:
                 af.done()
                 self.logger.info('# Flagging of baseline(s) ' + self.preflag_manualflag_baseline + ' for target data done #')
 
+    def manualflag_channel(self):
+        '''
+        Function to flag individual channels
+        '''
+        if self.preflag_manualflag_channel != '':
+            self.director('ch', self.rawdir)
+            af = casac.casac.agentflagger()
+            if self.preflag_manualflag_fluxcal:
+                self.logger.info('# Flagging channel(s) ' + self.preflag_manualflag_channel + ' for flux calibrator data #')
+                af.open(self.fluxcal)
+                af.selectdata()
+                af.parsemanualparameters(spw='0:' + self.preflag_manualflag_channel)
+                af.init()
+                af.run(writeflags=True)
+                af.done()
+                self.logger.info('# Flagging of channel(s) ' + self.preflag_manualflag_channel + ' for flux calibrator data done #')
+            if self.preflag_manualflag_polcal:
+                self.logger.info('# Flagging channel(s) ' + self.preflag_manualflag_channel + ' for polarised calibrator data #')
+                af.open(self.polcal)
+                af.selectdata()
+                af.parsemanualparameters(spw='0:' + self.preflag_manualflag_channel)
+                af.init()
+                af.run(writeflags=True)
+                af.done()
+                self.logger.info('# Flagging of channel(s) ' + self.preflag_manualflag_channel + ' for polariased calibrator data done #')
+            if self.preflag_manualflag_target:
+                self.logger.info('# Flagging channel(s) ' + self.preflag_manualflag_channel + ' for target data #')
+                af.open(self.target)
+                af.selectdata()
+                af.parsemanualparameters(spw='0:' + self.preflag_manualflag_channel)
+                af.init()
+                af.run(writeflags=True)
+                af.done()
+                self.logger.info('# Flagging of channel(s) ' + self.preflag_manualflag_channel + ' for target data done #')
 
     #######################################################################
     ##### Manage the creation and moving of new directories and files #####
