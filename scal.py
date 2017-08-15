@@ -10,7 +10,6 @@ import lsm
 import aipy
 import numpy as np
 import astropy.io.fits as pyfits
-import time
 
 ####################################################################################################
 
@@ -803,11 +802,13 @@ class scal:
             dr_min = [prevdr + np.power((dr_maj[majc] - prevdr),(1.0/(n))) for n in range(minorcycles)][::-1] # Not exactly need to work on this, but close
         elif function == 'linear':
             dr_min = [(prevdr + ((dr_maj[majc] - prevdr) / (minorcycles-1)) * n) for n in range(minorcycles)]
-        # elif function == 'sqrt':
-        #     dr_min =
         else:
             self.logger.error('### Function for minor cycles not supported! Exiting! ###')
             sys.exit(1)
+        if dr_min[0] == 0:
+            dr_min[0] = self.selfcal_mode_standard_minorcycle0_dr
+        else:
+            pass
         return dr_min
 
     def calc_mask_threshold(self,theoretical_noise_threshold, noise_threshold, dynamic_range_threshold):
@@ -850,7 +851,7 @@ class scal:
         clean_cutoff = mask_threshold / self.selfcal_mode_standard_c1
         return clean_cutoff
 
-    def calc_dynamic_range_threshold(self, imax, dynamic_range):
+    def calc_dynamic_range_threshold(self, imax, dynamic_range, dynamic_range_minimum):
         '''
         Calculates the dynamic range threshold
         imax (float): the maximum in the input image
@@ -858,7 +859,7 @@ class scal:
         returns (float): the dynamic range threshold
         '''
         if dynamic_range == 0:
-            dynamic_range = self.selfcal_mode_standard_minorcycle0_dr
+            dynamic_range = dynamic_range_minimum
         dynamic_range_threshold = imax / dynamic_range
         return dynamic_range_threshold
 

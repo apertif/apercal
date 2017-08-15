@@ -757,6 +757,10 @@ class final:
         else:
             self.logger.error('### Function for minor cycles not supported! Exiting! ###')
             sys.exit(1)
+        if dr_min[0] == 0:
+            dr_min[0] = self.selfcal_mode_standard_minorcycle0_dr
+        else:
+            pass
         return dr_min
 
     def calc_mask_threshold(self, theoretical_noise_threshold, noise_threshold, dynamic_range_threshold):
@@ -799,7 +803,7 @@ class final:
         clean_cutoff = mask_threshold / c1
         return clean_cutoff
 
-    def calc_dynamic_range_threshold(self, imax, dynamic_range, minorcycle0_dr):
+    def calc_dynamic_range_threshold(self, imax, dynamic_range, dynamic_range_minimum):
         '''
         Calculates the dynamic range threshold
         imax (float): the maximum in the input image
@@ -807,7 +811,7 @@ class final:
         returns (float): the dynamic range threshold
         '''
         if dynamic_range == 0:
-            dynamic_range = minorcycle0_dr
+            dynamic_range = dynamic_range_minimum
         dynamic_range_threshold = imax / dynamic_range
         return dynamic_range_threshold
 
