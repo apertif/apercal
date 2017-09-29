@@ -3,6 +3,8 @@ import logging
 import lib
 import ConfigParser
 import casac
+casalog = casac.casac.logsink()
+casalog.setglobal(False)
 
 class preflag:
     '''
@@ -24,25 +26,6 @@ class preflag:
         # Create the directory names
         self.rawdir = self.basedir + self.rawsubdir
 
-    def aoflagger(self):
-        '''
-        Runs aoflagger on the datasets with the strategies given in the config-file. Strategies for calibrators and target fields normally differ.
-        '''
-        if self.preflag_aoflagger:
-            self.director('ch', self.rawdir)
-            self.logger.info('### Doing pre-flagging with AOFlagger ###')
-            if self.preflag_aoflagger_fluxcal:
-                os.system('aoflagger -strategy ' + self.apercaldir + '/ao_strategies/' + self.preflag_aoflagger_fluxcalstrat + ' ' + self.fluxcal)
-                self.logger.info('### Flagging of ' + self.fluxcal + ' using ' + self.preflag_aoflagger_fluxcalstrat + ' done ###')
-            if self.preflag_aoflagger_polcal:
-                os.system('aoflagger -strategy ' + self.apercaldir + '/ao_strategies/' + self.preflag_aoflagger_polcalstrat + ' ' + self.polcal)
-                self.logger.info('### Flagging of ' + self.polcal + ' using ' + self.preflag_aoflagger_polcalstrat + ' done ###')
-            if self.preflag_aoflagger_target:
-                os.system('aoflagger -strategy ' + self.apercaldir + '/ao_strategies/' + self.preflag_aoflagger_targetstrat + ' ' + self.target)
-                self.logger.info('### Flagging of ' + self.target + ' using ' + self.preflag_aoflagger_targetstrat + ' done ###')
-        else:
-            self.logger.warning('### No flagging with AOflagger done! Your data might be contaminated by RFI! ###')
-
     def manualflag(self):
         '''
         Uses the CASA toolbox to flag entire antennas, baselines, correlations etc. before doing any other calibration. Mostly used for commissioning where we know that telescopes are not working or correlations are absent.
@@ -55,18 +38,65 @@ class preflag:
             self.manualflag_shadow()
             self.manualflag_baseline()
             self.manualflag_channel()
+            self.manualflag_time()
         self.logger.info('### Pre-flagging of known flags done ###')
+
+    def aoflagger(self):
+        '''
+        Runs aoflagger on the datasets with the strategies given in the config-file. Creates and applies a preliminary bandpass before executing the strategy for better performance of the flagging routines. Strategies for calibrators and target fields normally differ.
+        '''
+        if self.preflag_aoflagger:
+            self.director('ch', self.rawdir)
+            self.logger.info('### Doing pre-flagging with AOFlagger ###')
+            if self.preflag_aoflagger_bandpass:
+                cb = casac.casac.calibrater()
+                cb.open(self.fluxcal)
+                cb.setsolve('B', 'inf', self.fluxcal + '_Bcal')
+                cb.solve()
+                cb.setapply('B', 'inf', self.fluxcal + '_Bcal')
+                cb.correct()
+                cb.close()
+            if self.preflag_aoflagger_fluxcal:
+                if self.preflag_aoflagger_bandpass:
+                    os.system('aoflagger -strategy ' + self.apercaldir + '/ao_strategies/' + self.preflag_aoflagger_fluxcalstrat + ' -column CORRECTED_DATA ' + self.fluxcal)
+                else:
+                    os.system('aoflagger -strategy ' + self.apercaldir + '/ao_strategies/' + self.preflag_aoflagger_fluxcalstrat + ' ' + self.fluxcal)
+                # self.logger.info('### Flagging of ' + self.fluxcal + ' using ' + self.preflag_aoflagger_fluxcalstrat + ' done ###')
+            if self.preflag_aoflagger_polcal:
+                if self.preflag_aoflagger_bandpass:
+                    cb = casac.casac.calibrater()
+                    cb.open(self.polcal)
+                    cb.setapply('B', 'inf', self.fluxcal + '_Bcal')
+                    cb.correct()
+                    cb.close()
+                    os.system('aoflagger -strategy ' + self.apercaldir + '/ao_strategies/' + self.preflag_aoflagger_polcalstrat  + ' -column CORRECTED_DATA ' + self.polcal)
+                else:
+                    os.system('aoflagger -strategy ' + self.apercaldir + '/ao_strategies/' + self.preflag_aoflagger_polcalstrat + ' ' + self.polcal)
+                # self.logger.info('### Flagging of ' + self.polcal + ' using ' + self.preflag_aoflagger_polcalstrat + ' done ###')
+            if self.preflag_aoflagger_target:
+                if self.preflag_aoflagger_bandpass:
+                    cb = casac.casac.calibrater()
+                    cb.open(self.target)
+                    cb.setapply('B', 'inf', self.fluxcal + '_Bcal')
+                    cb.correct()
+                    cb.close()
+                    os.system('aoflagger -strategy ' + self.apercaldir + '/ao_strategies/' + self.preflag_aoflagger_targetstrat + ' -column CORRECTED_DATA ' + self.target)
+                else:
+                    os.system('aoflagger -strategy ' + self.apercaldir + '/ao_strategies/' + self.preflag_aoflagger_targetstrat + ' ' + self.target)
+                # self.logger.info('### Flagging of ' + self.target + ' using ' + self.preflag_aoflagger_targetstrat + ' done ###')
+        else:
+            self.logger.warning('### No flagging with AOflagger done! Your data might be contaminated by RFI! ###')
 
     def go(self):
         '''
         Executes the complete preflag step with the parameters indicated in the config-file in the following order:
-        aoflagger
         manualflag
+        aoflagger
         '''
-        self.logger.info('########## PRE-FLAGGING started ##########')
-        self.aoflagger()
+        # self.logger.info('########## PRE-FLAGGING started ##########')
         self.manualflag()
-        self.logger.info('########## PRE-FLAGGING done ##########')
+        self.aoflagger()
+        # self.logger.info('########## PRE-FLAGGING done ##########')
 
     ############################################################
     ##### Subfunctions for the different manual_flag steps #####
@@ -296,6 +326,41 @@ class preflag:
                 af.run(writeflags=True)
                 af.done()
                 self.logger.info('# Flagging of channel(s) ' + self.preflag_manualflag_channel + ' for target data done #')
+
+    def manualflag_time(self):
+        '''
+        Function to flag individual channels
+        '''
+        if self.preflag_manualflag_time != '':
+            self.director('ch', self.rawdir)
+            af = casac.casac.agentflagger()
+            if self.preflag_manualflag_fluxcal:
+                self.logger.info('# Flagging timerange ' + self.preflag_manualflag_time + ' for flux calibrator data #')
+                af.open(self.fluxcal)
+                af.selectdata()
+                af.parsemanualparameters(time=self.preflag_manualflag_time)
+                af.init()
+                af.run(writeflags=True)
+                af.done()
+                self.logger.info('# Flagging of timerange ' + self.preflag_manualflag_time + ' for flux calibrator data done #')
+            if self.preflag_manualflag_polcal:
+                self.logger.info('# Flagging timerange ' + self.preflag_manualflag_time + ' for polarised calibrator data #')
+                af.open(self.polcal)
+                af.selectdata()
+                af.parsemanualparameters(time=self.preflag_manualflag_time)
+                af.init()
+                af.run(writeflags=True)
+                af.done()
+                self.logger.info('# Flagging of timerange ' + self.preflag_manualflag_time + ' for polariased calibrator data done #')
+            if self.preflag_manualflag_target:
+                self.logger.info('# Flagging timerange ' + self.preflag_manualflag_time + ' for target data #')
+                af.open(self.target)
+                af.selectdata()
+                af.parsemanualparameters(time=self.preflag_manualflag_time)
+                af.init()
+                af.run(writeflags=True)
+                af.done()
+                self.logger.info('# Flagging of timerange ' + self.preflag_manualflag_time + ' for target data done #')
 
     #######################################################################
     ##### Manage the creation and moving of new directories and files #####
