@@ -5,46 +5,39 @@ import lib
 import os
 import time
 import numpy as np
-import re
-import math as m
 from astropy.table import Table
 
-def get_gains(self, chunk, yaxis):
+def get_gains(file):
     '''
-    Function to write and return the plot txt file
-    chunk (int): The chunk to return the arrays for.
-    yaxis (string): The axis you want to show the gains for.
-    return (array, array): The array with the timestep information, the array with the gains for all antennas of a chunk.
+    Function to create a complex python array of amplitude and phase gains from a dataset
+    file (str): u,v file with the bandpass calibration
+    return(array, array): an array with the amplitude and phase gains for each antenna and solution interval, a datetime array with the actual solution timesteps
     '''
     char_set = string.ascii_uppercase + string.digits  # Create a charset for random gain log file generation
-    self.tempdir = os.path.expanduser('~') + '/apercal/temp/iaplot'
+    tempdir = os.path.expanduser('~') + '/apercal/temp/mirlog'
+    gains_string = ''.join(random.sample(char_set * 8, 8))
     gpplt = lib.miriad('gpplt')
-    gpplt.vis = self.selfcaldir + '/' + str(chunk).zfill(2) + '/' + str(chunk).zfill(2) + '.mir'
-    gpplt.log = self.tempdir + '/' + ''.join(random.sample(char_set * 8, 8)) + '.txt'
-    gpplt.yaxis = yaxis
+    gpplt.vis = file
+    gpplt.log = tempdir + '/' + gains_string
     gpplt.options = 'gains'
-    gpplt.go()
-    gainstring = ''
-    with open(gpplt.log, 'r') as gaintxt:
-        gainlines = gaintxt.readlines()
-        nants = int(gainlines[3][-3:-1])
-        obsdate = gainlines[1][-19:-12]
-        gainlines = gainlines[4:]
-        joiner = range(0, len(gainlines), int(m.ceil(nants / 6) + 1))
-        for num, line in enumerate(gainlines):
-            if num in joiner:
-                joinedline = re.sub('\s+', ' ', ''.join(gainlines[num:num + 3])).strip() + '\n'
-                joinedline = re.sub(':', ' ', joinedline)
-                gainstring = gainstring + joinedline
-    gainfile = self.tempdir + '/' + ''.join(random.sample(char_set * 8, 8)) + '.txt'
-    with open(gainfile, 'w') as gainreformated:
-        gainreformated.write(gainstring)
-    with open(gainfile, 'r') as gainarrayfile:
-        gainarray = np.loadtxt(gainarrayfile)
+    gpplt.yaxis = 'amp'
+    cmd = gpplt.go()
+    obsdate = cmd[3].split(' ')[4][0:7]
     starttime = datetime.datetime(int('20' + obsdate[0:2]), int(time.strptime(obsdate[2:5], '%b').tm_mon), int(obsdate[5:7]))
-    timearray = [starttime + datetime.timedelta(days=gainarray[gain, 0], hours=gainarray[gain, 1], minutes=gainarray[gain, 2], seconds=gainarray[gain, 3]) for gain in range(len(gainarray))]
-    gainarray = gainarray[:, 4:]
-    return timearray, gainarray
+    s = Table.read(tempdir + '/' + gains_string, format='ascii')
+    gpplt.yaxis = 'phase'
+    gpplt.go()
+    t = Table.read(tempdir + '/' + gains_string, format='ascii')
+    days = np.array(t['col1'])
+    times = np.array(t['col2'])
+    nint = len(days)
+    nant = int(len(t[0])-2)
+    gain_array = np.zeros((nant, nint, 2))
+    for ant in range(nant):
+        gain_array[ant, :, 0] = s['col' + str(ant + 3)]
+        gain_array[ant, :, 1] = t['col' + str(ant + 3)]
+    time_array = [starttime + datetime.timedelta(days=int(days[step]), hours=int(times[step][0:2]), minutes=int(times[step][3:5]), seconds=int(times[step][6:8])) for step in range(nint)]
+    return gain_array, time_array
 
 def get_bp(file):
     '''
@@ -70,3 +63,29 @@ def get_bp(file):
         bp_array[ant,:,:] = np.swapaxes(t['col' + str(ant+2)].reshape(nint, nfreq),0,1)
     return bp_array, freqs
 
+def get_delays(file):
+    '''
+    Function to create a numpy array with the antenna delays for each solution interval
+    file (str): u,v file with the bandpass calibration
+    return(array, array): an array with the delays for each antenna and solution interval in nsec, a datetime array with the actual solution timesteps
+    '''
+    char_set = string.ascii_uppercase + string.digits  # Create a charset for random gain log file generation
+    tempdir = os.path.expanduser('~') + '/apercal/temp/mirlog'
+    gains_string = ''.join(random.sample(char_set * 8, 8))
+    gpplt = lib.miriad('gpplt')
+    gpplt.vis = file
+    gpplt.log = tempdir + '/' + gains_string
+    gpplt.options = 'delays'
+    cmd = gpplt.go()
+    obsdate = cmd[3].split(' ')[4][0:7]
+    starttime = datetime.datetime(int('20' + obsdate[0:2]), int(time.strptime(obsdate[2:5], '%b').tm_mon), int(obsdate[5:7]))
+    t = Table.read(tempdir + '/' + gains_string, format='ascii')
+    days = np.array(t['col1'])
+    times = np.array(t['col2'])
+    nint = len(days)
+    nant = int(len(t[0])-2)
+    delay_array = np.zeros((nant, nint))
+    for ant in range(nant):
+        delay_array[ant, :] = t['col' + str(ant + 3)]
+    time_array = [starttime + datetime.timedelta(days=int(days[step]), hours=int(times[step][0:2]), minutes=int(times[step][3:5]), seconds=int(times[step][6:8])) for step in range(nint)]
+    return delay_array, time_array
