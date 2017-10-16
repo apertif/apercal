@@ -294,6 +294,8 @@ class scal:
                         else:
                             selfcal.options = 'mfs,phase'
                     selfcal.refant = '5'
+                    if self.selfcal_mode_standard_nfbin >= 1:
+                        selfcal.nfbin = self.selfcal_mode_standard_nfbin
                     selfcal.go()
                     self.logger.info('# Major self-calibration cycle ' + str(majc) + ' for frequency chunk ' + chunk + ' finished #')
                 except:
@@ -592,7 +594,7 @@ class scal:
                 maths.go()
                 self.logger.info('# Mask with threshold ' + str(mask_threshold) + ' Jy/beam created #')
             else:
-                self.director('cp', str(majc).zfill(2) + '/mask_' + str(minc).zfill(2), file=str(majc - 1).zfill(2) + '/mask_' + str(self.final_continuum_minorcycle - 1).zfill(2))
+                self.director('cp', str(majc).zfill(2) + '/mask_' + str(minc).zfill(2), file=str(majc - 1).zfill(2) + '/mask_' + str(self.selfcal_mode_standard_minorcycle - 1).zfill(2))
                 self.logger.info('# Mask from last minor iteration of last major cycle copied #')
             clean_cutoff = self.calc_clean_cutoff(mask_threshold)
             self.logger.info('# Clean threshold at major/minor cycle ' + str(majc) + '/' + str(minc) + ' was set to ' + str(clean_cutoff) + ' Jy/beam #')

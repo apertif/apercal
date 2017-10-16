@@ -59,7 +59,6 @@ class ccal:
         tranfer_to_target
         '''
         self.logger.info("########## Starting CROSS CALIBRATION ##########")
-        self.fringe_stop()
         self.applysys()
         self.bandpass()
         self.polarisation()
@@ -69,102 +68,6 @@ class ccal:
     ###########################################################################################
     ##### Functions to compensate for the fringe stopping. Hopefully not needed for long. #####
     ###########################################################################################
-
-    # def correct_freq(self):
-    #     self.logger.info('# Correcting the observing frequency (sfreq keyword in MIRIAD) of dataset ' + self.vis + ' #')
-    #     puthd = lib.miriad('puthd')
-    #     puthd.in_ = self.vis + '/sfreq'
-    #     puthd.value = self.obsfreq
-    #     self.logger.info('# New frequency is ' + str(puthd.value) + ' #')
-    #     puthd.go()
-
-    # def calc_np_offset(self, coords):
-    #     '''
-    #     Calculates the offset of the actual position towards the North Pole
-    #     infile: The coords to calculate the offset for
-    #     '''
-    #     dec_off = (90.0 - coords.dec.deg) * 3600.0
-    #     return dec_off
-
-    # def comp_fstop(self):
-    #     '''
-    #     Divide the dataset by a model of amplitude 1 at the North Pole to compensate for the non-existent fringe stopping
-    #     '''
-    #     self.logger.info('### Starting fringe stopping ###')
-    #     # Correct for fringe stopping of the flux calibrator
-    #     self.vis = self.fluxcal
-    #     self.correct_freq()
-    #     if self.equinox == 'J2000' or self.equinox == 'Apparent':
-    #         fluxcalcoords = self.getradec(self.vis)
-    #     elif self.quinox == 'current':
-    #         equinox = self.getequinox(self.vis)
-    #         self.logger.info('# Equinox of the day of the observation is ' + str(equinox) + ' #')
-    #         fluxcalcoords = self.getradec(self.vis)
-    #         curr_coords = fluxcalcoords.transform_to(FK5(equinox='J' + str(equinox)))
-    #         self.logger.info('# Transforming coordinates to new equinox #')
-    #     self.logger.info('# Coordinates of the flux calibrator are RA: ' + str(fluxcalcoords.ra.deg) + ' deg, DEC: ' + str(fluxcalcoords.dec.deg) + ' deg #')
-    #     dec_off = self.calc_np_offset(curr_coords)
-    #     self.logger.info('# Declination offset towards north pole for the flux calibrator is ' + str(dec_off) + ' arcsec #')
-    #     self.fringe_stop(dec_off)
-    #     # Correct for fringe stopping of the target field
-    #     self.vis = self.target
-    #     self.correct_freq()
-    #     if self.equinox == 'J2000' or self.equinox == 'Apparent':
-    #         targetcoords = self.getradec(self.vis)
-    #     elif self.quinox == 'current':
-    #         equinox = self.getequinox(self.vis)
-    #         self.logger.info('# Equinox of the day of the observation is ' + str(equinox) + ' #')
-    #         targetcoords = self.getradec(self.vis)
-    #         curr_coords = targetcoords.transform_to(FK5(equinox='J' + str(equinox)))
-    #         self.logger.info('# Transforming coordinates to new equinox #')
-    #     self.logger.info('# Coordinates of the flux calibrator are RA: ' + str(targetcoords.ra.deg) + ' deg, DEC: ' + str(targetcoords.dec.deg) + ' deg #')
-    #     dec_off = self.calc_np_offset(curr_coords)
-    #     self.logger.info('# Declination offset towards north pole for the target field is ' + str(dec_off) + ' arcsec #')
-    #     self.fringe_stop(dec_off)
-    #     self.logger.info('### Fringe stopping done! ###')
-
-    def fringe_stop(self):
-        '''
-        Does the fringe stopping for APERTIF data. Only usable for strong point sources at the moment like 3C147. Moves the source to the right position by calibrating on phase for each integration (mostly 1s).
-        '''
-        if self.crosscal_mode == 'APERTIF':
-            if self.crosscal_fringestop:
-                self.logger.info('### Fringe stopping started ###')
-                self.director('ch', self.crosscaldir)
-                if self.crosscal_fringestop_mode == 'direct':
-                    self.logger.info('# Doing fringe stopping by using the integration time of the observation and a point source model #')
-                    selfcal = lib.miriad('selfcal')
-                    selfcal.vis = self.fluxcal
-                    selfcal.interval = 0.016666
-                    selfcal.options = 'phase'
-                    selfcal.go()
-                    self.logger.info('# Self calibrating flux calibrator dataset ' + self.fluxcal + ' with solution interval ' + str(selfcal.interval) + ' #')
-                    uvcat = lib.miriad('uvcat')
-                    uvcat.vis = self.fluxcal
-                    uvcat.out = self.fluxcal + '.copy'
-                    uvcat.go()
-                    self.director('rm', self.fluxcal)
-                    self.director('rn', self.fluxcal, file=uvcat.out)
-                # elif self.crosscal_fringestop_mode == 'northpole':
-                #     self.correct_freq()
-                #     self.logger.info('# Dividing by model at the north pole of unit amplitude #')
-                #     uvmodel = lib.miriad('uvmodel')
-                #     uvmodel.vis = self.vis
-                #     uvmodel.options = 'divide'
-                #     uvmodel.offset = '0,' + str(offset)
-                #     uvmodel.out = self.vis.rstrip('.mir') + '_fs.mir'
-                #     uvmodel.go()
-                #     self.director('rm', self.vis)
-                #     self.director('rn', self.vis, file=uvmodel.out)
-                else:
-                    self.logger.error('# Fringe stopping mode not supported! Exiting! #')
-                    sys.exit(1)
-                self.logger.info('### Fringe stopping done ###')
-        elif self.crosscal_mode == 'WSRT':
-            self.logger.info('### WSRT data set. Fringe stopping was done online! ###')
-        else:
-            self.logger.error('### Crosscal mode not known! Exiting!')
-            sys.exit(1)
 
     def applysys(self):
         '''
@@ -207,6 +110,7 @@ class ccal:
             self.logger.info('### Bandpass calibration on the flux calibrator data started ###')
             mfcal = lib.miriad('mfcal')
             mfcal.vis = self.fluxcal
+            mfcal.stokes = 'ii'
             if self.crosscal_delay:
                 mfcal.options = 'delay'
             else:

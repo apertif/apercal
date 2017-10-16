@@ -7,6 +7,30 @@ import time
 import numpy as np
 from astropy.table import Table
 
+def check_table(file, type):
+    '''
+    Function to change the file format to an ascii table compatible one
+    file (str): the log file with the table
+    '''
+    with open(file, 'rw') as gaintxt:
+        gainlines = gaintxt.readlines()
+        if type == 'bp':
+            nants = int(gainlines[2].split(' ')[-1])
+        elif type == 'gains' or type == 'delays':
+            nants = int(gainlines[3].split(' ')[-1])
+        gaintxt.close()
+    if nants > 6:
+        os.system('sed /^#.*/d ' + file + ' > ' + file + '_tmp')
+        with open(file + '_tmp', 'r') as f:
+            content = f.readlines()
+            with open(file + '_refor', 'w') as g:
+                for i in xrange(1, len(content) + 1):
+                    if i % 2 == 0:
+                        g.write(content[i - 2].strip() + '   ' + content[i - 1].strip() + '\n')
+                g.close()
+            f.close()
+        os.system('mv ' + file + '_refor ' + file)
+
 def get_gains(file):
     '''
     Function to create a complex python array of amplitude and phase gains from a dataset
@@ -22,6 +46,7 @@ def get_gains(file):
     gpplt.options = 'gains'
     gpplt.yaxis = 'amp'
     cmd = gpplt.go()
+    check_table(tempdir + '/' + gains_string, 'gains')
     obsdate = cmd[3].split(' ')[4][0:7]
     starttime = datetime.datetime(int('20' + obsdate[0:2]), int(time.strptime(obsdate[2:5], '%b').tm_mon), int(obsdate[5:7]))
     s = Table.read(tempdir + '/' + gains_string, format='ascii')
@@ -53,6 +78,7 @@ def get_bp(file):
     gpplt.log = tempdir + '/' + bp_string
     gpplt.options = 'bandpass'
     gpplt.go()
+    check_table(tempdir + '/' + bp_string, 'bp')
     t = Table.read(tempdir + '/' + bp_string, format='ascii')
     freqs = np.array(np.unique(t['col1']))
     nfreq = len(freqs)
@@ -77,6 +103,7 @@ def get_delays(file):
     gpplt.log = tempdir + '/' + gains_string
     gpplt.options = 'delays'
     cmd = gpplt.go()
+    check_table(tempdir + '/' + gains_string, 'delays')
     obsdate = cmd[3].split(' ')[4][0:7]
     starttime = datetime.datetime(int('20' + obsdate[0:2]), int(time.strptime(obsdate[2:5], '%b').tm_mon), int(obsdate[5:7]))
     t = Table.read(tempdir + '/' + gains_string, format='ascii')
