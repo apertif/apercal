@@ -278,86 +278,116 @@ class final:
                     uv = aipy.miriad.UV(self.linedir + '/' + chunk + '/' + chunk + '_line.mir')
                     nchannel = uv['nschan'] # Number of channels in the dataset
                     for channel in range(nchannel):
-                        invert = lib.miriad('invert')
-                        invert.vis = self.linedir + '/' + chunk + '/' + chunk + '_line.mir'
-                        invert.map = 'map_00_' + str(channel_counter).zfill(5)
-                        invert.beam = 'beam_00_' + str(channel_counter).zfill(5)
-                        invert.imsize = self.final_line_image_imsize
-                        invert.cell = self.final_line_image_cellsize
-                        invert.line = '"' + 'channel,1,' + str(channel+1) + ',1,1' + '"'
-                        invert.stokes = 'ii'
-                        invert.slop = 1
-                        if self.final_line_image_robust == '':
-                            pass
-                        else:
-                            invert.robust = self.final_line_image_robust
-                        if self.final_line_image_centre != '':
-                            invert.offset = self.final_line_image_centre
-                            invert.options = 'mfs,double,mosaic,sdb'
-                        else:
-                            invert.options = 'mfs,double,sdb'
-                        invertcmd = invert.go()
-                        try:
-                            theoretical_noise = invertcmd[11].split(' ')[3]
-                            theoretical_noise_threshold = self.calc_theoretical_noise_threshold(float(theoretical_noise), self.final_line_clean_nsigma)
-                            ratio = self.calc_max_min_ratio('map_00_' + str(channel_counter).zfill(5))
-                            if ratio >= self.final_line_clean_ratio_limit:
-                                imax = self.calc_imax('map_00_' + str(channel_counter).zfill(5))
-                                maxdr = np.divide(imax,float(theoretical_noise_threshold))
-                                nminiter = self.calc_miniter(maxdr, self.final_line_clean_dr0)
-                                imclean, masklevels = self.calc_line_masklevel(nminiter, self.final_line_clean_dr0, maxdr, self.final_line_clean_minorcycle0_dr, imax)
-                                if imclean:
-                                    self.logger.info('# Emission found in channel ' + str(channel_counter).zfill(5) + '. Cleaning! #')
-                                    for minc in range(nminiter):  # Iterate over the minor imaging cycles and masking
-                                        mask_threshold = masklevels[minc]
-                                        if minc == 0:
-                                            maths = lib.miriad('maths')
-                                            maths.out = 'mask_00_' + str(channel_counter).zfill(5)
-                                            maths.exp = '"<' + 'map_00_' + str(channel_counter).zfill(5) + '>"'
-                                            maths.mask = '"<' + 'map_00_' + str(channel_counter).zfill(5) + '>.gt.' + str(mask_threshold) + '"'
-                                            maths.go()
-                                            clean_cutoff = self.calc_clean_cutoff(mask_threshold, self.final_line_clean_c1)
-                                            clean = lib.miriad('clean')  # Clean the image down to the calculated threshold
-                                            clean.map = 'map_00_' + str(channel_counter).zfill(5)
-                                            clean.beam = 'beam_00_' + str(channel_counter).zfill(5)
-                                            clean.out = 'model_00_' + str(channel_counter).zfill(5)
-                                            clean.cutoff = clean_cutoff
-                                            clean.niters = 100000
-                                            clean.region = '"' + 'mask(mask_00_' + str(channel_counter).zfill(5) + ')' + '"'
-                                            clean.go()
-                                        else:
-                                            maths = lib.miriad('maths')
-                                            maths.out = 'mask_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(5)
-                                            maths.exp = '"<' + 'image_' + str(minc-1).zfill(2) + '_' + str(channel_counter).zfill(5) + '>"'
-                                            maths.mask = '"<' + 'image_' + str(minc-1).zfill(2) + '_' + str(channel_counter).zfill(5) + '>.gt.' + str(mask_threshold) + '"'
-                                            maths.go()
-                                            clean_cutoff = self.calc_clean_cutoff(mask_threshold, self.final_line_clean_c1)
-                                            clean = lib.miriad('clean')  # Clean the image down to the calculated threshold
-                                            clean.map = 'map_00_' + str(channel_counter).zfill(5)
-                                            clean.model = 'model_' + str(minc-1).zfill(2) + '_' + str(channel_counter).zfill(5)
-                                            clean.beam = 'beam_00_' + str(channel_counter).zfill(5)
-                                            clean.out = 'model_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(5)
-                                            clean.cutoff = clean_cutoff
-                                            clean.niters = 100000
-                                            clean.region = '"' + 'mask(mask_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(5) + ')' + '"'
-                                            clean.go()
+                        if channel_counter in range(int(str(self.final_line_channels).split(',')[0]), int(str(self.final_line_channels).split(',')[1]), 1):
+                            invert = lib.miriad('invert')
+                            invert.vis = self.linedir + '/' + chunk + '/' + chunk + '_line.mir'
+                            invert.map = 'map_00_' + str(channel_counter).zfill(5)
+                            invert.beam = 'beam_00_' + str(channel_counter).zfill(5)
+                            invert.imsize = self.final_line_image_imsize
+                            invert.cell = self.final_line_image_cellsize
+                            invert.line = '"' + 'channel,1,' + str(channel+1) + ',1,1' + '"'
+                            invert.stokes = 'ii'
+                            invert.slop = 1
+                            if self.final_line_image_robust == '':
+                                pass
+                            else:
+                                invert.robust = self.final_line_image_robust
+                            if self.final_line_image_centre != '':
+                                invert.offset = self.final_line_image_centre
+                                invert.options = 'mfs,double,mosaic,sdb'
+                            else:
+                                invert.options = 'mfs,double,sdb'
+                            invertcmd = invert.go()
+                            try:
+                                theoretical_noise = invertcmd[11].split(' ')[3]
+                                theoretical_noise_threshold = self.calc_theoretical_noise_threshold(float(theoretical_noise), self.final_line_clean_nsigma)
+                                ratio = self.calc_max_min_ratio('map_00_' + str(channel_counter).zfill(5))
+                                if ratio >= self.final_line_clean_ratio_limit:
+                                    imax = self.calc_imax('map_00_' + str(channel_counter).zfill(5))
+                                    maxdr = np.divide(imax,float(theoretical_noise_threshold))
+                                    nminiter = self.calc_miniter(maxdr, self.final_line_clean_dr0)
+                                    imclean, masklevels = self.calc_line_masklevel(nminiter, self.final_line_clean_dr0, maxdr, self.final_line_clean_minorcycle0_dr, imax)
+                                    if imclean:
+                                        self.logger.info('# Emission found in channel ' + str(channel_counter).zfill(5) + '. Cleaning! #')
+                                        for minc in range(nminiter):  # Iterate over the minor imaging cycles and masking
+                                            mask_threshold = masklevels[minc]
+                                            if minc == 0:
+                                                maths = lib.miriad('maths')
+                                                maths.out = 'mask_00_' + str(channel_counter).zfill(5)
+                                                maths.exp = '"<' + 'map_00_' + str(channel_counter).zfill(5) + '>"'
+                                                maths.mask = '"<' + 'map_00_' + str(channel_counter).zfill(5) + '>.gt.' + str(mask_threshold) + '"'
+                                                maths.go()
+                                                clean_cutoff = self.calc_clean_cutoff(mask_threshold, self.final_line_clean_c1)
+                                                clean = lib.miriad('clean')  # Clean the image down to the calculated threshold
+                                                clean.map = 'map_00_' + str(channel_counter).zfill(5)
+                                                clean.beam = 'beam_00_' + str(channel_counter).zfill(5)
+                                                clean.out = 'model_00_' + str(channel_counter).zfill(5)
+                                                clean.cutoff = clean_cutoff
+                                                clean.niters = 100000
+                                                clean.region = '"' + 'mask(mask_00_' + str(channel_counter).zfill(5) + ')' + '"'
+                                                clean.go()
+                                            else:
+                                                maths = lib.miriad('maths')
+                                                maths.out = 'mask_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(5)
+                                                maths.exp = '"<' + 'image_' + str(minc-1).zfill(2) + '_' + str(channel_counter).zfill(5) + '>"'
+                                                maths.mask = '"<' + 'image_' + str(minc-1).zfill(2) + '_' + str(channel_counter).zfill(5) + '>.gt.' + str(mask_threshold) + '"'
+                                                maths.go()
+                                                clean_cutoff = self.calc_clean_cutoff(mask_threshold, self.final_line_clean_c1)
+                                                clean = lib.miriad('clean')  # Clean the image down to the calculated threshold
+                                                clean.map = 'map_00_' + str(channel_counter).zfill(5)
+                                                clean.model = 'model_' + str(minc-1).zfill(2) + '_' + str(channel_counter).zfill(5)
+                                                clean.beam = 'beam_00_' + str(channel_counter).zfill(5)
+                                                clean.out = 'model_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(5)
+                                                clean.cutoff = clean_cutoff
+                                                clean.niters = 100000
+                                                clean.region = '"' + 'mask(mask_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(5) + ')' + '"'
+                                                clean.go()
+                                            restor = lib.miriad('restor')
+                                            restor.model = 'model_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(5)
+                                            restor.beam = 'beam_00_' + str(channel_counter).zfill(5)
+                                            restor.map = 'map_00_' + str(channel_counter).zfill(5)
+                                            restor.out = 'image_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(5)
+                                            restor.mode = 'clean'
+                                            if self.final_line_image_restorbeam != '':
+                                                beam_parameters = self.final_line_image_restorbeam.split(',')
+                                                restor.fwhm = str(beam_parameters[0]) + ',' + str(beam_parameters[1])
+                                                restor.pa = str(beam_parameters[2])
+                                            else:
+                                                pass
+                                            restor.go()  # Create the cleaned image
+                                            restor.mode = 'residual'
+                                            restor.out = 'residual_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(5)
+                                            restor.go()  # Create the residual image
+                                    else:
+                                        clean = lib.miriad('clean')  # Do one iteration of clean to create a model map for usage with restor to give the beam size.
+                                        clean.map = 'map_00_' + str(channel_counter).zfill(5)
+                                        clean.beam = 'beam_00_' + str(channel_counter).zfill(5)
+                                        clean.out = 'model_00_' + str(channel_counter).zfill(5)
+                                        clean.niters = 1
+                                        clean.gain = 0.0000001
+                                        clean.region = '"boxes(1,1,2,2)"'
+                                        clean.go()
                                         restor = lib.miriad('restor')
-                                        restor.model = 'model_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(5)
+                                        restor.model = 'model_00_' + str(channel_counter).zfill(5)
                                         restor.beam = 'beam_00_' + str(channel_counter).zfill(5)
                                         restor.map = 'map_00_' + str(channel_counter).zfill(5)
-                                        restor.out = 'image_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(5)
+                                        restor.out = 'image_00_' + str(channel_counter).zfill(5)
                                         restor.mode = 'clean'
-                                        if self.final_line_image_restorbeam != '':
-                                            beam_parameters = self.final_line_image_restorbeam.split(',')
-                                            restor.fwhm = str(beam_parameters[0]) + ',' + str(beam_parameters[1])
-                                            restor.pa = str(beam_parameters[2])
-                                        else:
-                                            pass
-                                        restor.go()  # Create the cleaned image
-                                        restor.mode = 'residual'
-                                        restor.out = 'residual_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(5)
-                                        restor.go()  # Create the residual image
+                                        restor.go()
+                                    if self.final_line_image_convolbeam:
+                                        convol = lib.miriad('convol')
+                                        convol.map = 'image_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(5)
+                                        beam_parameters = self.final_line_image_convolbeam.split(',')
+                                        convol.fwhm = str(beam_parameters[0]) + ',' + str(beam_parameters[1])
+                                        convol.pa = str(beam_parameters[2])
+                                        convol.out = 'convol_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(5)
+                                        convol.options = 'final'
+                                        convol.go()
+                                        self.director('rn', 'image_' + str(channel_counter).zfill(5), file='convol_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(5))
+                                    else:
+                                        pass
                                 else:
+                                    minc = 0
                                     clean = lib.miriad('clean')  # Do one iteration of clean to create a model map for usage with restor to give the beam size.
                                     clean.map = 'map_00_' + str(channel_counter).zfill(5)
                                     clean.beam = 'beam_00_' + str(channel_counter).zfill(5)
@@ -373,64 +403,37 @@ class final:
                                     restor.out = 'image_00_' + str(channel_counter).zfill(5)
                                     restor.mode = 'clean'
                                     restor.go()
+                                    if self.final_line_image_convolbeam:
+                                        convol = lib.miriad('convol')
+                                        convol.map = 'image_00_' + str(channel_counter).zfill(5)
+                                        beam_parameters = self.final_line_image_convolbeam.split(',')
+                                        convol.fwhm = str(beam_parameters[0]) + ',' + str(beam_parameters[1])
+                                        convol.pa = str(beam_parameters[2])
+                                        convol.out = 'convol_00_' + str(channel_counter).zfill(5)
+                                        convol.options = 'final'
+                                        convol.go()
+                                    else:
+                                        pass
+                                fits = lib.miriad('fits')
+                                fits.op = 'xyout'
                                 if self.final_line_image_convolbeam:
-                                    convol = lib.miriad('convol')
-                                    convol.map = 'image_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(5)
-                                    beam_parameters = self.final_line_image_convolbeam.split(',')
-                                    convol.fwhm = str(beam_parameters[0]) + ',' + str(beam_parameters[1])
-                                    convol.pa = str(beam_parameters[2])
-                                    convol.out = 'convol_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(5)
-                                    convol.options = 'final'
-                                    convol.go()
-                                    self.director('rn', 'image_' + str(channel_counter).zfill(5), file='convol_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(5))
-                                else:
-                                    pass
-                            else:
-                                minc = 0
-                                clean = lib.miriad('clean')  # Do one iteration of clean to create a model map for usage with restor to give the beam size.
-                                clean.map = 'map_00_' + str(channel_counter).zfill(5)
-                                clean.beam = 'beam_00_' + str(channel_counter).zfill(5)
-                                clean.out = 'model_00_' + str(channel_counter).zfill(5)
-                                clean.niters = 1
-                                clean.gain = 0.0000001
-                                clean.region = '"boxes(1,1,2,2)"'
-                                clean.go()
-                                restor = lib.miriad('restor')
-                                restor.model = 'model_00_' + str(channel_counter).zfill(5)
-                                restor.beam = 'beam_00_' + str(channel_counter).zfill(5)
-                                restor.map = 'map_00_' + str(channel_counter).zfill(5)
-                                restor.out = 'image_00_' + str(channel_counter).zfill(5)
-                                restor.mode = 'clean'
-                                restor.go()
-                                if self.final_line_image_convolbeam:
-                                    convol = lib.miriad('convol')
-                                    convol.map = 'image_00_' + str(channel_counter).zfill(5)
-                                    beam_parameters = self.final_line_image_convolbeam.split(',')
-                                    convol.fwhm = str(beam_parameters[0]) + ',' + str(beam_parameters[1])
-                                    convol.pa = str(beam_parameters[2])
-                                    convol.out = 'convol_00_' + str(channel_counter).zfill(5)
-                                    convol.options = 'final'
-                                    convol.go()
-                                else:
-                                    pass
-                            fits = lib.miriad('fits')
-                            fits.op = 'xyout'
-                            if self.final_line_image_convolbeam:
-                                if os.path.exists('convol_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(5)):
-                                    fits.in_ = 'convol_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(5)
+                                    if os.path.exists('convol_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(5)):
+                                        fits.in_ = 'convol_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(5)
+                                    else:
+                                        fits.in_ = 'image_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(5)
                                 else:
                                     fits.in_ = 'image_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(5)
-                            else:
-                                fits.in_ = 'image_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(5)
-                            fits.out = 'cube_image_' + str(channel_counter).zfill(5) + '.fits'
-                            fits.go()
-                            fits.in_ = 'beam_00_' + str(channel_counter).zfill(5)
-                            fits.region = '"images(1,1)"'
-                            fits.out = 'cube_beam_' + str(channel_counter).zfill(5) + '.fits'
-                            fits.go()
-                            self.logger.info('# Finished processing channel ' + str(channel_counter).zfill(5) + '/' + str((nchunks * nchannel)-1).zfill(5) + '. #')
-                            channel_counter = channel_counter + 1
-                        except:
+                                fits.out = 'cube_image_' + str(channel_counter).zfill(5) + '.fits'
+                                fits.go()
+                                fits.in_ = 'beam_00_' + str(channel_counter).zfill(5)
+                                fits.region = '"images(1,1)"'
+                                fits.out = 'cube_beam_' + str(channel_counter).zfill(5) + '.fits'
+                                fits.go()
+                                self.logger.info('# Finished processing channel ' + str(channel_counter).zfill(5) + '/' + str((nchunks * nchannel)-1).zfill(5) + '. #')
+                                channel_counter = channel_counter + 1
+                            except:
+                                channel_counter = channel_counter + 1
+                        else:
                             channel_counter = channel_counter + 1
                     self.logger.info('# All channels of chunk ' + chunk + ' imaged #')
                     self.director('rm', self.finaldir + '/line' + 'image*')

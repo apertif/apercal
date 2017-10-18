@@ -78,6 +78,14 @@ class scal:
                 uvaver.out = self.selfcaldir + '/' + self.target
                 uvaver.go()
                 self.logger.info('# Calibrator solutions to target data applied #')
+            if self.selfcal_flagantenna != None:
+                uvflag = lib.miriad('uvflag')
+                uvflag.vis = self.selfcaldir + '/' + self.target
+                uvflag.flagval = 'flag'
+                uvflag.select = 'antenna(' + str(self.selfcal_flagantenna) + ')'
+                uvflag.go()
+            else:
+                pass
             try:
                 uv = aipy.miriad.UV(self.selfcaldir + '/' + self.target)
             except RuntimeError:
