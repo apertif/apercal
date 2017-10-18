@@ -436,12 +436,12 @@ class final:
                         else:
                             channel_counter = channel_counter + 1
                     self.logger.info('# All channels of chunk ' + chunk + ' imaged #')
-                    self.director('rm', self.finaldir + '/line' + 'image*')
-                    self.director('rm', self.finaldir + '/line' + 'beam*')
-                    self.director('rm', self.finaldir + '/line' + 'mask*')
-                    self.director('rm', self.finaldir + '/line' + 'model*')
-                    self.director('rm', self.finaldir + '/line' + 'map*')
-                    self.director('rm', self.finaldir + '/line' + 'convol*')
+                    self.director('rm', self.finaldir + '/line/' + 'image*')
+                    self.director('rm', self.finaldir + '/line/' + 'beam*')
+                    self.director('rm', self.finaldir + '/line/' + 'mask*')
+                    self.director('rm', self.finaldir + '/line/' + 'model*')
+                    self.director('rm', self.finaldir + '/line/' + 'map*')
+                    self.director('rm', self.finaldir + '/line/' + 'convol*')
                     self.logger.info('# Cleaned up the directory for chunk ' + chunk + ' #')
                 else:
                     self.logger.warning('### No continuum subtracted data available for chunk ' + chunk + '! ###')
