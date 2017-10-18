@@ -6,6 +6,7 @@ import os
 import time
 import numpy as np
 from astropy.table import Table
+import sub_managetmp
 
 def check_table(file, type):
     '''
@@ -38,7 +39,8 @@ def get_gains(file):
     return(array, array): an array with the amplitude and phase gains for each antenna and solution interval, a datetime array with the actual solution timesteps
     '''
     char_set = string.ascii_uppercase + string.digits  # Create a charset for random gain log file generation
-    tempdir = os.path.expanduser('~') + '/apercal/temp/mirlog'
+    tempdir = sub_managetmp.manage_tempdir('mirlog')
+    # tempdir = os.path.expanduser('~') + '/apercal/temp/mirlog'
     gains_string = ''.join(random.sample(char_set * 8, 8))
     gpplt = lib.miriad('gpplt')
     gpplt.vis = file
@@ -52,6 +54,7 @@ def get_gains(file):
     s = Table.read(tempdir + '/' + gains_string, format='ascii')
     gpplt.yaxis = 'phase'
     gpplt.go()
+    check_table(tempdir + '/' + gains_string, 'gains')
     t = Table.read(tempdir + '/' + gains_string, format='ascii')
     days = np.array(t['col1'])
     times = np.array(t['col2'])
@@ -71,7 +74,8 @@ def get_bp(file):
     return(array, array): The bandpass array in the following order (antenna, frequencies, solution intervals) and a list of the frequencies
     '''
     char_set = string.ascii_uppercase + string.digits  # Create a charset for random gain log file generation
-    tempdir = os.path.expanduser('~') + '/apercal/temp/mirlog'
+    tempdir = sub_managetmp.manage_tempdir('mirlog')
+    # tempdir = os.path.expanduser('~') + '/apercal/temp/mirlog'
     bp_string = ''.join(random.sample(char_set * 8, 8))
     gpplt = lib.miriad('gpplt')
     gpplt.vis = file
@@ -96,7 +100,8 @@ def get_delays(file):
     return(array, array): an array with the delays for each antenna and solution interval in nsec, a datetime array with the actual solution timesteps
     '''
     char_set = string.ascii_uppercase + string.digits  # Create a charset for random gain log file generation
-    tempdir = os.path.expanduser('~') + '/apercal/temp/mirlog'
+    tempdir = sub_managetmp.manage_tempdir('mirlog')
+    # tempdir = os.path.expanduser('~') + '/apercal/temp/mirlog'
     gains_string = ''.join(random.sample(char_set * 8, 8))
     gpplt = lib.miriad('gpplt')
     gpplt.vis = file

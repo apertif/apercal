@@ -7,14 +7,14 @@ Created by AOFlagger 2.9.0 (2016-12-20)
   <action type="Strategy">
     <children>
       <action type="ForEachBaselineAction">
-        <selection>1</selection>
-        <thread-count>4</thread-count>
+        <selection>0</selection>
+        <thread-count>1</thread-count>
         <children>
           <action type="SetImageAction">
             <new-image>1</new-image>
           </action>
           <action type="SetFlaggingAction">
-            <new-flagging>0</new-flagging>
+            <new-flagging>2</new-flagging>
           </action>
           <action type="ForEachPolarisationBlock">
             <on-xx>1</on-xx>
@@ -34,11 +34,11 @@ Created by AOFlagger 2.9.0 (2016-12-20)
                 <restore-from-amplitude>0</restore-from-amplitude>
                 <children>
                   <action type="IterationBlock">
-                    <iteration-count>2</iteration-count>
-                    <sensitivity-start>4</sensitivity-start>
+                    <iteration-count>4</iteration-count>
+                    <sensitivity-start>8</sensitivity-start>
                     <children>
                       <action type="SumThresholdAction">
-                        <base-sensitivity>1.4</base-sensitivity>
+                        <base-sensitivity>1.16667</base-sensitivity>
                         <time-direction-flagging>1</time-direction-flagging>
                         <frequency-direction-flagging>1</frequency-direction-flagging>
                       </action>
@@ -72,8 +72,11 @@ Created by AOFlagger 2.9.0 (2016-12-20)
                       </action>
                     </children>
                   </action>
+                  <action type="CalibratePassbandAction">
+                    <steps>48</steps>
+                  </action>
                   <action type="SumThresholdAction">
-                    <base-sensitivity>1.4</base-sensitivity>
+                    <base-sensitivity>1</base-sensitivity>
                     <time-direction-flagging>1</time-direction-flagging>
                     <frequency-direction-flagging>1</frequency-direction-flagging>
                   </action>

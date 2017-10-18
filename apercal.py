@@ -11,4 +11,5 @@ from line import line
 from iaimage import iaimage
 from iaplot import iaplot
 import sub_readmirlog
+import sub_managetmp
 import lsm
