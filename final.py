@@ -450,6 +450,8 @@ class final:
             self.logger.info('# Created HI-image cube #')
             self.create_linecube(self.finaldir + '/line/cube_beam_*.fits', 'HI_beam_cube.fits', nchunks * nchannel)
             self.logger.info('# Created HI-beam cube #')
+            self.logger.info('# Removing obsolete files #')
+            self.director('rm', self.finaldir + '/line/' + 'cube_*')
 
     def polarisation(self):
         '''

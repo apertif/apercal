@@ -78,7 +78,7 @@ class scal:
                 uvaver.out = self.selfcaldir + '/' + self.target
                 uvaver.go()
                 self.logger.info('# Calibrator solutions to target data applied #')
-            if self.selfcal_flagantenna != None:
+            if self.selfcal_flagantenna != '':
                 uvflag = lib.miriad('uvflag')
                 uvflag.vis = self.selfcaldir + '/' + self.target
                 uvflag.flagval = 'flag'
