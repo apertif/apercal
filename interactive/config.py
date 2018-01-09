@@ -7,6 +7,7 @@ class config:
     Class to manage configuration files.
     '''
     def __init__(self, file=None, **kwargs):
+        logging.basicConfig(level=20)
         self.logger = logging.getLogger('CONFIG')
         self.__dict__.update(kwargs)
         default = ConfigParser.ConfigParser()  # Initialise the config parser

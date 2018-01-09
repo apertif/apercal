@@ -3,15 +3,17 @@ __copyright__ = "ASTRON"
 __credits__ = ["Kijeong Yim"]
 __email__ = "frank@astron.nl, adebahr@astron.nl"
 
-import re
 import logging
-import numpy as np
-from astroquery.vizier import Vizier
-from astropy.coordinates import Angle, FK5, SkyCoord
-from astropy import units as u
-import lib
-from pb import wsrtBeam
+
 import matplotlib.mlab as mplab
+import numpy as np
+import re
+from astropy import units as u
+from astropy.coordinates import Angle, FK5, SkyCoord
+from astroquery.vizier import Vizier
+
+from libs import lib
+from subs.pb import wsrtBeam
 
 '''
 # This file uses astropy and miriad to construct a catalogue of apparent and real flux densities for a pointing centre in a certain radius

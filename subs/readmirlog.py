@@ -1,12 +1,14 @@
-import string
-import random
 import datetime
-import lib
-import os
+import random
+import string
 import time
+
 import numpy as np
+import os
 from astropy.table import Table
-import sub_managetmp
+
+from libs import lib
+
 
 def check_table(file, type):
     '''

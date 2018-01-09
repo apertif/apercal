@@ -1,26 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- This is a strategy configuration file for the AOFlagger RFI
 detector by André Offringa (offringa@gmail.com).
-Created by AOFlagger 2.8.0 (2016-06-21)
+Created by AOFlagger 2.9.0 (2016-12-20)
 -->
 <rfi-strategy format-version="3.7" reader-version-required="3.4">
   <action type="Strategy">
     <children>
       <action type="ForEachBaselineAction">
-        <selection>1</selection>
-        <thread-count>4</thread-count>
+        <selection>0</selection>
+        <thread-count>1</thread-count>
         <children>
           <action type="SetImageAction">
             <new-image>1</new-image>
           </action>
           <action type="SetFlaggingAction">
-            <new-flagging>0</new-flagging>
+            <new-flagging>2</new-flagging>
           </action>
           <action type="ForEachPolarisationBlock">
             <on-xx>1</on-xx>
-            <on-xy>1</on-xy>
-            <on-yx>1</on-yx>
-            <on-yy>1</on-yy>
+            <on-xy>0</on-xy>
+            <on-yx>0</on-yx>
+            <on-yy>0</on-yy>
             <on-stokes-i>0</on-stokes-i>
             <on-stokes-q>0</on-stokes-q>
             <on-stokes-u>0</on-stokes-u>
@@ -34,11 +34,11 @@ Created by AOFlagger 2.8.0 (2016-06-21)
                 <restore-from-amplitude>0</restore-from-amplitude>
                 <children>
                   <action type="IterationBlock">
-                    <iteration-count>2</iteration-count>
-                    <sensitivity-start>4</sensitivity-start>
+                    <iteration-count>1</iteration-count>
+                    <sensitivity-start>8</sensitivity-start>
                     <children>
                       <action type="SumThresholdAction">
-                        <base-sensitivity>1.4</base-sensitivity>
+                        <base-sensitivity>1.16667</base-sensitivity>
                         <time-direction-flagging>1</time-direction-flagging>
                         <frequency-direction-flagging>1</frequency-direction-flagging>
                       </action>
@@ -48,7 +48,7 @@ Created by AOFlagger 2.8.0 (2016-06-21)
                             <threshold>3</threshold>
                           </action>
                           <action type="TimeSelectionAction">
-                            <threshold>3.5</threshold>
+                            <threshold>2.5</threshold>
                           </action>
                         </children>
                       </action>
@@ -62,10 +62,10 @@ Created by AOFlagger 2.8.0 (2016-06-21)
                         <restore-masks>0</restore-masks>
                         <children>
                           <action type="HighPassFilterAction">
-                            <horizontal-kernel-sigma-sq>2.5</horizontal-kernel-sigma-sq>
-                            <vertical-kernel-sigma-sq>5</vertical-kernel-sigma-sq>
-                            <window-width>21</window-width>
-                            <window-height>15</window-height>
+                            <horizontal-kernel-sigma-sq>272.25</horizontal-kernel-sigma-sq>
+                            <vertical-kernel-sigma-sq>207.36</vertical-kernel-sigma-sq>
+                            <window-width>30</window-width>
+                            <window-height>31</window-height>
                             <mode>1</mode>
                           </action>
                         </children>
@@ -73,7 +73,7 @@ Created by AOFlagger 2.8.0 (2016-06-21)
                     </children>
                   </action>
                   <action type="SumThresholdAction">
-                    <base-sensitivity>2</base-sensitivity>
+                    <base-sensitivity>0.8</base-sensitivity>
                     <time-direction-flagging>1</time-direction-flagging>
                     <frequency-direction-flagging>1</frequency-direction-flagging>
                   </action>
@@ -93,11 +93,11 @@ Created by AOFlagger 2.8.0 (2016-06-21)
             <enlarge-time-size>0</enlarge-time-size>
             <max-contaminated-frequencies-ratio>0.5</max-contaminated-frequencies-ratio>
             <max-contaminated-times-ratio>0.5</max-contaminated-times-ratio>
-            <minimum-good-frequency-ratio>0.2</minimum-good-frequency-ratio>
-            <minimum-good-time-ratio>0.2</minimum-good-time-ratio>
+            <minimum-good-frequency-ratio>0.031</minimum-good-frequency-ratio>
+            <minimum-good-time-ratio>0.031</minimum-good-time-ratio>
           </action>
           <action type="TimeSelectionAction">
-            <threshold>3.5</threshold>
+            <threshold>3</threshold>
           </action>
           <action type="BaselineSelectionAction">
             <preparation-step>1</preparation-step>

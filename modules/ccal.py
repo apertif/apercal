@@ -2,17 +2,16 @@ __author__ = "Bradley Frank, Bjoern Adebahr"
 __copyright__ = "ASTRON"
 __email__ = "frank@astron.nl, adebahr@astron.nl"
 
-import re
-import lib
-import logging
-import os, sys
 import ConfigParser
-import aipy
-from datetime import datetime
-import calendar
-import astropy.units as u
-from astropy.coordinates import SkyCoord
-from astropy.coordinates import FK5
+import glob
+import logging
+
+import os
+import sys
+
+import subs.setinit
+from libs import lib
+
 
 ####################################################################################################
 
@@ -21,6 +20,7 @@ class ccal:
     Crosscal class to handle applying the calibrator gains and prepare the dataset for self-calibration.
     '''
     def __init__(self, file=None, **kwargs):
+        logging.basicConfig(level=20)
         self.logger = logging.getLogger('CROSSCAL')
         config = ConfigParser.ConfigParser() # Initialise the config parser
         if file != None:
@@ -33,17 +33,8 @@ class ccal:
             for o in config.items(s):
                 setattr(self, o[0], eval(o[1]))
         self.default = config # Save the loaded config file as defaults for later usage
-
-        # Create the directory names
-        self.rawdir = self.basedir + self.rawsubdir
-        self.crosscaldir = self.basedir + self.crosscalsubdir
-        self.selfcaldir = self.basedir + self.selfcalsubdir
-        self.finaldir = self.basedir + self.finalsubdir
-
-        # Name the datasets
-        self.fluxcal = self.fluxcal.rstrip('MS') + 'mir'
-        self.polcal = self.polcal.rstrip('MS') + 'mir'
-        self.target = self.target.rstrip('MS') + 'mir'
+        subs.setinit.setinitdirs(self)
+        subs.setinit.setdatasetnamestomiriad(self)
 
     #############################################################
     ##### Function to execute the cross-calibration process #####
@@ -52,14 +43,11 @@ class ccal:
     def go(self):
         '''
         Executes the full cross calibration process in the following order.
-        fringe_stop
-        applysys
         bandpass
         polarisation
         tranfer_to_target
         '''
         self.logger.info("########## Starting CROSS CALIBRATION ##########")
-        self.applysys()
         self.bandpass()
         self.polarisation()
         self.transfer_to_target()
@@ -69,43 +57,13 @@ class ccal:
     ##### Functions to compensate for the fringe stopping. Hopefully not needed for long. #####
     ###########################################################################################
 
-    def applysys(self):
-        '''
-        Apply the system temperatures to the data if it is old WSRT data
-        '''
-        if self.crosscal_applysys:
-            self.director('ch', self.crosscaldir)
-            self.logger.info('### Applying system temperatures corrections ###')
-            attsys = lib.miriad('attsys')
-            self.logger.info('# Applying system temperature corrections to flux calibrator data #')
-            attsys.vis = self.fluxcal
-            attsys.out = self.fluxcal + '_temp'
-            attsys.go()
-            self.director('rm', self.fluxcal)
-            self.director('rn', self.fluxcal, file=attsys.out)
-            self.logger.info('# System temperatures corrections to flux calibrator data applied #')
-            if os.path.isdir(self.crosscaldir + '/' + self.polcal):
-                self.logger.info('# Applying system temperature corrections to polarised calibrator data #')
-                attsys.vis = self.polcal
-                attsys.out = self.polcal + '_temp'
-                attsys.go()
-                self.director('rm', self.polcal)
-                self.director('rn', self.polcal, file=attsys.out)
-                self.logger.info('# System temperatures corrections to polarised calibrator data applied #')
-            self.logger.info('# Applying system temperature corrections to target data #')
-            attsys.vis = self.target
-            attsys.out = self.target + '_temp'
-            attsys.go()
-            self.director('rm', self.target)
-            self.director('rn', self.target, file=attsys.out)
-            self.logger.info('# System temperatures corrections to target data applied #')
-            self.logger.info('### System temperatures corrections applied ###')
-
     def bandpass(self):
         '''
         Calibrates the bandpass for the flux calibrator using mfcal in MIRIAD.
         '''
         if self.crosscal_bandpass:
+            subs.setinit.setinitdirs(self)
+            subs.setinit.setdatasetnamestomiriad(self)
             self.director('ch', self.crosscaldir)
             self.logger.info('### Bandpass calibration on the flux calibrator data started ###')
             mfcal = lib.miriad('mfcal')
@@ -124,6 +82,8 @@ class ccal:
         Derives the polarisation corrections (leakage, angle) from the polarised calibrator. Uses the bandpass from the bandpass calibrator. Does not account for freqeuncy dependent solutions at the moment.
         '''
         if self.crosscal_polarisation:
+            subs.setinit.setinitdirs(self)
+            subs.setinit.setdatasetnamestomiriad(self)
             self.director('ch', self.crosscaldir)
             self.logger.info('### Polarisation calibration on the polarised calibrator data started ###')
             if os.path.isfile(self.crosscaldir + '/' + self.fluxcal + '/' + 'bandpass'):
@@ -168,6 +128,8 @@ class ccal:
         Transfers the gains of the calibrators to the target field. Automatically checks if polarisation calibration has been done.
         '''
         if self.crosscal_transfer_to_target:
+            subs.setinit.setinitdirs(self)
+            subs.setinit.setdatasetnamestomiriad(self)
             self.director('ch', self.crosscaldir)
             self.logger.info('### Copying calibrator solutions to target dataset ###')
             gpcopy = lib.miriad('gpcopy')
@@ -181,72 +143,19 @@ class ccal:
             else:
                 self.logger.error('# No calibrator solutions found! Exiting! #')
                 sys.exit(1)
-            gpcopy.out = self.target
-            gpcopy.options = 'relax'
-            gpcopy.go()
-            self.logger.info('### All solutions copied to target data ###')
+            datasets = glob.glob('../../*')
+            self.logger.info('# Copying calibrator solutions to ' + str(len(datasets)) + ' beams! #')
+            for n, ds in enumerate(datasets):
+                if os.path.isfile(ds + '/' + self.crosscalsubdir + '/' + self.target + '/visdata'):
+                    gpcopy.out = ds + '/' + self.crosscalsubdir + '/' + self.target
+                    gpcopy.options = 'relax'
+                    gpcopy.go()
+                    self.logger.info('# Calibrator solutions copied to beam ' + str(n).zfill(2) + '! #')
+                else:
+                    self.logger.warning('# Beam ' + str(n).zfill(2) + ' does not seem to contain data! #')
+            self.logger.info('### All solutions copied to target data set(s) ###')
         else:
             self.logger.info('### No copying of calibrator solutions to target data done! ###')
-
-    ##################################################################################################################
-    ##### Helper functions to get coordinates and central frequency of a dataset and fix the coordinate notation #####
-    ##################################################################################################################
-
-    # def getradec(self, infile):
-    #     '''
-    #     getradec: module to extract the pointing centre ra and dec from a miriad image file. Uses the PRTHD task in miriad
-    #     inputs: infile (name of file)
-    #     return: coords, an instance of the astropy.coordinates SkyCoord class which has a few convenient attributes.
-    #     '''
-    #     prthd = lib.basher('prthd in=' + infile)
-    #     if self.equinox == 'J2000':
-    #         regex = re.compile(".*(J2000).*")
-    #     elif self.equinox == 'Apparent':
-    #         regex = re.compile(".*(Apparent).*")
-    #     coordline = [m.group(0) for l in prthd for m in [regex.search(l)] if m][0].split()
-    #     rastr = coordline[3]
-    #     decstr = coordline[5]
-    #     rastr = self.fixra(rastr)
-    #     coords = SkyCoord(FK5, ra=rastr, dec=decstr, unit=(u.deg, u.deg))
-    #     return coords
-
-    # def fixra(self, ra0):
-    #     '''
-    #     fixra: module to fix the notation of the ra string
-    #     ra0: input ra notation from a skycoords query
-    #     return: the fixed notation for the ra
-    #     '''
-    #     R = ''
-    #     s = 0
-    #     for i in ra0:
-    #         if i == ':':
-    #             if s == 0:
-    #                 R += 'h'
-    #                 s += 1
-    #             else:
-    #                 R += 'm'
-    #         else:
-    #             R += i
-    #     return R
-
-    # def getequinox(self, infile):
-    #     '''
-    #     param infile: The input file to calculate the current equinox for
-    #     return: the equinox in decimal
-    #     '''
-    #     prthd = lib.basher('prthd in=' + infile)
-    #     regex = re.compile(".*(First).*")
-    #     datestr = [m.group(0) for l in prthd for m in [regex.search(l)] if m][0].split()[2]
-    #     YY = int('20' + datestr[0:2])
-    #     month_abbr = datestr[2:5].capitalize()
-    #     MM = int(list(calendar.month_abbr).index(month_abbr))
-    #     DD = int(datestr[5:7])
-    #     hh = int(datestr.split(':')[1])
-    #     mm = int(datestr.split(':')[2])
-    #     ss = int(datestr.split(':')[3].split('.')[0])
-    #     d = datetime(YY, MM, DD, hh, mm, ss)
-    #     equinox = (float(d.strftime("%j")) - 1) / 366 + float(d.strftime("%Y"))
-    #     return equinox
 
     #######################################################################
     ##### Manage the creation and moving of new directories and files #####
@@ -257,8 +166,9 @@ class ccal:
         show: Prints the current settings of the pipeline. Only shows keywords, which are in the default config file default.cfg
         showall: Set to true if you want to see all current settings instead of only the ones from the current step
         '''
+        subs.setinit.setinitdirs(self)
         config = ConfigParser.ConfigParser()
-        config.readfp(open(self.apercaldir + '/default.cfg'))
+        config.readfp(open(self.apercaldir + '/modules/default.cfg'))
         for s in config.sections():
             if showall:
                 print(s)
@@ -284,6 +194,8 @@ class ccal:
         '''
         Function to reset the current step and remove all generated data. Be careful! Deletes all data generated in this step!
         '''
+        subs.setinit.setinitdirs(self)
+        subs.setinit.setdatasetnamestomiriad(self)
         self.logger.warning('### Deleting all cross calibrated data. ###')
         self.director('ch', self.crosscaldir)
         self.director('rm', self.crosscaldir + '/*')
@@ -295,6 +207,8 @@ class ccal:
         dest: Destination of a file or directory to move to
         file: Which file to move or copy, otherwise None
         '''
+        subs.setinit.setinitdirs(self)
+        subs.setinit.setdatasetnamestomiriad(self)
         if option == 'mk':
             if os.path.exists(dest):
                 pass

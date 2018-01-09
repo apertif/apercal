@@ -2,9 +2,11 @@ __author__ = "Bjoern Adebahr"
 __copyright__ = "ASTRON"
 __email__ = "adebahr@astron.nl"
 
-import lsm
-import numpy as np
 import logging
+
+import numpy as np
+
+from subs import lsm
 
 '''
 # Class to check if sources have to be peeled

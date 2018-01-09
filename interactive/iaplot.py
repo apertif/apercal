@@ -2,21 +2,24 @@ __author__ = "Bjoern Adebahr"
 __copyright__ = "ASTRON"
 __email__ = "adebahr@astron.nl"
 
-import lib
-import os, sys
 import ConfigParser
+import datetime
+import glob
+import math as m
 import random
 import string
-import math as m
-import re
-import datetime
 import time
-from matplotlib import pyplot as plt
-import numpy as np
+
 import matplotlib.cm as cm
-import astropy.io.fits as pyfits
-import glob
-from matplotlib.widgets import Slider, Button
+import numpy as np
+import os
+import re
+import sys
+from matplotlib import pyplot as plt
+
+import subs.setinit
+from libs import lib
+
 
 ####################################################################################################
 
@@ -36,11 +39,7 @@ class iaplot:
             for o in config.items(s):
                 setattr(self, o[0], eval(o[1]))
         self.default = config # Save the loaded config file as defaults for later usage
-
-        # Create the directory names
-        self.crosscaldir = self.basedir + self.crosscalsubdir
-        self.selfcaldir = self.basedir + self.selfcalsubdir
-        self.finaldir = self.basedir + self.finalsubdir
+        subs.setinit.setinitdirs(self)
 
     ############################################################################
     ##### Functions to show and analyse calibration tables in the notebook #####
@@ -56,6 +55,7 @@ class iaplot:
         antenna (int or string): The antenna to show the gains for. Possible options are the number of the antenna, 'all', and 'subplot'. Not two parameters with the 'all' keyword can be used at the same time.
         yaxis(string): 'amp', 'phase', 'real', and 'imag' are possible. 'phase' is default.
         '''
+        subs.setinit.setinitdirs(self)
         if all(param == 'all' for param in [chunk, antenna]): # Check if two of the parameters are 'all'
             print('### No two parameters can be all ###')
             sys.exit(1)
@@ -193,6 +193,7 @@ class iaplot:
         yaxis (string): The axis you want to show the gains for.
         return (array, array): The array with the timestep information, the array with the gains for all antennas of a chunk.
         '''
+        subs.setinit.setinitdirs(self)
         char_set = string.ascii_uppercase + string.digits  # Create a charset for random gain log file generation
         self.tempdir = os.path.expanduser('~') + '/apercal/temp/iaplot'
         gpplt = lib.miriad('gpplt')

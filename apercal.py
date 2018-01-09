@@ -1,15 +1,17 @@
 import pylab as pl
-import lib
 import os
-from config import config
-from preflag import preflag
-from convert import convert
-from ccal import ccal
-from scal import scal
-from final import final
-from line import line
-from iaimage import iaimage
-from iaplot import iaplot
-import sub_readmirlog
-import sub_managetmp
-import lsm
+
+import libs.lib
+
+from modules.prepare import prepare
+from modules.preflag import preflag
+from modules.convert import convert
+from modules.ccal import ccal
+from modules.scal import scal
+from modules.continuum import continuum
+from modules.line import line
+from modules.polarisation import polarisation
+
+import subs.readmirlog
+import subs.managetmp
+import subs.lsm

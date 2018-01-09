@@ -1,7 +1,9 @@
-import lib
-import pyfits
 import numpy as np
 import os
+import pyfits
+
+from libs import lib
+
 
 def resistats(infile):
     fits = lib.miriad('fits')

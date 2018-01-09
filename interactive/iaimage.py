@@ -2,17 +2,22 @@ __author__ = "Bjoern Adebahr"
 __copyright__ = "ASTRON"
 __email__ = "adebahr@astron.nl"
 
-import lib
-import os, sys
 import ConfigParser
+import glob
 import random
 import string
+
+import astropy.io.fits as pyfits
+import numpy as np
+import os
+import sys
 from kapteyn import maputils
 from matplotlib import pyplot as plt
-import numpy as np
-import astropy.io.fits as pyfits
-import glob
-from matplotlib.widgets import Slider, Button
+from matplotlib.widgets import Slider
+
+import subs.setinit
+from libs import lib
+
 
 ####################################################################################################
 
@@ -32,10 +37,7 @@ class iaimage:
             for o in config.items(s):
                 setattr(self, o[0], eval(o[1]))
         self.default = config # Save the loaded config file as defaults for later usage
-
-        # Create the directory names
-        self.selfcaldir = self.basedir + self.selfcalsubdir
-        self.finaldir = self.basedir + self.finalsubdir
+        subs.setinit.setinitdirs(self)
 
     ################################################################
     ##### Functions to show and analyse images in the notebook #####
@@ -55,6 +57,7 @@ class iaimage:
         imax(float): Maximum cutoff in the image.
         return (string): String with a path and image name to use for displaying.
         '''
+        subs.setinit.setinitdirs(self)
         self.manage_tempdir() # Check if the temporary directory exists and if not create it
         self.clean_tempdir() # Remove any temorary files from the temporary directory
         char_set = string.ascii_uppercase + string.digits # Create a charset for random image name generation
@@ -245,6 +248,7 @@ class iaimage:
         Function to show the stats (rms, min, max) of an image previously loaded or plotted with show_image
         borders (list of 4 int): The bottom left and top right pixel values to use for calculating the stats. No value means the entire image.
         '''
+        subs.setinit.setinitdirs(self)
         image = pyfits.open(self.fitsimage)
         image_data = np.squeeze(image[0].data)
         if len(borders) == 0:
@@ -277,6 +281,7 @@ class iaimage:
         type(string): Type of image to show. mask, beam, image, residual, and in case of step=final final are possible.
         return (string): String with a path and image name to use for displaying.
         '''
+        subs.setinit.setinitdirs(self)
         if step == 'selfcal':
             imagestring = self.selfcaldir + '/' + str(chunk).zfill(2) + '/'
             if major == None:
