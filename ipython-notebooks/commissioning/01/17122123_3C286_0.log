@@ -1,0 +1,147 @@
+01/11/2018 10:47:02 AM - root - INFO : Logging started!
+01/11/2018 10:47:02 AM - root - INFO : To see the log in a bash window use the following command:
+01/11/2018 10:47:02 AM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/01/17122123_3C286_0.log
+01/11/2018 10:47:12 AM - PREPARE - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/01/17122123_3C286_0.cfg successfully read! ###
+01/11/2018 10:47:12 AM - PREPARE - INFO : ########## Preparing data for calibration ##########
+01/11/2018 10:47:40 AM - PREPARE - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/01/17122123_3C286_0.cfg successfully read! ###
+01/11/2018 10:47:40 AM - PREPARE - INFO : ########## Preparing data for calibration ##########
+01/11/2018 10:47:40 AM - PREPARE - INFO : ### Flux calibrator dataset found. Copying beam 00 to working directory. ###
+01/11/2018 10:47:40 AM - basher - DEBUG : cp -r /data2/apertif/17122123_3C286_0/WSRTA17122123_B000.MS /data/adebahr/apertif/17122123_3C286_0/00/raw/3C286.MS
+01/11/2018 10:53:49 AM - basher - DEBUG : Returning output.
+01/11/2018 10:53:49 AM - PREPARE - WARNING : ### No polarisation calibrator dataset specified. The next steps might not work! ###
+01/11/2018 10:53:49 AM - PREPARE - INFO : ########## Data prepared for calibration ##########
+01/11/2018 11:47:01 AM - CONVERT - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/01/17122123_3C286_0.cfg successfully read! ###
+01/11/2018 11:47:01 AM - CONVERT - INFO : ########## FILE CONVERSION started ##########
+01/11/2018 11:47:01 AM - CONVERT - INFO : ### Starting conversion from MS to UVFITS format ###
+01/11/2018 11:51:30 AM - CONVERT - INFO : ### Converted MS file 3C286.MS to UVFITS format! ###
+01/11/2018 11:51:30 AM - CONVERT - INFO : ### Conversion from MS to UVFITS format done! ###
+01/11/2018 11:51:30 AM - CONVERT - INFO : ### Starting conversion from UVFITS to MIRIAD format ###
+01/11/2018 11:51:30 AM - masher - DEBUG : fits in=/data/adebahr/apertif/17122123_3C286_0/00/crosscal/3C286.UVFITS op=uvin out=/data/adebahr/apertif/17122123_3C286_0/00/crosscal/3C286.mir 
+01/11/2018 11:51:30 AM - basher - DEBUG : fits in=/data/adebahr/apertif/17122123_3C286_0/00/crosscal/3C286.UVFITS op=uvin out=/data/adebahr/apertif/17122123_3C286_0/00/crosscal/3C286.mir 
+01/11/2018 11:54:05 AM - basher - DEBUG : Command = fits in=/data/adebahr/apertif/17122123_3C286_0/00/crosscal/3C286.UVFITS op=uvin out=/data/adebahr/apertif/17122123_3C286_0/00/crosscal/3C286.mir 
+01/11/2018 11:54:05 AM - basher - DEBUG : 
+
+fits: Revision 1.32, 2014/09/15 04:39:01 UTC
+
+Determining various defaults ...
+  Assuming systemp=30
+  Assuming jyperk=8
+
+Analysing the extension tables ...
+  Using antenna table information
+  Using frequency table information
+  Using source table information
+
+Handling the visibility data
+  Data are linearly polarized
+  Reading the correlation data
+  The estimated integration time of a sample is 31 seconds
+  Number of antennas: 10
+  Number of antenna configurations: 1
+
+01/11/2018 11:54:05 AM - basher - DEBUG : ### Warning:  1 unrecognised cards were written to the history file
+### Warning:  Ignored random parameter INTTIM
+### Warning:  Some visibilities had zero weight
+
+01/11/2018 11:54:05 AM - basher - DEBUG : Returning output.
+01/11/2018 11:54:05 AM - basher - DEBUG : rm -r /data/adebahr/apertif/17122123_3C286_0/00/crosscal/3C286.UVFITS
+01/11/2018 11:54:11 AM - basher - DEBUG : Returning output.
+01/11/2018 11:54:11 AM - CONVERT - INFO : ### Converted UVFITS file 3C286.MS to MIRIAD format! ###
+01/11/2018 11:54:11 AM - CONVERT - INFO : ### Conversion from UVFITS to MIRIAD format done! ###
+01/11/2018 11:54:11 AM - CONVERT - INFO : ########## FILE CONVERSION done ##########
+01/11/2018 11:55:39 AM - CROSSCAL - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/01/17122123_3C286_0.cfg successfully read! ###
+01/11/2018 11:55:55 AM - masher - DEBUG : mfcal vis=3C286.mir interval=60,60,60 options=delay stokes=XX 
+01/11/2018 11:55:55 AM - basher - DEBUG : mfcal vis=3C286.mir interval=60,60,60 options=delay stokes=XX 
+01/11/2018 12:28:56 PM - basher - DEBUG : Command = mfcal vis=3C286.mir interval=60,60,60 options=delay stokes=XX 
+01/11/2018 12:28:56 PM - basher - DEBUG : 
+MfCal: $Revision: 1.20 $, $Date: 2017/05/08 02:31:10 $
+Reading the data ...
+Number correlations accepted: 50011451
+Number of frequency bands/settings: 1
+Number of polarisations selected: 1
+Number of solution intervals: 12
+Number of passband solution intervals: 12
+Initialising ...
+Generating initial solution estimate ...
+Doing solution refinement ...
+Iter= 1, Solution Error:  0.534
+Iter= 2, Solution Error:  1.000
+Iter= 3, Solution Error:  0.138
+Iter= 4, Solution Error:  0.124
+Iter= 5, Solution Error:  0.099
+Iter= 6, Solution Error:  0.096
+Iter= 7, Solution Error:  0.093
+Iter= 8, Solution Error:  0.096
+Iter= 9, Solution Error:  0.098
+Iter=10, Solution Error:  0.094
+Iter=11, Solution Error:  0.107
+Iter=12, Solution Error:  0.105
+Iter=13, Solution Error:  0.099
+Iter=14, Solution Error:  0.091
+Iter=15, Solution Error:  0.092
+Iter=16, Solution Error:  0.092
+Iter=17, Solution Error:  0.098
+Iter=18, Solution Error:  0.096
+Iter=19, Solution Error:  0.093
+Iter=20, Solution Error:  0.096
+Iter=21, Solution Error:  0.097
+Iter=22, Solution Error:  0.099
+Iter=23, Solution Error:  0.102
+Iter=24, Solution Error:  0.098
+Iter=25, Solution Error:  0.094
+Iter=26, Solution Error:  0.098
+Iter=27, Solution Error:  0.093
+Iter=28, Solution Error:  0.111
+Iter=29, Solution Error:  0.100
+Iter=30, Solution Error:  0.095
+I flux density: 4471.090
+Saving solution ...
+
+01/11/2018 12:28:56 PM - basher - DEBUG : ### Warning:  Correlations flagged or edge-rejected: 16763076
+### Warning:  Failed to converge
+
+01/11/2018 12:28:56 PM - basher - DEBUG : Returning output.
+01/11/2018 01:36:42 PM - root - INFO : Logging started!
+01/11/2018 01:36:42 PM - root - INFO : To see the log in a bash window use the following command:
+01/11/2018 01:36:42 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/01/17122123_3C286_0.log
+01/11/2018 01:36:58 PM - CROSSCAL - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/01/17122123_3C286_0.cfg successfully read! ###
+01/11/2018 01:37:02 PM - masher - DEBUG : gpplt vis=/data/adebahr/apertif/17122123_3C286_0/00/crosscal/3C286.mir log=/home/adebahr/apercal/temp/mirlog/C2DB8VHL options=bandpass 
+01/11/2018 01:37:02 PM - basher - DEBUG : gpplt vis=/data/adebahr/apertif/17122123_3C286_0/00/crosscal/3C286.mir log=/home/adebahr/apercal/temp/mirlog/C2DB8VHL options=bandpass 
+01/11/2018 01:37:03 PM - basher - DEBUG : Command = gpplt vis=/data/adebahr/apertif/17122123_3C286_0/00/crosscal/3C286.mir log=/home/adebahr/apercal/temp/mirlog/C2DB8VHL options=bandpass 
+01/11/2018 01:37:03 PM - basher - DEBUG : 
+
+gpplt: Revision (not recorded)
+
+
+01/11/2018 01:37:03 PM - basher - DEBUG : Returning output.
+01/11/2018 01:50:37 PM - root - INFO : Logging started!
+01/11/2018 01:50:37 PM - root - INFO : To see the log in a bash window use the following command:
+01/11/2018 01:50:37 PM - root - INFO : tail -n +1 -f /home/adebahr/apercal/ipython-notebooks/commissioning/01/17122123_3C286_0.log
+01/11/2018 01:50:48 PM - CROSSCAL - INFO : ### Configuration file /home/adebahr/apercal/ipython-notebooks/commissioning/01/17122123_3C286_0.cfg successfully read! ###
+01/11/2018 01:51:17 PM - masher - DEBUG : gpplt vis=/data/adebahr/apertif/17122123_3C286_0/00/crosscal/3C286.mir log=/home/adebahr/apercal/temp/mirlog/C2DB8VHL options=bandpass 
+01/11/2018 01:51:17 PM - basher - DEBUG : gpplt vis=/data/adebahr/apertif/17122123_3C286_0/00/crosscal/3C286.mir log=/home/adebahr/apercal/temp/mirlog/C2DB8VHL options=bandpass 
+01/11/2018 01:51:19 PM - basher - DEBUG : Command = gpplt vis=/data/adebahr/apertif/17122123_3C286_0/00/crosscal/3C286.mir log=/home/adebahr/apercal/temp/mirlog/C2DB8VHL options=bandpass 
+01/11/2018 01:51:19 PM - basher - DEBUG : 
+
+gpplt: Revision (not recorded)
+
+
+01/11/2018 01:51:19 PM - basher - DEBUG : Returning output.
+01/11/2018 03:22:13 PM - masher - DEBUG : gpplt vis=/data/adebahr/apertif/17122123_3C286_0/00/crosscal/3C286.mir log=/home/adebahr/apercal/temp/mirlog/1IYQDAU1 options=bandpass 
+01/11/2018 03:22:13 PM - basher - DEBUG : gpplt vis=/data/adebahr/apertif/17122123_3C286_0/00/crosscal/3C286.mir log=/home/adebahr/apercal/temp/mirlog/1IYQDAU1 options=bandpass 
+01/11/2018 03:22:15 PM - basher - DEBUG : Command = gpplt vis=/data/adebahr/apertif/17122123_3C286_0/00/crosscal/3C286.mir log=/home/adebahr/apercal/temp/mirlog/1IYQDAU1 options=bandpass 
+01/11/2018 03:22:15 PM - basher - DEBUG : 
+
+gpplt: Revision (not recorded)
+
+
+01/11/2018 03:22:15 PM - basher - DEBUG : Returning output.
+01/11/2018 03:31:53 PM - masher - DEBUG : gpplt vis=/data/adebahr/apertif/17122123_3C286_0/00/crosscal/3C286.mir log=/home/adebahr/apercal/temp/mirlog/3UHIHLSB options=bandpass 
+01/11/2018 03:31:53 PM - basher - DEBUG : gpplt vis=/data/adebahr/apertif/17122123_3C286_0/00/crosscal/3C286.mir log=/home/adebahr/apercal/temp/mirlog/3UHIHLSB options=bandpass 
+01/11/2018 03:31:54 PM - basher - DEBUG : Command = gpplt vis=/data/adebahr/apertif/17122123_3C286_0/00/crosscal/3C286.mir log=/home/adebahr/apercal/temp/mirlog/3UHIHLSB options=bandpass 
+01/11/2018 03:31:54 PM - basher - DEBUG : 
+
+gpplt: Revision (not recorded)
+
+
+01/11/2018 03:31:54 PM - basher - DEBUG : Returning output.

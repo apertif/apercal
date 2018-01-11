@@ -8,6 +8,7 @@ import os
 from astropy.table import Table
 
 from libs import lib
+import subs
 
 
 def check_table(file, type):
@@ -41,7 +42,7 @@ def get_gains(file):
     return(array, array): an array with the amplitude and phase gains for each antenna and solution interval, a datetime array with the actual solution timesteps
     '''
     char_set = string.ascii_uppercase + string.digits  # Create a charset for random gain log file generation
-    tempdir = sub_managetmp.manage_tempdir('mirlog')
+    tempdir = subs.managetmp.manage_tempdir('mirlog')
     # tempdir = os.path.expanduser('~') + '/apercal/temp/mirlog'
     gains_string = ''.join(random.sample(char_set * 8, 8))
     gpplt = lib.miriad('gpplt')
@@ -76,7 +77,7 @@ def get_bp(file):
     return(array, array): The bandpass array in the following order (antenna, frequencies, solution intervals) and a list of the frequencies
     '''
     char_set = string.ascii_uppercase + string.digits  # Create a charset for random gain log file generation
-    tempdir = sub_managetmp.manage_tempdir('mirlog')
+    tempdir = subs.managetmp.manage_tempdir('mirlog')
     # tempdir = os.path.expanduser('~') + '/apercal/temp/mirlog'
     bp_string = ''.join(random.sample(char_set * 8, 8))
     gpplt = lib.miriad('gpplt')
@@ -102,7 +103,7 @@ def get_delays(file):
     return(array, array): an array with the delays for each antenna and solution interval in nsec, a datetime array with the actual solution timesteps
     '''
     char_set = string.ascii_uppercase + string.digits  # Create a charset for random gain log file generation
-    tempdir = sub_managetmp.manage_tempdir('mirlog')
+    tempdir = subs.managetmp.manage_tempdir('mirlog')
     # tempdir = os.path.expanduser('~') + '/apercal/temp/mirlog'
     gains_string = ''.join(random.sample(char_set * 8, 8))
     gpplt = lib.miriad('gpplt')
