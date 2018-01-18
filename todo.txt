@@ -1,7 +1,0 @@
-- add minor cycles to adaptive
-- implement transfer adaptive to manual, and standard to manual parameters function
-- implement amp calibration
-- write flag module to flag during cross-calibration
-- create cube function for line and polarisation
-- implement rm-synthesis and rm-clean
-- add option to use different parameters for frequency chunks in manual mode
