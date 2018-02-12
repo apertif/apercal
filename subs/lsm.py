@@ -33,21 +33,21 @@ def query_catalogue(infile, catalogue, radius, minflux=0.0):
 	'''
 	try:
 		if catalogue == 'FIRST':
-			v = Vizier(columns=["*","+_r"], column_filters={"Fint": ">"+str(minflux)})
+			v = Vizier(columns=["*","+_r","_RAJ2000","_DEJ2000","PA"], column_filters={"Fint": ">"+str(minflux)})
 			v.ROW_LIMIT=-1
 			sources = v.query_region(getradec(infile), radius=Angle(radius, "deg"), catalog=catalogue)
 			maj_axis = sources[0]['Maj']
 			min_axis = sources[0]['Min']
 			flux = sources[0]['Fint']/1000.0
 		elif catalogue == 'NVSS':
-			v = Vizier(columns=["*","+_r"], column_filters={"S1.4": ">" + str(minflux)})
+			v = Vizier(columns=["*","+_r","_RAJ2000","_DEJ2000","PA"], column_filters={"S1.4": ">" + str(minflux)})
 			v.ROW_LIMIT = -1
 			sources = v.query_region(getradec(infile), radius=Angle(radius, "deg"), catalog=catalogue)
 			maj_axis = sources[0]['MajAxis']
 			min_axis = sources[0]['MinAxis']
 			flux = sources[0]['S1.4']/1000.0
 		elif catalogue == 'WENSS':
-			v = Vizier(columns=["*","+_r"], column_filters={"Sint": ">" + str(minflux)})
+			v = Vizier(columns=["*","+_r","_RAJ2000","_DEJ2000","PA"], column_filters={"Sint": ">" + str(minflux)})
 			v.ROW_LIMIT = -1
 			sources = v.query_region(getradec(infile), radius=Angle(radius, "deg"), catalog=catalogue)
 			maj_axis = sources[0]['MajAxis']
