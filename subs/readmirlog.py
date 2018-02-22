@@ -13,7 +13,7 @@ import subs
 
 def check_table(file, type):
     '''
-    Function to change the file format to an ascii table compatible one
+    Function to change the file format of a MIRIAD ggplt table to an ascii table compatible one
     file (str): the log file with the table
     '''
     with open(file, 'rw') as gaintxt:
@@ -43,7 +43,6 @@ def get_gains(file):
     '''
     char_set = string.ascii_uppercase + string.digits  # Create a charset for random gain log file generation
     tempdir = subs.managetmp.manage_tempdir('mirlog')
-    # tempdir = os.path.expanduser('~') + '/apercal/temp/mirlog'
     gains_string = ''.join(random.sample(char_set * 8, 8))
     gpplt = lib.miriad('gpplt')
     gpplt.vis = file
@@ -66,7 +65,8 @@ def get_gains(file):
     gain_array = np.zeros((nant, nint, 2))
     for ant in range(nant):
         gain_array[ant, :, 0] = s['col' + str(ant + 3)]
-        gain_array[ant, :, 1] = t['col' + str(ant + 3)]
+#        gain_array[ant, :, 1] = t['col' + str(ant + 3)]
+        gain_array[ant, :, 1] = np.unwrap(t['col' + str(ant + 3)], discont=90)
     time_array = [starttime + datetime.timedelta(days=int(days[step]), hours=int(times[step][0:2]), minutes=int(times[step][3:5]), seconds=int(times[step][6:8])) for step in range(nint)]
     return gain_array, time_array
 
