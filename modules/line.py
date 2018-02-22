@@ -71,28 +71,28 @@ class line:
         self.splitdata() # not parallelised (yet?): if each thread opens entire file, memory can become full
         end = time.time()
         splitdata_time = end - start
-        self.logger.info("### Splitting data for " + nthreads + ": " + str(splitdata_time) + " s ###")
+        self.logger.info("### Splitting data for " + str(nthreads) + ": " + str(splitdata_time) + " s ###")
         # build in check on nthreads to prevent excessive demands? (here?)
         start = time.time()
         self.transfergains_parallel(nthreads)
         end = time.time()
         transfergains_time = end - start
-        self.logger.info("### Transfer gains for " + nthreads + ": " + str(transfergains_time) + " s ###")
+        self.logger.info("### Transfer gains for " + str(nthreads) + ": " + str(transfergains_time) + " s ###")
         start = time.time()
         self.subtract_parallel(nthreads)
         end = time.time()
         subtract_time = end - start
-        self.logger.info("### Subtract continuum for " + nthreads + ": " + str(subtract_time) + " s ###")
+        self.logger.info("### Subtract continuum for " + str(nthreads) + ": " + str(subtract_time) + " s ###")
         start = time.time()
         self.image_line_parallel(nthreads)
         end = time.time()
         image_line_time = end - start
-        self.logger.info("### Line imaging for " + nthreads + ": " + str(image_line_time) + " s ###")
+        self.logger.info("### Line imaging for " + str(nthreads) + ": " + str(image_line_time) + " s ###")
         self.logger.info("### Timing summary: ###")
-        self.logger.info("### Splitting data for " + nthreads + ": " + str(splitdata_time) + " s ###")
-        self.logger.info("### Transfer gains for " + nthreads + ": " + str(transfergains_time) + " s ###")
-        self.logger.info("### Subtract continuum for " + nthreads + ": " + str(subtract_time) + " s ###")
-        self.logger.info("### Line imaging for " + nthreads + ": " + str(image_line_time) + " s ###")
+        self.logger.info("### Splitting data for " + str(nthreads) + ": " + str(splitdata_time) + " s ###")
+        self.logger.info("### Transfer gains for " + str(nthreads) + ": " + str(transfergains_time) + " s ###")
+        self.logger.info("### Subtract continuum for " + str(nthreads) + ": " + str(subtract_time) + " s ###")
+        self.logger.info("### Line imaging for " + str(nthreads) + ": " + str(image_line_time) + " s ###")
         self.logger.info("########## CONTINUUM SUBTRACTION done ##########")
 
     def splitdata(self):
