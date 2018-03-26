@@ -13,6 +13,12 @@ import os
 import sys
 
 import subs.setinit
+import subs.managefiles
+import subs.combim
+import subs.readmirhead
+import subs.imstats
+import subs.param
+
 from libs import lib
 
 
@@ -20,10 +26,10 @@ from libs import lib
 
 class continuum:
     '''
-    Final class to produce final data products (Deep continuum images, line cubes, and polairsation images and Faraday-cubes).
+    Continuum class to produce continuum data products (Deep continuum images of individual frequency chunks and stacked continuum image).
     '''
     def __init__(self, file=None, **kwargs):
-        logging.basicConfig(level=20)
+#        logging.basicConfig(level=20)
         self.logger = logging.getLogger('CONTINUUM')
         config = ConfigParser.ConfigParser() # Initialise the config parser
         if file != None:
@@ -39,18 +45,18 @@ class continuum:
         subs.setinit.setinitdirs(self)
         subs.setinit.setdatasetnamestomiriad(self)
 
-    #########################################################
-    ##### Function to execute the final imaging process #####
-    #########################################################
+    #############################################################
+    ##### Function to execute the continuum imaging process #####
+    #############################################################
 
     def go(self):
         '''
         Executes the continuum imaging process in the following order
-        continuum
+        image_continuum
         '''
-        self.logger.info("########## Starting CONTINUUM IMAGING ##########")
+        self.logger.info("########## Starting CONTINUUM IMAGING of beam " + str(self.beam) + " ##########")
         self.image_continuum()
-        self.logger.info("########## CONTINUUM IMAGING done ##########")
+        self.logger.info("########## CONTINUUM IMAGING of beam " + str(self.beam) + " done ##########")
 
     def image_continuum(self):
         '''
@@ -59,72 +65,168 @@ class continuum:
         subs.setinit.setinitdirs(self)
         subs.setinit.setdatasetnamestomiriad(self)
         self.logger.info('### Starting deep continuum imaging of full dataset ###')
-        self.director('ch', self.contdir)
+        subs.managefiles.director(self, 'ch', self.contdir)
+
+        #########################
+        # Stacking imaging mode #
+        #########################
+
         if self.continuum_mode == 'stack':
-            self.logger.info('### Creating individual deep images from frequency chunks ###')
-            self.director('ch', self.contdir + '/stack')
+            self.logger.debug('### Creating individual deep images from frequency chunks ###')
+            subs.managefiles.director(self,'ch', self.contdir + '/stack')
             for chunk in self.list_chunks(): # Produce an image for each chunk
                 self.logger.info('### Continuum imaging for chunk ' + chunk + ' started ###')
                 majc = int(self.get_last_major_iteration(chunk)+1)
-                self.logger.info('# Last major self-calibration cycle seems to have been ' + str(majc-1) + ' #')
-                if os.path.isfile(self.selfcaldir + '/' + chunk + '/' + chunk + '.mir/gains'): # Check if a chunk could be calibrated and has data left
-                    self.director('ch', self.contdir + '/stack/' + chunk)
-                    theoretical_noise = self.calc_theoretical_noise(self.selfcaldir + '/' + chunk + '/' + chunk + '.mir')
-                    self.logger.info('# Theoretical noise for chunk ' + chunk + ' is ' + str(theoretical_noise) + ' Jy/beam #')
-                    theoretical_noise_threshold = self.calc_theoretical_noise_threshold(theoretical_noise, self.continuum_nsigma)
-                    self.logger.info('# Your theoretical noise threshold will be ' + str(self.continuum_nsigma) + ' times the theoretical noise corresponding to ' + str(theoretical_noise_threshold) + ' Jy/beam #')
-                    dr_list = self.calc_dr_maj(self.continuum_drinit, self.continuum_dr0, majc, self.continuum_majorcycle_function)
-                    dr_minlist = self.calc_dr_min(dr_list, majc-1, self.continuum_minorcycle, self.continuum_minorcycle_function)
-                    self.logger.info('# Dynamic range limits for the continuum minor iterations to clean are ' + str(dr_minlist) + ' #')
-                    try:
-                        for minc in range(self.continuum_minorcycle): # Iterate over the minor imaging cycles and masking
-                            self.run_continuum_minoriteration(chunk, majc, minc, dr_minlist[minc], theoretical_noise_threshold)
-                        self.logger.info('### Continuum imaging for chunk ' + chunk + ' successful ###')
-                    except:
-                        self.logger.warning('### Continuum imaging for chunk ' + chunk + ' NOT successful ###')
+                self.logger.debug('# Last major self-calibration cycle seems to have been ' + str(majc-1) + ' #')
+                # Check if a chunk could be calibrated and has data left
+                if os.path.isfile(self.selfcaldir + '/' + chunk + '/' + chunk + '.mir/gains'):
+                    subs.managefiles.director(self, 'ch', self.contdir + '/stack/' + chunk)
+                    # Check if the chunk was already imaged
+                    if os.path.isdir(self.contdir + '/stack/' + chunk + '/' + 'image_' + str(self.continuum_minorcycle-1).zfill(2)):
+                        self.logger.info('# Frequency chunk ' + chunk + ' has already been imaged! #')
+                    else:
+                        ###########################
+                        # Do the final deep clean #
+                        ###########################
+                        theoretical_noise = self.calc_theoretical_noise(self.selfcaldir + '/' + chunk + '/' + chunk + '.mir')
+                        self.logger.debug('# Theoretical noise for chunk ' + chunk + ' is ' + str(theoretical_noise) + ' Jy/beam #')
+                        theoretical_noise_threshold = self.calc_theoretical_noise_threshold(theoretical_noise, self.continuum_nsigma)
+                        self.logger.debug('# Your theoretical noise threshold will be ' + str(self.continuum_nsigma) + ' times the theoretical noise corresponding to ' + str(theoretical_noise_threshold) + ' Jy/beam #')
+                        dr_list = self.calc_dr_maj(self.continuum_drinit, self.continuum_dr0, majc, self.continuum_majorcycle_function)
+                        dr_minlist = self.calc_dr_min(dr_list, majc - 1, self.continuum_minorcycle, self.continuum_minorcycle_function)
+                        self.logger.debug('# Dynamic range limits for the continuum minor iterations to clean are ' + str(dr_minlist) + ' #')
+                        try:
+                            for minc in range(self.continuum_minorcycle):  # Iterate over the minor imaging cycles and masking
+                                self.run_continuum_minoriteration(chunk, majc, minc, dr_minlist[minc], theoretical_noise_threshold)
+                        except:
+                            self.logger.warning('### Continuum imaging for chunk ' + chunk + ' NOT successful ###')
+                        # Create a list of files and check if all of them are there
+                        filelist = ['map_00', 'beam_00']
+                        iterlist = [str(iter) for iter in range(self.continuum_minorcycle)]
+                        for map in ['image_', 'mask_', 'model_', 'residual_']:
+                            for n in iterlist:
+                                filelist.append(map + n.zfill(2))
+                        dirlist = os.listdir(self.contdir + '/stack/' + chunk)
+                        if all(x in filelist for x in dirlist):
+                            self.logger.info('### All files for continuum imaging available. Continuum imaging for chunk ' + chunk + ' successful! ###')
+                        else:
+                            self.logger.warning('### Continuum imaging for chunk ' + chunk + ' NOT successful ###')
+
+            ################################
+            # Stacking of continuum images #
+            ################################
             self.logger.info('### Stacking continuum images of individual frequency chunks ###')
-            self.director('ch', self.contdir + '/stack')
+            subs.managefiles.director(self,'ch', self.contdir + '/stack')
             images = ''
             for n in range(100):
                 if os.path.exists(self.contdir + '/stack/' + str(n).zfill(2)):
                     lastimage = glob.glob(str(n).zfill(2) + '/image_*')
                     if len(lastimage) != 0: # Check if there is an image for a chunk
-                        if np.isnan(self.calc_irms(lastimage[-1])): # Check if the image is not blank
+                        lastimage_stats = subs.imstats.getimagestats(self, lastimage[-1])
+                        if np.isnan(lastimage_stats[2]): # Check if the image is not blank
                             self.logger.warning('# Image from frequency chunk ' + str(n) + ' is not valid. This image is not added in stacking! #')
+                        elif lastimage_stats[1] >= 100000.0: # Check if the image has high amplitudes
+                            self.logger.warning('# Image from frequency chunk ' + str(n) + ' shows high amplitudes and is not added in stacking! #')
+                        elif lastimage_stats[0] <= -1.0: # Check if the image has strong negative residuals
+                            self.logger.warning('# Image from frequency chunk ' + str(n) + ' shows strong negative residuals and is not added in stacking! #')
                         else:
                             images = images + lastimage[-1] + ','
                     else:
                         self.logger.warning('# Frequency chunk ' + str(n) + ' did not produce any image. Was all data for this chunk flagged? #')
                 else:
                     pass
-            if self.continuum_image_convolbeam != '':
-                convolimages = ''
-                beam_parameters = self.continuum_image_convolbeam.split(',')
-                self.logger.info('# Convolving final continuum images to major/minor fwhm ' + str(beam_parameters[0]) + ',' + str(beam_parameters[1]) + 'and angle ' + str(beam_parameters[2]))
-                for image in images.rstrip(',').split(','):
-                    convol = lib.miriad('convol')
-                    convol.map = image
-                    convol.fwhm = str(beam_parameters[0]) + ',' + str(beam_parameters[1])
-                    convol.pa = str(beam_parameters[2])
-                    convol.out = image +'_convol'
-                    convol.options = 'final'
-                    convol.go()
-                    convolimages = image +'_convol' + ','
+
+            if len(images) == 0: # Check if not all images are bad
+                self.logger.error('### No images of good quality available for beam ' + self.beam + ' ! ###')
+            else:
+                pass
+
+            ########################################
+            # Convolve the images to a common beam #
+            ########################################
+            if len(glob.glob('*/convol_' + str(self.continuum_minorcycle-1).zfill(2))) == 0:
+                if self.continuum_image_convolbeam == '': # Calculate the beam size automatically and reject outliers
+                    beamarray = np.full((len(images.rstrip(',').split(',')),3), np.nan)
+                    avchunks = []
+                    for n, image in enumerate(images.rstrip(',').split(',')):
+                        beamarray[n,:] = subs.readmirhead.getbeamimage(image) # Create the array with the sythesised beam parameters
+                        avchunks.append(image.split('/')[0]) # List of the available chunks
+                    rejchunks, stackbeam = subs.combim.calc_synbeam(avchunks, beamarray)
+                    imagelist = images.rstrip(',').split(',')
+                    if len(rejchunks) == 0:
+                        self.logger.debug('# No frequency chunks rejected. All beam sizes are within usable parameters! #')
+                    else:
+                        for chunk in rejchunks:
+                            rejindex = avchunks.index(chunk)
+                            imagelist.pop(rejindex)
+                    self.logger.debug('# Final beam size is fwhm = ' + str(stackbeam[0]) + ' arcsec , ' + str(stackbeam[1]) + ' arcsec, pa = ' + str(stackbeam[2]) + ' deg')
+                    convolimages = ''
+                    for image in imagelist:
+                        convol = lib.miriad('convol')
+                        convol.map = image
+                        convol.fwhm = str(stackbeam[0]) + ',' + str(stackbeam[1])
+                        convol.pa = str(stackbeam[2])
+                        convol.out = image.replace('image', 'convol')
+                        convol.options = 'final'
+                        convol.go()
+                        convolimages = convolimages + convol.out + ','
+                else: # If you give a beam size, convol the images to that one
+                    convolimages = ''
+                    beam_parameters = self.continuum_image_convolbeam.split(',')
+                    self.logger.debug('# Convolving final continuum images to major/minor fwhm ' + str(beam_parameters[0]) + ',' + str(beam_parameters[1]) + ' and angle ' + str(beam_parameters[2]))
+                    for image in images.rstrip(',').split(','):
+                        convol = lib.miriad('convol')
+                        convol.map = image
+                        convol.fwhm = str(beam_parameters[0]) + ',' + str(beam_parameters[1])
+                        convol.pa = str(beam_parameters[2])
+                        convol.out = image.replace('image', 'convol')
+                        convol.options = 'final'
+                        convol.go()
+                        convolimages = convolimages + convol.out + ','
                 images = convolimages
-            imcomb = lib.miriad('imcomb')
-            imcomb.in_ = images.rstrip(',')
-            imcomb.out = self.contdir + '/' + self.target.rstrip('.mir') + '_stack'
-            imcomb.options = 'fqaver'
-            imcomb.go()
-            self.director('rm', self.contdir + '/' + self.target.rstrip('.mir') + '_stack/mask')
-            self.logger.info('### Final deep continuum image is ' + self.contdir + '/' + self.target.rstrip('.mir') + '_stack ###')
+            else:
+                self.logger.info('# Convolved images are already available! #')
+
+            ###################################
+            # Combination of convolved images #
+            ###################################
+            if os.path.isfile(self.contdir + '/' + self.target.rstrip('.mir') + '_stack.fits'):
+                self.logger.info('# Combined image already available! #')
+            else:
+                # Create a list of the residual images and get the rms to weight the combined image accordingly
+                residualimages = [w.replace('image', 'residual') for w in images.rstrip(',').split(',')]
+                rmsstr = ''
+                for residualimage in residualimages:
+#                    rms = subs.imstats.getimagestats(self, residualimage.rstrip('_convol'))[2]
+                    rms = subs.imstats.getimagestats(self, residualimage)[2]
+                    rmsstr = rmsstr + str(rms) + ','
+                imcomb = lib.miriad('imcomb')
+                imcomb.in_ = images.rstrip(',')
+                imcomb.out = self.contdir + '/' + self.target.rstrip('.mir') + '_stack'
+                imcomb.rms = rmsstr.rstrip(',')
+                imcomb.options = 'fqaver'
+                imcomb.go()
+                subs.param.add_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_imcomb_rms', np.fromstring(imcomb.rms, dtype=float, sep=','))
+                subs.managefiles.director(self,'rm', self.contdir + '/' + self.target.rstrip('.mir') + '_stack/mask')
+                fits = lib.miriad('fits')
+                fits.op = 'xyout'
+                fits.in_ = self.contdir + '/' + self.target.rstrip('.mir') + '_stack'
+                fits.out = self.contdir + '/' + self.target.rstrip('.mir') + '_stack.fits'
+                fits.go()
+                subs.managefiles.director(self, 'rm', self.contdir + '/stack/*/convol*') # Remove the obsolete files
+                self.logger.info('### Final deep continuum image is ' + self.contdir + '/' + self.target.rstrip('.mir') + '_stack.fits ###')
+
+        ##########################################
+        # Multi-frequency synthesis imaging mode #
+        ##########################################
+
         elif self.continuum_mode == 'mf':
             self.logger.info('### Combining frequency chunks in the (u,v)-plane and creating an mfclean image ###')
-            self.director('ch', self.contdir + '/mf')
+            subs.managefiles.director(self,'ch', self.contdir + '/mf')
             self.logger.info('# Copying calibrated datasets to ' + self.contdir + '/mf')
             theoretical_noise_array = np.zeros((len(self.list_chunks()),1),dtype=np.float)
             for n,chunk in enumerate(self.list_chunks()): # Copy the datasets over to keep pathnames short
-                self.director('cp', '.', self.selfcaldir + '/' + chunk + '/' + chunk + '.mir')
+                subs.managefiles.director(self,'cp', '.', self.selfcaldir + '/' + chunk + '/' + chunk + '.mir')
                 theoretical_noise_array[n,0] = self.calc_theoretical_noise(chunk + '.mir')
             theoretical_noise = np.sqrt(1.0/(np.sum(1.0/(np.square(theoretical_noise_array)))))
             self.logger.info('# Theoretical noise for combined dataset is ' + str(theoretical_noise) + ' Jy/beam #')
@@ -152,14 +254,18 @@ class continuum:
                     invert.stokes = 'ii'
                     invert.slop = 1
                     if self.continuum_image_robust == '':
-                        pass
+                        invert.robust = -1
                     else:
                         invert.robust = self.continuum_image_robust
-                    if self.continuum_image_centre != '':
+                    if self.continuum_image_centre != '': # Use the image centre given in the cfg file
                         invert.offset = self.continuum_image_centre
                         invert.options = 'mfs,double,mosaic,sdb'
                     else:
-                        invert.options = 'mfs,double,sdb'
+                        if os.path.isdir(self.basedir + '00' + '/' + self.selfcalsubdir + '/' + self.target):
+                            invert.offset = subs.readmirhead.getradecsex(self.basedir + '00' + '/' + self.selfcalsubdir + '/' + self.target)
+                            invert.options = 'mfs,double,mosaic,sdb'
+                        else:
+                            invert.options = 'mfs,double,sdb' # Use the image centre of the individual beams for gridding (not recommended)
                     invert.go()
                     imax = self.calc_imax('map_' + str(minc).zfill(2))
                     noise_threshold = self.calc_noise_threshold(imax, minc, majc, self.continuum_c0)
@@ -278,32 +384,41 @@ class continuum:
             invert.cell = self.continuum_image_cellsize
             invert.stokes = 'ii'
             invert.slop = 1
-            if self.continuum_robust != '':
-                invert.robust = self.continuum_robust
-            if self.continuum_image_centre != '':
+            if self.continuum_image_robust == '':
+                invert.robust = -1
+            else:
+                invert.robust = self.continuum_image_robust
+            if self.continuum_image_centre != '':  # Use the image centre given in the cfg file
                 invert.offset = self.continuum_image_centre
                 invert.options = 'mfs,double,mosaic'
             else:
-                invert.options = 'mfs,double'
+                if os.path.isdir(self.basedir + '00' + '/' + self.selfcalsubdir + '/' + self.target):
+                    invert.offset = subs.readmirhead.getradecsex(
+                        self.basedir + '00' + '/' + self.selfcalsubdir + '/' + self.target)
+                    invert.options = 'mfs,double,mosaic'
+                    self.logger.debug('# Using pointing centre of beam 00 for gridding of all beams! #')
+                else:
+                    invert.options = 'mfs,double,sdb'  # Use the image centre of the individual beams for gridding (not recommended)
+                    self.logger.warning('### Using pointing centres of individual beams for gridding. Not recommended for mosaicking! ###')
             invert.go()
             imax = self.calc_imax('map_' + str(minc).zfill(2))
             noise_threshold = self.calc_noise_threshold(imax, minc, majc, self.continuum_c0)
             dynamic_range_threshold = self.calc_dynamic_range_threshold(imax, drmin, self.continuum_minorcycle0_dr)
             mask_threshold, mask_threshold_type = self.calc_mask_threshold(theoretical_noise_threshold, noise_threshold, dynamic_range_threshold)
-            self.logger.info('# Mask threshold for final minor cycle ' + str(minc) + ' set to ' + str(mask_threshold) + ' Jy/beam #')
-            self.logger.info('# Mask threshold set by ' + str(mask_threshold_type) + ' #')
-            self.director('cp', 'mask_' + str(minc).zfill(2), file=self.selfcaldir + '/' + chunk + '/' + str(majc - 2).zfill(2) + '/mask_' + str(self.continuum_minorcycle - 1).zfill(2))
+            self.logger.debug('# Mask threshold for final minor cycle ' + str(minc) + ' set to ' + str(mask_threshold) + ' Jy/beam #')
+            self.logger.debug('# Mask threshold set by ' + str(mask_threshold_type) + ' #')
+            subs.managefiles.director(self,'cp', 'mask_' + str(minc).zfill(2), file=self.selfcaldir + '/' + chunk + '/' + str(majc - 2).zfill(2) + '/mask_' + str(self.continuum_minorcycle - 1).zfill(2))
             regrid = lib.miriad('regrid')
             regrid.in_ = 'mask_' + str(minc).zfill(2)
             regrid.out = 'mask_regrid'
             regrid.tin = 'map_' + str(minc).zfill(2)
             regrid.axes = '1,2'
             regrid.go()
-            self.director('rm', 'mask_' + str(minc).zfill(2))
-            self.director('rn', 'mask_' + str(minc).zfill(2), file='mask_regrid')
-            self.logger.info('# Mask from last selfcal cycle copied and regridded to common grid #')
+            subs.managefiles.director(self,'rm', 'mask_' + str(minc).zfill(2))
+            subs.managefiles.director(self,'rn', 'mask_' + str(minc).zfill(2), file='mask_regrid')
+            self.logger.debug('# Mask from last selfcal cycle copied and regridded to common grid #')
             clean_cutoff = self.calc_clean_cutoff(mask_threshold, self.continuum_c1)
-            self.logger.info('# Clean threshold for minor cycle ' + str(minc) + ' was set to ' + str(clean_cutoff) + ' Jy/beam #')
+            self.logger.debug('# Clean threshold for minor cycle ' + str(minc) + ' was set to ' + str(clean_cutoff) + ' Jy/beam #')
             clean = lib.miriad('clean')  # Clean the image down to the calculated threshold
             clean.map = 'map_' + str(0).zfill(2)
             clean.beam = 'beam_' + str(0).zfill(2)
@@ -312,7 +427,7 @@ class continuum:
             clean.niters = 100000
             clean.region = '"' + 'mask(mask_' + str(minc).zfill(2) + ')' + '"'
             clean.go()
-            self.logger.info('# Minor cycle ' + str(minc) + ' cleaning done #')
+            self.logger.debug('# Minor cycle ' + str(minc) + ' cleaning done #')
             restor = lib.miriad('restor')
             restor.model = 'model_' + str(minc).zfill(2)
             restor.beam = 'beam_' + str(0).zfill(2)
@@ -326,28 +441,28 @@ class continuum:
             else:
                 pass
             restor.go()  # Create the cleaned image
-            self.logger.info('# Cleaned image for minor cycle ' + str(minc) + ' created #')
+            self.logger.debug('# Cleaned image for minor cycle ' + str(minc) + ' created #')
             restor.mode = 'residual'
             restor.out = 'residual_' + str(minc).zfill(2)
             restor.go()  # Create the residual image
-            self.logger.info('# Residual image for minor cycle ' + str(minc) + ' created #')
-            self.logger.info('# Peak of the residual image is ' + str(self.calc_imax('residual_' + str(minc).zfill(2))) + ' Jy/beam #')
-            self.logger.info('# RMS of the residual image is ' + str(self.calc_irms('residual_' + str(minc).zfill(2))) + ' Jy/beam #')
+            self.logger.debug('# Residual image for minor cycle ' + str(minc) + ' created #')
+            self.logger.debug('# Peak of the residual image is ' + str(self.calc_imax('residual_' + str(minc).zfill(2))) + ' Jy/beam #')
+            self.logger.debug('# RMS of the residual image is ' + str(self.calc_irms('residual_' + str(minc).zfill(2))) + ' Jy/beam #')
         else:
             imax = self.calc_imax('map_' + str(0).zfill(2))
             noise_threshold = self.calc_noise_threshold(imax, minc, majc, self.continuum_c0)
             dynamic_range_threshold = self.calc_dynamic_range_threshold(imax, drmin, self.continuum_minorcycle0_dr)
             mask_threshold, mask_threshold_type = self.calc_mask_threshold(theoretical_noise_threshold, noise_threshold, dynamic_range_threshold)
-            self.logger.info('# Mask threshold for final imaging minor cycle ' + str(minc) + ' set to ' + str(mask_threshold) + ' Jy/beam #')
-            self.logger.info('# Mask threshold set by ' + str(mask_threshold_type) + ' #')
+            self.logger.debug('# Mask threshold for final imaging minor cycle ' + str(minc) + ' set to ' + str(mask_threshold) + ' Jy/beam #')
+            self.logger.debug('# Mask threshold set by ' + str(mask_threshold_type) + ' #')
             maths = lib.miriad('maths')
             maths.out = 'mask_' + str(minc).zfill(2)
             maths.exp = '"<' + 'image_' + str(minc - 1).zfill(2) + '>"'
             maths.mask = '"<' + 'image_' + str(minc - 1).zfill(2) + '>.gt.' + str(mask_threshold) + '"'
             maths.go()
-            self.logger.info('# Mask with threshold ' + str(mask_threshold) + ' Jy/beam created #')
+            self.logger.debug('# Mask with threshold ' + str(mask_threshold) + ' Jy/beam created #')
             clean_cutoff = self.calc_clean_cutoff(mask_threshold, self.continuum_c1)
-            self.logger.info('# Clean threshold for minor cycle ' + str(minc) + ' was set to ' + str(clean_cutoff) + ' Jy/beam #')
+            self.logger.debug('# Clean threshold for minor cycle ' + str(minc) + ' was set to ' + str(clean_cutoff) + ' Jy/beam #')
             clean = lib.miriad('clean')  # Clean the image down to the calculated threshold
             clean.map = 'map_' + str(0).zfill(2)
             clean.beam = 'beam_' + str(0).zfill(2)
@@ -357,7 +472,7 @@ class continuum:
             clean.niters = 100000
             clean.region = '"' + 'mask(' + 'mask_' + str(minc).zfill(2) + ')' + '"'
             clean.go()
-            self.logger.info('# Minor cycle ' + str(minc) + ' cleaning done #')
+            self.logger.debug('# Minor cycle ' + str(minc) + ' cleaning done #')
             restor = lib.miriad('restor')
             restor.model = 'model_' + str(minc).zfill(2)
             restor.beam = 'beam_' + str(0).zfill(2)
@@ -371,13 +486,13 @@ class continuum:
             else:
                 pass
             restor.go()  # Create the cleaned image
-            self.logger.info('# Cleaned image for minor cycle ' + str(minc) + ' created #')
+            self.logger.debug('# Cleaned image for minor cycle ' + str(minc) + ' created #')
             restor.mode = 'residual'
             restor.out = 'residual_' + str(minc).zfill(2)
             restor.go()
-            self.logger.info('# Residual image for minor cycle ' + str(minc) + ' created #')
-            self.logger.info('# Peak of the residual image is ' + str(self.calc_imax('residual_' + str(minc).zfill(2))) + ' Jy/beam #')
-            self.logger.info('# RMS of the residual image is ' + str(self.calc_irms('residual_' + str(minc).zfill(2))) + ' Jy/beam #')
+            self.logger.debug('# Residual image for minor cycle ' + str(minc) + ' created #')
+            self.logger.debug('# Peak of the residual image is ' + str(self.calc_imax('residual_' + str(minc).zfill(2))) + ' Jy/beam #')
+            self.logger.debug('# RMS of the residual image is ' + str(self.calc_irms('residual_' + str(minc).zfill(2))) + ' Jy/beam #')
 
     def calc_miniter(self, maxdr, dr0):
         '''
@@ -419,7 +534,7 @@ class continuum:
         data = image_data[0].data
         imax = np.nanstd(data)  # Get the standard deviation
         image_data.close()  # Close the image
-        self.director('rm', image + '.fits')
+        subs.managefiles.director(self,'rm', image + '.fits')
         return imax
 
     def calc_imax(self, image):
@@ -437,8 +552,26 @@ class continuum:
         data = image_data[0].data
         imax = np.nanmax(data)  # Get the maximum
         image_data.close()  # Close the image
-        self.director('rm', image + '.fits')
+        subs.managefiles.director(self,'rm', image + '.fits')
         return imax
+
+    def calc_imin(self, image):
+        '''
+        Function to calculate the maximum of an image
+        image (string): The name of the image file. Must be in MIRIAD-format
+        returns (float): the maximum in the image
+        '''
+        fits = lib.miriad('fits')
+        fits.op = 'xyout'
+        fits.in_ = image
+        fits.out = image + '.fits'
+        fits.go()
+        image_data = pyfits.open(image + '.fits')  # Open the image
+        data = image_data[0].data
+        imin = np.nanmin(data)  # Get the maximum
+        image_data.close()  # Close the image
+        subs.managefiles.director(self, 'rm', image + '.fits')
+        return imin
 
     def calc_max_min_ratio(self, image):
         '''
@@ -459,7 +592,7 @@ class continuum:
         min_max = np.abs(imin/imax)
         ratio = np.nanmax([max_min,min_max]) # Take the maximum of both ratios and return it
         image_data.close()  # Close the image
-        self.director('rm', image + '.fits')
+        subs.managefiles.director(self,'rm', image + '.fits')
         return ratio
 
     def calc_isum(self, image):
@@ -477,7 +610,7 @@ class continuum:
         data = image_data[0].data
         isum = np.nansum(data)  # Get the maximum
         image_data.close()  # Close the image
-        self.director('rm', image + '.fits')
+        subs.managefiles.director(self,'rm', image + '.fits')
         return isum
 
     def calc_dr_maj(self, drinit, dr0, majorcycles, function):
@@ -520,7 +653,7 @@ class continuum:
             self.logger.error('### Function for minor cycles not supported! Exiting! ###')
             sys.exit(1)
         if dr_min[0] == 0:
-            dr_min[0] = self.selfcal_mode_standard_minorcycle0_dr
+            dr_min[0] = self.continuum_minorcycle0_dr
         else:
             pass
         return dr_min
@@ -644,9 +777,9 @@ class continuum:
         lastmajor = n
         return lastmajor
 
-    #######################################################################
-    ##### Manage the creation and moving of new directories and files #####
-    #######################################################################
+    ##########################################################################
+    ##### Individual functions to show the parameters and reset the step #####
+    ##########################################################################
 
     def show(self, showall=False):
         '''
@@ -684,51 +817,5 @@ class continuum:
         subs.setinit.setinitdirs(self)
         subs.setinit.setdatasetnamestomiriad(self)
         self.logger.warning('### Deleting all continuum data products. ###')
-        self.director('ch', self.finaldir)
-        self.director('rm', self.finaldir + '/*')
-
-    def director(self, option, dest, file=None, verbose=True):
-        '''
-        director: Function to move, remove, and copy files and directories
-        option: 'mk', 'ch', 'mv', 'rm', and 'cp' are supported
-        dest: Destination of a file or directory to move to
-        file: Which file to move or copy, otherwise None
-        '''
-        subs.setinit.setinitdirs(self)
-        subs.setinit.setdatasetnamestomiriad(self)
-        if option == 'mk':
-            if os.path.exists(dest):
-                pass
-            else:
-                os.mkdir(dest)
-                if verbose == True:
-                    self.logger.info('# Creating directory ' + str(dest) + ' #')
-        elif option == 'ch':
-            if os.getcwd() == dest:
-                pass
-            else:
-                self.lwd = os.getcwd()  # Save the former working directory in a variable
-                try:
-                    os.chdir(dest)
-                except:
-                    os.mkdir(dest)
-                    if verbose == True:
-                        self.logger.info('# Creating directory ' + str(dest) + ' #')
-                    os.chdir(dest)
-                self.cwd = os.getcwd()  # Save the current working directory in a variable
-                if verbose == True:
-                    self.logger.info('# Moved to directory ' + str(dest) + ' #')
-        elif option == 'mv':  # Move
-            if os.path.exists(dest):
-                lib.basher("mv " + str(file) + " " + str(dest))
-            else:
-                os.mkdir(dest)
-                lib.basher("mv " + str(file) + " " + str(dest))
-        elif option == 'rn':  # Rename
-            lib.basher("mv " + str(file) + " " + str(dest))
-        elif option == 'cp':  # Copy
-            lib.basher("cp -r " + str(file) + " " + str(dest))
-        elif option == 'rm':  # Remove
-            lib.basher("rm -r " + str(dest))
-        else:
-            print('### Option not supported! Only mk, ch, mv, rm, rn, and cp are supported! ###')
+        subs.managefiles.director(self,'ch', self.contdir)
+        subs.managefiles.director(self,'rm', self.contdir + '/*')

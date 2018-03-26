@@ -16,6 +16,7 @@ from matplotlib import pyplot as plt
 from matplotlib import rc
 
 from libs import lib
+import setinit_an
 
 C=2.99792458e5 #km/s
 HI=1.420405751e9 #Hz
@@ -25,9 +26,18 @@ HI=1.420405751e9 #Hz
 
 class abs_ex:
     '''
-    Class for absorption studies (find continuum sources, extract spectra, analyze spectra)
+    
+    Class for spectral studies (find continuum sources, extract spectra, analyze spectra)
+    
     '''
     def __init__(self, file=None, **kwargs):
+        '''
+    
+        Set logger for spectrum extraction
+        Find config file
+        If not specified by user load default.cfga
+    
+        '''
         
         self.logger = logging.getLogger('ABS')
         config = ConfigParser.ConfigParser() # Initialise the config parser
@@ -35,70 +45,68 @@ class abs_ex:
             config.readfp(open(file))
             self.logger.info('### Configuration file ' + file + ' successfully read! ###')
         else:
-            config.readfp(open(os.path.realpath(__file__).rstrip('abs_ex.pyc') + 'default_analysis.cfg'))
+            config.readfp(open(os.path.realpath(__file__).rstrip('abs_ex.pyc') + 'default.cfga'))
             self.logger.info('### No configuration file given or file not found! Using default values! ###')
         for s in config.sections():
             for o in config.items(s):
                 setattr(self, o[0], eval(o[1]))
         self.default = config # Save the loaded config file as defaults for later usage
-
-        # Create the directory names
-        #self.rawdir = self.basedir + self.rawsubdir
-        #self.crosscaldir = self.basedir + self.crosscalsubdir
-        #self.selfcaldir = self.basedir + self.selfcalsubdir
-        #self.linedir = self.basedir + self.linesubdir
-    
-    def set_names(self):
-
-        self.absdir_inp = self.basedir + self.finalsubdir + 'cubes/'
-        
-        self.contdir = self.basedir + self.finalsubdir + 'continuum/'
-        
-        self.absdir = self.basedir + self.finalsubdir + 'abs/' 
-        if os.path.exists(self.absdir) == False:
-             os.makedirs(self.absdir)         
-        
-        
-        self.specdir = self.absdir+'spec/'    
-        if os.path.exists(self.specdir) == False:
-             os.makedirs(self.specdir)    
-                
-        self.plotdir = self.absdir+'plot/'    
-        if os.path.exists(self.plotdir) == False:
-             os.makedirs(self.plotdir)
-
-        # Name the datasets -> t
-        # !!!! to change according to the final products of previous pipeline
-        self.data_cube = 'c_han.fits'
-        self.data_cube_mir = 'c_han'
-        self.cont_im = 'continuum_image.fits'
-        self.cont_im_mir = 'cont_im'
-        self.src_imsad_out = 'cont_src_imsad.txt'
-        self.src_list_csv = 'cont_src.csv'
+        setinit_an.setinitdirs_abs(self)
+        setinit_an.setinitfiles_abs(self)
 
 
     def go(self):
         '''
-        Executes the whole final imaging process in the following order
-        continuum
-        line
-        polarisation
+
+        Executes the whole spectrum extraction process as follows:
+        1: set_dirs
+        2: find_src_imsad
+        3: load_src_csv
+        4: spec_ex
+        5: plot_spec
+
         '''
         self.logger.info("########## STARTING ABSORPTION analysis ##########")
-        self.set_names()
+        self.set_dirs()
         self.find_src_imsad()
         self.load_src_csv()
         self.spec_ex()
         self.plot_spec()
         self.logger.info("########## END ABSORPTION ANALYSIS ##########")
 
+    def set_dirs(self):
+        '''
+     
+        Sets directory strucure and filenames
+        Creates directory abs/ in basedir+beam and subdirectories spec/ and plot/
+     
+        '''
+
+        setinit_an.setinitdirs_abs(self)
+        setinit_an.setinitfiles_abs(self)
+
+        if os.path.exists(self.absdir) == False:
+             os.makedirs(self.absdir)                 
+        if os.path.exists(self.specdir) == False:
+             os.makedirs(self.specdir)    
+                
+        if os.path.exists(self.plotdir) == False:
+             os.makedirs(self.plotdir)
+
+        print '\t*****\n\tAbs_Ex INPUTS\n\t*****\n'
+        print '\tCube     \t: '+self.data_cube
+        print '\tContinuum\t: '+self.cont_im
+
     #######################################################################
     ##### Modules to convert units                                    #####
     #######################################################################        
 
-    # HMS -> degrees
     def ra2deg(self,ra_hms):
-
+        '''
+            
+            Converts RA from HH:MM:SS to degrees
+        
+        '''
         ra = string.split(ra_hms, ':')
 
         hh = float(ra[0])*15
@@ -106,10 +114,14 @@ class abs_ex:
         ss = (float(ra[2])/3600)*15
 
         return hh+mm+ss
-    
-    # DMS -> degrees
-    
+        
     def dec2deg(self,dec_dms):
+        '''
+            
+            Converts DEC from DD:MM:SS to degrees
+        
+        '''
+
         dec = string.split(dec_dms, ':')
 
         hh = abs(float(dec[0]))
@@ -119,29 +131,38 @@ class abs_ex:
         return hh+mm+ss        
     
     def optical_depth(self, flux, peak_flux):
+        '''
 
-        tau_vec=-np.log(1.-flux/float(peak_flux*1e-3))
+        Module called by spec_ex
+        Finds optical depth of an absorption line
+        IN
+            flux: absorbed flux of the line in Jy
+            peak_flux: flux of the continuum source in Jy
+
+        '''
+        tau_vec=-np.log(1.-flux/float(peak_flux))
         
         return tau_vec 
 
     #######################################################################
     ##### Modules for continuum sources                               #####
-    #######################################################################  
-    def write_src_csv(self,tot):
-    
-        # write the spectrum on file
-        out_file = self.src_list_csv
-        f = open(out_file, 'w')
-        f.write('ID,J2000,ra,dec,Pix_x,Pix_y,peak\n')
-        np.savetxt(f, tot, delimiter=",", fmt="%s")
-        f.close()
-        
-        self.logger.info('# List of continuum sources saved on file. #')    
-    
-        return 0
+    #######################################################################      
     
     def find_src_imsad(self):
+        '''
         
+        Finds sources in continuum image above a threshold in flux specified by the user
+        IN
+            Continuum image: located in contdir
+        IN cfga
+            abs_ex_imsad_clip:   sets flux threshold in Jy
+            abs_ex_imsad_region: xmin,xmax,ymin,ymax 
+                                 defines regions where to search for sources
+        OUT
+            cont_src_imsad.txt:  table with found sources
+                                 stored in contdir
+        
+        '''
         self.logger.info('### Find continuum sources ###')    
 
         os.chdir(self.contdir)
@@ -171,7 +192,6 @@ class abs_ex:
 
         imsad.go(rmfiles=True)
         
-        self.logger.info('# Continuum sources found. #')    
         
         #modify output of imsad for module load_src_csv
         src_list = open(self.src_imsad_out,'r')
@@ -187,8 +207,8 @@ class abs_ex:
             tmp = lines[i].split(' ')
             ra_tmp.append(str(tmp[3]))
             dec_tmp.append(str(tmp[4]))
-            peak_tmp.append(str(tmp[5]))
-        
+            peak_tmp.append(str(tmp[6]))
+    
         ra_tmp = np.array(ra_tmp)
         dec_tmp = np.array(dec_tmp)
         peak_tmp = np.array(peak_tmp)
@@ -254,6 +274,10 @@ class abs_ex:
         #make csv file with ID, J2000, Ra, Dec, Pix_y, Pix_y, Peak[Jy] 
         tot = np.column_stack((ids,J2000_tmp,ra_tmp,dec_coord,
                                self.pixels_cont[:,0],self.pixels_cont[:,1],peak_tmp))
+
+        self.logger.info('# Continuum sources found. #')    
+
+
         self.write_src_csv(tot)  
         
         self.logger.info('### Continuum sources found ###')    
@@ -262,6 +286,12 @@ class abs_ex:
         return 0    
     
     def load_src_csv(self):
+        '''
+
+        Loads .csv table, output of find_src_imsad
+        Coordinates and flux of each source are stored in memory.
+        
+        '''
         os.chdir(self.contdir)
         
         if os.path.exists(self.src_list_csv):
@@ -291,8 +321,37 @@ class abs_ex:
                 self.dec_deg[i] = self.dec2deg(self.dec[i])
         return 0
 
-    def coord_to_pix(self):
+    def write_src_csv(self,tot):
+        '''
         
+        Module called by find_src_imsad
+        Writes output of Miriad imsad in .csv file
+        The table has the following columns
+
+        Obs_ID, Beam, Source_ID, J2000, Ra, Dec, Pix_x(continuum), Pix_y(continuum), Flux_peak[Jy/beam]
+        
+        '''
+
+        # write the spectrum on file
+        out_file = self.src_list_csv
+        f = open(out_file, 'w')
+        f.write('ID,J2000,ra,dec,Pix_x,Pix_y,peak\n')
+        np.savetxt(f, tot, delimiter=",", fmt="%s")
+        f.close()
+        
+        self.logger.info('# List of continuum sources saved on file. #')    
+    
+        return 0
+
+    def coord_to_pix(self):
+        '''
+        
+        Module called by spec_ex
+        Converts ra,dec of sources found loaded by load_src_csv
+        into pixel coordinates of the datacube
+        
+        '''
+
         #I load the WCS coordinate system:
         #open file
         hdulist = pyfits.open(self.data_cube)  # read input
@@ -328,12 +387,23 @@ class abs_ex:
     #######################################################################      
     
     def write_spec_csv(self,tot,out_spec):
+        '''
 
-        # write the spectrum on file
+        Module called by spec_ex
+        Writes extracted spectra in .csv format. 
+            Spectra are in flux and optical depth (tau).
+            Noise is measured in the datacube for each channel, away from the radio source 
+        
+        Spectra have the following columns[units]
+
+            frequency[Hz], velocity[km/s], flux[Jy/beam], rms_flux[Jy/beam], tau,  rms_tau
+        
+        '''
+
         out_spec = out_spec+'_spec.txt'
         f = open(out_spec, 'w')
         f.write('freq[Hz],vel[km/s],flux[Jy/beam],noise[Jy/beam],tau,tau_noise\n')
-        np.savetxt(f, tot, delimiter=" ", fmt="%s")
+        np.savetxt(f, tot, delimiter=",", fmt="%s")
         f.close()
         
         self.logger.info('# Spectrum of source saved on file. #')
@@ -341,7 +411,20 @@ class abs_ex:
         return 0
 
     def write_spec_fitstab(self,tot,out_spec):
+        '''
+
+        Module called by spec_ex
+        Writes extracted spectra in .fits format. 
+            Spectra are in flux and optical depth (tau).
+            Noise is measured in the datacube for each channel, away from the radio source 
         
+        Spectra have the following columns[units]
+
+            frequency[Hz] velocity[km/s] flux[Jy/beam] rms_flux[Jy/beam] tau  rms_tau
+        
+        '''
+
+
         out_spec = out_spec+'_spec.fits'
 
         c1 = pyfits.Column(name='frequency', format='D', unit='Hz', array=tot[:,0])
@@ -362,7 +445,29 @@ class abs_ex:
     ####################################################################### 
     
     def plot_spec(self):
+        '''
         
+        Plots spectra of all radio sources found by find_src_imsad 
+        saved in basedir/beam/abs/spec.
+        Plots are stored in basedir/beam/abs/plot
+        
+        IN
+            Spectra extracted by spec_ex
+        
+        IN cfga
+            abs_ex_plot_xaxis= ' '      #: X-axis units ['velocity','frequency'] 
+            abs_ex_plot_yaxis= ' '      #: Y axis units ['flux','optical depth']
+            abs_ex_plot_redsrc= True    #: plots line at redshift of source in spectrum
+                                           redshift must be stored in table of load_src_csv
+            abs_ex_plot_title= True     #: plot title: J2000 name of radio source
+            abs_ex_plot_format= ' '     #: format of plot ['.pdf','.jpeg','.png']
+        
+        OUT
+            For each source outputs have the following name:
+            J2000_xaxis-unit_yaxis-unit.plot_format = J220919.87+180920.17_vel_flux.pdf
+
+        '''
+
         os.chdir(self.specdir)
         
         params = {
@@ -489,12 +594,11 @@ class abs_ex:
                 ax1.yaxis.labelpad = 10
 
                 # Plot spectra 
-                if self.abs_ex_plot_linestyle == 'step':
+#                if self.abs_ex_plot_linestyle == 'step':
                     #ax1.plot(x_data, y_data, color='black', linestyle='-')
 
-                    ax1.step(x_data, y_data, where='mid', color='black', linestyle='-')
-                else:
-                    ax1.plot(x_data, y_data, color='black', linestyle='-')
+                ax1.step(x_data, y_data, where='mid', color='black', linestyle='-')
+                
 
                 # Plot noise
                 ax1.fill_between(x_data, -y_sigma, y_sigma, facecolor='grey', alpha=0.5)
@@ -531,14 +635,23 @@ class abs_ex:
         
     def spec_ex(self):
         '''
-       Extract spectra at the coordinates of the peak flux of each source identified in the radio continuum.
-       Measure noise of spectrum, save spectrum in .csv, .fits(table) and plot (.pdf).
-       Write output table with info on spectrum and source.
+        
+        Extract spectrum at the coordinates of each source found by find_src_imsad
+        IN
+        Arrays stored in memory by load_src_csv
+        IN cfga
+        abs_ex_spec_format: .csv or .fits
+        OUT
+        Spectrum in .csv or .fits file format stored in abs/spec/ folder
+        New line in abs_table.txt. Each line has the following information:
+        
+        Obs_ID, Beam, Source_ID, Ra, Dec, Peak Flux [Jy], r.m.s. spectrum
+        
         '''
         if self.abs_ex_spec_ex == True:
 
             self.logger.info('### Extract spectra from the position of the peak of each continuum source ###')
-            os.chdir(self.absdir_inp)
+            os.chdir(self.linedir)
             print os.getcwd()
             if os.path.exists(self.data_cube) == False:     
                 fits = lib.miriad('fits')
@@ -609,7 +722,6 @@ class abs_ex:
                             pix_y = (pix_y_or - prihdr['CRPIX2']) * scale + prihdr['CRPIX2']
                             pix_x = int(round(pix_x,0))
                             pix_y = int(round(pix_y,0))
-                            #print pix_x, pix_y,j    
                         else:
                             pix_x = pix_x_or
                             pix_y = pix_y_or
@@ -623,22 +735,22 @@ class abs_ex:
                         # determine the noise of the spectrum [Whiting 2012 et al.] in each channel
                         # MADMF: median absolute deviation from the median
                         # extract a region were to determine the noise: A BOX around the l.o.s.
-                        if (pix_x+5 < prihdr['NAXIS1'] and pix_x - 5 > 0 and
+                        if (pix_x+10 < prihdr['NAXIS1'] and
                            pix_y+5 < prihdr['NAXIS2'] and pix_y - 5 > 0 ):
-                                rms = np.median(sci[j, pix_x + 10:pix_x + 5, pix_y - 5:pix_y + 5])
+                                rms = np.nanmedian(sci[j, pix_x +5:pix_x + 10, pix_y - 5:pix_y + 5])
                                 med2 = abs(sci[j, pix_x, pix_y] - rms)
-                                madfm[j] = np.median(med2) / 0.6744888
+                                madfm[j] = np.nanmedian(med2) / 0.6744888
                         else:
                             madfm[j] = 0.0
 
-                        self.abs_mean_rms[i] = np.mean(madfm) 
+                        self.abs_mean_rms[i] = np.nanmean(madfm) 
                     
                     # measure noise in the spectrum outside of the line
                     end_spec = float(sci.shape[0])
                     end_spec_th = int(end_spec/3.)
                     end_spec = int(end_spec)
 
-                    print self.src_id[i], self.J2000_name[i], pix_x_or, pix_y_or, pix_x, pix_y
+                    #print self.src_id[i], self.J2000_name[i], pix_x_or, pix_y_or, pix_x, pix_y
                     tau = self.optical_depth(flux,self.peak_flux[i])
                     tau_noise = self.optical_depth(madfm,self.peak_flux[i])
                     #convert flux in optical depth
@@ -652,7 +764,7 @@ class abs_ex:
 
                      #write spectrum
                     tot = np.column_stack((freq, v, flux, madfm, tau, tau_noise)) 
-                    out_spec = str(self.specdir+self.J2000_name[i])
+                    out_spec = str(self.specdir+self.src_id[i]+'_'+self.J2000_name[i])
                 
                     #save spectrum
                     if self.abs_ex_spec_format == 'csv':
@@ -675,17 +787,21 @@ class abs_ex:
 
     
     #######################################################################
-    ##### Manage the creation and moving of new directories and files #####
+    ##### Utilities                                                   #####
     #######################################################################
-
-
+    
     def show(self, showall=False):
         '''
-        show: Prints the current settings of the pipeline. Only shows keywords, which are in the default config file default.cfg
-        showall: Set to true if you want to see all current settings instead of only the ones from the current step
+        
+        show: Prints the current settings of the pipeline. 
+              Only shows keywords, which are in the default analysis config file apercal/third_party/default.cfga
+        
+        showall=True : see all current settings of default.cfga instead of only the ones from the current class
+        
         '''
+        setinit_an.setinitdirs_abs(self)
         config = ConfigParser.ConfigParser()
-        config.readfp(open(self.apercaldir + '/default.cfg'))
+        config.readfp(open(self.apercaldir + '/third_party/default.cfga'))
         for s in config.sections():
             if showall:
                 print(s)
@@ -710,7 +826,10 @@ class abs_ex:
     
     def reset(self):
         '''
-        Function to reset the current step and remove all generated data. Be careful! Deletes all data generated in this step!
+        
+        Resets the current step and remove all generated data. 
+        Be careful! Deletes all data generated in this step!
+        
         '''
         self.logger.warning('### Deleting all preflagged data. You might need to copy over the raw data to the raw subdirectory again. ###')
         self.director('ch', self.rawdir)

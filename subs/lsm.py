@@ -14,6 +14,7 @@ from astroquery.vizier import Vizier
 
 from libs import lib
 from subs.pb import wsrtBeam
+from subs.readmirhead import getradec
 
 '''
 # This file uses astropy and miriad to construct a catalogue of apparent and real flux densities for a pointing centre in a certain radius

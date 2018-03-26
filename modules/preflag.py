@@ -6,6 +6,8 @@ import casac
 import os
 
 import subs.setinit
+import subs.managefiles
+
 from libs import lib
 
 casalog = casac.casac.logsink()
@@ -36,6 +38,7 @@ class preflag:
         '''
         # self.logger.info('### Starting pre-flagging of known flags ###')
         if self.preflag_manualflag:
+            subs.setinit.setinitdirs(self)
             self.manualflag_auto()
             self.manualflag_antenna()
             self.manualflag_corr()
@@ -80,7 +83,7 @@ class preflag:
         '''
         if self.preflag_manualflag_auto:
             subs.setinit.setinitdirs(self)
-            self.director('ch', self.rawdir, verbose=False)
+            subs.managefiles.director(self, 'ch', self.rawdir, verbose=False)
             af = casac.casac.agentflagger()
             if self.preflag_manualflag_fluxcal:
                 # self.logger.info('# Flagging auto-correlations for flux calibrator data #')
@@ -118,7 +121,7 @@ class preflag:
         '''
         if self.preflag_manualflag_antenna != '':
             subs.setinit.setinitdirs(self)
-            self.director('ch', self.rawdir)
+            subs.managefiles.director(self, 'ch', self.rawdir)
             af = casac.casac.agentflagger()
             if self.preflag_manualflag_fluxcal:
                 # self.logger.info('# Flagging antenna(s) ' + self.preflag_manualflag_antenna + ' for flux calibrator data #')
@@ -162,7 +165,7 @@ class preflag:
         '''
         if self.preflag_manualflag_corr != '':
             subs.setinit.setinitdirs(self)
-            self.director('ch', self.rawdir)
+            subs.managefiles.director(self, 'ch', self.rawdir)
             af = casac.casac.agentflagger()
             if self.preflag_manualflag_fluxcal:
                 # self.logger.info('# Flagging correlation(s) ' + self.preflag_manualflag_corr + ' for flux calibrator data #')
@@ -200,7 +203,7 @@ class preflag:
         '''
         if self.preflag_manualflag_shadow:
             subs.setinit.setinitdirs(self)
-            self.director('ch', self.rawdir)
+            subs.managefiles.director(self, 'ch', self.rawdir)
             af = casac.casac.agentflagger()
             if self.preflag_manualflag_fluxcal:
                 # self.logger.info('# Flagging shadowed antennas for flux calibrator data #')
@@ -244,7 +247,7 @@ class preflag:
         '''
         if self.preflag_manualflag_baseline != '':
             subs.setinit.setinitdirs(self)
-            self.director('ch', self.rawdir)
+            subs.managefiles.director(self, 'ch', self.rawdir)
             af = casac.casac.agentflagger()
             if self.preflag_manualflag_fluxcal:
                 # self.logger.info('# Flagging baseline(s) ' + self.preflag_manualflag_baseline + ' for flux calibrator data #')
@@ -285,7 +288,7 @@ class preflag:
         '''
         if self.preflag_manualflag_channel != '':
             subs.setinit.setinitdirs(self)
-            self.director('ch', self.rawdir)
+            subs.managefiles.director(self, 'ch', self.rawdir)
             af = casac.casac.agentflagger()
             if self.preflag_manualflag_fluxcal:
                 # self.logger.info('# Flagging channel(s) ' + self.preflag_manualflag_channel + ' for flux calibrator data #')
@@ -323,7 +326,7 @@ class preflag:
         '''
         if self.preflag_manualflag_time != '':
             subs.setinit.setinitdirs(self)
-            self.director('ch', self.rawdir)
+            subs.managefiles.director(self, 'ch', self.rawdir)
             af = casac.casac.agentflagger()
             if self.preflag_manualflag_fluxcal:
                 # self.logger.info('# Flagging timerange ' + self.preflag_manualflag_time + ' for flux calibrator data #')
@@ -360,7 +363,7 @@ class preflag:
         Creates a bandpass from the flux calibrator and applies it to all calibrators and target fields
         '''
         if self.preflag_aoflagger_bandpass:
-            self.director('ch', self.basedir + '00' + '/' + self.rawsubdir, verbose=False)
+            subs.managefiles.director(self, 'ch', self.basedir + '00' + '/' + self.rawsubdir, verbose=False)
             cb = casac.casac.calibrater()
             cb.open(self.fluxcal)
             cb.setsolve('B', 'inf', self.fluxcal + '_Bcal')
@@ -410,30 +413,34 @@ class preflag:
         '''
         Uses the aoflagger to flag the calibrators and the target data set(s).
         '''
-        if self.preflag_aoflagger_fluxcal:
-            # if os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal):
-            try:
-                os.system('aoflagger -strategy ' + self.apercaldir + '/ao_strategies/' + self.preflag_aoflagger_fluxcalstrat + ' -column CORRECTED_DATA ' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal)
-            except:
-                os.system('aoflagger -strategy ' + self.apercaldir + '/ao_strategies/' + self.preflag_aoflagger_fluxcalstrat + ' ' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal)
-        if self.preflag_aoflagger_polcal:
-            # if os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal):
-            try:
-                os.system('aoflagger -strategy ' + self.apercaldir + '/ao_strategies/' + self.preflag_aoflagger_fluxcalstrat + ' -column CORRECTED_DATA ' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal)
-            except:
-                os.system('aoflagger -strategy ' + self.apercaldir + '/ao_strategies/' + self.preflag_aoflagger_fluxcalstrat + ' ' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal)
-        if self.preflag_aoflagger_target:
-            mslist = glob.glob(self.basedir + '*/' + self.rawsubdir + '/' + self.target)
-            for dataset in mslist:
-                # if os.path.isdir(ms):
+        if self.preflag_aoflagger:
+            if self.preflag_aoflagger_fluxcal:
+                # if os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal):
                 try:
-                    os.system('aoflagger -strategy ' + self.apercaldir + '/ao_strategies/' + self.preflag_aoflagger_fluxcalstrat + ' -column CORRECTED_DATA ' + dataset)
+                    os.system('aoflagger -strategy ' + self.apercaldir + '/ao_strategies/' + self.preflag_aoflagger_fluxcalstrat + ' -column CORRECTED_DATA ' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal)
                 except:
-                    os.system('aoflagger -strategy ' + self.apercaldir + '/ao_strategies/' + self.preflag_aoflagger_fluxcalstrat + ' ' + dataset)
+                    os.system('aoflagger -strategy ' + self.apercaldir + '/ao_strategies/' + self.preflag_aoflagger_fluxcalstrat + ' ' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal)
+            if self.preflag_aoflagger_polcal:
+                # if os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal):
+                try:
+                    os.system('aoflagger -strategy ' + self.apercaldir + '/ao_strategies/' + self.preflag_aoflagger_fluxcalstrat + ' -column CORRECTED_DATA ' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal)
+                except:
+                    os.system('aoflagger -strategy ' + self.apercaldir + '/ao_strategies/' + self.preflag_aoflagger_fluxcalstrat + ' ' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal)
+            if self.preflag_aoflagger_target:
+                mslist = glob.glob(self.basedir + '*/' + self.rawsubdir + '/' + self.target)
+                for dataset in mslist:
+                    # if os.path.isdir(ms):
+                    try:
+                        os.system('aoflagger -strategy ' + self.apercaldir + '/ao_strategies/' + self.preflag_aoflagger_fluxcalstrat + ' -column CORRECTED_DATA ' + dataset)
+                    except:
+                        os.system('aoflagger -strategy ' + self.apercaldir + '/ao_strategies/' + self.preflag_aoflagger_fluxcalstrat + ' ' + dataset)
+        else:
+            pass
+            #self.logger.warning('# No flagging with aoflagger done! #')
 
-    #######################################################################
-    ##### Manage the creation and moving of new directories and files #####
-    #######################################################################
+    ##########################################################################
+    ##### Individual functions to show the parameters and reset the step #####
+    ##########################################################################
 
     def show(self, showall=False):
         '''
@@ -470,53 +477,5 @@ class preflag:
         '''
         subs.setinit.setinitdirs(self)
         # self.logger.warning('### Deleting all preflagged data. You might need to run the PREPARE step again. ###')
-        self.director('ch', self.rawdir)
-        self.director('rm', self.rawdir + '/*')
-
-    def director(self, option, dest, file=None, verbose=True):
-        '''
-        director: Function to move, remove, and copy files and directories
-        option: 'mk', 'ch', 'mv', 'rm', and 'cp' are supported
-        dest: Destination of a file or directory to move to
-        file: Which file to move or copy, otherwise None
-        '''
-        subs.setinit.setinitdirs(self)
-        if option == 'mk':
-            if os.path.exists(dest):
-                pass
-            else:
-                os.mkdir(dest)
-                if verbose == True:
-                    pass
-                    # self.logger.info('# Creating directory ' + str(dest) + ' #')
-        elif option == 'ch':
-            if os.getcwd() == dest:
-                pass
-            else:
-                self.lwd = os.getcwd()  # Save the former working directory in a variable
-                try:
-                    os.chdir(dest)
-                except:
-                    os.mkdir(dest)
-                    if verbose == True:
-                        pass
-                        # self.logger.info('# Creating directory ' + str(dest) + ' #')
-                    os.chdir(dest)
-                self.cwd = os.getcwd()  # Save the current working directory in a variable
-                if verbose == True:
-                    pass
-                    # self.logger.info('# Moved to directory ' + str(dest) + ' #')
-        elif option == 'mv':  # Move
-            if os.path.exists(dest):
-                lib.basher("mv " + str(file) + " " + str(dest))
-            else:
-                os.mkdir(dest)
-                lib.basher("mv " + str(file) + " " + str(dest))
-        elif option == 'rn':  # Rename
-            lib.basher("mv " + str(file) + " " + str(dest))
-        elif option == 'cp':  # Copy
-            lib.basher("cp -r " + str(file) + " " + str(dest))
-        elif option == 'rm':  # Remove
-            lib.basher("rm -r " + str(dest))
-        else:
-            print('### Option not supported! Only mk, ch, mv, rm, rn, and cp are supported! ###')
+        subs.managefiles.director(self, 'ch', self.rawdir)
+        subs.managefiles.director(self, 'rm', self.rawdir + '/*')

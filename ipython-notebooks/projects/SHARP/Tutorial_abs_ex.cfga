@@ -1,0 +1,53 @@
+[INITIAL]
+apercaldir = '/home/maccagni/apercal'
+fluxcal = ''
+polcal = ''
+target = 'Obj5'
+basedir = '/data/maccagni/ApertiF/SHARP/data/Obj5/'
+beam = 'beam_num'
+linesubdir = 'line'
+contsubdir = 'continuum'
+contname = 'cln.s1'
+cubename = 'mapL.subH'
+
+[RFI]
+aperfi_pol = 'xx'                   #polarization to study
+aperfi_uvaver = True                #uv-dataset needs to be averaged down to <5000 channels 
+aperfi_uvaver_line ='channel,3669,2,3,3'
+aperfi_badant = False
+aperfi_bant = ''
+aperfi_rmsclip = 5
+aperfi_noise = 'rfi'
+aperfi_rfifree_min = 1300           #Frequency range where to compute rms: RFI free in MHz
+aperfi_rfifree_max = 1380           #Frequency range where to compute rms: RFI free in MHz
+aperfi_long_short = False
+aperfi_plot_format = '.jpg'
+
+[ABS]
+abs_spec_ex = True
+abs_ex_convert_radec = True
+abs_ex_chrom_aber = True             #need to correct for chromatic aberration when extracting spectra
+abs_ex_cube_zunit = 'velocity'       #specify units of z-axis of datacube (velocity, frequency)
+abs_ex_imsad_region = '775,775,1900,1900' #xmin,ymin,xmax,ymax
+abs_ex_imsad_options = ' '           #xmin,ymin,xmax,ymax
+abs_ex_imsad_clip = 5e-3             #value in Jy   
+abs_ex_spec_ex = True
+abs_ex_spec_format = '.fits'              #can be csv, fits, none = both
+abs_ex_plot_xaxis= 'frequency'      #: X-axis units ['velocity','frequency'] 
+abs_ex_plot_yaxis= 'flux'      #: Y axis units ['flux','optical depth']
+abs_ex_plot_redsrc= False    #: if true plots line at redshift of source in spectrum
+                            #  redshift must be stored in table of load_src_csv
+abs_ex_plot_title= True     #: plot title: J2000 name of radio source
+abs_ex_plot_format= '.png'  #: format of plot ['.pdf','.jpeg','.png']
+
+[STACK]
+abstack_dir = '/Users/maccagni/data/Safari/detections/'	#working directory for stacking
+abstack_sample = 'safari_highpower'
+abstack_srctab = 'safari_stacking_detections.fits'
+abstack_filter_name = ['all']
+abstack_filter_switch = ['=']
+abstack_filter = [1]
+abstack_velrange = 4000						#range of velocities of final stacked spectrum
+abstack_plot_title = 'WSRT Survey - High radio power'
+abstack_plot_linestyle = 'step'
+

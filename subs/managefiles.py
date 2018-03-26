@@ -4,6 +4,21 @@ import subs.setinit
 from libs import lib
 
 
+def imagetofits(self, mirimage, fitsimage):
+    '''
+    Converts a MIRIAD image to a FITS image
+    mirimage: The MIRIAD image to convert
+    fitsimage: The converted FITS image
+    '''
+    subs.setinit.setinitdirs(self)
+    fits = lib.miriad('fits')
+    fits.op = 'xyout'
+    fits.in_ = mirimage
+    fits.out = fitsimage
+    fits.go()
+    if os.path.isfile(fitsimage):
+        director(self, 'rm', mirimage)
+
 def director(self, option, dest, file=None, verbose=True):
     '''
     director: Function to move, remove, and copy files and directories
@@ -18,7 +33,7 @@ def director(self, option, dest, file=None, verbose=True):
         else:
             os.makedirs(dest)
             if verbose == True:
-                self.logger.info('# Creating directory ' + str(dest) + ' #')
+                self.logger.debug('# Creating directory ' + str(dest) + ' #')
     elif option == 'ch':
         if os.getcwd() == dest:
             pass
@@ -29,11 +44,11 @@ def director(self, option, dest, file=None, verbose=True):
             except:
                 os.makedirs(dest)
                 if verbose == True:
-                    self.logger.info('# Creating directory ' + str(dest) + ' #')
+                    self.logger.debug('# Creating directory ' + str(dest) + ' #')
                 os.chdir(dest)
             self.cwd = os.getcwd()  # Save the current working directory in a variable
             if verbose == True:
-                self.logger.info('# Moved to directory ' + str(dest) + ' #')
+                self.logger.debug('# Moved to directory ' + str(dest) + ' #')
     elif option == 'mv':  # Move
         if os.path.exists(dest):
             lib.basher("mv " + str(file) + " " + str(dest))
@@ -47,4 +62,4 @@ def director(self, option, dest, file=None, verbose=True):
     elif option == 'rm':  # Remove
         lib.basher("rm -r " + str(dest))
     else:
-        print('### Option not supported! Only mk, ch, mv, rm, rn, and cp are supported! ###')
+        self.logger.warning('### Option not supported! Only mk, ch, mv, rm, rn, and cp are supported! ###')

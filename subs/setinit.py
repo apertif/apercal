@@ -8,6 +8,8 @@ def setinitdirs(self):
     self.linedir = self.basedir + self.beam + '/' + self.linesubdir
     self.contdir = self.basedir + self.beam + '/' + self.contsubdir
     self.poldir = self.basedir + self.beam + '/' + self.polsubdir
+    self.mosdir = self.basedir + self.mossubdir
+    self.transferdir = self.basedir + self.transfersubdir
 
 def setdatasetnamestomiriad(self):
     '''

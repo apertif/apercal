@@ -12,6 +12,8 @@ import numpy as np
 import os
 
 import subs.setinit
+import subs.managefiles
+
 from libs import lib
 from subs import lsm
 
@@ -23,7 +25,7 @@ class scal:
     Selfcal class to do the self-calibration on a dataset. Can be done with several different algorithms.
     '''
     def __init__(self, file=None, **kwargs):
-        logging.basicConfig(level=20)
+#        logging.basicConfig(level=20)
         self.logger = logging.getLogger('SELFCAL')
         config = ConfigParser.ConfigParser() # Initialise the config parser
         if file != None:
@@ -65,7 +67,7 @@ class scal:
         if self.splitdata:
             subs.setinit.setinitdirs(self)
             subs.setinit.setdatasetnamestomiriad(self)
-            self.director('ch', self.selfcaldir)
+            subs.managefiles.director(self, 'ch', self.selfcaldir)
             self.logger.info('### Splitting of target data into individual frequency chunks started ###')
             if os.path.isfile(self.selfcaldir + '/' + self.target):
                 self.logger.info('# Calibrator corrections already seem to have been applied #')
@@ -130,7 +132,7 @@ class scal:
                     start = 1 + chunk * chan_per_chunk
                     width = int(binchan)
                     step = int(width)
-                    self.director('mk', self.selfcaldir + '/' + str(counter).zfill(2))
+                    subs.managefiles.director(self, 'mk', self.selfcaldir + '/' + str(counter).zfill(2))
                     uvaver = lib.miriad('uvaver')
                     uvaver.vis = self.selfcaldir + '/' + self.target
                     uvaver.out = self.selfcaldir + '/' + str(counter).zfill(2) + '/' + str(counter).zfill(2) + '.mir'
@@ -150,9 +152,9 @@ class scal:
             subs.setinit.setinitdirs(self)
             subs.setinit.setdatasetnamestomiriad(self)
             self.logger.info('### Automatic flagging of HI-line/RFI started ###')
-            self.director('ch', self.selfcaldir)
+            subs.managefiles.director(self, 'ch', self.selfcaldir)
             for chunk in self.list_chunks():
-                self.director('ch', self.selfcaldir + '/' + str(chunk))
+                subs.managefiles.director(self, 'ch', self.selfcaldir + '/' + str(chunk))
                 self.logger.info('# Looking through data chunk ' + str(chunk) + ' #')
                 invert = lib.miriad('invert')
                 invert.vis = chunk + '.mir'
@@ -187,9 +189,9 @@ class scal:
                         self.logger.info('# Flagged channel(s) ' + str(detections).lstrip('[').rstrip(']') + ' in data chunk ' + str(chunk) + ' #')
                     else:
                         self.logger.info('# No high noise found in data chunk ' + str(chunk) + ' #')
-                    self.director('rm', self.selfcaldir + '/' + str(chunk) + '/' + 'map')
-                    self.director('rm', self.selfcaldir + '/' + str(chunk) + '/' + 'map.fits')
-                    self.director('rm', self.selfcaldir + '/' + str(chunk) + '/' + 'beam')
+                    subs.managefiles.director(self, 'rm', self.selfcaldir + '/' + str(chunk) + '/' + 'map')
+                    subs.managefiles.director(self, 'rm', self.selfcaldir + '/' + str(chunk) + '/' + 'map.fits')
+                    subs.managefiles.director(self, 'rm', self.selfcaldir + '/' + str(chunk) + '/' + 'beam')
                 else:
                     self.logger.info('### No data in chunk ' + str(chunk) + '! ###')
             self.logger.info('### Automatic flagging of HI-line/RFI done ###')
@@ -202,11 +204,11 @@ class scal:
             subs.setinit.setinitdirs(self)
             subs.setinit.setdatasetnamestomiriad(self)
             self.logger.info('### Doing parametric self calibration ###')
-            self.director('ch', self.selfcaldir)
+            subs.managefiles.director(self, 'ch', self.selfcaldir)
             for chunk in self.list_chunks():
                 self.logger.info('# Starting parametric self calibration routine on chunk ' + chunk + ' #')
-                self.director('ch', self.selfcaldir + '/' + chunk)
-                self.director('mk', self.selfcaldir + '/' + chunk + '/' + 'pm')
+                subs.managefiles.director(self, 'ch', self.selfcaldir + '/' + chunk)
+                subs.managefiles.director(self, 'mk', self.selfcaldir + '/' + chunk + '/' + 'pm')
                 parametric_textfile = lsm.lsm_model(chunk + '.mir', self.selfcal_parametric_skymodel_radius, self.selfcal_parametric_skymodel_cutoff, self.selfcal_parametric_skymodel_distance)
                 lsm.write_model(self.selfcaldir + '/' + chunk + '/' + 'pm' + '/model.txt', parametric_textfile)
                 self.logger.info('# Creating model from textfile model.txt for chunk ' + chunk + ' #')
@@ -225,8 +227,8 @@ class scal:
                     uvmodel.out = 'pm/tmp' + str(n)
                     uvmodel.go()
                     uvmodel.vis = uvmodel.out
-                self.director('rn', 'pm/model', uvmodel.out) # Rename the last modelfile to model
-                self.director('rm', 'pm/tmp*') # Remove all the obsolete modelfiles
+                subs.managefiles.director(self, 'rn', 'pm/model', uvmodel.out) # Rename the last modelfile to model
+                subs.managefiles.director(self, 'rm', 'pm/tmp*') # Remove all the obsolete modelfiles
                 self.logger.info('# Doing parametric self-calibration on chunk ' + chunk + ' with solution interval ' + str(self.selfcal_parametric_solint) + ' min and uvrange limits of ' + str(self.selfcal_parametric_uvmin) + '~' + str(self.selfcal_parametric_uvmax) + ' klambda #')
                 selfcal = lib.miriad('selfcal')
                 selfcal.vis = chunk + '.mir'
@@ -250,10 +252,10 @@ class scal:
         subs.setinit.setinitdirs(self)
         subs.setinit.setdatasetnamestomiriad(self)
         self.logger.info('### Starting standard self calibration routine ###')
-        self.director('ch', self.selfcaldir)
+        subs.managefiles.director(self, 'ch', self.selfcaldir)
         for chunk in self.list_chunks():
             self.logger.info('# Starting standard self-calibration routine on frequency chunk ' + chunk + ' #')
-            self.director('ch', self.selfcaldir + '/' + chunk)
+            subs.managefiles.director(self, 'ch', self.selfcaldir + '/' + chunk)
             if os.path.isfile(self.selfcaldir + '/' + chunk + '/' + chunk + '.mir/visdata'):
                 theoretical_noise = self.calc_theoretical_noise(self.selfcaldir + '/' + chunk + '/' + chunk + '.mir')
                 self.logger.info('# Theoretical noise for chunk ' + chunk + ' is ' + str(theoretical_noise) + ' Jy/beam #')
@@ -263,7 +265,7 @@ class scal:
                 self.logger.info('# Your dynamic range limits are set to ' + str(dr_list) + ' for the major self-calibration cycles #')
                 for majc in range(self.selfcal_standard_majorcycle):
                     self.logger.info('# Major self-calibration cycle ' + str(majc) + ' for frequency chunk ' + chunk + ' started #')
-                    self.director('mk', self.selfcaldir + '/' + str(chunk) + '/' + str(majc).zfill(2))
+                    subs.managefiles.director(self, 'mk', self.selfcaldir + '/' + str(chunk) + '/' + str(majc).zfill(2))
                     dr_minlist = self.calc_dr_min(dr_list, majc, self.selfcal_standard_minorcycle, self.selfcal_standard_minorcycle_function)  # Calculate the dynamic ranges during minor cycles
                     self.logger.info('# The minor cycle dynamic range limits for major cycle ' + str(majc) + ' are ' + str(dr_minlist) + ' #')
                     for minc in range(self.selfcal_standard_minorcycle):
@@ -329,6 +331,7 @@ class scal:
             invert.stokes = 'ii'
             invert.options = 'mfs,double'
             invert.slop = 1
+            invert.robust = -2
             invert.go()
             imax = self.calc_imax(str(majc).zfill(2) + '/map_' + str(minc).zfill(2))
             noise_threshold = self.calc_noise_threshold(imax, minc, majc)
@@ -344,7 +347,7 @@ class scal:
                 maths.go()
                 self.logger.info('# Mask with threshold ' + str(mask_threshold) + ' Jy/beam created #')
             else:
-                self.director('cp', str(majc).zfill(2) + '/mask_' + str(minc).zfill(2), file=str(majc - 1).zfill(2) + '/mask_' + str(self.selfcal_standard_minorcycle - 1).zfill(2))
+                subs.managefiles.director(self, 'cp', str(majc).zfill(2) + '/mask_' + str(minc).zfill(2), file=str(majc - 1).zfill(2) + '/mask_' + str(self.selfcal_standard_minorcycle - 1).zfill(2))
                 self.logger.info('# Mask from last minor iteration of last major cycle copied #')
             clean_cutoff = self.calc_clean_cutoff(mask_threshold)
             self.logger.info('# Clean threshold at major/minor cycle ' + str(majc) + '/' + str(minc) + ' was set to ' + str(clean_cutoff) + ' Jy/beam #')
@@ -442,9 +445,9 @@ class scal:
         maths.mask = '"<' + outputdir + '/imgen>.gt.1e-6' + '"'
         maths.out = outputdir + '/mask'
         maths.go()
-        self.director('rm', outputdir + '/imgen')
+        subs.managefiles.director(self, 'rm', outputdir + '/imgen')
         self.single_mskcutoff = 1e-6
-        self.director('rm', outputdir + '/mask.txt')
+        subs.managefiles.director(self, 'rm', outputdir + '/mask.txt')
 
     def calc_irms(self, image):
         '''
@@ -461,7 +464,7 @@ class scal:
         data = image_data[0].data
         imax = np.nanstd(data) # Get the standard deviation
         image_data.close() # Close the image
-        self.director('rm', image + '.fits')
+        subs.managefiles.director(self, 'rm', image + '.fits')
         return imax
 
     def calc_imax(self, image):
@@ -479,7 +482,7 @@ class scal:
         data = image_data[0].data
         imax = np.nanmax(data) # Get the maximum
         image_data.close() # Close the image
-        self.director('rm', image + '.fits')
+        subs.managefiles.director(self, 'rm', image + '.fits')
         return imax
 
     def calc_isum(self, image):
@@ -497,7 +500,7 @@ class scal:
         data = image_data[0].data
         isum = np.nansum(data)  # Get the maximum
         image_data.close()  # Close the image
-        self.director('rm', image + '.fits')
+        subs.managefiles.director(self, 'rm', image + '.fits')
         return isum
 
     def calc_dr_maj(self, drinit, dr0, majorcycles, function):
@@ -692,51 +695,5 @@ class scal:
         subs.setinit.setinitdirs(self)
         subs.setinit.setdatasetnamestomiriad(self)
         self.logger.warning('### Deleting all self-calibrated data. ###')
-        self.director('ch', self.selfcaldir)
-        self.director('rm', self.selfcaldir + '/*')
-
-    def director(self, option, dest, file=None, verbose=True):
-        '''
-        director: Function to move, remove, and copy files and directories
-        option: 'mk', 'ch', 'mv', 'rm', and 'cp' are supported
-        dest: Destination of a file or directory to move to
-        file: Which file to move or copy, otherwise None
-        '''
-        subs.setinit.setinitdirs(self)
-        subs.setinit.setdatasetnamestomiriad(self)
-        if option == 'mk':
-            if os.path.exists(dest):
-                pass
-            else:
-                os.mkdir(dest)
-                if verbose == True:
-                    self.logger.info('# Creating directory ' + str(dest) + ' #')
-        elif option == 'ch':
-            if os.getcwd() == dest:
-                pass
-            else:
-                self.lwd = os.getcwd()  # Save the former working directory in a variable
-                try:
-                    os.chdir(dest)
-                except:
-                    os.mkdir(dest)
-                    if verbose == True:
-                        self.logger.info('# Creating directory ' + str(dest) + ' #')
-                    os.chdir(dest)
-                self.cwd = os.getcwd()  # Save the current working directory in a variable
-                if verbose == True:
-                    self.logger.info('# Moved to directory ' + str(dest) + ' #')
-        elif option == 'mv':  # Move
-            if os.path.exists(dest):
-                lib.basher("mv " + str(file) + " " + str(dest))
-            else:
-                os.mkdir(dest)
-                lib.basher("mv " + str(file) + " " + str(dest))
-        elif option == 'rn':  # Rename
-            lib.basher("mv " + str(file) + " " + str(dest))
-        elif option == 'cp':  # Copy
-            lib.basher("cp -r " + str(file) + " " + str(dest))
-        elif option == 'rm':  # Remove
-            lib.basher("rm -r " + str(dest))
-        else:
-            print('### Option not supported! Only mk, ch, mv, rm, rn, and cp are supported! ###')
+        subs.managefiles.director(self, 'ch', self.selfcaldir)
+        subs.managefiles.director(self, 'rm', self.selfcaldir + '/*')

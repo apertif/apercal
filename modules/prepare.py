@@ -11,6 +11,8 @@ import casac
 import os
 
 import subs.setinit
+import subs.managefiles
+
 from libs import lib
 
 
@@ -43,9 +45,9 @@ class prepare:
             fluxset = glob.glob(self.prepare_obsdir_fluxcal + '*.MS')[0]
             if fluxset != '':
                 self.logger.info('### Flux calibrator dataset found. Copying beam 00 to working directory. ###')
-                self.director('mk', self.basedir + '00' + '/' + self.rawsubdir, verbose=False)
+                subs.managefiles.director(self, 'mk', self.basedir + '00' + '/' + self.rawsubdir, verbose=False)
                 if self.prepare_obsmode == 'single_element' or self.prepare_obsmode == 'multi_element':
-                    self.director('cp', self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal, file=fluxset)
+                    subs.managefiles.director(self, 'cp', self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal, file=fluxset)
                 elif self.prepare_obsmode == 'multi_element_90':
                     ms = casac.casac.ms()
                     ms.open(fluxset)
@@ -62,9 +64,9 @@ class prepare:
             polset = glob.glob(self.prepare_obsdir_polcal + '*.MS')[0]
             if polset != '':
                 self.logger.info('### Polarisation calibrator dataset found. Copying beam 00 to working directory. ###')
-                self.director('mk', self.basedir + '00' + '/' + self.rawsubdir, verbose=False)
+                subs.managefiles.director(self, 'mk', self.basedir + '00' + '/' + self.rawsubdir, verbose=False)
                 if self.prepare_obsmode == 'single_element' or self.prepare_obsmode == 'multi_element':
-                    self.director('cp', self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal, file=polset)
+                    subs.managefiles.director(self, 'cp', self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal, file=polset)
                 elif self.prepare_obsmode == 'multi_element_90':
                     ms = casac.casac.ms()
                     ms.open(polset)
@@ -83,17 +85,17 @@ class prepare:
                 self.logger.info('### ' + str(len(targetsets)) + ' different beams for target field found. ###')
                 if self.prepare_obsmode == 'single_element':
                     self.logger.info('### Copying central element beam to working directory. ###')
-                    self.director('mk', self.basedir + '00' + '/' + self.rawsubdir, verbose=False)
-                    self.director('cp', self.basedir + '00' + '/' + self.rawsubdir + '/' + self.target, file=targetsets[0])
+                    subs.managefiles.director(self, 'mk', self.basedir + '00' + '/' + self.rawsubdir, verbose=False)
+                    subs.managefiles.director(self, 'cp', self.basedir + '00' + '/' + self.rawsubdir + '/' + self.target, file=targetsets[0])
                 elif self.prepare_obsmode == 'multi_element':
                     self.logger.info('### Copying all target datasets to their working directories. ###')
                     for b, ds in enumerate(targetsets):
-                        self.director('mk', self.basedir + str(b).zfill(2) + '/' + self.rawsubdir, verbose=False)
-                        self.director('cp', self.basedir + str(b).zfill(2) + '/' + self.rawsubdir + '/' + self.target, file=ds, verbose=False)
+                        subs.managefiles.director(self, 'mk', self.basedir + str(b).zfill(2) + '/' + self.rawsubdir, verbose=False)
+                        subs.managefiles.director(self, 'cp', self.basedir + str(b).zfill(2) + '/' + self.rawsubdir + '/' + self.target, file=ds, verbose=False)
                 elif self.prepare_obsmode == 'multi_element_90':
                     self.logger.info('### Copying all target datasets to their working directories. ###')
                     for b, ds in enumerate(targetsets):
-                        self.director('mk', self.basedir + str(b).zfill(2) + '/' + self.rawsubdir, verbose=False)
+                        subs.managefiles.director(self, 'mk', self.basedir + str(b).zfill(2) + '/' + self.rawsubdir, verbose=False)
                         ms = casac.casac.ms()
                         ms.open(ds)
                         ms.split(self.basedir + str(b).zfill(2) + '/' + self.rawsubdir + '/' + self.target, spw='0:0~7359')
@@ -112,9 +114,9 @@ class prepare:
         self.copyobs()
         self.logger.info('########## Data prepared for calibration ##########')
 
-    #######################################################################
-    ##### Manage the creation and moving of new directories and files #####
-    #######################################################################
+    ##########################################################################
+    ##### Individual functions to show the parameters and reset the step #####
+    ##########################################################################
 
     def show(self, showall=False):
         '''
@@ -144,48 +146,3 @@ class prepare:
                             pass
                 else:
                     pass
-
-    def director(self, option, dest, file=None, verbose=True):
-        '''
-        director: Function to move, remove, and copy files and directories
-        option: 'mk', 'ch', 'mv', 'rm', and 'cp' are supported
-        dest: Destination of a file or directory to move to
-        file: Which file to move or copy, otherwise None
-        '''
-        subs.setinit.setinitdirs(self)
-        if option == 'mk':
-            if os.path.exists(dest):
-                pass
-            else:
-                os.makedirs(dest)
-                if verbose == True:
-                    self.logger.info('# Creating directory ' + str(dest) + ' #')
-        elif option == 'ch':
-            if os.getcwd() == dest:
-                pass
-            else:
-                self.lwd = os.getcwd()  # Save the former working directory in a variable
-                try:
-                    os.chdir(dest)
-                except:
-                    os.mkdir(dest)
-                    if verbose == True:
-                        self.logger.info('# Creating directory ' + str(dest) + ' #')
-                    os.chdir(dest)
-                self.cwd = os.getcwd()  # Save the current working directory in a variable
-                if verbose == True:
-                    self.logger.info('# Moved to directory ' + str(dest) + ' #')
-        elif option == 'mv':  # Move
-            if os.path.exists(dest):
-                lib.basher("mv " + str(file) + " " + str(dest))
-            else:
-                os.mkdir(dest)
-                lib.basher("mv " + str(file) + " " + str(dest))
-        elif option == 'rn':  # Rename
-            lib.basher("mv " + str(file) + " " + str(dest))
-        elif option == 'cp':  # Copy
-            lib.basher("cp -r " + str(file) + " " + str(dest))
-        elif option == 'rm':  # Remove
-            lib.basher("rm -r " + str(dest))
-        else:
-            print('### Option not supported! Only mk, ch, mv, rm, rn, and cp are supported! ###')
