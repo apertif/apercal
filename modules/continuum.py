@@ -107,8 +107,6 @@ class continuum:
                             for n in iterlist:
                                 filelist.append(map + n.zfill(2))
                         dirlist = os.listdir(self.contdir + '/stack/' + chunk)
-                        print(filelist)
-                        print(dirlist)
                         if all(x in filelist for x in dirlist):
                             self.logger.info('### All files for continuum imaging available. Continuum imaging for chunk ' + chunk + ' successful! ###')
                         else:
