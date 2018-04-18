@@ -25,7 +25,7 @@ class scal:
     Selfcal class to do the self-calibration on a dataset. Can be done with several different algorithms.
     '''
     def __init__(self, file=None, **kwargs):
-#        logging.basicConfig(level=20)
+        logging.basicConfig(level=logging.DEBUG)
         self.logger = logging.getLogger('SELFCAL')
         config = ConfigParser.ConfigParser() # Initialise the config parser
         if file != None:
@@ -235,6 +235,12 @@ class scal:
                 selfcal.model = 'pm/model'
                 selfcal.interval = self.selfcal_parametric_solint
                 selfcal.select = "'" + 'uvrange(' + str(self.selfcal_parametric_uvmin) + ',' + str(self.selfcal_parametric_uvmax) + ')' + "'"
+                # Choose reference antenna if given
+                if self.selfcal_refant == '':
+                    pass
+                else:
+                    selfcal.refant = self.selfcal_refant
+                # Do amplitude calibration if wanted
                 if self.selfcal_parametric_amp:
                     selfcal.options = 'mfs,amp'
                 else:
@@ -281,6 +287,12 @@ class scal:
                         selfcal.select = '"' + 'uvrange(' + str(self.selfcal_standard_uvmin[majc]) + ',' + str(self.selfcal_standard_uvmax[majc]) + ')"'
                         selfcal.model = str(majc).zfill(2) + '/model_' + str(minc).zfill(2)
                         selfcal.interval = self.selfcal_standard_solint[majc]
+                        # Choose reference antenna if given
+                        if self.selfcal_refant == '':
+                            pass
+                        else:
+                            selfcal.refant = self.selfcal_refant
+                        # Enable amplitude calibration if triggered
                         if self.selfcal_standard_amp == False: # See if we want to do amplitude calibration
                             selfcal.options = 'mfs,phase'
                         elif self.selfcal_standard_amp == True:
@@ -292,7 +304,6 @@ class scal:
                                 selfcal.options = 'mfs,amp'
                             else:
                                 selfcal.options = 'mfs,phase'
-                        selfcal.refant = '5'
                         if self.selfcal_standard_nfbin >= 1:
                             selfcal.nfbin = self.selfcal_standard_nfbin
                         selfcal.go()

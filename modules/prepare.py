@@ -21,7 +21,7 @@ class prepare:
     Prepare class. Automatically copies the datasets into the directories and selects valid data (in case of multi-element observations)
     '''
     def __init__(self, file=None, **kwargs):
-        logging.basicConfig(level=20)
+        logging.basicConfig(level=logging.DEBUG)
         self.logger = logging.getLogger('PREPARE')
         config = ConfigParser.ConfigParser()  # Initialise the config parser
         if file != None:

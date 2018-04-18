@@ -18,7 +18,7 @@ class preflag:
     Preflagging class. Used to automatically flag data and apply preknown flags.
     '''
     def __init__(self, file=None, **kwargs):
-        logging.basicConfig(level=20)
+        logging.basicConfig(level=logging.DEBUG)
         self.logger = logging.getLogger('PREFLAG')
         config = ConfigParser.ConfigParser()  # Initialise the config parser
         if file != None:

@@ -29,7 +29,7 @@ class continuum:
     Continuum class to produce continuum data products (Deep continuum images of individual frequency chunks and stacked continuum image).
     '''
     def __init__(self, file=None, **kwargs):
-#        logging.basicConfig(level=20)
+        logging.basicConfig(level=logging.DEBUG)
         self.logger = logging.getLogger('CONTINUUM')
         config = ConfigParser.ConfigParser() # Initialise the config parser
         if file != None:
@@ -107,10 +107,14 @@ class continuum:
                             for n in iterlist:
                                 filelist.append(map + n.zfill(2))
                         dirlist = os.listdir(self.contdir + '/stack/' + chunk)
+                        print(filelist)
+                        print(dirlist)
                         if all(x in filelist for x in dirlist):
                             self.logger.info('### All files for continuum imaging available. Continuum imaging for chunk ' + chunk + ' successful! ###')
                         else:
                             self.logger.warning('### Continuum imaging for chunk ' + chunk + ' NOT successful ###')
+                else:
+                    self.logger.error('### Chunk ' + str(chunk) + ' could or was not successfully calibrated! No continuum imaging for this chunk possible! ###')
 
             ################################
             # Stacking of continuum images #
@@ -197,7 +201,6 @@ class continuum:
                 residualimages = [w.replace('image', 'residual') for w in images.rstrip(',').split(',')]
                 rmsstr = ''
                 for residualimage in residualimages:
-#                    rms = subs.imstats.getimagestats(self, residualimage.rstrip('_convol'))[2]
                     rms = subs.imstats.getimagestats(self, residualimage)[2]
                     rmsstr = rmsstr + str(rms) + ','
                 imcomb = lib.miriad('imcomb')

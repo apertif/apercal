@@ -30,6 +30,7 @@ class transfer:
     Gain tables and flags are already applied. Data is then ready to get ingested into ALTA.
     '''
     def __init__(self, file=None, **kwargs):
+        logging.basicConfig(level=logging.DEBUG)
         self.logger = logging.getLogger('TRANSFER')
         config = ConfigParser.ConfigParser() # Initialise the config parser
         if file != None:

@@ -22,7 +22,7 @@ class ccal:
     Crosscal class to handle applying the calibrator gains and prepare the dataset for self-calibration.
     '''
     def __init__(self, file=None, **kwargs):
-        logging.basicConfig(level=20)
+        logging.basicConfig(level=logging.DEBUG)
         self.logger = logging.getLogger('CROSSCAL')
         config = ConfigParser.ConfigParser() # Initialise the config parser
         if file != None:

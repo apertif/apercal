@@ -20,7 +20,7 @@ class polarisation:
     Final class to produce final data products (Deep continuum images, line cubes, and polairsation images and Faraday-cubes).
     '''
     def __init__(self, file=None, **kwargs):
-        logging.basicConfig(level=20)
+        logging.basicConfig(level=logging.DEBUG)
         self.logger = logging.getLogger('POLARISATION')
         config = ConfigParser.ConfigParser() # Initialise the config parser
         if file != None:

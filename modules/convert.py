@@ -15,7 +15,7 @@ class convert:
     Class to convert data from MS-format into UVFITS, and from UVFITS into MIRIAD format. Resulting datasets will have the endings .MS, .UVFITS, and .mir.
     '''
     def __init__(self, file=None, **kwargs):
-        logging.basicConfig(level=20)
+        logging.basicConfig(level=logging.DEBUG)
         self.logger = logging.getLogger('CONVERT')
         config = ConfigParser.ConfigParser()  # Initialise the config parser
         if file != None:

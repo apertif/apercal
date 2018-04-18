@@ -26,7 +26,7 @@ class mosaic:
     Mosaic class to produce mosaics of continuum, line and polarisation images.
     '''
     def __init__(self, file=None, **kwargs):
-#        logging.basicConfig(level=20)
+        logging.basicConfig(level=logging.DEBUG)
         self.logger = logging.getLogger('MOSAIC')
         config = ConfigParser.ConfigParser() # Initialise the config parser
         if file != None:
