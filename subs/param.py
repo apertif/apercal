@@ -34,8 +34,11 @@ def del_param(self, parameter):
         print('# Parameter file not found! Cannot remove parameter ' + str(parameter) + ' #')
     else:
         d = np.load(self.basedir + 'param.npy').item()
-        del d[parameter]
-        np.save(self.basedir + 'param.npy', d)
+        try:
+            del d[parameter]
+            np.save(self.basedir + 'param.npy', d)
+        except KeyError:
+            print('# Parameter file does not have parameter '+ str(parameter) + ' #')
 
 def get_param(self, parameter):
     '''
