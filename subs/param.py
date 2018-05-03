@@ -63,6 +63,8 @@ def check_param(self, parameter):
     subs.setinit.setinitdirs(self)
     if os.path.isfile(self.basedir + 'param.npy') != True:
         print('# Parameter file not found! Cannot load parameter ' + str(parameter) + ' #')
+        self.create_param_file()
+        status = False
     else:
         d = np.load(self.basedir + 'param.npy').item()
         if parameter in d:
