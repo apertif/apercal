@@ -25,7 +25,7 @@ from libs import lib
 
 ####################################################################################################
 
-class line:
+class line_parallel:
     '''
     Line class to do continuum subtraction and prepare data for line imaging.
     '''
