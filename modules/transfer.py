@@ -6,11 +6,8 @@ import ConfigParser
 import glob
 import logging
 
-import aipy
-import astropy.io.fits as pyfits
 import numpy as np
 import os
-import sys
 
 import subs.setinit
 import subs.managefiles
