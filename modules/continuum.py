@@ -550,14 +550,14 @@ class continuum:
                     for map in ['image_', 'mask_', 'model_', 'residual_']:
                         for n in iterlist:
                             filelist.append(map + n.zfill(2))
-                    dirlist = os.listdir(self.contdir + '/stack/' + chunk)
-                    # Rewrite this part check is wrong ###################################
-                    if all(x in filelist for x in dirlist):
-                        self.logger.info('### All files for continuum imaging available. Continuum imaging for chunk ' + chunk + ' successful! ###')
-                        continuumstatus[int(chunk)] = True
-                    else:
-                        self.logger.warning('### Continuum imaging for chunk ' + chunk + ' NOT successful ###')
-                        continuumstatus[int(chunk)] = False
+                    for f in filelist:
+                        if os.path.isdir(self.contdir + '/stack/' + chunk + '/' + f):
+                            continuumstatus[int(chunk)] = True
+                        else:
+                            continuumstatus[int(chunk)] = False
+                            self.logger.warning('###  Continuum imaging for chunk ' + str(chunk) + ' not successful! ' + file +  ' was not found! ###')
+                            continuumchunkstackrejreason[int(chunk)] = file + ' missing'
+                            break
             else:
                 continuumchunkstackrejreason[int(chunk)] = 'Self-calibration failed'
                 self.logger.error('### Chunk ' + str(chunk) + ' could or was not successfully calibrated! No continuum imaging for this chunk possible! ###')
