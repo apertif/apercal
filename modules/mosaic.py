@@ -8,7 +8,6 @@ import logging
 import numpy as np
 import pandas as pd
 import os
-import glob
 
 import subs.setinit
 import subs.managefiles
