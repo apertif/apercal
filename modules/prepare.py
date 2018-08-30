@@ -55,7 +55,7 @@ class prepare:
     def copyobs(self):
         '''
         Prepares the directory structure and copies over the needed data from ALTA.
-        Checks for data in the current working directories and copies only only missing data.
+        Checks for data in the current working directories and copies only missing data.
         '''
         subs.setinit.setinitdirs(self)
         beams = 37 # Number of beams
@@ -317,7 +317,7 @@ class prepare:
 
     def summary(self):
         '''
-        Creates a general summary of the parameters in the parameter file generated during the prepare. No detailed summary is available for prepare
+        Creates a general summary of the parameters in the parameter file generated during PREPARE. No detailed summary is available for PREPARE
         returns (DataFrame): A python pandas dataframe object, which can be looked at with the style function in the notebook
         '''
 
@@ -422,7 +422,7 @@ class prepare:
         deldirs = glob.glob(self.basedir + '[0-9][0-9]' + '/' + self.rawsubdir)
         for dir in deldirs:
             subs.managefiles.director(self,'rm', dir)
-        self.logger.warning('### Deleteing all parameter file entries for PREPARE module ###')
+        self.logger.warning('### Deleting all parameter file entries for PREPARE module ###')
         subs.param.del_param(self, 'prepare_fluxcal_requested')
         subs.param.del_param(self, 'prepare_fluxcal_diskstatus')
         subs.param.del_param(self, 'prepare_fluxcal_altastatus')
