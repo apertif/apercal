@@ -11,8 +11,6 @@ import astropy.io.fits as pyfits
 import numpy as np
 import os
 import sys
-import pymp
-import time
 
 import subs.setinit
 from libs import lib
@@ -72,10 +70,10 @@ class line:
                 self.logger.info('# Calibrator corrections already seem to have been applied #')
             else:
                 self.logger.info('# Applying calibrator solutions to target data before averaging #')
-                uvaver = lib.miriad('uvaver')
-                uvaver.vis = self.crosscaldir + '/' + self.target
-                uvaver.out = self.linedir + '/' + self.target
-                uvaver.go()
+                uvcat = lib.miriad('uvcut')
+                uvcat.vis = self.crosscaldir + '/' + self.target
+                uvcat.out = self.linedir + '/' + self.target
+                uvcat.go()
                 self.logger.info('# Calibrator solutions to target data applied #')
             try:
                 uv = aipy.miriad.UV(self.linedir + '/' + self.target)
@@ -124,12 +122,12 @@ class line:
                     width = int(binchan)
                     step = int(width)
                     self.director('mk', self.linedir + '/' + str(counter).zfill(2))
-                    uvaver = lib.miriad('uvaver')
-                    uvaver.vis = self.linedir + '/' + self.target
-                    uvaver.out = self.linedir + '/' + str(counter).zfill(2) + '/' + str(counter).zfill(2) + '.mir'
-                    uvaver.select = "'" + 'window(' + str(subband+1) + ')' + "'"
-                    uvaver.line = "'" + 'channel,' + str(nchan) + ',' + str(start) + ',' + str(width) + ',' + str(step) + "'"
-                    uvaver.go()
+                    uvcat = lib.miriad('uvcat')
+                    uvcat.vis = self.linedir + '/' + self.target
+                    uvcat.out = self.linedir + '/' + str(counter).zfill(2) + '/' + str(counter).zfill(2) + '.mir'
+                    uvcat.select = "'" + 'window(' + str(subband+1) + ')' + "'"
+                    uvcat.line = "'" + 'channel,' + str(nchan) + ',' + str(start) + ',' + str(width) + ',' + str(step) + "'"
+                    uvcat.go()
                     counter = counter + 1
                     self.logger.info('# Splitting of data chunk ' + str(chunk) + ' for subband ' + str(subband) + ' done #')
                 self.logger.info('# Splitting of data for subband ' + str(subband) + ' done #')
