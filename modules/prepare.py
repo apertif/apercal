@@ -64,6 +64,9 @@ class prepare:
         # Check if the parameter is already in the parameter file and load it otherwise create the needed arrays #
         ##########################################################################################################
 
+        if not os.path.isdir(self.basedir):
+            os.mkdir(self.basedir)
+
         if subs.param.check_param(self, 'prepare_fluxcal_requested'):
             preparefluxcalrequested = subs.param.get_param(self, 'prepare_fluxcal_requested')
         else:
