@@ -14,6 +14,7 @@ import os
 import subs.setinit
 import subs.managefiles
 
+import casacore.tables as pt
 
 ####################################################################################################
 
@@ -57,6 +58,13 @@ class preflag:
         self.manualflag()
         self.aoflagger()
         self.logger.info('########## Pre-flagging step done ##########')
+
+    @staticmethod
+    def _getnchan(msname):
+        '''Return the number of channels in a given ms'''
+        spectralwindowtable = pt.table(msname + '::SPECTRAL_WINDOW', ack=False)
+        nchan = spectralwindowtable.getcol("CHAN_FREQ").shape[1]
+        return nchan
 
     def shadow(self):
         '''
@@ -173,14 +181,7 @@ class preflag:
                     # Flag the subband edges of the flux calibrator data set
                     self.logger.debug('# Flagging subband edges for flux calibrator #')
                     # Get the number of channels of the flux calibrator data set
-                    fc_edges_open = 'ms.open("' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal + '")'
-                    fc_edges_readmeta = 'metadata = ms.metadata()'
-                    fc_edges_nchan = 'nchannel = metadata.nchan(0)'
-                    fc_edges_print = 'print(nchannel)'
-                    casacmd_getfcnchan = [fc_edges_open, fc_edges_readmeta, fc_edges_nchan, fc_edges_print]
-                    casa = drivecasa.Casapy()
-                    casal = casa.run_script(casacmd_getfcnchan, raise_on_severe=True, timeout=1800)
-                    nchannel = int(casal[0][6])
+                    nchannel = self._getnchan(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal)
                     # Calculate the subband edges of the flux calibrator data set
                     a = range(0, nchannel, 64)
                     b = range(1, nchannel, 64)
@@ -203,14 +204,7 @@ class preflag:
                     # Flag the subband edges of the polarised calibrator data set
                     self.logger.debug('# Flagging subband edges for polarised calibrator #')
                     # Get the number of channels of the polarised calibrator data set
-                    pc_edges_open = 'ms.open("' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal + '")'
-                    pc_edges_readmeta = 'metadata = ms.metadata()'
-                    pc_edges_nchan = 'nchannel = metadata.nchan(0)'
-                    pc_edges_print = 'print(nchannel)'
-                    casacmd_getpcnchan = [pc_edges_open, pc_edges_readmeta, pc_edges_nchan, pc_edges_print]
-                    casa = drivecasa.Casapy()
-                    casal = casa.run_script(casacmd_getpcnchan, raise_on_severe=True, timeout=1800)
-                    nchannel = int(casal[0][6])
+                    nchannel = self._getnchan(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal)
                     # Calculate the subband edges of the polarised calibrator data set
                     a = range(0, nchannel, 64)
                     b = range(1, nchannel, 64)
@@ -233,14 +227,7 @@ class preflag:
                         self.logger.info('# Subband edges for target beam ' + vis.split('/')[-3] + ' were already flagged #')
                     else:
                         self.logger.debug('# Flagging subband edges for target beam ' + vis.split('/')[-3] + ' #')
-                        tg_edges_open = 'ms.open("' + vis + '")'
-                        tg_edges_readmeta = 'metadata = ms.metadata()'
-                        tg_edges_nchan = 'nchannel = metadata.nchan(0)'
-                        tg_edges_print = 'print(nchannel)'
-                        casacmd_gettgnchan = [tg_edges_open, tg_edges_readmeta, tg_edges_nchan, tg_edges_print]
-                        casa = drivecasa.Casapy()
-                        casal = casa.run_script(casacmd_gettgnchan, raise_on_severe=True, timeout=1800)
-                        nchannel = int(casal[0][6])
+                        nchannel = self._getnchan(vis)
                         # Calculate the subband edges for each target beam data set
                         a = range(0, nchannel, 64)
                         b = range(1, nchannel, 64)
@@ -298,14 +285,7 @@ class preflag:
                     # Flag the ghosts in the flux calibrator data set
                     self.logger.debug('# Flagging ghost channels for flux calibrator #')
                     # Get the number of channels of the flux calibrator data set
-                    fc_ghosts_open = 'ms.open("' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal + '")'
-                    fc_ghosts_readmeta = 'metadata = ms.metadata()'
-                    fc_ghosts_nchan = 'nchannel = metadata.nchan(0)'
-                    fc_ghosts_print = 'print(nchannel)'
-                    casacmd_getfcnchan = [fc_ghosts_open, fc_ghosts_readmeta, fc_ghosts_nchan, fc_ghosts_print]
-                    casa = drivecasa.Casapy()
-                    casal = casa.run_script(casacmd_getfcnchan, raise_on_severe=True, timeout=1800)
-                    nchannel = int(casal[0][6])
+                    nchannel = self._getnchan(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal)
                     # Calculate the ghost positions for the flux calibrator data set
                     a = range(16, nchannel, 64)
                     b = range(48, nchannel, 64)
@@ -327,14 +307,7 @@ class preflag:
                     # Flag the ghosts in the polarised calibrator data set
                     self.logger.debug('# Flagging ghost channels for polarised calibrator #')
                     # Get the number of channels of the polarised calibrator data set
-                    pc_ghosts_open = 'ms.open("' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal + '")'
-                    pc_ghosts_readmeta = 'metadata = ms.metadata()'
-                    pc_ghosts_nchan = 'nchannel = metadata.nchan(0)'
-                    pc_ghosts_print = 'print(nchannel)'
-                    casacmd_getpcnchan = [pc_ghosts_open, pc_ghosts_readmeta, pc_ghosts_nchan, pc_ghosts_print]
-                    casa = drivecasa.Casapy()
-                    casal = casa.run_script(casacmd_getpcnchan, raise_on_severe=True, timeout=1800)
-                    nchannel = int(casal[0][6])
+                    nchannel = self._getnchan(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal)
                     # Calculate the subband edges of the polarised calibrator data set
                     a = range(0, nchannel, 64)
                     b = range(1, nchannel, 64)
@@ -356,14 +329,7 @@ class preflag:
                         self.logger.info('# Ghost channels for target beam ' + vis.split('/')[-3] + ' were already flagged #')
                     else:
                         self.logger.debug('# Flagging ghost channels for target beam ' + vis.split('/')[-3] + ' #')
-                        tg_ghosts_open = 'ms.open("' + vis + '")'
-                        tg_ghosts_readmeta = 'metadata = ms.metadata()'
-                        tg_ghosts_nchan = 'nchannel = metadata.nchan(0)'
-                        tg_ghosts_print = 'print(nchannel)'
-                        casacmd_gettgnchan = [tg_ghosts_open, tg_ghosts_readmeta, tg_ghosts_nchan, tg_ghosts_print]
-                        casa = drivecasa.Casapy()
-                        casal = casa.run_script(casacmd_gettgnchan, raise_on_severe=True, timeout=1800)
-                        nchannel = int(casal[0][6])
+                        nchannel = self._getnchan(vis)
                         # Calculate the ghost channels for each target beam data set
                         a = range(0, nchannel, 64)
                         b = range(1, nchannel, 64)
