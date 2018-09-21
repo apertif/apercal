@@ -11,9 +11,9 @@ def getdata_alta(date, ID, beam, targetdir):
     '''
 
     if int(date) <= 180216:
-        cmd = "irsync -rK i:/altaZone/home/apertif_main/wcudata/WSRTA%s%.2d/WSRTA%s%.2d_B%.3d.MS " % (int(date), int(ID), int(date), int(ID), int(beam)) + targetdir
+        cmd = "irsync -rs i:/altaZone/home/apertif_main/wcudata/WSRTA%s%.2d/WSRTA%s%.2d_B%.3d.MS " % (int(date), int(ID), int(date), int(ID), int(beam)) + targetdir
     else:
-        cmd = "irsync -rK i:/altaZone/home/apertif_main/wcudata/WSRTA%s%.3d/WSRTA%s%.3d_B%.3d.MS " % (int(date), int(ID), int(date), int(ID), int(beam)) + targetdir
+        cmd = "irsync -rs i:/altaZone/home/apertif_main/wcudata/WSRTA%s%.3d/WSRTA%s%.3d_B%.3d.MS " % (int(date), int(ID), int(date), int(ID), int(beam)) + targetdir
     os.system(cmd)
 
 def getstatus_alta(date, ID, beam):
