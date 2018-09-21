@@ -9,6 +9,8 @@ import os
 
 import subs.setinit
 import subs.managefiles
+from subs.param import get_param_def
+
 from libs import lib
 
 
@@ -54,54 +56,18 @@ class convert:
 
         # Create the parameters for the parameter file for converting from MS to UVFITS format
 
-        if subs.param.check_param(self, 'convert_fluxcal_MSavailable'):
-            convertfluxcalmsavailable = subs.param.get_param(self, 'convert_fluxcal_MSavailable')
-        else:
-            convertfluxcalmsavailable = False  # Flux calibrator MS dataset available?
-        if subs.param.check_param(self, 'convert_polcal_MSavailable'):
-            convertpolcalmsavailable = subs.param.get_param(self, 'convert_polcal_MSavailable')
-        else:
-            convertpolcalmsavailable = False  # Polarised calibrator MS dataset available?
-        if subs.param.check_param(self, 'convert_targetbeams_MSavailable'):
-            converttargetbeamsmsavailable = subs.param.get_param(self, 'convert_targetbeams_MSavailable')
-        else:
-            converttargetbeamsmsavailable = np.full((beams), False)  # Target beam MS dataset available?
-        if subs.param.check_param(self, 'convert_fluxcal_MS2UVFITS'):
-            convertfluxcalms2uvfits = subs.param.get_param(self, 'convert_fluxcal_MS2UVFITS')
-        else:
-            convertfluxcalms2uvfits = False  # Flux calibrator MS dataset converted to UVFITS?
-        if subs.param.check_param(self, 'convert_polcal_MS2UVFITS'):
-            convertpolcalms2uvfits = subs.param.get_param(self, 'convert_polcal_MS2UVFITS')
-        else:
-            convertpolcalms2uvfits = False  # Polarised calibrator MS dataset converted to UVFITS?
-        if subs.param.check_param(self, 'convert_targetbeams_MS2UVFITS'):
-            converttargetbeamsms2uvfits = subs.param.get_param(self, 'convert_targetbeams_MS2UVFITS')
-        else:
-            converttargetbeamsms2uvfits = np.full((beams), False)  # Target beam MS dataset converted to UVFITS?
-        if subs.param.check_param(self, 'convert_fluxcal_UVFITSavailable'):
-            convertfluxcaluvfitsavailable = subs.param.get_param(self, 'convert_fluxcal_UVFITSavailable')
-        else:
-            convertfluxcaluvfitsavailable = False  # Flux calibrator UVFITS dataset available?
-        if subs.param.check_param(self, 'convert_polcal_UVFITSavailable'):
-            convertpolcaluvfitsavailable = subs.param.get_param(self, 'convert_polcal_UVFITSavailable')
-        else:
-            convertpolcaluvfitsavailable = False  # Polarised calibrator UVFITS dataset available?
-        if subs.param.check_param(self, 'convert_targetbeams_UVFITSavailable'):
-            converttargetbeamsuvfitsavailable = subs.param.get_param(self, 'convert_targetbeams_UVFITSavailable')
-        else:
-            converttargetbeamsuvfitsavailable = np.full((beams), False)  # Target beam UVFITS dataset available?
-        if subs.param.check_param(self, 'convert_fluxcal_UVFITS2MIRIAD'):
-            convertfluxcaluvfits2miriad = subs.param.get_param(self, 'convert_fluxcal_UVFITS2MIRIAD')
-        else:
-            convertfluxcaluvfits2miriad = False  # Flux calibrator UVFITS dataset converted to MIRIAD?
-        if subs.param.check_param(self, 'convert_polcal_UVFITS2MIRIAD'):
-            convertpolcaluvfits2miriad = subs.param.get_param(self, 'convert_polcal_UVFITS2MIRIAD')
-        else:
-            convertpolcaluvfits2miriad = False  # Polarised calibrator UVFITS dataset converted to MIRIAD?
-        if subs.param.check_param(self, 'convert_targetbeams_UVFITS2MIRIAD'):
-            converttargetbeamsuvfits2miriad = subs.param.get_param(self, 'convert_targetbeams_UVFITS2MIRIAD')
-        else:
-            converttargetbeamsuvfits2miriad = np.full((beams), False)  # Target beam UVFITS dataset converted to MIRIAD?
+        convertfluxcalmsavailable = get_param_def(self, 'convert_fluxcal_MSavailable', False ) # Flux calibrator MS dataset available?
+        convertpolcalmsavailable = get_param_def(self, 'convert_polcal_MSavailable', False ) # Polarised calibrator MS dataset available?
+        converttargetbeamsmsavailable = get_param_def(self, 'convert_targetbeams_MSavailable', np.full((beams), False) ) # Target beam MS dataset available?
+        convertfluxcalms2uvfits = get_param_def(self, 'convert_fluxcal_MS2UVFITS', False ) # Flux calibrator MS dataset converted to UVFITS?
+        convertpolcalms2uvfits = get_param_def(self, 'convert_polcal_MS2UVFITS', False ) # Polarised calibrator MS dataset converted to UVFITS?
+        converttargetbeamsms2uvfits = get_param_def(self, 'convert_targetbeams_MS2UVFITS', np.full((beams), False) ) # Target beam MS dataset converted to UVFITS?
+        convertfluxcaluvfitsavailable = get_param_def(self, 'convert_fluxcal_UVFITSavailable', False ) # Flux calibrator UVFITS dataset available?
+        convertpolcaluvfitsavailable = get_param_def(self, 'convert_polcal_UVFITSavailable', False ) # Polarised calibrator UVFITS dataset available?
+        converttargetbeamsuvfitsavailable = get_param_def(self, 'convert_targetbeams_UVFITSavailable', np.full((beams), False) ) # Target beam UVFITS dataset available?
+        convertfluxcaluvfits2miriad = get_param_def(self, 'convert_fluxcal_UVFITS2MIRIAD', False ) # Flux calibrator UVFITS dataset converted to MIRIAD?
+        convertpolcaluvfits2miriad = get_param_def(self, 'convert_polcal_UVFITS2MIRIAD', False ) # Polarised calibrator UVFITS dataset converted to MIRIAD?
+        converttargetbeamsuvfits2miriad = get_param_def(self, 'convert_targetbeams_UVFITS2MIRIAD', np.full((beams), False) ) # Target beam UVFITS dataset converted to MIRIAD?
 
         ###################################################
         # Check which datasets are available in MS format #
