@@ -13,6 +13,8 @@ import os
 
 import subs.setinit
 import subs.managefiles
+import subs.param
+from subs.param import get_param_def
 
 import casacore.tables as pt
 
@@ -22,13 +24,13 @@ class preflag:
     '''
     Preflagging class. Used to automatically flag data and apply preknown flags.
     '''
-    def __init__(self, file=None, **kwargs):
+    def __init__(self, filename=None, **kwargs):
         logging.basicConfig(level=logging.DEBUG)
         self.logger = logging.getLogger('PREFLAG')
         config = ConfigParser.ConfigParser()  # Initialise the config parser
-        if file != None:
-            config.readfp(open(file))
-            self.logger.info('### Configuration file ' + file + ' successfully read! ###')
+        if filename:
+            config.readfp(open(filename))
+            self.logger.info('### Configuration file ' + filename + ' successfully read! ###')
         else:
             config.readfp(open(os.path.realpath(__file__).rstrip('preflag.pyc') + 'default.cfg'))
             self.logger.info('### No configuration file given or file not found! Using default values! ###')
@@ -106,7 +108,7 @@ class preflag:
                     casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
                     preflagfluxcalshadow = True
                 else:
-                    self.logger.warning('# Flux calibrator dataset not specified or dataset not avaialble. Not flagging shadowed antennas for flux calibrator #')
+                    self.logger.warning('# Flux calibrator dataset not specified or dataset not available. Not flagging shadowed antennas for flux calibrator #')
                     preflagfluxcalshadow = False
             # Flag the polarised calibrator
             if preflagpolcalshadow:
@@ -120,7 +122,7 @@ class preflag:
                     casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
                     preflagpolcalshadow = True
                 else:
-                    self.logger.warning('# Polarised calibrator dataset not specified or dataset not avaialble. Not flagging shadowed antennas for polarised calibrator #')
+                    self.logger.warning('# Polarised calibrator dataset not specified or dataset not available. Not flagging shadowed antennas for polarised calibrator #')
                     preflagpolcalshadow = False
             # Flag the target beams
             if self.target != '':
@@ -1076,7 +1078,7 @@ class preflag:
         subs.setinit.setinitdirs(self)
         beams = 37
 
-        # Create the parameters for the parameter file for the bandpass step of the AOFLagger step
+        # Create the parameters for the parameter file for the bandpass step of the AOFlagger step
 
         if subs.param.check_param(self, 'preflag_aoflagger_fluxcal_flag_status'):
             preflagaoflaggerfluxcalflag = subs.param.get_param(self, 'preflag_aoflagger_fluxcal_flag_status')
@@ -1094,7 +1096,7 @@ class preflag:
         if self.preflag_aoflagger:
             # Flag the flux calibrator with AOFLagger
             if self.preflag_aoflagger_fluxcal:
-                if preflagaoflaggerfluxcalflag == False:
+                if not preflagaoflaggerfluxcalflag:
                     if self.fluxcal !='' and os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal) and self.preflag_aoflagger_fluxcalstrat != '':
                         self.logger.info('# Using AOFlagger to flag flux calibrator dataset #')
                         if subs.param.check_param(self, 'preflag_aoflagger_fluxcal_bandpass_apply'): # Check if bandpass was applied successfully
@@ -1117,7 +1119,7 @@ class preflag:
                         self.logger.error('# Flux calibrator dataset or strategy not defined properly or dataset not available. Not AOFlagging flux calibrator. #')
                 else:
                     self.logger.info('# Flux calibrator was already flagged with AOFlagger! #')
-            # Flag the polarised calibrator with AOFLagger
+            # Flag the polarised calibrator with AOFlagger
             if self.preflag_aoflagger_polcal:
                 if preflagaoflaggerpolcalflag == False:
                     if self.polcal !='' and os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal) and self.preflag_aoflagger_polcalstrat != '':
@@ -1142,7 +1144,7 @@ class preflag:
                         self.logger.error('# Polarised calibrator dataset or strategy not defined properly or dataset not available. Not AOFlagging polarised calibrator. #')
                 else:
                     self.logger.info('# Polarised calibrator was already flagged with AOFlagger! #')
-            # Flag the target beams with AOFLagger
+            # Flag the target beams with AOFlagger
             if self.preflag_aoflagger_target:
                 if self.target !='' and self.preflag_aoflagger_targetstrat != '':
                     self.logger.info('# Using AOFlagger to flag selected target beam dataset(s) #')
