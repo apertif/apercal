@@ -15,6 +15,7 @@ import subs.readmirhead
 import subs.imstats
 import subs.param
 import subs.combim
+from subs.param import get_param_def
 
 from libs import lib
 
@@ -74,65 +75,18 @@ class mosaic:
         # Check if the parameter is already in the parameter file and load it otherwise create the needed arrays #
         ##########################################################################################################
 
-        if subs.param.check_param(self, 'mosaic_continuum_stacked_beams_inputstatus'):
-            mosaiccontinuumstackedinputstatus = subs.param.get_param(self, 'mosaic_continuum_stacked_beams_inputstatus')
-        else:
-            mosaiccontinuumstackedinputstatus = np.full((beams), False)  # Status of the input images for the mosaicing
-
-        if subs.param.check_param(self, 'mosaic_continuum_stacked_beams_continuumstatus'):
-            mosaiccontinuumstackedcontinuumstatus = subs.param.get_param(self, 'mosaic_continuum_stacked_beams_continuumstatus')
-        else:
-            mosaiccontinuumstackedcontinuumstatus = np.full((beams), False)  # Status of the continuum imaging
-
-        if subs.param.check_param(self, 'mosaic_continuum_stacked_beams_copystatus'):
-            mosaiccontinuumstackedcopystatus = subs.param.get_param(self, 'mosaic_continuum_stacked_beams_copystatus')
-        else:
-            mosaiccontinuumstackedcopystatus = np.full((beams), False)  # Status of the copy of the images
-
-        if subs.param.check_param(self, 'mosaic_continuum_stacked_beams_convolstatus'):
-            mosaiccontinuumstackedconvolstatus = subs.param.get_param(self, 'mosaic_continuum_stacked_beams_convolstatus')
-        else:
-            mosaiccontinuumstackedconvolstatus = np.full((beams), False)  # Status of the convolved images
-
-        if subs.param.check_param(self, 'mosaic_continuum_stacked_beams_beamstatus'):
-            mosaiccontinuumstackedbeamstatus = subs.param.get_param(self, 'mosaic_continuum_stacked_beams_beamstatus')
-        else:
-            mosaiccontinuumstackedbeamstatus = np.full((beams), False)  # Was the image accepted based on the synthesised beam?
-
-        if subs.param.check_param(self, 'mosaic_continuum_stacked_beams_inputsynthbeamparams'):
-            mosaiccontinuumstackedinputsynthbeamparams = subs.param.get_param(self,'mosaic_continuum_stacked_beams_inputsynthbeamparams')
-        else:
-            mosaiccontinuumstackedinputsynthbeamparams = np.full((beams, 3), np.nan)  # Beam sizes of the input images
-
-        if subs.param.check_param(self, 'mosaic_continuum_stacked_beams_inputimagestats'):
-            mosaiccontinuumstackedinputimagestats = subs.param.get_param(self,'mosaic_continuum_stacked_beams_inputimagestats')
-        else:
-            mosaiccontinuumstackedinputimagestats = np.full((beams, 3), np.nan)  # Image statistics of the input images
-
-        if subs.param.check_param(self, 'mosaic_continuum_stacked_beams_inputrms'):
-            mosaiccontinuumstackedinputrms = subs.param.get_param(self,'mosaic_continuum_stacked_beams_inputrms')
-        else:
-            mosaiccontinuumstackedinputrms = np.full((beams), np.nan)  # RMS of the stacked input images
-
-        if subs.param.check_param(self, 'mosaic_continuum_stacked_beams_inputweights'):
-            mosaiccontinuumstackedinputweights = subs.param.get_param(self, 'mosaic_continuum_stacked_beams_inputweights')
-        else:
-            mosaiccontinuumstackedinputweights = np.full((beams), np.nan)  # Weights of the stacked input images (normalised to one)
-
-        if subs.param.check_param(self, 'mosaic_continuum_stacked_beams_rejreason'):
-            mosaiccontinuumstackedrejreason = subs.param.get_param(self, 'mosaic_continuum_stacked_beams_rejreason')
-        else:
-            mosaiccontinuumstackedrejreason = np.full((beams), '', dtype='U50')  # Reason for rejecting an image
-
-        if subs.param.check_param(self, 'mosaic_continuum_stacked_beams_synthbeamparams'):
-            stackbeam = subs.param.get_param(self, 'mosaic_continuum_stacked_beams_synthbeamparams')
-        else:
-            stackbeam = np.full((3), np.nan)  # Synthesised beam parameters for the final stacked continuum mosaic
-
-        if subs.param.check_param(self, 'mosaic_continuum_stacked_beams_imagestatus'):
-            mosaiccontinuumstackedimagestatus = subs.param.get_param(self, 'mosaic_continuum_stacked_beams_imagestatus')
-        else:
-            mosaiccontinuumstackedimagestatus = False  # Status of the final stacked mosaic
+        mosaiccontinuumstackedinputstatus = get_param_def(self, 'mosaic_continuum_stacked_beams_inputstatus', np.full((beams), False) ) # Status of the input images for the mosaicing
+        mosaiccontinuumstackedcontinuumstatus = get_param_def(self, 'mosaic_continuum_stacked_beams_continuumstatus', np.full((beams), False) ) # Status of the continuum imaging
+        mosaiccontinuumstackedcopystatus = get_param_def(self, 'mosaic_continuum_stacked_beams_copystatus', np.full((beams), False) ) # Status of the copy of the images
+        mosaiccontinuumstackedconvolstatus = get_param_def(self, 'mosaic_continuum_stacked_beams_convolstatus', np.full((beams), False) ) # Status of the convolved images
+        mosaiccontinuumstackedbeamstatus = get_param_def(self, 'mosaic_continuum_stacked_beams_beamstatus', np.full((beams), False) ) # Was the image accepted based on the synthesised beam?
+        mosaiccontinuumstackedinputsynthbeamparams = get_param_def(self, 'mosaic_continuum_stacked_beams_inputsynthbeamparams', np.full((beams, 3), np.nan) ) # Beam sizes of the input images
+        mosaiccontinuumstackedinputimagestats = get_param_def(self, 'mosaic_continuum_stacked_beams_inputimagestats', np.full((beams, 3), np.nan) ) # Image statistics of the input images
+        mosaiccontinuumstackedinputrms = get_param_def(self, 'mosaic_continuum_stacked_beams_inputrms', np.full((beams), np.nan) ) # RMS of the stacked input images
+        mosaiccontinuumstackedinputweights = get_param_def(self, 'mosaic_continuum_stacked_beams_inputweights', np.full((beams), np.nan) ) # Weights of the stacked input images (normalised to one)
+        mosaiccontinuumstackedrejreason = get_param_def(self, 'mosaic_continuum_stacked_beams_rejreason', np.full((beams), '', dtype='U50') ) # Reason for rejecting an image
+        stackbeam = get_param_def(self, 'mosaic_continuum_stacked_beams_synthbeamparams', np.full((3), np.nan) ) # Synthesised beam parameters for the final stacked continuum mosaic
+        mosaiccontinuumstackedimagestatus = get_param_def(self, 'mosaic_continuum_stacked_beams_imagestatus', False ) # Status of the final stacked mosaic
 
         #######################################################
         # Start the mosaicing of the stacked continuum images #
@@ -310,70 +264,31 @@ class mosaic:
         # Check if the parameter is already in the parameter file and load it otherwise create the needed arrays #
         ##########################################################################################################
 
-        if subs.param.check_param(self, 'mosaic_continuum_chunks_beams_inputstatus'):
-            mosaiccontinuumchunksinputstatus = subs.param.get_param(self, 'mosaic_continuum_chunks_beams_inputstatus')
-        else:
-            mosaiccontinuumchunksinputstatus = np.full((beams, nch), False)  # Status of the input chunk images for the mosaicing
+        mosaiccontinuumchunksinputstatus = get_param_def(self, 'mosaic_continuum_chunks_beams_inputstatus', np.full((beams, nch), False) ) # Status of the input chunk images for the mosaicing
 
-        if subs.param.check_param(self, 'mosaic_continuum_chunks_beams_inputsynthbeamparams'):
-            mosaiccontinuumchunksinputsynthbeamparams = subs.param.get_param(self,'mosaic_continuum_chunks_beams_inputsynthbeamparams')
-        else:
-            mosaiccontinuumchunksinputsynthbeamparams = np.full((beams, nch, 3), np.nan)  # Beam sizes of the input images
+        mosaiccontinuumchunksinputsynthbeamparams = get_param_def(self, 'mosaic_continuum_chunks_beams_inputsynthbeamparams', np.full((beams, nch, 3), np.nan) ) # Beam sizes of the input images
 
-        if subs.param.check_param(self, 'mosaic_continuum_chunks_beams_inputimagestats'):
-            mosaiccontinuumchunksinputimagestats = subs.param.get_param(self,'mosaic_continuum_chunks_beams_inputimagestats')
-        else:
-            mosaiccontinuumchunksinputimagestats = np.full((beams, nch, 3), np.nan)  # Image statistics of the input images
+        mosaiccontinuumchunksinputimagestats = get_param_def(self, 'mosaic_continuum_chunks_beams_inputimagestats', np.full((beams, nch, 3), np.nan) ) # Image statistics of the input images
 
-        if subs.param.check_param(self, 'mosaic_continuum_chunks_beams_inputrms'):
-            mosaiccontinuumchunksinputrms = subs.param.get_param(self,'mosaic_continuum_chunks_beams_inputrms')
-        else:
-            mosaiccontinuumchunksinputrms = np.full((beams, nch), np.nan)  # RMS of the input chunk images
+        mosaiccontinuumchunksinputrms = get_param_def(self, 'mosaic_continuum_chunks_beams_inputrms', np.full((beams, nch), np.nan) ) # RMS of the input chunk images
 
-        if subs.param.check_param(self, 'mosaic_continuum_chunks_beams_beamstatus'):
-            mosaiccontinuumchunksbeamstatus = subs.param.get_param(self, 'mosaic_continuum_chunks_beams_beamstatus')
-        else:
-            mosaiccontinuumchunksbeamstatus = np.full((beams, nch), False)  # Was the image accepted based on the synthesised beam?
+        mosaiccontinuumchunksbeamstatus = get_param_def(self, 'mosaic_continuum_chunks_beams_beamstatus', np.full((beams, nch), False) ) # Was the image accepted based on the synthesised beam?
 
-        if subs.param.check_param(self, 'mosaic_continuum_chunks_beams_rejreason'):
-            mosaiccontinuumchunksrejreason = subs.param.get_param(self, 'mosaic_continuum_chunks_beams_rejreason')
-        else:
-            mosaiccontinuumchunksrejreason = np.full((beams, nch), '', dtype='U50')  # Reason for rejecting an image
+        mosaiccontinuumchunksrejreason = get_param_def(self, 'mosaic_continuum_chunks_beams_rejreason', np.full((beams, nch), '', dtype='U50') ) # Reason for rejecting an image
 
-        if subs.param.check_param(self, 'mosaic_continuum_chunks_beams_inputweights'):
-            mosaiccontinuumchunksinputweights = subs.param.get_param(self, 'mosaic_continuum_chunks_beams_inputweights')
-        else:
-            mosaiccontinuumchunksinputweights = np.full((beams, nch), np.nan)  # Weights of the individual input images (normalised to one)
+        mosaiccontinuumchunksinputweights = get_param_def(self, 'mosaic_continuum_chunks_beams_inputweights', np.full((beams, nch), np.nan) ) # Weights of the individual input images (normalised to one)
 
-        if subs.param.check_param(self, 'mosaic_continuum_chunks_beams_synthbeamparams'):
-            mosaiccontinuumchunksbeams = subs.param.get_param(self, 'mosaic_continuum_chunks_beams_synthbeamparams')
-        else:
-            mosaiccontinuumchunksbeams = np.full((nch, 3), np.nan)  # Synthesised beam parameters for the final continuum chunk mosaics
+        mosaiccontinuumchunksbeams = get_param_def(self, 'mosaic_continuum_chunks_beams_synthbeamparams', np.full((nch, 3), np.nan) ) # Synthesised beam parameters for the final continuum chunk mosaics
 
-        if subs.param.check_param(self, 'mosaic_continuum_chunks_beams_iterations'):
-            mosaiccontinuumchunksiterations = subs.param.get_param(self, 'mosaic_continuum_chunks_beams_iterations')
-        else:
-            mosaiccontinuumchunksiterations = np.full((beams, nch), np.nan)  # Last executed clean iteration for the continuum images
+        mosaiccontinuumchunksiterations = get_param_def(self, 'mosaic_continuum_chunks_beams_iterations', np.full((beams, nch), np.nan) ) # Last executed clean iteration for the continuum images
 
-        if subs.param.check_param(self, 'mosaic_continuum_chunks_beams_continuumstatus'):
-            mosaiccontinuumchunkscontinuumstatus = subs.param.get_param(self, 'mosaic_continuum_chunks_beams_continuumstatus')
-        else:
-            mosaiccontinuumchunkscontinuumstatus = np.full((beams, nch), False)  # Status of the input chunk images for the mosaicing
+        mosaiccontinuumchunkscontinuumstatus = get_param_def(self, 'mosaic_continuum_chunks_beams_continuumstatus', np.full((beams, nch), False) ) # Status of the input chunk images for the mosaicing
 
-        if subs.param.check_param(self, 'mosaic_continuum_chunks_beams_copystatus'):
-            mosaiccontinuumchunkscopystatus = subs.param.get_param(self, 'mosaic_continuum_chunks_beams_copystatus')
-        else:
-            mosaiccontinuumchunkscopystatus = np.full((beams, nch), False)  # Status of the copying of the individual chunk images
+        mosaiccontinuumchunkscopystatus = get_param_def(self, 'mosaic_continuum_chunks_beams_copystatus', np.full((beams, nch), False) ) # Status of the copying of the individual chunk images
 
-        if subs.param.check_param(self, 'mosaic_continuum_chunks_beams_convolstatus'):
-            mosaiccontinuumchunksconvolstatus = subs.param.get_param(self, 'mosaic_continuum_chunks_beams_convolstatus')
-        else:
-            mosaiccontinuumchunksconvolstatus = np.full((beams, nch), False)  # Status of the convolution of the individual chunk images
+        mosaiccontinuumchunksconvolstatus = get_param_def(self, 'mosaic_continuum_chunks_beams_convolstatus', np.full((beams, nch), False) ) # Status of the convolution of the individual chunk images
 
-        if subs.param.check_param(self, 'mosaic_continuum_chunks_beams_imagestatus'):
-            mosaiccontinuumchunksimagestatus = subs.param.get_param(self, 'mosaic_continuum_chunks_beams_imagestatus')
-        else:
-            mosaiccontinuumchunksimagestatus = np.full((nch), False)  # Status of the final chunk mosaics
+        mosaiccontinuumchunksimagestatus = get_param_def(self, 'mosaic_continuum_chunks_beams_imagestatus', np.full((nch), False) ) # Status of the final chunk mosaics
 
         ################################################
         # Start the mosaicing of the individual chunks #

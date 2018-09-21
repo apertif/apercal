@@ -63,14 +63,18 @@ def get_param_def(step, parameter, default):
     parameter (string): name of the keyword to load
     parameter (object): default value
     '''
-    if not check_param(step, parameter):
-        return default
+    subs.setinit.setinitdirs(step)
+    if not os.path.isfile(step.basedir + 'param.npy'):
+        print('# Parameter file not found! Using default for parameter ' + str(parameter) + ' #')
     else:
-        return get_param(step, parameter)
+        d = np.load(step.basedir + 'param.npy').item()
+        if parameter in d:
+            return d[parameter]
+    return default
 
 def check_param(step, parameter):
     '''
-    Check if a list of paramaters exist in the parmaater file ans return True or False
+    Check if a list of parameters exist in the parameter file ans return True or False
     parameter (list of strings): The parameters to search for
     returns (bool): True if parameter exists, otherwise False
     '''
@@ -78,14 +82,11 @@ def check_param(step, parameter):
     if not os.path.isfile(step.basedir + 'param.npy'):
         print('# Parameter file not found! Cannot load parameter ' + str(parameter) + ' #')
         create_param_file(step)
-        status = False
     else:
         d = np.load(step.basedir + 'param.npy').item()
         if parameter in d:
-            status = True
-        else:
-            status = False
-    return status
+            return True
+    return False
 
 def show_param(step):
     '''

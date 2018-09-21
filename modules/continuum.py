@@ -16,7 +16,7 @@ import subs.managefiles
 import subs.combim
 import subs.readmirhead
 import subs.imstats
-import subs.param
+from subs.param import get_param_def
 
 from libs import lib
 
@@ -79,90 +79,23 @@ class continuum:
 
         nchunks = len(self.list_chunks())
 
-        if subs.param.check_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_minoriterations'):
-            continuumminiters = subs.param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_minoriterations')
-        else:
-            continuumminiters = np.full((nchunks), np.nan) # Number of the last executed minor iterations during imaging
-
-        if subs.param.check_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_imagestats'):
-            continuumimagestats = subs.param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_imagestats')
-        else:
-            continuumimagestats = np.full((nchunks, self.continuum_minorcycle, 3), np.nan) # Stats of the created continuum images (minimum, maximum, standard deviation)
-
-        if subs.param.check_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_residualstats'):
-            continuumresidualstats = subs.param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_residualstats')
-        else:
-            continuumresidualstats = np.full((nchunks, self.continuum_minorcycle, 3), np.nan) # Stats of the created continuum residual images (minimum, maximum, standard deviation)
-
-        if subs.param.check_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_status'):
-            continuumstatus = subs.param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_status')
-        else:
-            continuumstatus = np.full((nchunks), False) # Status if imaging completed successfully
-
-        if subs.param.check_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_imagestatus'):
-            continuumimagestatus = subs.param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_imagestatus')
-        else:
-            continuumimagestatus = np.full((nchunks, self.continuum_minorcycle), False)  # Was the final image for each iteration created successfully?
-
-        if subs.param.check_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_maskstatus'):
-            continuummaskstatus = subs.param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_maskstatus')
-        else:
-            continuummaskstatus = np.full((nchunks, self.continuum_minorcycle), False)  # Was the mask for each iteration created successfully?
-
-        if subs.param.check_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_modelstatus'):
-            continuummodelstatus = subs.param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_modelstatus')
-        else:
-            continuummodelstatus = np.full((nchunks, self.continuum_minorcycle), False)  # Was the model for each iteration created successfully?
-
-        if subs.param.check_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_residualstatus'):
-            continuumresidualstatus = subs.param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_residualstatus')
-        else:
-            continuumresidualstatus = np.full((nchunks, self.continuum_minorcycle), False)  # Was the residual image for each iteration created successfully?
-
-        if subs.param.check_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_thresholdtype'):
-            continuumthresholdtype = subs.param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_thresholdtype')
-        else:
-            continuumthresholdtype = np.full((nchunks, self.continuum_minorcycle), '') # Threshold type for each individual cycle and chunk
-
-        if subs.param.check_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_masklimit'):
-            continuummasklimit = subs.param.get_param(self,'continuum_B' + str(self.beam).zfill(2) + '_masklimit')
-        else:
-            continuummasklimit = np.full((nchunks, self.continuum_minorcycle), np.nan) # Masking threshold for each individual cycle and chunk
-
-        if subs.param.check_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_cleanlimit'):
-            continuumcleanlimit = subs.param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_cleanlimit')
-        else:
-            continuumcleanlimit = np.full((nchunks, self.continuum_minorcycle), np.nan) # Cleaning threshold for each individual cycle and chunk
-
-        if subs.param.check_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_synthbeamparams'):
-            continuumsynthbeamparams = subs.param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_synthbeamparams')
-        else:
-            continuumsynthbeamparams = np.full((nchunks, 3), np.nan) # Cleaning threshold for each individual cycle and chunk
-
-        if subs.param.check_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_stackstatus'):
-            continuumchunkimageacceptforstacking = subs.param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_stackstatus')
-        else:
-            continuumchunkimageacceptforstacking = np.full((nchunks), False)  # Is the final image accepted for stacking
-
-        if subs.param.check_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_stackrejreason'):
-            continuumchunkstackrejreason = subs.param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_stackrejreason')
-        else:
-            continuumchunkstackrejreason = np.full((nchunks), '', dtype='U50')  # Reason for rejecting an image
-
-        if subs.param.check_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_imcombrms'):
-            continuumimcombrms = subs.param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_imcombrms')
-        else:
-            continuumimcombrms = np.full((nchunks), np.nan)  # RMS of the final chunk images
-
-        if subs.param.check_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_imcombweights'):
-            continuumimcombweights = subs.param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_imcombweights')
-        else:
-            continuumimcombweights = np.full((nchunks), np.nan)  # Weighting of the final chunk images (normalised)
-
-        if subs.param.check_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_stackedimagestatus'):
-            continuumstackedimagestatus = subs.param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_stackedimagestatus')
-        else:
-            continuumstackedimagestatus = False  # Is the final image accepted for stacking
+        continuumminiters = get_param_def(self, 'continuum_B' + str(self.beam).zfill(2) + '_minoriterations', np.full((nchunks), np.nan)) # Number of the last executed minor iterations during imaging
+        continuumimagestats = get_param_def(self, 'continuum_B' + str(self.beam).zfill(2) + '_imagestats', np.full((nchunks, self.continuum_minorcycle, 3), np.nan)) # Stats of the created continuum images (minimum, maximum, standard deviation)
+        continuumresidualstats = get_param_def(self, 'continuum_B' + str(self.beam).zfill(2) + '_residualstats', np.full((nchunks, self.continuum_minorcycle, 3), np.nan)) # Stats of the created continuum residual images (minimum, maximum, standard deviation)
+        continuumstatus = get_param_def(self, 'continuum_B' + str(self.beam).zfill(2) + '_status', np.full((nchunks), False)) # Status if imaging completed successfully
+        continuumimagestatus = get_param_def(self, 'continuum_B' + str(self.beam).zfill(2) + '_imagestatus', np.full((nchunks, self.continuum_minorcycle), False) ) # Was the final image for each iteration created successfully?
+        continuummaskstatus = get_param_def(self, 'continuum_B' + str(self.beam).zfill(2) + '_maskstatus', np.full((nchunks, self.continuum_minorcycle), False) ) # Was the mask for each iteration created successfully?
+        continuummodelstatus = get_param_def(self, 'continuum_B' + str(self.beam).zfill(2) + '_modelstatus', np.full((nchunks, self.continuum_minorcycle), False) ) # Was the model for each iteration created successfully?
+        continuumresidualstatus = get_param_def(self, 'continuum_B' + str(self.beam).zfill(2) + '_residualstatus', np.full((nchunks, self.continuum_minorcycle), False) ) # Was the residual image for each iteration created successfully?
+        continuumthresholdtype = get_param_def(self, 'continuum_B' + str(self.beam).zfill(2) + '_thresholdtype', np.full((nchunks, self.continuum_minorcycle), '')) # Threshold type for each individual cycle and chunk
+        continuummasklimit = get_param_def(self, 'continuum_B' + str(self.beam).zfill(2) + '_masklimit', np.full((nchunks, self.continuum_minorcycle), np.nan)) # Masking threshold for each individual cycle and chunk
+        continuumcleanlimit = get_param_def(self, 'continuum_B' + str(self.beam).zfill(2) + '_cleanlimit', np.full((nchunks, self.continuum_minorcycle), np.nan)) # Cleaning threshold for each individual cycle and chunk
+        continuumsynthbeamparams = get_param_def(self, 'continuum_B' + str(self.beam).zfill(2) + '_synthbeamparams', np.full((nchunks, 3), np.nan)) # Cleaning threshold for each individual cycle and chunk
+        continuumchunkimageacceptforstacking = get_param_def(self, 'continuum_B' + str(self.beam).zfill(2) + '_stackstatus', np.full((nchunks), False) ) # Is the final image accepted for stacking
+        continuumchunkstackrejreason = get_param_def(self, 'continuum_B' + str(self.beam).zfill(2) + '_stackrejreason', np.full((nchunks), '', dtype='U50') ) # Reason for rejecting an image
+        continuumimcombrms = get_param_def(self, 'continuum_B' + str(self.beam).zfill(2) + '_imcombrms', np.full((nchunks), np.nan) ) # RMS of the final chunk images
+        continuumimcombweights = get_param_def(self, 'continuum_B' + str(self.beam).zfill(2) + '_imcombweights', np.full((nchunks), np.nan) ) # Weighting of the final chunk images (normalised)
+        continuumstackedimagestatus = get_param_def(self, 'continuum_B' + str(self.beam).zfill(2) + '_stackedimagestatus', False ) # Is the final image accepted for stacking
 
         ####################################
         # Imaging of each individual chunk #

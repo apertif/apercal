@@ -12,7 +12,7 @@ import numpy as np
 import subs.irods
 import subs.setinit
 import subs.managefiles
-
+from subs.param import get_param_def
 
 ####################################################################################################
 
@@ -67,80 +67,35 @@ class prepare:
         if not os.path.isdir(self.basedir):
             os.mkdir(self.basedir)
 
-        if subs.param.check_param(self, 'prepare_fluxcal_requested'):
-            preparefluxcalrequested = subs.param.get_param(self, 'prepare_fluxcal_requested')
-        else:
-            preparefluxcalrequested = False  # Is the fluxcal data requested?
+        preparefluxcalrequested = get_param_def(self, 'prepare_fluxcal_requested', False ) # Is the fluxcal data requested?
 
-        if subs.param.check_param(self, 'prepare_polcal_requested'):
-            preparepolcalrequested = subs.param.get_param(self, 'prepare_polcal_requested')
-        else:
-            preparepolcalrequested = False  # Is the polcal data requested?
+        preparepolcalrequested = get_param_def(self, 'prepare_polcal_requested', False ) # Is the polcal data requested?
 
-        if subs.param.check_param(self, 'prepare_targetbeams_requested'):
-            preparetargetbeamsrequested = subs.param.get_param(self, 'prepare_targetbeams_requested')
-        else:
-            preparetargetbeamsrequested = np.full((beams), False)  # Is the target data requested? One entry per beam
+        preparetargetbeamsrequested = get_param_def(self, 'prepare_targetbeams_requested', np.full((beams), False) ) # Is the target data requested? One entry per beam
 
-        if subs.param.check_param(self, 'prepare_fluxcal_diskstatus'):
-            preparefluxcaldiskstatus = subs.param.get_param(self, 'prepare_fluxcal_diskstatus')
-        else:
-            preparefluxcaldiskstatus = False  # Is the fluxcal data already on disk?
+        preparefluxcaldiskstatus = get_param_def(self, 'prepare_fluxcal_diskstatus', False ) # Is the fluxcal data already on disk?
 
-        if subs.param.check_param(self, 'prepare_polcal_diskstatus'):
-            preparepolcaldiskstatus = subs.param.get_param(self, 'prepare_polcal_diskstatus')
-        else:
-            preparepolcaldiskstatus = False  # Is the polcal data already on disk?
+        preparepolcaldiskstatus = get_param_def(self, 'prepare_polcal_diskstatus', False ) # Is the polcal data already on disk?
 
-        if subs.param.check_param(self, 'prepare_targetbeams_diskstatus'):
-            preparetargetbeamsdiskstatus = subs.param.get_param(self, 'prepare_targetbeams_diskstatus')
-        else:
-            preparetargetbeamsdiskstatus = np.full((beams), False)  # Is the target data already on disk? One entry per beam
+        preparetargetbeamsdiskstatus = get_param_def(self, 'prepare_targetbeams_diskstatus', np.full((beams), False) ) # Is the target data already on disk? One entry per beam
 
-        if subs.param.check_param(self, 'prepare_fluxcal_altastatus'):
-            preparefluxcalaltastatus = subs.param.get_param(self, 'prepare_fluxcal_altastatus')
-        else:
-            preparefluxcalaltastatus = False  # Is the fluxcal data on ALTA?
+        preparefluxcalaltastatus = get_param_def(self, 'prepare_fluxcal_altastatus', False ) # Is the fluxcal data on ALTA?
 
-        if subs.param.check_param(self, 'prepare_polcal_altastatus'):
-            preparepolcalaltastatus = subs.param.get_param(self, 'prepare_polcal_altastatus')
-        else:
-            preparepolcalaltastatus = False  # Is the polcal data on ALTA?
+        preparepolcalaltastatus = get_param_def(self, 'prepare_polcal_altastatus', False ) # Is the polcal data on ALTA?
 
-        if subs.param.check_param(self, 'prepare_targetbeams_altastatus'):
-            preparetargetbeamsaltastatus = subs.param.get_param(self, 'prepare_targetbeams_altastatus')
-        else:
-            preparetargetbeamsaltastatus = np.full((beams), False)  # Is the target data on disk? One entry per beam
+        preparetargetbeamsaltastatus = get_param_def(self, 'prepare_targetbeams_altastatus', np.full((beams), False) ) # Is the target data on disk? One entry per beam
 
-        if subs.param.check_param(self, 'prepare_fluxcal_copystatus'):
-            preparefluxcalcopystatus = subs.param.get_param(self, 'prepare_fluxcal_copystatus')
-        else:
-            preparefluxcalcopystatus = False  # Is the fluxcal data copied?
+        preparefluxcalcopystatus = get_param_def(self, 'prepare_fluxcal_copystatus', False ) # Is the fluxcal data copied?
 
-        if subs.param.check_param(self, 'prepare_polcal_copystatus'):
-            preparepolcalcopystatus = subs.param.get_param(self, 'prepare_polcal_copystatus')
-        else:
-            preparepolcalcopystatus = False  # Is the polcal data on copied?
+        preparepolcalcopystatus = get_param_def(self, 'prepare_polcal_copystatus', False ) # Is the polcal data on copied?
 
-        if subs.param.check_param(self, 'prepare_targetbeams_copystatus'):
-            preparetargetbeamscopystatus = subs.param.get_param(self, 'prepare_targetbeams_copystatus')
-        else:
-            preparetargetbeamscopystatus = np.full((beams), False)  # Is the target data copied? One entry per beam
+        preparetargetbeamscopystatus = get_param_def(self, 'prepare_targetbeams_copystatus', np.full((beams), False) ) # Is the target data copied? One entry per beam
 
-        if subs.param.check_param(self, 'prepare_fluxcal_rejreason'):
-            preparefluxcalrejreason = subs.param.get_param(self, 'prepare_fluxcal_rejreason')
-        else:
-            preparefluxcalrejreason = np.full((1), '', dtype='U50')  # Reason for flux calibrator dataset not being there
+        preparefluxcalrejreason = get_param_def(self, 'prepare_fluxcal_rejreason', np.full((1), '', dtype='U50') ) # Reason for flux calibrator dataset not being there
 
-        if subs.param.check_param(self, 'prepare_polcal_rejreason'):
-            preparepolcalrejreason = subs.param.get_param(self, 'prepare_polcal_rejreason')
-        else:
-            preparepolcalrejreason = np.full((1), '', dtype='U50')  # Reason for polarisation calibrator dataset not being there
+        preparepolcalrejreason = get_param_def(self, 'prepare_polcal_rejreason', np.full((1), '', dtype='U50') ) # Reason for polarisation calibrator dataset not being there
 
-        if subs.param.check_param(self, 'prepare_targetbeams_rejreason'):
-            preparetargetbeamsrejreason = subs.param.get_param(self, 'prepare_targetbeams_rejreason')
-        else:
-            preparetargetbeamsrejreason = np.full((beams), '', dtype='U50')  # Reason for a beam dataset not being there
+        preparetargetbeamsrejreason = get_param_def(self, 'prepare_targetbeams_rejreason', np.full((beams), '', dtype='U50') ) # Reason for a beam dataset not being there
 
         ################################################
         # Start the preparation of the flux calibrator #

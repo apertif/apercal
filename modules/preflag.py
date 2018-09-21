@@ -79,18 +79,9 @@ class preflag:
 
         # Create the parameters for the parameter file for the shadowing status
 
-        if subs.param.check_param(self, 'preflag_fluxcal_shadow'):
-            preflagfluxcalshadow = subs.param.get_param(self, 'preflag_fluxcal_shadow')
-        else:
-            preflagfluxcalshadow = False  # Is the fluxcal shadow flagged?
-        if subs.param.check_param(self, 'preflag_polcal_shadow'):
-            preflagpolcalshadow = subs.param.get_param(self, 'preflag_polcal_shadow')
-        else:
-            preflagpolcalshadow = False  # Is the polcal shadow flagged?
-        if subs.param.check_param(self, 'preflag_targetbeams_shadow'):
-            preflagtargetbeamsshadow = subs.param.get_param(self, 'preflag_targetbeams_shadow')
-        else:
-            preflagtargetbeamsshadow = np.full((beams), False)  # Are the target beams shadow flagged?
+        preflagfluxcalshadow = get_param_def(self, 'preflag_fluxcal_shadow', False ) # Is the fluxcal shadow flagged?
+        preflagpolcalshadow = get_param_def(self, 'preflag_polcal_shadow', False ) # Is the polcal shadow flagged?
+        preflagtargetbeamsshadow = get_param_def(self, 'preflag_targetbeams_shadow', np.full((beams), False) ) # Are the target beams shadow flagged?
 
         # Flag shadowed antennas
 
@@ -160,18 +151,9 @@ class preflag:
 
         # Create the parameters for the parameter file for the shadowing status
 
-        if subs.param.check_param(self, 'preflag_fluxcal_edges'):
-            preflagfluxcaledges = subs.param.get_param(self, 'preflag_fluxcal_edges')
-        else:
-            preflagfluxcaledges = False  # Edges of fluxcal flagged?
-        if subs.param.check_param(self, 'preflag_polcal_edges'):
-            preflagpolcaledges = subs.param.get_param(self, 'preflag_polcal_edges')
-        else:
-            preflagpolcaledges = False  # Edges of polcal flagged?
-        if subs.param.check_param(self, 'preflag_targetbeams_edges'):
-            preflagtargetbeamsedges = subs.param.get_param(self, 'preflag_targetbeams_edges')
-        else:
-            preflagtargetbeamsedges = np.full((beams), False)  # Edges of target beams flagged?
+        preflagfluxcaledges = get_param_def(self, 'preflag_fluxcal_edges', False ) # Edges of fluxcal flagged?
+        preflagpolcaledges = get_param_def(self, 'preflag_polcal_edges', False ) # Edges of polcal flagged?
+        preflagtargetbeamsedges = get_param_def(self, 'preflag_targetbeams_edges', np.full((beams), False) ) # Edges of target beams flagged?
 
         if self.preflag_edges:
             self.logger.info('# Flagging subband edges #')
@@ -264,18 +246,9 @@ class preflag:
 
         # Create the parameters for the parameter file for the shadowing status
 
-        if subs.param.check_param(self, 'preflag_fluxcal_ghosts'):
-            preflagfluxcalghosts = subs.param.get_param(self, 'preflag_fluxcal_ghosts')
-        else:
-            preflagfluxcalghosts = False  # Ghosts of fluxcal flagged?
-        if subs.param.check_param(self, 'preflag_polcal_ghosts'):
-            preflagpolcalghosts = subs.param.get_param(self, 'preflag_polcal_ghosts')
-        else:
-            preflagpolcalghosts = False  # Ghosts of polcal flagged?
-        if subs.param.check_param(self, 'preflag_targetbeams_ghosts'):
-            preflagtargetbeamsghosts = subs.param.get_param(self, 'preflag_targetbeams_ghosts')
-        else:
-            preflagtargetbeamsghosts = np.full((beams), False)  # Ghosts of target beams flagged?
+        preflagfluxcalghosts = get_param_def(self, 'preflag_fluxcal_ghosts', False ) # Ghosts of fluxcal flagged?
+        preflagpolcalghosts = get_param_def(self, 'preflag_polcal_ghosts', False ) # Ghosts of polcal flagged?
+        preflagtargetbeamsghosts = get_param_def(self, 'preflag_targetbeams_ghosts', np.full((beams), False) ) # Ghosts of target beams flagged?
 
         if self.preflag_ghosts:
             self.logger.info('# Flagging ghost channels #')
@@ -395,18 +368,9 @@ class preflag:
 
         # Create the parameters for the parameter file for the manualflag step to flag the auto-correlations
 
-        if subs.param.check_param(self, 'preflag_fluxcal_manualflag_auto'):
-            preflagfluxcalmanualflagauto = subs.param.get_param(self, 'preflag_fluxcal_manualflag_auto')
-        else:
-            preflagfluxcalmanualflagauto = False  # Auto-correlations of fluxcal flagged?
-        if subs.param.check_param(self, 'preflag_polcal_manualflag_auto'):
-            preflagpolcalmanualflagauto = subs.param.get_param(self, 'preflag_polcal_manualflag_auto')
-        else:
-            preflagpolcalmanualflagauto = False  # Auto-correlations of polcal flagged?
-        if subs.param.check_param(self, 'preflag_targetbeams_manualflag_auto'):
-            preflagtargetbeamsmanualflagauto = subs.param.get_param(self, 'preflag_targetbeams_manualflag_auto')
-        else:
-            preflagtargetbeamsmanualflagauto = np.full((beams), False)  # Auto-correlations of target beams flagged?
+        preflagfluxcalmanualflagauto = get_param_def(self, 'preflag_fluxcal_manualflag_auto', False ) # Auto-correlations of fluxcal flagged?
+        preflagpolcalmanualflagauto = get_param_def(self, 'preflag_polcal_manualflag_auto', False ) # Auto-correlations of polcal flagged?
+        preflagtargetbeamsmanualflagauto = get_param_def(self, 'preflag_targetbeams_manualflag_auto', np.full((beams), False) ) # Auto-correlations of target beams flagged?
 
         if self.preflag_manualflag_auto:
             self.logger.info('# Flagging auto-correlations #')
@@ -476,18 +440,9 @@ class preflag:
 
         # Create the parameters for the parameter file for the manualflag step to flag individual antennas
 
-        if subs.param.check_param(self, 'preflag_fluxcal_manualflag_antenna'):
-            preflagfluxcalmanualflagantenna = subs.param.get_param(self, 'preflag_fluxcal_manualflag_antenna')
-        else:
-            preflagfluxcalmanualflagantenna = np.full((1), '', dtype='U50')  # Flagged antennas of fluxcal?
-        if subs.param.check_param(self, 'preflag_polcal_manualflag_antenna'):
-            preflagpolcalmanualflagantenna = subs.param.get_param(self, 'preflag_polcal_manualflag_antenna')
-        else:
-            preflagpolcalmanualflagantenna = np.full((1), '', dtype='U50')  # Flagged antennas of polcal?
-        if subs.param.check_param(self, 'preflag_targetbeams_manualflag_antenna'):
-            preflagtargetbeamsmanualflagantenna = subs.param.get_param(self, 'preflag_targetbeams_manualflag_antenna')
-        else:
-            preflagtargetbeamsmanualflagantenna = np.full((beams), '', dtype='U50')  # Flagged antennas of target beams?
+        preflagfluxcalmanualflagantenna = get_param_def(self, 'preflag_fluxcal_manualflag_antenna', np.full((1), '', dtype='U50') ) # Flagged antennas of fluxcal?
+        preflagpolcalmanualflagantenna = get_param_def(self, 'preflag_polcal_manualflag_antenna', np.full((1), '', dtype='U50') ) # Flagged antennas of polcal?
+        preflagtargetbeamsmanualflagantenna = get_param_def(self, 'preflag_targetbeams_manualflag_antenna', np.full((beams), '', dtype='U50') ) # Flagged antennas of target beams?
 
         if self.preflag_manualflag_antenna != '':
             self.logger.info('# Flagging antenna(s) ' + self.preflag_manualflag_antenna + ' #')
@@ -573,18 +528,9 @@ class preflag:
 
         # Create the parameters for the parameter file for the manualflag step to flag individual correlations
 
-        if subs.param.check_param(self, 'preflag_fluxcal_manualflag_corr'):
-            preflagfluxcalmanualflagcorr = subs.param.get_param(self, 'preflag_fluxcal_manualflag_corr')
-        else:
-            preflagfluxcalmanualflagcorr = np.full((1), '', dtype='U50')  # Flagged correlations of fluxcal?
-        if subs.param.check_param(self, 'preflag_polcal_manualflag_corr'):
-            preflagpolcalmanualflagcorr = subs.param.get_param(self, 'preflag_polcal_manualflag_corr')
-        else:
-            preflagpolcalmanualflagcorr = np.full((1), '', dtype='U50')  # Flagged correlations of polcal?
-        if subs.param.check_param(self, 'preflag_targetbeams_manualflag_corr'):
-            preflagtargetbeamsmanualflagcorr = subs.param.get_param(self, 'preflag_targetbeams_manualflag_corr')
-        else:
-            preflagtargetbeamsmanualflagcorr = np.full((beams), '', dtype='U50')  # Flagged correlations of target beams?
+        preflagfluxcalmanualflagcorr = get_param_def(self, 'preflag_fluxcal_manualflag_corr', np.full((1), '', dtype='U50') ) # Flagged correlations of fluxcal?
+        preflagpolcalmanualflagcorr = get_param_def(self, 'preflag_polcal_manualflag_corr', np.full((1), '', dtype='U50') ) # Flagged correlations of polcal?
+        preflagtargetbeamsmanualflagcorr = get_param_def(self, 'preflag_targetbeams_manualflag_corr', np.full((beams), '', dtype='U50') ) # Flagged correlations of target beams?
 
         if self.preflag_manualflag_corr != '':
             self.logger.info('# Flagging correlation(s) ' + self.preflag_manualflag_corr + ' #')
@@ -672,18 +618,9 @@ class preflag:
 
         # Create the parameters for the parameter file for the manualflag step to flag individual baselines
 
-        if subs.param.check_param(self, 'preflag_fluxcal_manualflag_baseline'):
-            preflagfluxcalmanualflagbaseline = subs.param.get_param(self, 'preflag_fluxcal_manualflag_baseline')
-        else:
-            preflagfluxcalmanualflagbaseline = np.full((1), '', dtype='U50') # Flagged baselines of fluxcal?
-        if subs.param.check_param(self, 'preflag_polcal_manualflag_baseline'):
-            preflagpolcalmanualflagbaseline = subs.param.get_param(self, 'preflag_polcal_manualflag_baseline')
-        else:
-            preflagpolcalmanualflagbaseline = np.full((1), '', dtype='U50')  # Flagged baselines of polcal?
-        if subs.param.check_param(self, 'preflag_targetbeams_manualflag_baseline'):
-            preflagtargetbeamsmanualflagbaseline = subs.param.get_param(self, 'preflag_targetbeams_manualflag_baseline')
-        else:
-            preflagtargetbeamsmanualflagbaseline = np.full((beams), '', dtype='U50')  # Flagged baselines of target beams?
+        preflagfluxcalmanualflagbaseline = get_param_def(self, 'preflag_fluxcal_manualflag_baseline', np.full((1), '', dtype='U50')) # Flagged baselines of fluxcal?
+        preflagpolcalmanualflagbaseline = get_param_def(self, 'preflag_polcal_manualflag_baseline', np.full((1), '', dtype='U50') ) # Flagged baselines of polcal?
+        preflagtargetbeamsmanualflagbaseline = get_param_def(self, 'preflag_targetbeams_manualflag_baseline', np.full((beams), '', dtype='U50') ) # Flagged baselines of target beams?
 
         if self.preflag_manualflag_baseline != '':
             self.logger.info('# Flagging baseline(s) ' + self.preflag_manualflag_baseline + ' #')
@@ -768,18 +705,9 @@ class preflag:
 
         # Create the parameters for the parameter file for the manualflag step to flag individual channel ranges
 
-        if subs.param.check_param(self, 'preflag_fluxcal_manualflag_channel'):
-            preflagfluxcalmanualflagchannel = subs.param.get_param(self, 'preflag_fluxcal_manualflag_channel')
-        else:
-            preflagfluxcalmanualflagchannel = np.full((1), '', dtype='U50')  # Flagged channels of fluxcal?
-        if subs.param.check_param(self, 'preflag_polcal_manualflag_channel'):
-            preflagpolcalmanualflagchannel = subs.param.get_param(self, 'preflag_polcal_manualflag_channel')
-        else:
-            preflagpolcalmanualflagchannel = np.full((1), '', dtype='U50')  # Flagged channels of polcal?
-        if subs.param.check_param(self, 'preflag_targetbeams_manualflag_channel'):
-            preflagtargetbeamsmanualflagchannel = subs.param.get_param(self, 'preflag_targetbeams_manualflag_channel')
-        else:
-            preflagtargetbeamsmanualflagchannel = np.full((beams), '', dtype='U50')  # Flagged channels of target beams?
+        preflagfluxcalmanualflagchannel = get_param_def(self, 'preflag_fluxcal_manualflag_channel', np.full((1), '', dtype='U50') ) # Flagged channels of fluxcal?
+        preflagpolcalmanualflagchannel = get_param_def(self, 'preflag_polcal_manualflag_channel', np.full((1), '', dtype='U50') ) # Flagged channels of polcal?
+        preflagtargetbeamsmanualflagchannel = get_param_def(self, 'preflag_targetbeams_manualflag_channel', np.full((beams), '', dtype='U50') ) # Flagged channels of target beams?
 
         if self.preflag_manualflag_channel != '':
             self.logger.info('# Flagging channel(s) ' + self.preflag_manualflag_channel + ' #')
@@ -864,18 +792,9 @@ class preflag:
 
         # Create the parameters for the parameter file for the manualflag step to flag individual channel ranges
 
-        if subs.param.check_param(self, 'preflag_fluxcal_manualflag_time'):
-            preflagfluxcalmanualflagtime = subs.param.get_param(self, 'preflag_fluxcal_manualflag_time')
-        else:
-            preflagfluxcalmanualflagtime = np.full((1), '', dtype='U50')  # Flagged time range(s) of fluxcal?
-        if subs.param.check_param(self, 'preflag_polcal_manualflag_time'):
-            preflagpolcalmanualflagtime = subs.param.get_param(self, 'preflag_polcal_manualflag_time')
-        else:
-            preflagpolcalmanualflagtime = np.full((1), '', dtype='U50')  # Flagged time range(s) of polcal?
-        if subs.param.check_param(self, 'preflag_targetbeams_manualflag_time'):
-            preflagtargetbeamsmanualflagtime = subs.param.get_param(self, 'preflag_targetbeams_manualflag_time')
-        else:
-            preflagtargetbeamsmanualflagtime = np.full((beams), '', dtype='U50')  # Flagged time range(s) of target beams?
+        preflagfluxcalmanualflagtime = get_param_def(self, 'preflag_fluxcal_manualflag_time', np.full((1), '', dtype='U50') ) # Flagged time range(s) of fluxcal?
+        preflagpolcalmanualflagtime = get_param_def(self, 'preflag_polcal_manualflag_time', np.full((1), '', dtype='U50') ) # Flagged time range(s) of polcal?
+        preflagtargetbeamsmanualflagtime = get_param_def(self, 'preflag_targetbeams_manualflag_time', np.full((beams), '', dtype='U50') ) # Flagged time range(s) of target beams?
 
         if self.preflag_manualflag_time != '':
             self.logger.info('# Flagging time range ' + self.preflag_manualflag_time + ' #')
@@ -963,22 +882,10 @@ class preflag:
 
         # Create the parameters for the parameter file for the bandpass step of the AOFLagger step
 
-        if subs.param.check_param(self, 'preflag_aoflagger_bandpass_status'):
-            preflagaoflaggerbandpassstatus = subs.param.get_param(self, 'preflag_aoflagger_bandpass_status')
-        else:
-            preflagaoflaggerbandpassstatus = False  # Bandpass successfully derived
-        if subs.param.check_param(self, 'preflag_aoflagger_fluxcal_bandpass_apply'):
-            preflagaoflaggerfluxcalbandpassapply = subs.param.get_param(self, 'preflag_aoflagger_fluxcal_bandpass_apply')
-        else:
-            preflagaoflaggerfluxcalbandpassapply = False  # Bandpass applied to flux calibrator?
-        if subs.param.check_param(self, 'preflag_aoflagger_polcal_bandpass_apply'):
-            preflagaoflaggerpolcalbandpassapply = subs.param.get_param(self, 'preflag_aoflagger_polcal_bandpass_apply')
-        else:
-            preflagaoflaggerpolcalbandpassapply = False  # Bandpass applied to polarised calibrator?
-        if subs.param.check_param(self, 'preflag_aoflagger_targetbeams_bandpass_apply'):
-            preflagaoflaggertargetbeamsbandpassapply = subs.param.get_param(self, 'preflag_aoflagger_targetbeams_bandpass_apply')
-        else:
-            preflagaoflaggertargetbeamsbandpassapply = np.full((beams), False)  # Bandpass applied to target beams?
+        preflagaoflaggerbandpassstatus = get_param_def(self, 'preflag_aoflagger_bandpass_status', False ) # Bandpass successfully derived
+        preflagaoflaggerfluxcalbandpassapply = get_param_def(self, 'preflag_aoflagger_fluxcal_bandpass_apply', False ) # Bandpass applied to flux calibrator?
+        preflagaoflaggerpolcalbandpassapply = get_param_def(self, 'preflag_aoflagger_polcal_bandpass_apply', False ) # Bandpass applied to polarised calibrator?
+        preflagaoflaggertargetbeamsbandpassapply = get_param_def(self, 'preflag_aoflagger_targetbeams_bandpass_apply', np.full((beams), False) ) # Bandpass applied to target beams?
 
         if self.preflag_aoflagger_bandpass:
             # Check if bandpass was already derived and bandpass table is available
@@ -1080,18 +987,9 @@ class preflag:
 
         # Create the parameters for the parameter file for the bandpass step of the AOFlagger step
 
-        if subs.param.check_param(self, 'preflag_aoflagger_fluxcal_flag_status'):
-            preflagaoflaggerfluxcalflag = subs.param.get_param(self, 'preflag_aoflagger_fluxcal_flag_status')
-        else:
-            preflagaoflaggerfluxcalflag = False  # AOFlagged the flux calibrator?
-        if subs.param.check_param(self, 'preflag_aoflagger_polcal_flag_status'):
-            preflagaoflaggerpolcalflag = subs.param.get_param(self, 'preflag_aoflagger_polcal_flag_status')
-        else:
-            preflagaoflaggerpolcalflag = False  # AOFlagged the polarised calibrator?
-        if subs.param.check_param(self, 'preflag_aoflagger_targetbeams_flag_status'):
-            preflagaoflaggertargetbeamsflag = subs.param.get_param(self, 'preflag_aoflagger_targetbeams_flag_status')
-        else:
-            preflagaoflaggertargetbeamsflag = np.full((beams), False)  # AOFlagged the target beams?
+        preflagaoflaggerfluxcalflag = get_param_def(self, 'preflag_aoflagger_fluxcal_flag_status', False ) # AOFlagged the flux calibrator?
+        preflagaoflaggerpolcalflag = get_param_def(self, 'preflag_aoflagger_polcal_flag_status', False ) # AOFlagged the polarised calibrator?
+        preflagaoflaggertargetbeamsflag = get_param_def(self, 'preflag_aoflagger_targetbeams_flag_status', np.full((beams), False) ) # AOFlagged the target beams?
 
         if self.preflag_aoflagger:
             # Flag the flux calibrator with AOFLagger
@@ -1099,10 +997,7 @@ class preflag:
                 if not preflagaoflaggerfluxcalflag:
                     if self.fluxcal !='' and os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal) and self.preflag_aoflagger_fluxcalstrat != '':
                         self.logger.info('# Using AOFlagger to flag flux calibrator dataset #')
-                        if subs.param.check_param(self, 'preflag_aoflagger_fluxcal_bandpass_apply'): # Check if bandpass was applied successfully
-                            preflagaoflaggerfluxcalbandpassapply = subs.param.get_param(self, 'preflag_aoflagger_fluxcal_bandpass_apply')
-                        else:
-                            preflagaoflaggerfluxcalbandpassapply = False
+                        preflagaoflaggerfluxcalbandpassapply = get_param_def(self, 'preflag_aoflagger_fluxcal_bandpass_apply', False) # Check if bandpass was applied successfully
                         if self.aoflagger_bandpass and preflagaoflaggerfluxcalbandpassapply:
                             os.system('aoflagger -strategy ' + self.apercaldir + '/ao_strategies/' + self.preflag_aoflagger_fluxcalstrat + ' -column CORRECTED_DATA ' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal)
                             self.logger.debug('# Used AOFlagger to flag flux calibrator with preliminary bandpass applied #')
@@ -1124,10 +1019,7 @@ class preflag:
                 if preflagaoflaggerpolcalflag == False:
                     if self.polcal !='' and os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal) and self.preflag_aoflagger_polcalstrat != '':
                         self.logger.info('# Using AOFlagger to flag polarised calibrator dataset #')
-                        if subs.param.check_param(self, 'preflag_aoflagger_polcal_bandpass_apply'): # Check if bandpass was applied successfully
-                            preflagaoflaggerpolcalbandpassapply = subs.param.get_param(self, 'preflag_aoflagger_polcal_bandpass_apply')
-                        else:
-                            preflagaoflaggerpolcalbandpassapply = False
+                        preflagaoflaggerpolcalbandpassapply = get_param_def(self, 'preflag_aoflagger_polcal_bandpass_apply', False) # Check if bandpass was applied successfully
                         if self.aoflagger_bandpass and preflagaoflaggerpolcalbandpassapply:
                             os.system('aoflagger -strategy ' + self.apercaldir + '/ao_strategies/' + self.preflag_aoflagger_polcalstrat + ' -column CORRECTED_DATA ' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal)
                             self.logger.debug('# Used AOFlagger to flag polarised calibrator with preliminary bandpass applied #')
@@ -1148,10 +1040,7 @@ class preflag:
             if self.preflag_aoflagger_target:
                 if self.target !='' and self.preflag_aoflagger_targetstrat != '':
                     self.logger.info('# Using AOFlagger to flag selected target beam dataset(s) #')
-                    if subs.param.check_param(self, 'preflag_aoflagger_targetbeams_bandpass_apply'): # Check if parameter exists already and bandpass was applied successfully
-                        preflagaoflaggertargetbeamsbandpassapply = subs.param.get_param(self, 'preflag_aoflagger_targetbeams_bandpass_apply')
-                    else:
-                        preflagaoflaggertargetbeamsbandpassapply = np.full((beams), False)
+                    preflagaoflaggertargetbeamsbandpassapply = get_param_def(self, 'preflag_aoflagger_targetbeams_bandpass_apply', np.full((beams), False)) # Check if parameter exists already and bandpass was applied successfully
                     if self.preflag_aoflagger_targetbeams == 'all': # Create a list of target beams
                         datasets = glob.glob(self.basedir + '[0-9][0-9]' + '/' + self.rawsubdir + '/' + self.target)
                         self.logger.info('# AOFlagging all target beams #')
