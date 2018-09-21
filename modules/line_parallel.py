@@ -724,7 +724,8 @@ class line_parallel:
                                 self.logger.info('# 0 visibilities in channel ' + str(channel_counter).zfill(5) + '! Skipping channel! #')
                                 channel_counter = channel_counter + 1
                             else:
-                                theoretical_noise = invertcmd[11].split(' ')[3]
+                                #theoretical_noise = invertcmd[11].split(' ')[3]
+                                theoretical_noise = invertcmd[13].split(' ')[3]
                                 theoretical_noise_threshold = self.calc_theoretical_noise_threshold(float(theoretical_noise), self.line_image_nsigma)
                                 ratio = self.calc_max_min_ratio('map_00_' + str(channel_counter).zfill(5))
                                 if ratio >= self.line_image_ratio_limit:
@@ -941,7 +942,7 @@ class line_parallel:
                                 #old:
                                 #channel_counter = channel_counter + 1
                             else:
-                                theoretical_noise = invertcmd[11].split(' ')[3]
+                                theoretical_noise = invertcmd[13].split(' ')[3]
                                 theoretical_noise_threshold = self.calc_theoretical_noise_threshold(float(theoretical_noise), self.line_image_nsigma)
                                 ratio = self.calc_max_min_ratio('map_00_' + str(channel_counter).zfill(5))
                                 if ratio >= self.line_image_ratio_limit:
@@ -1172,7 +1173,7 @@ class line_parallel:
                                         #old:
                                         #channel_counter = channel_counter + 1
                                     else:
-                                        theoretical_noise = invertcmd[11].split(' ')[3]
+                                        theoretical_noise = invertcmd[13].split(' ')[3]
                                         theoretical_noise_threshold = self.calc_theoretical_noise_threshold(float(theoretical_noise), self.line_image_nsigma)
                                         ratio = self.calc_max_min_ratio('map_00_' + str(channel_counter).zfill(5))
                                         if ratio >= self.line_image_ratio_limit:
@@ -1489,7 +1490,7 @@ class line_parallel:
         naxis1 = firstheader['NAXIS1']
         naxis2 = firstheader['NAXIS2']
         firstfile.close()
-        nancube = np.full((nchannel, naxis2, naxis1), np.nan)
+        nancube = np.full((nchannel, naxis2, naxis1), np.nan, dtype='float32')
         for chan in range(startchan, startchan + nchannel):
             if os.path.isfile(searchpattern[:-6] + str(chan).zfill(5) + '.fits'):
                 fitsfile = pyfits.open(searchpattern[:-6] + str(chan).zfill(5) + '.fits', memmap=True)
@@ -1500,18 +1501,45 @@ class line_parallel:
                 pass
         firstfile = pyfits.open(filelist[0], memmap=True)
         firstheader = firstfile[0].header
-        firstheader['NAXIS'] = 3
-        firstheader['CRVAL3'] = startfreq
+        # change suggested by JV, added by JMH    # commented out by JMH 
+        naxis = firstheader['NAXIS'] # put this line somewhere before that keyword is assigned the value 3
+        # end change
+#        firstheader['NAXIS'] = 3    # commented out by JMH 
+        firstheader['CRVAL3'] = startfreq     # set this for the beam as well even though the 3rd axis is not FREQ-OBS
+                                              # we will fix this later when we reorder the beam axes
         #new:
         #firstheader['REFFREQTYPE'] = 'BARY'
         #ideally, the following should be fetched from the original data; so far it's hard coded (for HI)
         restfreq = 1420405751.77
         firstheader['RESTFREQ'] = restfreq
-        del firstheader['CDELT4']
-        del firstheader['CRPIX4']
-        del firstheader['CRVAL4']
-        del firstheader['CTYPE4']
-        del firstheader['NAXIS4']
+        # changes added by JMH, based on suggestions by JV and NG
+        
+
+        # if FREQ-OBS is not the 3rd axis (beams) but the 5th then rename the header keywords accordingly
+        #         for keyword in firstheader:
+
+        if firstheader['CTYPE3'] in ["SDBEAM"]:
+            sdbeam = firstheader['CTYPE3']
+            firstheader['CTYPE3']=(firstheader['CTYPE5']," ")
+            firstheader['CTYPE5']=(sdbeam, " ")
+            firstheader['CDELT3']=(firstheader['CDELT5']," ")
+            firstheader['CRPIX3']=(firstheader['CRPIX5']," ")
+            firstheader['CRVAL3']=(firstheader['CRVAL5']," ")
+
+        for n in range(1,naxis + 1):
+             if firstheader['CTYPE'+str(n)] not in ["RA---NCP","DEC--NCP","FREQ-OBS"]:
+
+# at least if those are the only axes that are allowed; if there are other variaties of RA & DEC, those should be put in as well
+# also, I'm assuming it's FREQ-OBS we want for the 3rd axis (both image & beam);
+# if it should be something else (or possibly different between image & beam), let me know
+         
+                 for keyword in ["CRPIX","CDELT","CRVAL","CTYPE"]:
+                     del firstheader[keyword+str(n)]
+                     if n > firstheader['NAXIS']:
+                         del firstheader['NAXIS' + str(n)]
+#
+# end change
+
         pyfits.writeto(outcube, nancube, firstheader)
         firstfile.close()
 
