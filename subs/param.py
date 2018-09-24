@@ -65,10 +65,11 @@ def get_param_def(step, parameter, default):
     '''
     subs.setinit.setinitdirs(step)
     if not os.path.isfile(step.basedir + 'param.npy'):
-        print('# Parameter file not found! Using default for parameter ' + str(parameter) + ' #')
+        return default
     else:
         d = np.load(step.basedir + 'param.npy').item()
         if parameter in d:
+            print('# Parameter '+str(parameter)+' found in cache (param.npy). #')
             return d[parameter]
     return default
 
