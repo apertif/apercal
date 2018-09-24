@@ -1,6 +1,6 @@
 import numpy as np
 import os
-import pyfits
+import astropy.io.fits as pyfits
 
 from libs import lib
 
