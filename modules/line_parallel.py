@@ -7,7 +7,6 @@ import glob
 import logging
 
 import aipy
-import pyfits
 import astropy.io.fits as pyfits
 import numpy as np
 import os

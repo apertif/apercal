@@ -11,7 +11,7 @@ from astropy.coordinates import Angle, ICRS, Distance, SkyCoord
 import astropy.coordinates as coord
 from astropy import units as u
 from astropy.io import ascii
-import pyfits
+import astropy.io.fits as pyfits
 
 deg2rad = pl.pi/180.
 # Its rather messy to reload the logging library, but is necessary if the logger is going to work.
