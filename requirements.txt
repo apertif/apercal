@@ -1,0 +1,8 @@
+notebook
+matplotlib
+astroquery
+pandas
+drive-casa
+python-casacore
+aipy
+pymp-pypi
