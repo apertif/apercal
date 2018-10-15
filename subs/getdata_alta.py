@@ -141,6 +141,7 @@ def getdata_alta(date, task_ids, beams, targetdir=".", tmpdir=".", alta_exceptio
 
     # Check for failed files
     for task_id in task_ids:
+        break # Hack TJD: disable checking failed files
         logger.info('Checking failed files for task ID %.3d...' % task_id)
 
         cmd = os.popen('cat {tmpdir}transfer_WSRTA{date}{task_id:03d}_to_alta_verify.log | wc -l'.format(**locals()))
