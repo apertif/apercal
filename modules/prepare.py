@@ -123,7 +123,7 @@ class prepare:
                 self.logger.warning('Flux calibrator data available on disk, but not in ALTA! #')
             elif preparefluxcaldiskstatus == False and preparefluxcalaltastatus:
                 subs.managefiles.director(self, 'mk', self.basedir + '00' + '/' + self.rawsubdir, verbose=False)
-                subs.irods.getdata_alta(int(self.prepare_date), int(self.prepare_obsnum_fluxcal), 0, self.rawdir + '/' + self.fluxcal)
+                subs.irods.getdata_alta(int(self.prepare_date), int(self.prepare_obsnum_fluxcal), 0, targetdir=self.rawdir + '/' + self.fluxcal)
                 if os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal):
                     preparefluxcalcopystatus = True
                     self.logger.debug('# Flux calibrator dataset successfully copied from ALTA #')
@@ -177,7 +177,7 @@ class prepare:
                 self.logger.warning('Polarisation calibrator data available on disk, but not in ALTA! #')
             elif preparepolcaldiskstatus == False and preparepolcalaltastatus:
                 subs.managefiles.director(self, 'mk', self.basedir + '00' + '/' + self.rawsubdir, verbose=False)
-                subs.irods.getdata_alta(int(self.prepare_date), int(self.prepare_obsnum_polcal), 0, self.rawdir + '/' + self.polcal)
+                subs.irods.getdata_alta(int(self.prepare_date), int(self.prepare_obsnum_polcal), 0, targetdir=self.rawdir + '/' + self.polcal)
                 if os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal):
                     preparepolcalcopystatus = True
                     self.logger.debug('# Polarisation calibrator dataset successfully copied from ALTA #')
@@ -240,7 +240,7 @@ class prepare:
                     self.logger.warning('Target dataset for beam ' + str(c).zfill(2) + ' available on disk, but not in ALTA! #')
                 elif preparetargetbeamsdiskstatus[c] == False and preparetargetbeamsaltastatus[c] and str(c).zfill(2) in reqbeams: # if target dataset is requested, but not on disk
                     subs.managefiles.director(self, 'mk', self.basedir + str(c).zfill(2) + '/' + self.rawsubdir, verbose=False)
-                    subs.irods.getdata_alta(int(self.prepare_date), int(self.prepare_obsnum_target), int(str(c).zfill(2)),self.basedir + str(c).zfill(2) + '/' + self.rawsubdir + '/' + self.target)
+                    subs.irods.getdata_alta(int(self.prepare_date), int(self.prepare_obsnum_target), int(str(c).zfill(2)),targetdir=self.basedir + str(c).zfill(2) + '/' + self.rawsubdir + '/' + self.target)
                     # Check if copy was successful
                     if os.path.isdir(self.basedir + str(c).zfill(2) + '/' + self.rawsubdir + '/' + self.target):
                         preparetargetbeamscopystatus[c] = True
