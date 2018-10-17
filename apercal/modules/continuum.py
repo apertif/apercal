@@ -1,7 +1,3 @@
-__author__ = "Bjoern Adebahr"
-__copyright__ = "ASTRON"
-__email__ = "adebahr@astron.nl"
-
 import ConfigParser
 import logging
 
@@ -11,22 +7,23 @@ import pandas as pd
 import os
 import sys
 
-import subs.setinit
-import subs.managefiles
-import subs.combim
-import subs.readmirhead
-import subs.imstats
-from subs.param import get_param_def
+from apercal.subs import setinit as subs_setinit
+from apercal.subs import managefiles as subs_managefiles
+from apercal.subs import combim as subs_combim
+from apercal.subs import readmirhead as subs_readmirhead
+from apercal.subs import imstats as subs_imstats
+from apercal.subs import param as subs_param
+from apercal.subs.param import get_param_def
 
-from libs import lib
+from apercal.libs import lib
 
 
 ####################################################################################################
 
 class continuum:
-    '''
+    """
     Continuum class to produce continuum data products (Deep continuum images of individual frequency chunks and stacked continuum image).
-    '''
+    """
     def __init__(self, file=None, **kwargs):
         logging.basicConfig(level=logging.DEBUG)
         self.logger = logging.getLogger('CONTINUUM')
@@ -41,37 +38,37 @@ class continuum:
             for o in config.items(s):
                 setattr(self, o[0], eval(o[1]))
         self.default = config # Save the loaded config file as defaults for later usage
-        subs.setinit.setinitdirs(self)
-        subs.setinit.setdatasetnamestomiriad(self)
+        subs_setinit.setinitdirs(self)
+        subs_setinit.setdatasetnamestomiriad(self)
 
     #############################################################
     ##### Function to execute the continuum imaging process #####
     #############################################################
 
     def go(self):
-        '''
+        """
         Executes the continuum imaging process in the following order
         image_continuum
-        '''
+        """
         self.logger.info("########## Starting CONTINUUM IMAGING of beam " + str(self.beam) + " ##########")
         self.image_continuum()
         self.logger.info("########## CONTINUUM IMAGING of beam " + str(self.beam) + " done ##########")
 
     def image_continuum(self):
-        '''
+        """
         Create a deep continuum image by producing a deep image of each frequency chunk and stacking. Self-calibration gains are always applied before imaging.
-        '''
-        subs.setinit.setinitdirs(self)
-        subs.setinit.setdatasetnamestomiriad(self)
+        """
+        subs_setinit.setinitdirs(self)
+        subs_setinit.setdatasetnamestomiriad(self)
         self.logger.info('### Starting deep continuum imaging of full dataset ###')
-        subs.managefiles.director(self, 'ch', self.contdir)
+        subs_managefiles.director(self, 'ch', self.contdir)
 
         #####################
         # Start the imaging #
         #####################
 
         self.logger.debug('### Creating individual deep images from frequency chunks ###')
-        subs.managefiles.director(self,'ch', self.contdir + '/stack')
+        subs_managefiles.director(self,'ch', self.contdir + '/stack')
 
         ##########################################################################################################
         # Check if the parameter is already in the parameter file and load it otherwise create the needed arrays #
@@ -107,7 +104,7 @@ class continuum:
             self.logger.debug('# Last major self-calibration cycle seems to have been ' + str(majc) + ' #')
             # Check if a chunk could be calibrated and has data left
             if os.path.isfile(self.selfcaldir + '/' + chunk + '/' + chunk + '.mir/gains'):
-                subs.managefiles.director(self, 'ch', self.contdir + '/stack/' + chunk)
+                subs_managefiles.director(self, 'ch', self.contdir + '/stack/' + chunk)
                 # Check if the chunk was already imaged
                 if os.path.isdir(self.contdir + '/stack/' + chunk + '/' + 'image_' + str(self.continuum_minorcycle-1).zfill(2)):
                     self.logger.info('# Frequency chunk ' + chunk + ' has already been imaged! #')
@@ -143,7 +140,7 @@ class continuum:
                                 # Create the dirty image
                                 if os.path.isdir('map_00') and os.path.isdir('beam_00'):
                                     self.logger.debug('# Data for chunk ' + str(chunk) + ' has already been inverted #')
-                                    mapmin, mapmax, mapstd = subs.imstats.getimagestats(self, 'map_00') # Calculate the image stats for later usage
+                                    mapmin, mapmax, mapstd = subs_imstats.getimagestats(self, 'map_00') # Calculate the image stats for later usage
                                 else:
                                     invert = lib.miriad('invert')
                                     invert.vis = self.selfcaldir + '/' + chunk + '/' + chunk + '.mir'
@@ -162,7 +159,7 @@ class continuum:
                                         invert.options = 'mfs,double,mosaic'
                                     else:
                                         if os.path.isdir(self.basedir + '00' + '/' + self.selfcalsubdir + '/' + self.target):
-                                            invert.offset = subs.readmirhead.getradecsex(self.basedir + '00' + '/' + self.selfcalsubdir + '/' + self.target)
+                                            invert.offset = subs_readmirhead.getradecsex(self.basedir + '00' + '/' + self.selfcalsubdir + '/' + self.target)
                                             invert.options = 'mfs,double,mosaic'
                                             self.logger.debug('# Using pointing centre of beam 00 for gridding of all beams! #')
                                         else:
@@ -170,7 +167,7 @@ class continuum:
                                             self.logger.warning('### Using pointing centres of individual beams for gridding. Not recommended for mosaicking! ###')
                                     invert.go()
                                     if os.path.isdir('map_00') and os.path.isdir('beam_00'): # Check if the image and beam are there
-                                        mapmin, mapmax, mapstd = subs.imstats.getimagestats(self, 'map_00')
+                                        mapmin, mapmax, mapstd = subs_imstats.getimagestats(self, 'map_00')
                                         if mapmax>=mapmin and mapstd!=np.nan: # Check if the dirty image is valid
                                             pass
                                         else: # if not exit the imaging loop
@@ -188,7 +185,7 @@ class continuum:
                                     self.logger.debug('# Mask for chunk ' + str(chunk) + ' has already been copied from selfcal and regridded #')
                                 else: # if not look for it
                                     if os.path.isdir(self.selfcaldir + '/' + chunk + '/' + str(majc).zfill(2) + '/mask_' + str(self.get_last_minor_iteration(chunk, self.get_last_major_iteration(chunk))).zfill(2)): # Find the last created mask
-                                        subs.managefiles.director(self, 'cp', 'mask_00', file=self.selfcaldir + '/' + chunk + '/' + str(majc).zfill(2) + '/mask_' + str(self.get_last_minor_iteration(chunk, self.get_last_major_iteration(chunk))).zfill(2))
+                                        subs_managefiles.director(self, 'cp', 'mask_00', file=self.selfcaldir + '/' + chunk + '/' + str(majc).zfill(2) + '/mask_' + str(self.get_last_minor_iteration(chunk, self.get_last_major_iteration(chunk))).zfill(2))
                                         self.logger.debug('# Mask from last selfcal loop found! #')
                                     else: # If it is not there leave the loop for this chunk
                                         continuummaskstatus[int(chunk), minc] = False
@@ -201,11 +198,11 @@ class continuum:
                                     regrid.tin = 'map_00'
                                     regrid.axes = '1,2'
                                     regrid.go()
-                                    subs.managefiles.director(self, 'rm', 'mask_00')
-                                    subs.managefiles.director(self, 'rn', 'mask_00', file='mask_regrid')
+                                    subs_managefiles.director(self, 'rm', 'mask_00')
+                                    subs_managefiles.director(self, 'rn', 'mask_00', file='mask_regrid')
                                     self.logger.debug('# Mask from last selfcal cycle copied and regridded to common grid #')
                                     if os.path.isdir('mask_00'):
-                                        maskmin, maskmax, maskstd = subs.imstats.getimagestats(self, 'mask_00')
+                                        maskmin, maskmax, maskstd = subs_imstats.getimagestats(self, 'mask_00')
                                         if maskstd != np.nan: # Check if the mask is not empty
                                             continuummaskstatus[int(chunk), minc] = True
                                         else: # if not exit the imaging loop
@@ -245,7 +242,7 @@ class continuum:
                                     clean.region = '"' + 'mask(mask_' + str(minc).zfill(2) + ')' + '"'
                                     clean.go()
                                     if os.path.isdir('model_00'):  # Check if it was created successfully
-                                        modmin, modmax, modstd = subs.imstats.getimagestats(self, 'model_00')
+                                        modmin, modmax, modstd = subs_imstats.getimagestats(self, 'model_00')
                                         if modstd != np.nan and modmax<=10000 and modmin>=-10:  # Check if the clean model is valid
                                             continuummodelstatus[int(chunk), minc] = True
                                         else:  # if not exit the imaging loop
@@ -273,7 +270,7 @@ class continuum:
                                     restor.mode = 'clean'
                                     restor.go()
                                     if os.path.isdir('image_00'):  # Check if it was created successfully
-                                        immin, immax, imstd = subs.imstats.getimagestats(self, 'image_00')
+                                        immin, immax, imstd = subs_imstats.getimagestats(self, 'image_00')
                                         continuumimagestats[int(chunk), minc, :] = np.array([immin, immax, imstd])
                                         if imstd != np.nan and immax <= 10000 and immin >= -10:  # Check if the image is valid
                                             continuumimagestatus[int(chunk), minc] = True
@@ -303,7 +300,7 @@ class continuum:
                                     restor.mode = 'residual'
                                     restor.go()
                                     if os.path.isdir('residual_00'):  # Check if it was created successfully
-                                        resimin, resimax, resistd = subs.imstats.getimagestats(self, 'residual_00')
+                                        resimin, resimax, resistd = subs_imstats.getimagestats(self, 'residual_00')
                                         continuumresidualstats[int(chunk), minc, :] = np.array([resimin, resimax, resistd])
                                         if resistd != np.nan and resimax <= 10000 and resimin >= -10:  # Check if the image is valid
                                             continuumresidualstatus[int(chunk), minc] = True
@@ -330,7 +327,7 @@ class continuum:
                             else:
                                 # Now calculate the thresholds for the current minor cycle
                                 if os.path.isdir('map_00'): # Check if the dirty map is there
-                                    mapmin, mapmax, mapstd = subs.imstats.getimagestats(self, 'map_00')  # Calculate the image stats for later usage
+                                    mapmin, mapmax, mapstd = subs_imstats.getimagestats(self, 'map_00')  # Calculate the image stats for later usage
                                     if mapmax>=mapmin and mapstd!=np.nan: # Check if the dirty image is valid
                                         pass
                                     else: # if not exit the imaging loop
@@ -362,7 +359,7 @@ class continuum:
                                     maths.mask = '"<' + 'image_' + str(minc - 1).zfill(2) + '>.gt.' + str(mask_threshold) + '"'
                                     maths.go()
                                     if os.path.isdir('mask_' + str(minc).zfill(2)):  # Check if the mask was created successfully
-                                        maskmin, maskmax, maskstd = subs.imstats.getimagestats(self, 'mask_' + str(minc).zfill(2))  # Calculate the mask stats for viability
+                                        maskmin, maskmax, maskstd = subs_imstats.getimagestats(self, 'mask_' + str(minc).zfill(2))  # Calculate the mask stats for viability
                                         if maskstd != np.nan: # Check if mask is not empty
                                             continuummaskstatus[int(chunk), minc] = True
                                         else:# If not stop the imaging
@@ -392,7 +389,7 @@ class continuum:
                                     clean.region = '"' + 'mask(' + 'mask_' + str(minc).zfill(2) + ')' + '"'
                                     clean.go()
                                     if os.path.isdir('model_' + str(minc).zfill(2)):  # Check if it was created successfully
-                                        modmin, modmax, modstd = subs.imstats.getimagestats(self, 'model_' + str(minc).zfill(2))
+                                        modmin, modmax, modstd = subs_imstats.getimagestats(self, 'model_' + str(minc).zfill(2))
                                         if modstd != np.nan and modmax <= 10000 and modmin >= -10:  # Check if the clean model is valid
                                             continuummodelstatus[int(chunk), minc] = True
                                         else:  # if not exit the imaging loop
@@ -420,7 +417,7 @@ class continuum:
                                         restor.mode = 'clean'
                                         restor.go()
                                         if os.path.isdir('image_' + str(minc).zfill(2)):  # Check if it was created successfully
-                                            immin, immax, imstd = subs.imstats.getimagestats(self, 'image_' + str(minc).zfill(2))
+                                            immin, immax, imstd = subs_imstats.getimagestats(self, 'image_' + str(minc).zfill(2))
                                             continuumimagestats[int(chunk), minc, :] = np.array([immin, immax, imstd])
                                             if imstd != np.nan and immax <= 10000 and immin >= -10:  # Check if the image is valid
                                                 continuumimagestatus[int(chunk), minc] = True
@@ -450,7 +447,7 @@ class continuum:
                                         restor.mode = 'residual'
                                         restor.go()
                                         if os.path.isdir('residual_' + str(minc).zfill(2)):  # Check if it was created successfully
-                                            resimin, resimax, resistd = subs.imstats.getimagestats(self, 'residual_' + str(minc).zfill(2))
+                                            resimin, resimax, resistd = subs_imstats.getimagestats(self, 'residual_' + str(minc).zfill(2))
                                             continuumresidualstats[int(chunk), minc, :] = np.array([resimin, resimax, resistd])
                                             if resistd != np.nan and resimax <= 10000 and resimin >= -10:  # Check if the image is valid
                                                 continuumresidualstatus[int(chunk), minc] = True
@@ -497,24 +494,24 @@ class continuum:
 
 
         # Save the derived parameters to the parameter file
-        subs.param.add_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_minoriterations', continuumminiters)
-        subs.param.add_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_imagestats', continuumimagestats)
-        subs.param.add_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_residualstats', continuumresidualstats)
-        subs.param.add_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_status', continuumstatus)
-        subs.param.add_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_imagestatus', continuumimagestatus)
-        subs.param.add_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_maskstatus', continuummaskstatus)
-        subs.param.add_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_modelstatus', continuummodelstatus)
-        subs.param.add_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_residualstatus', continuumresidualstatus)
-        subs.param.add_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_thresholdtype', continuumthresholdtype)
-        subs.param.add_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_masklimit', continuummasklimit)
-        subs.param.add_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_cleanlimit', continuumcleanlimit)
+        subs_param.add_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_minoriterations', continuumminiters)
+        subs_param.add_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_imagestats', continuumimagestats)
+        subs_param.add_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_residualstats', continuumresidualstats)
+        subs_param.add_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_status', continuumstatus)
+        subs_param.add_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_imagestatus', continuumimagestatus)
+        subs_param.add_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_maskstatus', continuummaskstatus)
+        subs_param.add_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_modelstatus', continuummodelstatus)
+        subs_param.add_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_residualstatus', continuumresidualstatus)
+        subs_param.add_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_thresholdtype', continuumthresholdtype)
+        subs_param.add_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_masklimit', continuummasklimit)
+        subs_param.add_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_cleanlimit', continuumcleanlimit)
 
         ################################
         # Stacking of continuum images #
         ################################
 
-        status = subs.param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_status')
-        minoriterations = subs.param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_minoriterations')
+        status = subs_param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_status')
+        minoriterations = subs_param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_minoriterations')
 
         # Check if the final stacked continuum image is already available
         if os.path.isdir(self.contdir + '/' + self.target.rstrip('.mir') + '_stack') and os.path.isfile(self.contdir + '/' + self.target.rstrip('.mir') + '_stack.fits'):
@@ -524,14 +521,14 @@ class continuum:
             # Check if the continuum imaging worked for any of the chunks
             if any(status):
                 self.logger.info('### Stacking continuum images of individual frequency chunks ###')
-                subs.managefiles.director(self, 'ch', self.contdir + '/stack')
+                subs_managefiles.director(self, 'ch', self.contdir + '/stack')
                 images = ''
 
                 # Check if continuum imaging was successful and then check the image
                 for nch, chstat in enumerate(status):
                     if chstat:
                         lastimage = str(nch).zfill(2) + '/' + 'image_' + str(int(minoriterations[nch])).zfill(2)
-                        lastimage_stats = subs.imstats.getimagestats(self, lastimage)
+                        lastimage_stats = subs_imstats.getimagestats(self, lastimage)
                         if np.isnan(lastimage_stats[2]):  # Check if the image is not blank
                             continuumchunkimageacceptforstacking[nch] = False
                             continuumchunkstackrejreason[nch] = 'Final image not valid'
@@ -547,7 +544,7 @@ class continuum:
                         else:
                             continuumchunkimageacceptforstacking[nch] = True
                             images = images + lastimage + ','
-                            continuumsynthbeamparams[nch, :] = subs.readmirhead.getbeamimage(lastimage)
+                            continuumsynthbeamparams[nch, :] = subs_readmirhead.getbeamimage(lastimage)
 
                     else: # Continuum imaging was not successful for a specific chunk
                         continuumchunkimageacceptforstacking[nch] = False
@@ -567,7 +564,7 @@ class continuum:
                     avchunks = [str(x).zfill(2) for x in list(avchunklist)]
                     notavchunks = [str(x).zfill(2) for x in list(notavchunklist)]
                     beamarray = continuumsynthbeamparams[avchunklist, :]
-                    rejchunks, stackbeam = subs.combim.calc_synbeam(avchunks, beamarray)
+                    rejchunks, stackbeam = subs_combim.calc_synbeam(avchunks, beamarray)
                     if len(rejchunks) == 0:
                         self.logger.debug('# No chunks are rejected due to synthesised beam parameters. #')
                     else:
@@ -611,7 +608,7 @@ class continuum:
                     if chstat:
                         residualimage = str(nch).zfill(2) + '/' + 'residual_' + str(int(minoriterations[nch])).zfill(2)
                         finalimage = str(nch).zfill(2) + '/' + 'image_' + str(int(minoriterations[nch])).zfill(2)
-                        rms = subs.imstats.getimagestats(self, residualimage)[2]
+                        rms = subs_imstats.getimagestats(self, residualimage)[2]
                         continuumimcombrms[nch] = rms
                         images = finalimages + finalimage
                     else:
@@ -624,7 +621,7 @@ class continuum:
                 imcomb.rms = ','.join(str(e) for e in imcombrms)
                 imcomb.options = 'fqaver'
                 imcomb.go()
-                subs.managefiles.director(self,'rm', self.contdir + '/' + self.target.rstrip('.mir') + '_stack/mask')
+                subs_managefiles.director(self,'rm', self.contdir + '/' + self.target.rstrip('.mir') + '_stack/mask')
                 fits = lib.miriad('fits')
                 fits.op = 'xyout'
                 fits.in_ = self.contdir + '/' + self.target.rstrip('.mir') + '_stack'
@@ -633,7 +630,7 @@ class continuum:
 
                 # Check the final stacked continuum image
                 if os.path.isdir(self.contdir + '/' + self.target.rstrip('.mir') + '_stack') and os.path.isfile(self.contdir + '/' + self.target.rstrip('.mir') + '_stack.fits'):  # Check if the image file is there
-                    stackmin, stackmax, stackstd = subs.imstats.getimagestats(self, self.contdir + '/' + self.target.rstrip('.mir') + '_stack.fits')
+                    stackmin, stackmax, stackstd = subs_imstats.getimagestats(self, self.contdir + '/' + self.target.rstrip('.mir') + '_stack.fits')
                     if stackstd != np.nan and stackmax <= 10000 and stackmin >= -10:  # Check if the image is valid
                         continuumstackedimagestatus = True
                         self.logger.info('### Final deep continuum image is ' + self.contdir + '/' + self.target.rstrip('.mir') + '_stack.fits ###')
@@ -645,12 +642,12 @@ class continuum:
                     self.logger.error('### Final stacked continuum image could not be created! ###')
 
         # Save the derived parameters to the parameter file
-        subs.param.add_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_stackstatus', continuumchunkimageacceptforstacking)
-        subs.param.add_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_stackrejreason', continuumchunkstackrejreason)
-        subs.param.add_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_imcombrms', continuumimcombrms)
-        subs.param.add_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_imcombweights', continuumimcombweights)
-        subs.param.add_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_stackedimagestatus', continuumstackedimagestatus)
-        subs.param.add_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_synthbeamparams', continuumsynthbeamparams)
+        subs_param.add_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_stackstatus', continuumchunkimageacceptforstacking)
+        subs_param.add_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_stackrejreason', continuumchunkstackrejreason)
+        subs_param.add_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_imcombrms', continuumimcombrms)
+        subs_param.add_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_imcombweights', continuumimcombweights)
+        subs_param.add_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_stackedimagestatus', continuumstackedimagestatus)
+        subs_param.add_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_synthbeamparams', continuumsynthbeamparams)
 
 
 
@@ -659,14 +656,14 @@ class continuum:
     #########################################
 
     def calc_dr_maj(self, drinit, dr0, majorcycles, function):
-        '''
+        """
         Function to calculate the dynamic range limits during major cycles
         drinit (float): The initial dynamic range
         dr0 (float): Coefficient for increasing the dynamic range threshold at each major cycle
         majorcycles (int): The number of major cycles to execute
         function (string): The function to follow for increasing the dynamic ranges. Currently 'power' is supported.
         returns (list of floats): A list of floats for the dynamic range limits within the major cycles.
-        '''
+        """
         if function == 'square':
             dr_maj = [drinit * np.power(dr0, m) for m in range(majorcycles)]
         else:
@@ -675,14 +672,14 @@ class continuum:
         return dr_maj
 
     def calc_dr_min(self, dr_maj, majc, minorcycles, function):
-        '''
+        """
         Function to calculate the dynamic range limits during minor cycles
         dr_maj (list of floats): List with dynamic range limits for major cycles. Usually from calc_dr_maj
         majc (int): The major cycles you want to calculate the minor cycle dynamic ranges for
         minorcycles (int): The number of minor cycles to use
         function (string): The function to follow for increasing the dynamic ranges. Currently 'square', 'power', and 'linear' is supported.
         returns (list of floats): A list of floats for the dynamic range limits within the minor cycles.
-        '''
+        """
         if majc == 0:  # Take care about the first major cycle
             prevdr = 0
         else:
@@ -704,13 +701,13 @@ class continuum:
         return dr_min
 
     def calc_mask_threshold(self, theoretical_noise_threshold, noise_threshold, dynamic_range_threshold):
-        '''
+        """
         Function to calculate the actual mask_threshold and the type of mask threshold from the theoretical noise threshold, noise threshold, and the dynamic range threshold
         theoretical_noise_threshold (float): The theoretical noise threshold calculated by calc_theoretical_noise_threshold
         noise_threshold (float): The noise threshold calculated by calc_noise_threshold
         dynamic_range_threshold (float): The dynamic range threshold calculated by calc_dynamic_range_threshold
         returns (float, string): The maximum of the three thresholds, the type of the maximum threshold
-        '''
+        """
         # if np.isinf(dynamic_range_threshold) or np.isnan(dynamic_range_threshold):
         #     dynamic_range_threshold = noise_threshold
         mask_threshold = np.max([theoretical_noise_threshold, noise_threshold, dynamic_range_threshold])
@@ -724,52 +721,52 @@ class continuum:
         return mask_threshold, mask_threshold_type
 
     def calc_noise_threshold(self, imax, minor_cycle, major_cycle, c0):
-        '''
+        """
         Calculates the noise threshold
         imax (float): the maximum in the input image
         minor_cycle (int): the current minor cycle the self-calibration is in
         major_cycle (int): the current major cycle the self-calibration is in
         returns (float): the noise threshold
-        '''
+        """
         noise_threshold = imax / ((c0 + (minor_cycle) * c0) * (major_cycle + 1))
         return noise_threshold
 
     def calc_clean_cutoff(self, mask_threshold, c1):
-        '''
+        """
         Calculates the cutoff for the cleaning
         mask_threshold (float): the mask threshold to calculate the clean cutoff from
         returns (float): the clean cutoff
-        '''
+        """
         clean_cutoff = mask_threshold / c1
         return clean_cutoff
 
     def calc_dynamic_range_threshold(self, imax, dynamic_range, dynamic_range_minimum):
-        '''
+        """
         Calculates the dynamic range threshold
         imax (float): the maximum in the input image
         dynamic_range (float): the dynamic range you want to calculate the threshold for
         returns (float): the dynamic range threshold
-        '''
+        """
         if dynamic_range == 0:
             dynamic_range = dynamic_range_minimum
         dynamic_range_threshold = imax / dynamic_range
         return dynamic_range_threshold
 
     def calc_theoretical_noise_threshold(self, theoretical_noise, nsigma):
-        '''
+        """
         Calculates the theoretical noise threshold from the theoretical noise
         theoretical_noise (float): the theoretical noise of the observation
         returns (float): the theoretical noise threshold
-        '''
+        """
         theoretical_noise_threshold = (nsigma * theoretical_noise)
         return theoretical_noise_threshold
 
     def calc_theoretical_noise(self, dataset):
-        '''
+        """
         Calculate the theoretical rms of a given dataset
         dataset (string): The input dataset to calculate the theoretical rms from
         returns (float): The theoretical rms of the input dataset as a float
-        '''
+        """
         uv = aipy.miriad.UV(dataset)
         obsrms = lib.miriad('obsrms')
         try:
@@ -792,11 +789,11 @@ class continuum:
         return theorms
 
     def list_chunks(self):
-        '''
+        """
         Checks how many chunk directories exist and returns a list of them
-        '''
-        subs.setinit.setinitdirs(self)
-        subs.setinit.setdatasetnamestomiriad(self)
+        """
+        subs_setinit.setinitdirs(self)
+        subs_setinit.setdatasetnamestomiriad(self)
         for n in range(100):
             if os.path.isdir(self.selfcaldir + '/' + str(n).zfill(2)):
                 pass
@@ -807,13 +804,13 @@ class continuum:
         return chunkstr
 
     def get_last_major_iteration(self, chunk):
-        '''
+        """
         Get the number of the last major iteration
         chunk: The frequency chunk to look into. Usually an entry generated by list_chunks
         return: The number of the last major clean iteration for a frequency chunk
-        '''
-        subs.setinit.setinitdirs(self)
-        subs.setinit.setdatasetnamestomiriad(self)
+        """
+        subs_setinit.setinitdirs(self)
+        subs_setinit.setdatasetnamestomiriad(self)
         for n in range(100):
             if os.path.isdir(self.selfcaldir + '/' + str(chunk) + '/' + str(n).zfill(2)):
                 pass
@@ -823,14 +820,14 @@ class continuum:
         return lastmajor
 
     def get_last_minor_iteration(self, chunk, maj):
-        '''
+        """
         Get the number of the last minor iteration
         chunk: The frequency chunk to look into. Usually an entry generated by list_chunks
         maj: Number of the last major iteration
         return: The number of the last major clean iteration for a frequency chunk
-        '''
-        subs.setinit.setinitdirs(self)
-        subs.setinit.setdatasetnamestomiriad(self)
+        """
+        subs_setinit.setinitdirs(self)
+        subs_setinit.setdatasetnamestomiriad(self)
         for n in range(100):
             if os.path.isdir(self.selfcaldir + '/' + str(chunk) + '/' + str(maj).zfill(2) + '/' + 'image_' + str(n).zfill(2)):
                 pass
@@ -844,19 +841,19 @@ class continuum:
     ######################################################################
 
     def summary(self):
-        '''
+        """
         Creates a general summary of the parameters in the parameter file generated during the continuum imaging. A more detailed summary can be generated by the detailed_summary function
         returns (DataFrame): A python pandas dataframe object, which can be looked at with the style function in the notebook
-        '''
+        """
 
         # Load the parameters from the parameter file
 
-        IT = subs.param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_minoriterations')
-        ST = subs.param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_status')
-        SBEAMS = subs.param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_synthbeamparams')
-        STST = subs.param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_stackstatus')
-        ICW = subs.param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_imcombweights')
-        RR = subs.param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_stackrejreason')
+        IT = subs_param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_minoriterations')
+        ST = subs_param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_status')
+        SBEAMS = subs_param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_synthbeamparams')
+        STST = subs_param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_stackstatus')
+        ICW = subs_param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_imcombweights')
+        RR = subs_param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_stackrejreason')
 
         # Create the data frame
 
@@ -877,22 +874,22 @@ class continuum:
         return df
 
     def detailed_summary(self):
-        '''
+        """
         Creates a detailed summary of the parameters in the parameter file generated during the continuum imaging
         returns (DataFrame): A python pandas dataframe object, which can be looked at with the style function in the notebook
-        '''
+        """
 
         # Load the parameters from the parameter file
 
-        IMST = subs.param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_imagestats')
-        RSST = subs.param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_residualstats')
-        IMstatus = subs.param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_imagestatus')
-        MAstatus = subs.param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_maskstatus')
-        MOstatus = subs.param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_modelstatus')
-        REstatus = subs.param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_residualstatus')
-        TH = subs.param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_thresholdtype')
-        MLIM = subs.param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_masklimit')
-        CLIM = subs.param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_cleanlimit')
+        IMST = subs_param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_imagestats')
+        RSST = subs_param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_residualstats')
+        IMstatus = subs_param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_imagestatus')
+        MAstatus = subs_param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_maskstatus')
+        MOstatus = subs_param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_modelstatus')
+        REstatus = subs_param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_residualstatus')
+        TH = subs_param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_thresholdtype')
+        MLIM = subs_param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_masklimit')
+        CLIM = subs_param.get_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_cleanlimit')
 
         # Create the data frames
 
@@ -927,11 +924,11 @@ class continuum:
     ##########################################################################
 
     def show(self, showall=False):
-        '''
+        """
         show: Prints the current settings of the pipeline. Only shows keywords, which are in the default config file default.cfg
         showall: Set to true if you want to see all current settings instead of only the ones from the current step
-        '''
-        subs.setinit.setinitdirs(self)
+        """
+        subs_setinit.setinitdirs(self)
         config = ConfigParser.ConfigParser()
         config.readfp(open(self.apercaldir + '/modules/default.cfg'))
         for s in config.sections():
@@ -956,30 +953,30 @@ class continuum:
                     pass
 
     def reset(self):
-        '''
+        """
         Function to reset the current step and remove all generated data including continuum parameters in the parameter file. Be careful! Deletes all data generated in this step!
-        '''
-        subs.setinit.setinitdirs(self)
-        subs.setinit.setdatasetnamestomiriad(self)
+        """
+        subs_setinit.setinitdirs(self)
+        subs_setinit.setdatasetnamestomiriad(self)
         self.logger.warning('### Deleting all continuum data products. ###')
-        subs.managefiles.director(self,'ch', self.contdir)
-        subs.managefiles.director(self,'rm', self.contdir + '/*')
+        subs_managefiles.director(self,'ch', self.contdir)
+        subs_managefiles.director(self,'rm', self.contdir + '/*')
         self.logger.warning('### Deleteing all parameter file entries for CONTINUUM module ###')
-        subs.param.del_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_imcomb_rms')
-        subs.param.del_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_minoriterations')
-        subs.param.del_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_imagestats')
-        subs.param.del_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_maskstatus')
-        subs.param.del_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_modelstatus')
-        subs.param.del_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_imagestatus')
-        subs.param.del_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_residualstatus')
-        subs.param.del_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_residualstats')
-        subs.param.del_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_status')
-        subs.param.del_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_thresholdtype')
-        subs.param.del_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_masklimit')
-        subs.param.del_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_cleanlimit')
-        subs.param.del_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_synthbeamparams')
-        subs.param.del_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_stackstatus')
-        subs.param.del_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_stackrejreason')
-        subs.param.del_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_imcombrms')
-        subs.param.del_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_imcombweights')
-        subs.param.del_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_stackedimagestatus')
+        subs_param.del_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_imcomb_rms')
+        subs_param.del_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_minoriterations')
+        subs_param.del_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_imagestats')
+        subs_param.del_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_maskstatus')
+        subs_param.del_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_modelstatus')
+        subs_param.del_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_imagestatus')
+        subs_param.del_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_residualstatus')
+        subs_param.del_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_residualstats')
+        subs_param.del_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_status')
+        subs_param.del_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_thresholdtype')
+        subs_param.del_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_masklimit')
+        subs_param.del_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_cleanlimit')
+        subs_param.del_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_synthbeamparams')
+        subs_param.del_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_stackstatus')
+        subs_param.del_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_stackrejreason')
+        subs_param.del_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_imcombrms')
+        subs_param.del_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_imcombweights')
+        subs_param.del_param(self, 'continuum_B' + str(self.beam).zfill(2) + '_stackedimagestatus')

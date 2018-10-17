@@ -4,15 +4,16 @@ import os
 import random
 import string
 
-from libs import lib
-import subs
+from apercal.libs import lib
+from apercal import subs
+
 
 def getimagestats(self, image):
-    '''
+    """
     Subroutine to calculate the max,min and rms of an image
     image (string): The absolute path to the image file.
     returns (numpy array): The min, max and rms of the image
-    '''
+    """
     subs.setinit.setinitdirs(self)
     char_set = string.ascii_uppercase + string.digits
     if os.path.isdir(image) or os.path.isfile(image):

@@ -4,15 +4,9 @@
 # Example usage: >> python getdata_alta.py 180316 004-010 00-36
 # V.A. Moss (vmoss.astro@gmail.com)
 from __future__ import print_function
-
-__author__ = "V.A. Moss"
-__date__ = "$20-mar-2018 16:00:00$"
-__version__ = "0.2"
-
 import os
 import sys
 import time
-import argparse
 import logging
 
 

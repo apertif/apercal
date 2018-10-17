@@ -1,7 +1,7 @@
 def setinitdirs(self):
-    '''
+    """
     Creates the directory names for the subdirectories to make scripting easier
-    '''
+    """
     self.rawdir = self.basedir + self.beam + '/' + self.rawsubdir
     self.crosscaldir = self.basedir + self.beam + '/' + self.crosscalsubdir
     self.selfcaldir = self.basedir + self.beam + '/' + self.selfcalsubdir
@@ -11,10 +11,11 @@ def setinitdirs(self):
     self.mosdir = self.basedir + self.mossubdir
     self.transferdir = self.basedir + self.transfersubdir
 
+
 def setdatasetnamestomiriad(self):
-    '''
+    """
     Renames the dataset names to .mir from .MS for crosscal and following modules
-    '''
+    """
     if self.fluxcal.endswith('.MS'):
         self.fluxcal = self.fluxcal.rstrip('MS') + 'mir'
     if self.polcal.endswith('.MS'):

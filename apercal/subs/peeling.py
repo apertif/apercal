@@ -1,29 +1,23 @@
-__author__ = "Bjoern Adebahr"
-__copyright__ = "ASTRON"
-__email__ = "adebahr@astron.nl"
-
 import logging
-
 import numpy as np
+from apercal.subs import lsm
 
-from subs import lsm
-
-'''
+"""
 # Class to check if sources have to be peeled
-'''
+"""
 
 ################################################################################################
 ##### Functions to check if a strong source outside of the orimary beam needs to be peeled #####
 ################################################################################################
 
 def check_lsm(infile, cutoff, r1, r2):
-    '''
+    """
     checkpeeling: module to check if a source has an apparant flux density in the NVSS-catalogue higher than the cutoff between r1 and r2 from the pointing centre.
     infile: The input file to calibrate on. Needed for coordinate extraction and freqeuncy information
     cutoff: apparent flux density to consider a source as to be peeled
     r1: radius of primary beam (sources to ignore)
     r2: query radius for NVSS. Only sources between r1 and r2 from the pointing centre will be considered for peeling
-    '''
+    """
     cat = lsm.query_catalogue(infile, 'NVSS', r2, minflux=cutoff)
     if len(cat) > 0:
         cat = lsm.calc_appflux(infile, cat, 'WSRT')

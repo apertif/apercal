@@ -1,8 +1,9 @@
-import numpy as np
 import os
-import astropy.io.fits as pyfits
 
-from libs import lib
+import astropy.io.fits as pyfits
+import numpy as np
+
+from apercal.libs import lib
 
 
 def resistats(infile):
@@ -18,6 +19,7 @@ def resistats(infile):
     resirms = np.std(image)
     os.system('rm -rf rms*')
     return resirms, resimax
+
 
 def imstats(infile, stokes):
     invert = lib.miriad('invert')
@@ -44,27 +46,30 @@ def imstats(infile, stokes):
     os.system('rm -rf rms*')
     return inimax, inirms
 
+
 def theostats(infile):
-    '''
+    """
     theostats: Calculates the theoretical noise of an observation using the MIRIAD task obsrms
     infile: The input file to calculate the noise for
     return: The theoretical rms
-    '''
+    """
     obsrms = lib.miriad('obsrms')
     theorms = 0.00004
     return theorms
 
+
 def check_blank(infile):
-    '''
+    """
     check_blank: Checks if an image is completely blanked. Mostly used for checking if self calibration cycles produced a valid output.
     infile: The input image to check
     return: True if image is blank
-    '''
+    """
     if np.any(np.nan):
         status = True
     else:
         status = False
     return status
+
 
 def fieldflux(infile):
     invert = lib.miriad('invert')

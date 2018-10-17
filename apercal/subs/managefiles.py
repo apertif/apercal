@@ -1,16 +1,16 @@
 import os
 
-import subs.setinit
-from libs import lib
+from apercal.libs import lib
+from apercal.subs import setinit as subs_setinit
 
 
 def imagetofits(self, mirimage, fitsimage):
-    '''
+    """
     Converts a MIRIAD image to a FITS image
     mirimage: The MIRIAD image to convert
     fitsimage: The converted FITS image
-    '''
-    subs.setinit.setinitdirs(self)
+    """
+    subs_setinit.setinitdirs(self)
     fits = lib.miriad('fits')
     fits.op = 'xyout'
     fits.in_ = mirimage
@@ -19,14 +19,15 @@ def imagetofits(self, mirimage, fitsimage):
     if os.path.isfile(fitsimage):
         director(self, 'rm', mirimage)
 
+
 def director(self, option, dest, file=None, verbose=True):
-    '''
+    """
     director: Function to move, remove, and copy files and directories
     option: 'mk', 'ch', 'mv', 'rm', and 'cp' are supported
     dest: Destination of a file or directory to move to
     file: Which file to move or copy, otherwise None
-    '''
-    subs.setinit.setinitdirs(self)
+    """
+    subs_setinit.setinitdirs(self)
     if option == 'mk':
         if os.path.exists(dest):
             pass

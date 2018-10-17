@@ -7,17 +7,17 @@ import pandas as pd
 import drivecasa
 import os
 
-import subs.setinit
-import subs.managefiles
-from subs.param import get_param_def
-
-from libs import lib
+from apercal.subs import setinit as subs_setinit
+from apercal.subs import managefiles as subs_managefiles
+from apercal.subs.param import get_param_def
+from apercal.subs import param as subs_param
+from apercal.libs import lib
 
 
 class convert:
-    '''
+    """
     Class to convert data from MS-format into UVFITS, and from UVFITS into MIRIAD format. Resulting datasets will have the endings .MS, .UVFITS, and .mir.
-    '''
+    """
     def __init__(self, file=None, **kwargs):
         logging.basicConfig(level=logging.DEBUG)
         self.logger = logging.getLogger('CONVERT')
@@ -31,27 +31,27 @@ class convert:
         for s in config.sections():
             for o in config.items(s):
                 setattr(self, o[0], eval(o[1]))
-        subs.setinit.setinitdirs(self)
+        subs_setinit.setinitdirs(self)
 
     ###################################################
     ##### Function to execute the data conversion #####
     ###################################################
 
     def go(self):
-        '''
+        """
         Executes the whole conversion from MS format to MIRIAD format of the flux calibrator, polarisation calibrator, and target dataset in the following order:
         ms2uvfits
         uvfits2miriad
-        '''
+        """
         self.logger.info('########## FILE CONVERSION started ##########')
         self.ms2miriad()
         self.logger.info('########## FILE CONVERSION done ##########')
 
     def ms2miriad(self):
-        '''
+        """
         Converts the data from MS to MIRIAD format via UVFITS using drivecasa. Does it for the flux calibrator, polarisation calibrator, and target field independently.
-        '''
-        subs.setinit.setinitdirs(self)
+        """
+        subs_setinit.setinitdirs(self)
         nbeams = 37
 
         # Create the parameters for the parameter file for converting from MS to UVFITS format
@@ -89,9 +89,9 @@ class convert:
 
         # Save the derived parameters for the availability to the parameter file
 
-        subs.param.add_param(self, 'convert_fluxcal_MSavailable', convertfluxcalmsavailable)
-        subs.param.add_param(self, 'convert_polcal_MSavailable', convertpolcalmsavailable)
-        subs.param.add_param(self, 'convert_targetbeams_MSavailable', converttargetbeamsmsavailable)
+        subs_param.add_param(self, 'convert_fluxcal_MSavailable', convertfluxcalmsavailable)
+        subs_param.add_param(self, 'convert_polcal_MSavailable', convertpolcalmsavailable)
+        subs_param.add_param(self, 'convert_targetbeams_MSavailable', converttargetbeamsmsavailable)
 
         ###############################################
         # Convert the available MS-datasets to UVFITS #
@@ -103,7 +103,7 @@ class convert:
                 if convertfluxcaluvfits2miriad == False:
                     if convertfluxcalmsavailable:
                         self.logger.debug('# Converting flux calibrator dataset from MS to UVFITS format. #')
-                        subs.managefiles.director(self, 'mk', self.basedir + '00' + '/' + self.crosscalsubdir, verbose=False)
+                        subs_managefiles.director(self, 'mk', self.basedir + '00' + '/' + self.crosscalsubdir, verbose=False)
                         fc_convert = 'exportuvfits(vis="' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal + '", fitsfile="' + self.basedir + '00' + '/' + self.crosscalsubdir + '/' + str(self.fluxcal).rstrip('MS') + 'UVFITS' + '", datacolumn="data", combinespw=True, padwithflags=True, multisource=True, writestation=True)'
                         casacmd = [fc_convert]
                         casa = drivecasa.Casapy()
@@ -128,7 +128,7 @@ class convert:
                 if convertpolcaluvfits2miriad == False:
                     if convertpolcalmsavailable:
                         self.logger.debug('# Converting polarised calibrator dataset from MS to UVFITS format. #')
-                        subs.managefiles.director(self, 'mk', self.basedir + '00' + '/' + self.crosscalsubdir, verbose=False)
+                        subs_managefiles.director(self, 'mk', self.basedir + '00' + '/' + self.crosscalsubdir, verbose=False)
                         pc_convert = 'exportuvfits(vis="' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal + '", fitsfile="' + self.basedir + '00' + '/' + self.crosscalsubdir + '/' + str(self.polcal).rstrip('MS') + 'UVFITS' + '", datacolumn="data", combinespw=True, padwithflags=True, multisource=True, writestation=True)'
                         casacmd = [pc_convert]
                         casa = drivecasa.Casapy()
@@ -161,7 +161,7 @@ class convert:
                 for vis in datasets:
                     if converttargetbeamsuvfits2miriad[int(vis.split('/')[-3])] == False:
                         if converttargetbeamsmsavailable[int(vis.split('/')[-3])]:
-                            subs.managefiles.director(self, 'mk', self.basedir + vis.split('/')[-3] + '/' + self.crosscalsubdir, verbose=False)
+                            subs_managefiles.director(self, 'mk', self.basedir + vis.split('/')[-3] + '/' + self.crosscalsubdir, verbose=False)
                             tg_convert = 'exportuvfits(vis="' + self.basedir + vis.split('/')[-3] + '/' + self.rawsubdir + '/' + self.target + '", fitsfile="' + self.basedir + vis.split('/')[-3] + '/' + self.crosscalsubdir + '/' + self.target.rstrip('MS') + 'UVFITS' + '", datacolumn="data", combinespw=True, padwithflags=True, multisource=True, writestation=True)'
                             casacmd = [tg_convert]
                             casa = drivecasa.Casapy()
@@ -183,9 +183,9 @@ class convert:
 
         # Save the derived parameters for the MS to UVFITS conversion to the parameter file
 
-        subs.param.add_param(self, 'convert_fluxcal_MS2UVFITS', convertfluxcalms2uvfits)
-        subs.param.add_param(self, 'convert_polcal_MS2UVFITS', convertpolcalms2uvfits)
-        subs.param.add_param(self, 'convert_targetbeams_MS2UVFITS', converttargetbeamsms2uvfits)
+        subs_param.add_param(self, 'convert_fluxcal_MS2UVFITS', convertfluxcalms2uvfits)
+        subs_param.add_param(self, 'convert_polcal_MS2UVFITS', convertpolcalms2uvfits)
+        subs_param.add_param(self, 'convert_targetbeams_MS2UVFITS', converttargetbeamsms2uvfits)
 
         #######################################################
         # Check which datasets are available in UVFITS format #
@@ -207,9 +207,9 @@ class convert:
 
         # Save the derived parameters for the availability to the parameter file
 
-        subs.param.add_param(self, 'convert_fluxcal_UVFITSavailable', convertfluxcaluvfitsavailable)
-        subs.param.add_param(self, 'convert_polcal_UVFITSavailable', convertpolcaluvfitsavailable)
-        subs.param.add_param(self, 'convert_targetbeams_UVFITSavailable', converttargetbeamsuvfitsavailable)
+        subs_param.add_param(self, 'convert_fluxcal_UVFITSavailable', convertfluxcaluvfitsavailable)
+        subs_param.add_param(self, 'convert_polcal_UVFITSavailable', convertpolcaluvfitsavailable)
+        subs_param.add_param(self, 'convert_targetbeams_UVFITSavailable', converttargetbeamsuvfitsavailable)
 
         ##########################################################
         # Convert the available UVFITS-datasets to MIRIAD format #
@@ -221,7 +221,7 @@ class convert:
                 if convertfluxcaluvfits2miriad == False:
                     if convertfluxcaluvfitsavailable:
                         self.logger.debug('# Converting flux calibrator dataset from UVFITS to MIRIAD format. #')
-                        subs.managefiles.director(self, 'ch', self.basedir + '00' + '/' + self.crosscalsubdir, verbose=False)
+                        subs_managefiles.director(self, 'ch', self.basedir + '00' + '/' + self.crosscalsubdir, verbose=False)
                         fits = lib.miriad('fits')
                         fits.op = 'uvin'
                         fits.in_ = self.basedir + '00' + '/' + self.crosscalsubdir + '/' + self.fluxcal.rstrip('MS') + 'UVFITS'
@@ -247,7 +247,7 @@ class convert:
                 if convertpolcaluvfits2miriad == False:
                     if convertpolcaluvfitsavailable:
                         self.logger.debug('# Converting polarised calibrator dataset from UVFITS to MIRIAD format. #')
-                        subs.managefiles.director(self, 'ch',self.basedir + '00' + '/' + self.crosscalsubdir, verbose=False)
+                        subs_managefiles.director(self, 'ch',self.basedir + '00' + '/' + self.crosscalsubdir, verbose=False)
                         fits = lib.miriad('fits')
                         fits.op = 'uvin'
                         fits.in_ = self.basedir + '00' + '/' + self.crosscalsubdir + '/' + self.polcal.rstrip('MS') + 'UVFITS'
@@ -281,7 +281,7 @@ class convert:
                 for vis in datasets:
                     if converttargetbeamsuvfits2miriad[int(vis.split('/')[-3])] == False:
                         if converttargetbeamsuvfitsavailable[int(vis.split('/')[-3])]:
-                            subs.managefiles.director(self, 'ch', self.basedir + vis.split('/')[-3] + '/' + self.crosscalsubdir, verbose=False)
+                            subs_managefiles.director(self, 'ch', self.basedir + vis.split('/')[-3] + '/' + self.crosscalsubdir, verbose=False)
                             fits = lib.miriad('fits')
                             fits.op = 'uvin'
                             fits.in_ = self.basedir + vis.split('/')[-3] + '/' + self.crosscalsubdir + '/' + self.target.rstrip('MS') + 'UVFITS'
@@ -304,9 +304,9 @@ class convert:
 
         # Save the derived parameters for the MS to UVFITS conversion to the parameter file
 
-        subs.param.add_param(self, 'convert_fluxcal_UVFITS2MIRIAD', convertfluxcaluvfits2miriad)
-        subs.param.add_param(self, 'convert_polcal_UVFITS2MIRIAD', convertpolcaluvfits2miriad)
-        subs.param.add_param(self, 'convert_targetbeams_UVFITS2MIRIAD', converttargetbeamsuvfits2miriad)
+        subs_param.add_param(self, 'convert_fluxcal_UVFITS2MIRIAD', convertfluxcaluvfits2miriad)
+        subs_param.add_param(self, 'convert_polcal_UVFITS2MIRIAD', convertpolcaluvfits2miriad)
+        subs_param.add_param(self, 'convert_targetbeams_UVFITS2MIRIAD', converttargetbeamsuvfits2miriad)
 
         #####################################
         # Remove the UVFITS files if wanted #
@@ -314,11 +314,11 @@ class convert:
 
         if self.convert_removeuvfits:
             self.logger.info('# Removing all UVFITS files #')
-            subs.managefiles.director(self, 'rm', self.basedir + '00' + '/' + self.crosscalsubdir + '/' + self.fluxcal.rstrip('MS') + 'UVFITS')
-            subs.managefiles.director(self, 'rm', self.basedir + '00' + '/' + self.crosscalsubdir + '/' + self.polcal.rstrip('MS') + 'UVFITS')
+            subs_managefiles.director(self, 'rm', self.basedir + '00' + '/' + self.crosscalsubdir + '/' + self.fluxcal.rstrip('MS') + 'UVFITS')
+            subs_managefiles.director(self, 'rm', self.basedir + '00' + '/' + self.crosscalsubdir + '/' + self.polcal.rstrip('MS') + 'UVFITS')
             for beam in range(nbeams):
                 if os.path.isdir(self.basedir + str(beam).zfill(2) + '/' + self.crosscalsubdir):
-                    subs.managefiles.director(self, 'rm', self.basedir + str(beam).zfill(2) + '/' + self.crosscalsubdir + '/' + self.target.rstrip('MS') + 'UVFITS')
+                    subs_managefiles.director(self, 'rm', self.basedir + str(beam).zfill(2) + '/' + self.crosscalsubdir + '/' + self.target.rstrip('MS') + 'UVFITS')
                 else:
                     pass
 
@@ -327,26 +327,26 @@ class convert:
     #################################################################
 
     def summary(self):
-        '''
+        """
         Creates a general summary of the parameters in the parameter file generated during CONVERT. No detailed summary is available for CONVERT.
         returns (DataFrame): A python pandas dataframe object, which can be looked at with the style function in the notebook
-        '''
+        """
 
         nbeams = 37
 
         # Load the parameters from the parameter file
 
-        FMSA = subs.param.get_param(self, 'convert_fluxcal_MSavailable')
-        PMSA = subs.param.get_param(self, 'convert_polcal_MSavailable')
-        TMSA = subs.param.get_param(self, 'convert_targetbeams_MSavailable')
+        FMSA = subs_param.get_param(self, 'convert_fluxcal_MSavailable')
+        PMSA = subs_param.get_param(self, 'convert_polcal_MSavailable')
+        TMSA = subs_param.get_param(self, 'convert_targetbeams_MSavailable')
 
-        FMS2UV = subs.param.get_param(self, 'convert_fluxcal_MS2UVFITS')
-        PMS2UV = subs.param.get_param(self, 'convert_polcal_MS2UVFITS')
-        TMS2UV = subs.param.get_param(self, 'convert_targetbeams_MS2UVFITS')
+        FMS2UV = subs_param.get_param(self, 'convert_fluxcal_MS2UVFITS')
+        PMS2UV = subs_param.get_param(self, 'convert_polcal_MS2UVFITS')
+        TMS2UV = subs_param.get_param(self, 'convert_targetbeams_MS2UVFITS')
 
-        FUV2mir = subs.param.get_param(self, 'convert_fluxcal_UVFITS2MIRIAD')
-        PUV2mir = subs.param.get_param(self, 'convert_polcal_UVFITS2MIRIAD')
-        TUV2mir = subs.param.get_param(self, 'convert_targetbeams_UVFITS2MIRIAD')
+        FUV2mir = subs_param.get_param(self, 'convert_fluxcal_UVFITS2MIRIAD')
+        PUV2mir = subs_param.get_param(self, 'convert_polcal_UVFITS2MIRIAD')
+        TUV2mir = subs_param.get_param(self, 'convert_targetbeams_UVFITS2MIRIAD')
 
         # Create the data frame
 
@@ -382,11 +382,11 @@ class convert:
     #######################################################################
 
     def show(self, showall=False):
-        '''
+        """
         show: Prints the current settings of the pipeline. Only shows keywords, which are in the default config file default.cfg
         showall: Set to true if you want to see all current settings instead of only the ones from the current step
-        '''
-        subs.setinit.setinitdirs(self)
+        """
+        subs_setinit.setinitdirs(self)
         config = ConfigParser.ConfigParser()
         config.readfp(open(self.apercaldir + '/modules/default.cfg'))
         for s in config.sections():
@@ -411,28 +411,28 @@ class convert:
                     pass
 
     def reset(self):
-        '''
+        """
         Function to reset the current step and remove all generated data. Be careful! Deletes all data generated in this step!
-        '''
-        subs.setinit.setinitdirs(self)
+        """
+        subs_setinit.setinitdirs(self)
         nbeams = 37
 
         self.logger.warning('### Deleting all converted data. ###')
         for beam in range(nbeams):
             if os.path.isdir(self.basedir + str(beam).zfill(2) + '/' + self.crosscalsubdir):
-                subs.managefiles.director(self, 'rm', self.basedir + str(beam).zfill(2) + '/' + self.crosscalsubdir + '/*')
+                subs_managefiles.director(self, 'rm', self.basedir + str(beam).zfill(2) + '/' + self.crosscalsubdir + '/*')
             else:
                 pass
         self.logger.warning('### Deleting all parameter file entries for CONVERT module ###')
-        subs.param.del_param(self, 'convert_fluxcal_MSavailable')
-        subs.param.del_param(self, 'convert_polcal_MSavailable')
-        subs.param.del_param(self, 'convert_targetbeams_MSavailable')
-        subs.param.del_param(self, 'convert_fluxcal_MS2UVFITS')
-        subs.param.del_param(self, 'convert_polcal_MS2UVFITS')
-        subs.param.del_param(self, 'convert_targetbeams_MS2UVFITS')
-        subs.param.del_param(self, 'convert_fluxcal_UVFITSavailable')
-        subs.param.del_param(self, 'convert_polcal_UVFITSavailable')
-        subs.param.del_param(self, 'convert_targetbeams_UVFITSavailable')
-        subs.param.del_param(self, 'convert_fluxcal_UVFITS2MIRIAD')
-        subs.param.del_param(self, 'convert_polcal_UVFITS2MIRIAD')
-        subs.param.del_param(self, 'convert_targetbeams_UVFITS2MIRIAD')
+        subs_param.del_param(self, 'convert_fluxcal_MSavailable')
+        subs_param.del_param(self, 'convert_polcal_MSavailable')
+        subs_param.del_param(self, 'convert_targetbeams_MSavailable')
+        subs_param.del_param(self, 'convert_fluxcal_MS2UVFITS')
+        subs_param.del_param(self, 'convert_polcal_MS2UVFITS')
+        subs_param.del_param(self, 'convert_targetbeams_MS2UVFITS')
+        subs_param.del_param(self, 'convert_fluxcal_UVFITSavailable')
+        subs_param.del_param(self, 'convert_polcal_UVFITSavailable')
+        subs_param.del_param(self, 'convert_targetbeams_UVFITSavailable')
+        subs_param.del_param(self, 'convert_fluxcal_UVFITS2MIRIAD')
+        subs_param.del_param(self, 'convert_polcal_UVFITS2MIRIAD')
+        subs_param.del_param(self, 'convert_targetbeams_UVFITS2MIRIAD')

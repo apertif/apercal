@@ -1,7 +1,3 @@
-__author__ = "Bradley Frank, Bjoern Adebahr"
-__copyright__ = "ASTRON"
-__email__ = "frank@astron.nl, adebahr@astron.nl"
-
 import ConfigParser
 import glob
 import logging
@@ -9,18 +5,16 @@ import logging
 import os
 import sys
 
-import subs.setinit
-import subs.managefiles
+from apercal.subs import setinit as subs_setinit
+from apercal.subs import managefiles as subs_managefiles
 
-from libs import lib
+from apercal.libs import lib
 
-
-####################################################################################################
 
 class ccal:
-    '''
+    """
     Crosscal class to handle applying the calibrator gains and prepare the dataset for self-calibration.
-    '''
+    """
     def __init__(self, file=None, **kwargs):
         logging.basicConfig(level=logging.DEBUG)
         self.logger = logging.getLogger('CROSSCAL')
@@ -35,20 +29,20 @@ class ccal:
             for o in config.items(s):
                 setattr(self, o[0], eval(o[1]))
         self.default = config # Save the loaded config file as defaults for later usage
-        subs.setinit.setinitdirs(self)
-        subs.setinit.setdatasetnamestomiriad(self)
+        subs_setinit.setinitdirs(self)
+        subs_setinit.setdatasetnamestomiriad(self)
 
     #############################################################
     ##### Function to execute the cross-calibration process #####
     #############################################################
 
     def go(self):
-        '''
+        """
         Executes the full cross calibration process in the following order.
         bandpass
         polarisation
         tranfer_to_target
-        '''
+        """
         self.logger.info("########## Starting CROSS CALIBRATION ##########")
         self.bandpass()
         self.polarisation()
@@ -60,13 +54,13 @@ class ccal:
     ###########################################################################################
 
     def bandpass(self):
-        '''
+        """
         Calibrates the bandpass for the flux calibrator using mfcal in MIRIAD.
-        '''
+        """
         if self.crosscal_bandpass:
-            subs.setinit.setinitdirs(self)
-            subs.setinit.setdatasetnamestomiriad(self)
-            subs.managefiles.director(self, 'ch', self.crosscaldir)
+            subs_setinit.setinitdirs(self)
+            subs_setinit.setdatasetnamestomiriad(self)
+            subs_managefiles.director(self, 'ch', self.crosscaldir)
             self.logger.info('### Bandpass calibration on the flux calibrator data started ###')
             mfcal = lib.miriad('mfcal')
             mfcal.vis = self.fluxcal
@@ -80,13 +74,13 @@ class ccal:
             self.logger.info('### Bandpass calibration on the flux calibrator data done ###')
 
     def polarisation(self):
-        '''
+        """
         Derives the polarisation corrections (leakage, angle) from the polarised calibrator. Uses the bandpass from the bandpass calibrator. Does not account for freqeuncy dependent solutions at the moment.
-        '''
+        """
         if self.crosscal_polarisation:
-            subs.setinit.setinitdirs(self)
-            subs.setinit.setdatasetnamestomiriad(self)
-            subs.managefiles.director(self, 'ch', self.crosscaldir)
+            subs_setinit.setinitdirs(self)
+            subs_setinit.setdatasetnamestomiriad(self)
+            subs_managefiles.director(self, 'ch', self.crosscaldir)
             self.logger.info('### Polarisation calibration on the polarised calibrator data started ###')
             if os.path.isfile(self.crosscaldir + '/' + self.fluxcal + '/' + 'bandpass'):
                 self.logger.info('# Bandpass solutions in flux calibrator data found. Using them! #')
@@ -126,13 +120,13 @@ class ccal:
             self.logger.info('### No polarisation calibration done! ###')
 
     def transfer_to_target(self):
-        '''
+        """
         Transfers the gains of the calibrators to the target field. Automatically checks if polarisation calibration has been done.
-        '''
+        """
         if self.crosscal_transfer_to_target:
-            subs.setinit.setinitdirs(self)
-            subs.setinit.setdatasetnamestomiriad(self)
-            subs.managefiles.director(self, 'ch', self.crosscaldir)
+            subs_setinit.setinitdirs(self)
+            subs_setinit.setdatasetnamestomiriad(self)
+            subs_managefiles.director(self, 'ch', self.crosscaldir)
             self.logger.info('### Copying calibrator solutions to target dataset ###')
             gpcopy = lib.miriad('gpcopy')
             if os.path.isfile(self.crosscaldir + '/' + self.polcal + '/' + 'bandpass') and os.path.isfile(self.crosscaldir + '/' + self.polcal + '/' + 'gains') and os.path.isfile(self.crosscaldir + '/' + self.polcal + '/' + 'leakage'):
@@ -164,11 +158,11 @@ class ccal:
     #######################################################################
 
     def show(self, showall=False):
-        '''
+        """
         show: Prints the current settings of the pipeline. Only shows keywords, which are in the default config file default.cfg
         showall: Set to true if you want to see all current settings instead of only the ones from the current step
-        '''
-        subs.setinit.setinitdirs(self)
+        """
+        subs_setinit.setinitdirs(self)
         config = ConfigParser.ConfigParser()
         config.readfp(open(self.apercaldir + '/modules/default.cfg'))
         for s in config.sections():
@@ -193,11 +187,11 @@ class ccal:
                     pass
 
     def reset(self):
-        '''
+        """
         Function to reset the current step and remove all generated data. Be careful! Deletes all data generated in this step!
-        '''
-        subs.setinit.setinitdirs(self)
-        subs.setinit.setdatasetnamestomiriad(self)
+        """
+        subs_setinit.setinitdirs(self)
+        subs_setinit.setdatasetnamestomiriad(self)
         self.logger.warning('### Deleting all cross calibrated data. ###')
-        subs.managefiles.director(self, 'ch', self.crosscaldir)
-        subs.managefiles.director(self, 'rm', self.crosscaldir + '/*')
+        subs_managefiles.director(self, 'ch', self.crosscaldir)
+        subs_managefiles.director(self, 'rm', self.crosscaldir + '/*')

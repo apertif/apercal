@@ -1,35 +1,39 @@
 import os
+
 import numpy as np
 
-import subs.setinit
+from apercal.subs import setinit as subs_setinit
+
 
 def create_param_file(step):
-    '''
+    """
     Create a new parameter file in case there is none in the base directory as a dictionary
-    '''
-    subs.setinit.setinitdirs(step)
+    """
+    subs_setinit.setinitdirs(step)
     df = {}
     np.save(step.basedir + 'param.npy', df)
 
+
 def add_param(step, parameter, values):
-    '''
+    """
     Check if the param file exists, open it, check if the parameter exists and add or overwrite the parameter.
     parameter(string): Name of the parameter in the param file
     values(diverse): The data corresponding to the parameter
-    '''
-    subs.setinit.setinitdirs(step)
+    """
+    subs_setinit.setinitdirs(step)
     if os.path.isfile(step.basedir + 'param.npy') != True:
         create_param_file(step)
     d = np.load(step.basedir + 'param.npy').item()
     d[parameter] = values
     np.save(step.basedir + 'param.npy', d)
 
+
 def del_param(step, parameter):
-    '''
+    """
     Delete a parameter from the parameter file.
     parameter(string): Name of the parameter to delete
-    '''
-    subs.setinit.setinitdirs(step)
+    """
+    subs_setinit.setinitdirs(step)
     if not os.path.isfile(step.basedir + 'param.npy'):
         print('# Parameter file not found! Cannot remove parameter ' + str(parameter) + ' #')
     else:
@@ -38,15 +42,16 @@ def del_param(step, parameter):
             del d[parameter]
             np.save(step.basedir + 'param.npy', d)
         except KeyError:
-            print('# Parameter file does not have parameter '+ str(parameter) + ' #')
+            print('# Parameter file does not have parameter ' + str(parameter) + ' #')
+
 
 def get_param(step, parameter):
-    '''
+    """
     Load a keyword of the parameter file into a variable
     parameter (string): Name of the keyword to load
     returns (various): The variable for the parameter
-    '''
-    subs.setinit.setinitdirs(step)
+    """
+    subs_setinit.setinitdirs(step)
     if not os.path.isfile(step.basedir + 'param.npy'):
         print('# Parameter file not found! Cannot load parameter ' + str(parameter) + ' #')
     else:
@@ -54,32 +59,34 @@ def get_param(step, parameter):
         values = d[parameter]
     return values
 
+
 def get_param_def(step, parameter, default):
-    '''
+    """
     Load a keyword of the paramterfile into a variable, or give a default value if
     the keyword is not in the parameter file
     TODO: merge this into get_param to avoid loading param.npy too often
     step (object): step for which to do this
     parameter (string): name of the keyword to load
     parameter (object): default value
-    '''
-    subs.setinit.setinitdirs(step)
+    """
+    subs_setinit.setinitdirs(step)
     if not os.path.isfile(step.basedir + 'param.npy'):
         return default
     else:
         d = np.load(step.basedir + 'param.npy').item()
         if parameter in d:
-            print('# Parameter '+str(parameter)+' found in cache (param.npy). #')
+            print('# Parameter ' + str(parameter) + ' found in cache (param.npy). #')
             return d[parameter]
     return default
 
+
 def check_param(step, parameter):
-    '''
+    """
     Check if a list of parameters exist in the parameter file ans return True or False
     parameter (list of strings): The parameters to search for
     returns (bool): True if parameter exists, otherwise False
-    '''
-    subs.setinit.setinitdirs(step)
+    """
+    subs_setinit.setinitdirs(step)
     if not os.path.isfile(step.basedir + 'param.npy'):
         print('# Parameter file not found! Cannot load parameter ' + str(parameter) + ' #')
         create_param_file(step)
@@ -89,11 +96,12 @@ def check_param(step, parameter):
             return True
     return False
 
+
 def show_param(step):
-    '''
+    """
     Shows all the entries of the parameter file in a sorted order
-    '''
-    subs.setinit.setinitdirs(step)
+    """
+    subs_setinit.setinitdirs(step)
     if os.path.isfile(step.basedir + 'param.npy') != True:
         print('# Parameter file not found! #')
     else:

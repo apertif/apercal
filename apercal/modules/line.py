@@ -1,7 +1,3 @@
-__author__ = "Bjoern Adebahr"
-__copyright__ = "ASTRON"
-__email__ = "adebahr@astron.nl"
-
 import ConfigParser
 import glob
 import logging
@@ -12,16 +8,15 @@ import numpy as np
 import os
 import sys
 
-import subs.setinit
-from libs import lib
+from apercal.subs import setinit as subs_setinit
+from apercal.libs import lib
 
 
-####################################################################################################
 
 class line:
-    '''
+    """
     Line class to do continuum subtraction and prepare data for line imaging.
-    '''
+    """
     def __init__(self, file=None, **kwargs):
         logging.basicConfig(level=20)
         self.logger = logging.getLogger('LINE')
@@ -36,20 +31,20 @@ class line:
             for o in config.items(s):
                 setattr(self, o[0], eval(o[1]))
         self.default = config # Save the loaded config file as defaults for later usage
-        subs.setinit.setinitdirs(self)
-        subs.setinit.setdatasetnamestomiriad(self)
+        subs_setinit.setinitdirs(self)
+        subs_setinit.setdatasetnamestomiriad(self)
 
     #################################################################
     ##### Function to execute the continuum subtraction process #####
     #################################################################
 
     def go(self):
-        '''
+        """
         Executes the whole continuum subtraction process in the following order:
         splitdata
         transfergains
         subtract
-        '''
+        """
         self.logger.info("########## Starting CONTINUUM SUBTRACTION ##########")
         self.splitdata()
         self.transfergains()
@@ -58,12 +53,12 @@ class line:
         self.logger.info("########## CONTINUUM SUBTRACTION done ##########")
 
     def splitdata(self):
-        '''
+        """
         Applies calibrator corrections to data, splits the data into chunks in frequency and bins it to the given frequency resolution for the self-calibration
-        '''
+        """
         if self.splitdata:
-            subs.setinit.setinitdirs(self)
-            subs.setinit.setdatasetnamestomiriad(self)
+            subs_setinit.setinitdirs(self)
+            subs_setinit.setdatasetnamestomiriad(self)
             self.director('ch', self.linedir)
             self.logger.info('### Splitting of target data into individual frequency chunks started ###')
             if os.path.isfile(self.linedir + '/' + self.target):
@@ -134,12 +129,12 @@ class line:
             self.logger.info('### Splitting of target data into individual frequency chunks done ###')
 
     def transfergains(self):
-        '''
+        """
         Checks if the continuum datasets have self calibration gains and copies their gains over.
-        '''
+        """
         if self.line_transfergains:
-            subs.setinit.setinitdirs(self)
-            subs.setinit.setdatasetnamestomiriad(self)
+            subs_setinit.setinitdirs(self)
+            subs_setinit.setdatasetnamestomiriad(self)
             self.director('ch', self.linedir)
             self.logger.info('### Copying gains from continuum to line data ###')
             for chunk in self.list_chunks():
@@ -154,12 +149,12 @@ class line:
             self.logger.info('### Gains from continuum to line data copied ###')
 
     def subtract(self):
-        '''
+        """
         Module for subtracting the continuum from the line data. Supports uvlin and uvmodel (creating an image in the same way the final continuum imaging is done).
-        '''
+        """
         if self.line_subtract:
-            subs.setinit.setinitdirs(self)
-            subs.setinit.setdatasetnamestomiriad(self)
+            subs_setinit.setinitdirs(self)
+            subs_setinit.setdatasetnamestomiriad(self)
             self.director('ch', self.linedir)
             if self.line_subtract_mode == 'uvlin':
                 self.logger.info('### Starting continuum subtraction of individual chunks using uvlin ###')
@@ -201,11 +196,11 @@ class line:
                 sys.exit(1)
 
     def image_line(self):
-        '''
+        """
         Produces a line cube by imaging each individual channel. Saves the images as well as the beam as a FITS-cube.
-        '''
-        subs.setinit.setinitdirs(self)
-        subs.setinit.setdatasetnamestomiriad(self)
+        """
+        subs_setinit.setinitdirs(self)
+        subs_setinit.setdatasetnamestomiriad(self)
         if self.line_image:
             self.logger.info('### Starting line imaging of dataset ###')
             self.director('ch', self.linedir)
@@ -405,11 +400,11 @@ class line:
     ####################################
 
     def create_uvmodel(self, chunk):
-        '''
+        """
         chunk: Frequency chunk to create the uvmodel for for subtraction
-        '''
-        subs.setinit.setinitdirs(self)
-        subs.setinit.setdatasetnamestomiriad(self)
+        """
+        subs_setinit.setinitdirs(self)
+        subs_setinit.setdatasetnamestomiriad(self)
         majc = int(self.get_last_major_iteration(chunk) + 1)
         self.logger.info('# Last major self-calibration cycle seems to have been ' + str(majc - 1) + ' #')
         if os.path.isfile(self.linedir + '/' + chunk + '/' + chunk + '.mir/gains'):  # Check if a chunk could be calibrated and has data left
@@ -428,16 +423,16 @@ class line:
                 self.logger.warning('### Continuum imaging for subtraction for chunk ' + chunk + ' NOT successful! Continuum subtraction will provide bad or no results! ###')
 
     def run_continuum_minoriteration(self, chunk, majc, minc, drmin, theoretical_noise_threshold, c0):
-        '''
+        """
         Does a continuum minor iteration for imaging
         chunk: The frequency chunk to image and calibrate
         maj: Current major iteration
         min: Current minor iteration
         drmin: maximum dynamic range for minor iteration
         theoretical_noise_threshold: calculated theoretical noise threshold
-        '''
-        subs.setinit.setinitdirs(self)
-        subs.setinit.setdatasetnamestomiriad(self)
+        """
+        subs_setinit.setinitdirs(self)
+        subs_setinit.setdatasetnamestomiriad(self)
         if minc == 0:
             invert = lib.miriad('invert')  # Create the dirty image
             invert.vis = self.linedir + '/' + chunk + '/' + chunk + '.mir'
@@ -525,23 +520,23 @@ class line:
     ###########################################################
 
     def get_freqstart(self, dataset, startchan):
-        '''
+        """
         dataset: The dataset to get the first frequency from
         returns: The starting frequency of the observation
-        '''
+        """
         uv = aipy.miriad.UV(dataset)
         startfreq = (uv['freqs'][2] + int(startchan) * uv['freqs'][3]) * 1E9
         return startfreq
 
     def create_linecube(self, searchpattern, outcube, nchannel, startchan, startfreq):
-        '''
+        """
         Creates a cube out of a number of input files.
         searchpattern: Searchpattern for the files to combine in the cube. Uses the usual command line wild cards
         outcube: Full name and path of the output cube
         outfreq: Full name and path of the output frequency file
-        '''
-        subs.setinit.setinitdirs(self)
-        subs.setinit.setdatasetnamestomiriad(self)
+        """
+        subs_setinit.setinitdirs(self)
+        subs_setinit.setdatasetnamestomiriad(self)
         filelist = glob.glob(searchpattern) # Get a list of the fits files in the directory
         firstfile = pyfits.open(filelist[0]) # Open the first file to get the header information and array sizes
         firstheader = firstfile[0].header
@@ -570,12 +565,12 @@ class line:
         firstfile.close()
 
     def calc_miniter(self, maxdr, dr0):
-        '''
+        """
         Calculate the number of minor cycles needed for cleaning a line channel
         maxdr (float): The maximum dynamic range reachable calculated by the theoretical noise and maximum pixel value in the image
         dr0 (float): The increase for each cycle to clean deeper
         returns (int): Number of minor cycle iterations for cleaning
-        '''
+        """
         nminiter = int(np.ceil(np.log(maxdr) / np.log(dr0)))
         return nminiter
 
@@ -595,11 +590,11 @@ class line:
         return really, masklevels
 
     def calc_irms(self, image):
-        '''
+        """
         Function to calculate the maximum of an image
         image (string): The name of the image file. Must be in MIRIAD-format
         returns (float): the maximum in the image
-        '''
+        """
         fits = lib.miriad('fits')
         fits.op = 'xyout'
         fits.in_ = image
@@ -613,11 +608,11 @@ class line:
         return imax
 
     def calc_imax(self, image):
-        '''
+        """
         Function to calculate the maximum of an image
         image (string): The name of the image file. Must be in MIRIAD-format
         returns (float): the maximum in the image
-        '''
+        """
         fits = lib.miriad('fits')
         fits.op = 'xyout'
         fits.in_ = image
@@ -631,11 +626,11 @@ class line:
         return imax
 
     def calc_max_min_ratio(self, image):
-        '''
+        """
         Function to calculate the absolute maximum of the ratio max/min and min/max
         image (string): The name of the image file. Must be in MIRIAD-format
         returns (float): the ratio
-        '''
+        """
         fits = lib.miriad('fits')
         fits.op = 'xyout'
         fits.in_ = image
@@ -653,11 +648,11 @@ class line:
         return ratio
 
     def calc_isum(self, image):
-        '''
+        """
         Function to calculate the sum of the values of the pixels in an image
         image (string): The name of the image file. Must be in MIRIAD-format
         returns (float): the sum of the pxiels in the image
-        '''
+        """
         fits = lib.miriad('fits')
         fits.op = 'xyout'
         fits.in_ = image
@@ -671,14 +666,14 @@ class line:
         return isum
 
     def calc_dr_maj(self, drinit, dr0, majorcycles, function):
-        '''
+        """
         Function to calculate the dynamic range limits during major cycles
         drinit (float): The initial dynamic range
         dr0 (float): Coefficient for increasing the dynamic range threshold at each major cycle
         majorcycles (int): The number of major cycles to execute
         function (string): The function to follow for increasing the dynamic ranges. Currently 'power' is supported.
         returns (list of floats): A list of floats for the dynamic range limits within the major cycles.
-        '''
+        """
         if function == 'square':
             dr_maj = [drinit * np.power(dr0, m) for m in range(majorcycles)]
         else:
@@ -687,14 +682,14 @@ class line:
         return dr_maj
 
     def calc_dr_min(self, dr_maj, majc, minorcycles, function):
-        '''
+        """
         Function to calculate the dynamic range limits during minor cycles
         dr_maj (list of floats): List with dynamic range limits for major cycles. Usually from calc_dr_maj
         majc (int): The major cycles you want to calculate the minor cycle dynamic ranges for
         minorcycles (int): The number of minor cycles to use
         function (string): The function to follow for increasing the dynamic ranges. Currently 'square', 'power', and 'linear' is supported.
         returns (list of floats): A list of floats for the dynamic range limits within the minor cycles.
-        '''
+        """
         if majc == 0:  # Take care about the first major cycle
             prevdr = 0
         else:
@@ -712,13 +707,13 @@ class line:
         return dr_min
 
     def calc_mask_threshold(self, theoretical_noise_threshold, noise_threshold, dynamic_range_threshold):
-        '''
+        """
         Function to calculate the actual mask_threshold and the type of mask threshold from the theoretical noise threshold, noise threshold, and the dynamic range threshold
         theoretical_noise_threshold (float): The theoretical noise threshold calculated by calc_theoretical_noise_threshold
         noise_threshold (float): The noise threshold calculated by calc_noise_threshold
         dynamic_range_threshold (float): The dynamic range threshold calculated by calc_dynamic_range_threshold
         returns (float, string): The maximum of the three thresholds, the type of the maximum threshold
-        '''
+        """
         # if np.isinf(dynamic_range_threshold) or np.isnan(dynamic_range_threshold):
         #     dynamic_range_threshold = noise_threshold
         mask_threshold = np.max([theoretical_noise_threshold, noise_threshold, dynamic_range_threshold])
@@ -732,52 +727,52 @@ class line:
         return mask_threshold, mask_threshold_type
 
     def calc_noise_threshold(self, imax, minor_cycle, major_cycle, c0):
-        '''
+        """
         Calculates the noise threshold
         imax (float): the maximum in the input image
         minor_cycle (int): the current minor cycle the self-calibration is in
         major_cycle (int): the current major cycle the self-calibration is in
         returns (float): the noise threshold
-        '''
+        """
         noise_threshold = imax / ((c0 + (minor_cycle) * c0) * (major_cycle + 1))
         return noise_threshold
 
     def calc_clean_cutoff(self, mask_threshold, c1):
-        '''
+        """
         Calculates the cutoff for the cleaning
         mask_threshold (float): the mask threshold to calculate the clean cutoff from
         returns (float): the clean cutoff
-        '''
+        """
         clean_cutoff = mask_threshold / c1
         return clean_cutoff
 
     def calc_dynamic_range_threshold(self, imax, dynamic_range, minorcycle0_dr):
-        '''
+        """
         Calculates the dynamic range threshold
         imax (float): the maximum in the input image
         dynamic_range (float): the dynamic range you want to calculate the threshold for
         returns (float): the dynamic range threshold
-        '''
+        """
         if dynamic_range == 0:
             dynamic_range = minorcycle0_dr
         dynamic_range_threshold = imax / dynamic_range
         return dynamic_range_threshold
 
     def calc_theoretical_noise_threshold(self, theoretical_noise, nsigma):
-        '''
+        """
         Calculates the theoretical noise threshold from the theoretical noise
         theoretical_noise (float): the theoretical noise of the observation
         returns (float): the theoretical noise threshold
-        '''
+        """
         theoretical_noise_threshold = (nsigma * theoretical_noise)
         return theoretical_noise_threshold
 
     def calc_theoretical_noise(self, dataset):
-        '''
+        """
         Calculate the theoretical rms of a given dataset
         dataset (string): The input dataset to calculate the theoretical rms from
         returns (float): The theoretical rms of the input dataset as a float
-        '''
+        """
         uv = aipy.miriad.UV(dataset)
         obsrms = lib.miriad('obsrms')
         try:
@@ -800,9 +795,9 @@ class line:
         return theorms
 
     def list_chunks(self):
-        '''
+        """
         Checks how many chunk directories exist and returns a list of them
-        '''
+        """
         for n in range(100):
             if os.path.exists(self.selfcaldir + '/' + str(n).zfill(2)):
                 pass
@@ -813,11 +808,11 @@ class line:
         return chunkstr
 
     def get_last_major_iteration(self, chunk):
-        '''
+        """
         Get the number of the last major iteration
         chunk: The frequency chunk to look into. Usually an entry generated by list_chunks
         return: The number of the last major clean iteration for a frequency chunk
-        '''
+        """
         for n in range(100):
             if os.path.exists(self.selfcaldir + '/' + str(chunk) + '/' + str(n).zfill(2)):
                 pass
@@ -831,11 +826,11 @@ class line:
     #######################################################################
 
     def show(self, showall=False):
-        '''
+        """
         show: Prints the current settings of the pipeline. Only shows keywords, which are in the default config file default.cfg
         showall: Set to true if you want to see all current settings instead of only the ones from the current step
-        '''
-        subs.setinit.setinitdirs(self)
+        """
+        subs_setinit.setinitdirs(self)
         config = ConfigParser.ConfigParser()
         config.readfp(open(self.apercaldir + '/modules/default.cfg'))
         for s in config.sections():
@@ -860,24 +855,24 @@ class line:
                     pass
 
     def reset(self):
-        '''
+        """
         Function to reset the current step and remove all generated data. Be careful! Deletes all data generated in this step!
-        '''
-        subs.setinit.setinitdirs(self)
-        subs.setinit.setdatasetnamestomiriad(self)
+        """
+        subs_setinit.setinitdirs(self)
+        subs_setinit.setdatasetnamestomiriad(self)
         self.logger.warning('### Deleting all continuum subtracted line data. ###')
         self.director('ch', self.linedir)
         self.director('rm', self.linedir + '/*')
 
     def director(self, option, dest, file=None, verbose=True):
-        '''
+        """
         director: Function to move, remove, and copy files and directories
         option: 'mk', 'ch', 'mv', 'rm', 'rn', and 'cp' are supported
         dest: Destination of a file or directory to move to
         file: Which file to move or copy, otherwise None
-        '''
-        subs.setinit.setinitdirs(self)
-        subs.setinit.setdatasetnamestomiriad(self)
+        """
+        subs_setinit.setinitdirs(self)
+        subs_setinit.setdatasetnamestomiriad(self)
         if option == 'mk':
             if os.path.exists(dest):
                 pass

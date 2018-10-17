@@ -1,7 +1,3 @@
-__author__ = "Bjoern Adebahr"
-__copyright__ = "ASTRON"
-__email__ = "adebahr@astro.rub.de"
-
 import ConfigParser
 import glob
 import logging
@@ -11,19 +7,18 @@ import pandas as pd
 import drivecasa
 import os
 
-import subs.setinit
-import subs.managefiles
-import subs.param
-from subs.param import get_param_def
-
 import casacore.tables as pt
 
-####################################################################################################
+from apercal.subs import setinit as subs_setinit
+from apercal.subs import managefiles as subs_managefiles
+from apercal.subs import param as subs_param
+from apercal.subs.param import get_param_def
+
 
 class preflag:
-    '''
+    """
     Preflagging class. Used to automatically flag data and apply preknown flags.
-    '''
+    """
     def __init__(self, filename=None, **kwargs):
         logging.basicConfig(level=logging.DEBUG)
         self.logger = logging.getLogger('PREFLAG')
@@ -37,7 +32,7 @@ class preflag:
         for s in config.sections():
             for o in config.items(s):
                 setattr(self, o[0], eval(o[1]))
-        subs.setinit.setinitdirs(self)
+        subs_setinit.setinitdirs(self)
 
 
     ###############################################
@@ -45,14 +40,14 @@ class preflag:
     ###############################################
 
     def go(self):
-        '''
+        """
         Executes the complete preflag step with the parameters indicated in the config-file in the following order:
         shadow
         edges
         ghosts
         manualflag
         aoflagger
-        '''
+        """
         self.logger.info('########## Starting Pre-flagging step ##########')
         self.shadow()
         self.edges()
@@ -63,16 +58,16 @@ class preflag:
 
     @staticmethod
     def _getnchan(msname):
-        '''Return the number of channels in a given ms'''
+        """Return the number of channels in a given ms"""
         spectralwindowtable = pt.table(msname + '::SPECTRAL_WINDOW', ack=False)
         nchan = spectralwindowtable.getcol("CHAN_FREQ").shape[1]
         return nchan
 
     def shadow(self):
-        '''
+        """
         Flag all data sets for shadowed antennas using drivecasa and the CASA task flagdata
-        '''
-        subs.setinit.setinitdirs(self)
+        """
+        subs_setinit.setinitdirs(self)
         beams = 37
 
         self.logger.debug('### Shadowed antenna flagging step started ###')
@@ -136,15 +131,15 @@ class preflag:
 
         # Save the derived parameters for the shadow flagging to the parameter file
 
-        subs.param.add_param(self, 'preflag_fluxcal_shadow', preflagfluxcalshadow)
-        subs.param.add_param(self, 'preflag_polcal_shadow', preflagpolcalshadow)
-        subs.param.add_param(self, 'preflag_targetbeams_shadow', preflagtargetbeamsshadow)
+        subs_param.add_param(self, 'preflag_fluxcal_shadow', preflagfluxcalshadow)
+        subs_param.add_param(self, 'preflag_polcal_shadow', preflagpolcalshadow)
+        subs_param.add_param(self, 'preflag_targetbeams_shadow', preflagtargetbeamsshadow)
 
     def edges(self):
-        '''
+        """
         Flag the edges of the subbands
-        '''
-        subs.setinit.setinitdirs(self)
+        """
+        subs_setinit.setinitdirs(self)
         beams = 37
 
         self.logger.debug('### Starting to flag the edges of the subbands ###')
@@ -231,15 +226,15 @@ class preflag:
 
         # Save the derived parameters for the subband edges flagging to the parameter file
 
-        subs.param.add_param(self, 'preflag_fluxcal_edges', preflagfluxcaledges)
-        subs.param.add_param(self, 'preflag_polcal_edges', preflagpolcaledges)
-        subs.param.add_param(self, 'preflag_targetbeams_edges', preflagtargetbeamsedges)
+        subs_param.add_param(self, 'preflag_fluxcal_edges', preflagfluxcaledges)
+        subs_param.add_param(self, 'preflag_polcal_edges', preflagpolcaledges)
+        subs_param.add_param(self, 'preflag_targetbeams_edges', preflagtargetbeamsedges)
 
     def ghosts(self):
-        '''
+        """
         Flag the ghosts of each subband at channel 16 and 48
-        '''
-        subs.setinit.setinitdirs(self)
+        """
+        subs_setinit.setinitdirs(self)
         beams = 37
 
         self.logger.debug('### Starting to flag the ghost channels ###')
@@ -323,14 +318,14 @@ class preflag:
 
         # Save the derived parameters for the subband edges flagging to the parameter file
 
-        subs.param.add_param(self, 'preflag_fluxcal_ghosts', preflagfluxcalghosts)
-        subs.param.add_param(self, 'preflag_polcal_ghosts', preflagpolcalghosts)
-        subs.param.add_param(self, 'preflag_targetbeams_ghosts', preflagtargetbeamsghosts)
+        subs_param.add_param(self, 'preflag_fluxcal_ghosts', preflagfluxcalghosts)
+        subs_param.add_param(self, 'preflag_polcal_ghosts', preflagpolcalghosts)
+        subs_param.add_param(self, 'preflag_targetbeams_ghosts', preflagtargetbeamsghosts)
 
     def manualflag(self):
-        '''
+        """
         Use drivecasa and the CASA task flagdata to flag entire antennas, baselines, correlations etc. before doing any other calibration.
-        '''
+        """
         if self.preflag_manualflag:
             self.logger.debug('### Manual flagging step started ###')
             self.manualflag_auto()
@@ -342,9 +337,9 @@ class preflag:
             self.logger.debug('###  Manual flagging step done ###')
 
     def aoflagger(self):
-        '''
+        """
         Runs aoflagger on the datasets with the strategies given in the config-file. Creates and applies a preliminary bandpass before executing the strategy for better performance of the flagging routines. Strategies for calibrators and target fields normally differ.
-        '''
+        """
         if self.preflag_aoflagger:
             self.logger.debug('### Pre-flagging with AOFlagger started ###')
             self.aoflagger_bandpass()
@@ -360,10 +355,10 @@ class preflag:
     ############################################################
 
     def manualflag_auto(self):
-        '''
+        """
         Function to flag the auto-correlations
-        '''
-        subs.setinit.setinitdirs(self)
+        """
+        subs_setinit.setinitdirs(self)
         beams = 37
 
         # Create the parameters for the parameter file for the manualflag step to flag the auto-correlations
@@ -426,16 +421,16 @@ class preflag:
 
         # Save the derived parameters for the auto-correlation flagging to the parameter file
 
-        subs.param.add_param(self, 'preflag_fluxcal_manualflag_auto', preflagfluxcalmanualflagauto)
-        subs.param.add_param(self, 'preflag_polcal_manualflag_auto', preflagpolcalmanualflagauto)
-        subs.param.add_param(self, 'preflag_targetbeams_manualflag_auto', preflagtargetbeamsmanualflagauto)
+        subs_param.add_param(self, 'preflag_fluxcal_manualflag_auto', preflagfluxcalmanualflagauto)
+        subs_param.add_param(self, 'preflag_polcal_manualflag_auto', preflagpolcalmanualflagauto)
+        subs_param.add_param(self, 'preflag_targetbeams_manualflag_auto', preflagtargetbeamsmanualflagauto)
 
     def manualflag_antenna(self):
-        '''
+        """
         Function to flag complete antennas
         Antennas are named by their antenna names (e.g. 'RT2,RT3')
-        '''
-        subs.setinit.setinitdirs(self)
+        """
+        subs_setinit.setinitdirs(self)
         beams = 37
 
         # Create the parameters for the parameter file for the manualflag step to flag individual antennas
@@ -514,16 +509,16 @@ class preflag:
 
         # Save the derived parameters for the antenna flagging to the parameter file
 
-        subs.param.add_param(self, 'preflag_fluxcal_manualflag_antenna', preflagfluxcalmanualflagantenna)
-        subs.param.add_param(self, 'preflag_polcal_manualflag_antenna', preflagpolcalmanualflagantenna)
-        subs.param.add_param(self, 'preflag_targetbeams_manualflag_antenna', preflagtargetbeamsmanualflagantenna)
+        subs_param.add_param(self, 'preflag_fluxcal_manualflag_antenna', preflagfluxcalmanualflagantenna)
+        subs_param.add_param(self, 'preflag_polcal_manualflag_antenna', preflagpolcalmanualflagantenna)
+        subs_param.add_param(self, 'preflag_targetbeams_manualflag_antenna', preflagtargetbeamsmanualflagantenna)
 
     def manualflag_corr(self):
-        '''
+        """
         Function to flag complete correlations
         Possible values are 'XX,XY,YX,YY'
-        '''
-        subs.setinit.setinitdirs(self)
+        """
+        subs_setinit.setinitdirs(self)
         beams = 37
 
         # Create the parameters for the parameter file for the manualflag step to flag individual correlations
@@ -539,7 +534,7 @@ class preflag:
                 self.logger.info('# Correlation(s) ' + self.preflag_manualflag_corr + ' for flux calibrator were already flagged #')
             else:
                 if self.preflag_manualflag_fluxcal and os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal):
-                    subs.setinit.setinitdirs(self)
+                    subs_setinit.setinitdirs(self)
                     fc_corr = 'flagdata(vis="' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal + '", correlation="' + self.preflag_manualflag_corr + '", flagbackup=False)'
                     casacmd = [fc_corr]
                     casa = drivecasa.Casapy()
@@ -559,7 +554,7 @@ class preflag:
                 self.logger.info('# Correlation(s) ' + self.preflag_manualflag_corr + ' for polarised calibrator were already flagged #')
             else:
                 if self.preflag_manualflag_polcal and os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal):
-                    subs.setinit.setinitdirs(self)
+                    subs_setinit.setinitdirs(self)
                     pc_corr = 'flagdata(vis="' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal + '", correlation="' + self.preflag_manualflag_corr + '", flagbackup=False)'
                     casacmd = [pc_corr]
                     casa = drivecasa.Casapy()
@@ -604,16 +599,16 @@ class preflag:
 
        # Save the derived parameters for the correlation flagging to the parameter file
 
-        subs.param.add_param(self, 'preflag_fluxcal_manualflag_corr', preflagfluxcalmanualflagcorr)
-        subs.param.add_param(self, 'preflag_polcal_manualflag_corr', preflagpolcalmanualflagcorr)
-        subs.param.add_param(self, 'preflag_targetbeams_manualflag_corr', preflagtargetbeamsmanualflagcorr)
+        subs_param.add_param(self, 'preflag_fluxcal_manualflag_corr', preflagfluxcalmanualflagcorr)
+        subs_param.add_param(self, 'preflag_polcal_manualflag_corr', preflagpolcalmanualflagcorr)
+        subs_param.add_param(self, 'preflag_targetbeams_manualflag_corr', preflagtargetbeamsmanualflagcorr)
 
     def manualflag_baseline(self):
-        '''
+        """
         Function to flag complete baselines
         Use antenna names and the notation 'ant1&ant2;ant3&ant4' etc.
-        '''
-        subs.setinit.setinitdirs(self)
+        """
+        subs_setinit.setinitdirs(self)
         beams = 37
 
         # Create the parameters for the parameter file for the manualflag step to flag individual baselines
@@ -691,16 +686,16 @@ class preflag:
 
         # Save the derived parameters for the baseline flagging to the parameter file
 
-        subs.param.add_param(self, 'preflag_fluxcal_manualflag_baseline', preflagfluxcalmanualflagbaseline)
-        subs.param.add_param(self, 'preflag_polcal_manualflag_baseline', preflagpolcalmanualflagbaseline)
-        subs.param.add_param(self, 'preflag_targetbeams_manualflag_baseline', preflagtargetbeamsmanualflagbaseline)
+        subs_param.add_param(self, 'preflag_fluxcal_manualflag_baseline', preflagfluxcalmanualflagbaseline)
+        subs_param.add_param(self, 'preflag_polcal_manualflag_baseline', preflagpolcalmanualflagbaseline)
+        subs_param.add_param(self, 'preflag_targetbeams_manualflag_baseline', preflagtargetbeamsmanualflagbaseline)
 
     def manualflag_channel(self):
-        '''
+        """
         Function to flag individual channels and channel ranges
         Use the CASA notation e.g. '0~5;120~128'. You don't need to give a '0:' for the spw. It's added automatically.
-        '''
-        subs.setinit.setinitdirs(self)
+        """
+        subs_setinit.setinitdirs(self)
         beams = 37
 
         # Create the parameters for the parameter file for the manualflag step to flag individual channel ranges
@@ -778,16 +773,16 @@ class preflag:
 
         # Save the derived parameters for the channel flagging to the parameter file
 
-        subs.param.add_param(self, 'preflag_fluxcal_manualflag_channel', preflagfluxcalmanualflagchannel)
-        subs.param.add_param(self, 'preflag_polcal_manualflag_channel', preflagpolcalmanualflagchannel)
-        subs.param.add_param(self, 'preflag_targetbeams_manualflag_channel', preflagtargetbeamsmanualflagchannel)
+        subs_param.add_param(self, 'preflag_fluxcal_manualflag_channel', preflagfluxcalmanualflagchannel)
+        subs_param.add_param(self, 'preflag_polcal_manualflag_channel', preflagpolcalmanualflagchannel)
+        subs_param.add_param(self, 'preflag_targetbeams_manualflag_channel', preflagtargetbeamsmanualflagchannel)
 
     def manualflag_time(self):
-        '''
+        """
         Function to flag time ranges
         Use the CASA notation e.g. '09:14:0~09:54:0'.
-        '''
-        subs.setinit.setinitdirs(self)
+        """
+        subs_setinit.setinitdirs(self)
         beams = 37
 
         # Create the parameters for the parameter file for the manualflag step to flag individual channel ranges
@@ -865,19 +860,19 @@ class preflag:
 
         # Save the derived parameters for the channel flagging to the parameter file
 
-        subs.param.add_param(self, 'preflag_fluxcal_manualflag_time', preflagfluxcalmanualflagtime)
-        subs.param.add_param(self, 'preflag_polcal_manualflag_time', preflagpolcalmanualflagtime)
-        subs.param.add_param(self, 'preflag_targetbeams_manualflag_time', preflagtargetbeamsmanualflagtime)
+        subs_param.add_param(self, 'preflag_fluxcal_manualflag_time', preflagfluxcalmanualflagtime)
+        subs_param.add_param(self, 'preflag_polcal_manualflag_time', preflagpolcalmanualflagtime)
+        subs_param.add_param(self, 'preflag_targetbeams_manualflag_time', preflagtargetbeamsmanualflagtime)
 
     ##########################################################
     ##### Subfunctions for the different AOFlagger steps #####
     ##########################################################
 
     def aoflagger_bandpass(self):
-        '''
+        """
         Creates a preliminary bandpass for flagging from the flux calibrator and applies it to all calibrators and target fields
-        '''
-        subs.setinit.setinitdirs(self)
+        """
+        subs_setinit.setinitdirs(self)
         beams = 37
 
         # Create the parameters for the parameter file for the bandpass step of the AOFLagger step
@@ -972,17 +967,17 @@ class preflag:
 
         # Save the derived parameters for the AOFlagger bandpass status to the parameter file
 
-        subs.param.add_param(self, 'preflag_aoflagger_bandpass_status', preflagaoflaggerbandpassstatus)
-        subs.param.add_param(self, 'preflag_aoflagger_fluxcal_bandpass_apply', preflagaoflaggerfluxcalbandpassapply)
-        subs.param.add_param(self, 'preflag_aoflagger_polcal_bandpass_apply', preflagaoflaggerpolcalbandpassapply)
-        subs.param.add_param(self, 'preflag_aoflagger_targetbeams_bandpass_apply', preflagaoflaggertargetbeamsbandpassapply)
+        subs_param.add_param(self, 'preflag_aoflagger_bandpass_status', preflagaoflaggerbandpassstatus)
+        subs_param.add_param(self, 'preflag_aoflagger_fluxcal_bandpass_apply', preflagaoflaggerfluxcalbandpassapply)
+        subs_param.add_param(self, 'preflag_aoflagger_polcal_bandpass_apply', preflagaoflaggerpolcalbandpassapply)
+        subs_param.add_param(self, 'preflag_aoflagger_targetbeams_bandpass_apply', preflagaoflaggertargetbeamsbandpassapply)
 
 
     def aoflagger_flag(self):
-        '''
+        """
         Uses the aoflagger to flag the calibrators and the target data set(s). Uses the bandpass corrected visibilities if bandpass was derived and applied successfully beforehand.
-        '''
-        subs.setinit.setinitdirs(self)
+        """
+        subs_setinit.setinitdirs(self)
         beams = 37
 
         # Create the parameters for the parameter file for the bandpass step of the AOFlagger step
@@ -1069,68 +1064,68 @@ class preflag:
 
         # Save the derived parameters for the AOFlagger status to the parameter file
 
-        subs.param.add_param(self, 'preflag_aoflagger_fluxcal_flag_status', preflagaoflaggerfluxcalflag)
-        subs.param.add_param(self, 'preflag_aoflagger_polcal_flag_status', preflagaoflaggerpolcalflag)
-        subs.param.add_param(self, 'preflag_aoflagger_targetbeams_flag_status', preflagaoflaggertargetbeamsflag)
+        subs_param.add_param(self, 'preflag_aoflagger_fluxcal_flag_status', preflagaoflaggerfluxcalflag)
+        subs_param.add_param(self, 'preflag_aoflagger_polcal_flag_status', preflagaoflaggerpolcalflag)
+        subs_param.add_param(self, 'preflag_aoflagger_targetbeams_flag_status', preflagaoflaggertargetbeamsflag)
 
     #################################################################
     ##### Functions to create the summaries of the PREFLAG step #####
     #################################################################
 
     def temp_del(self):
-        subs.param.del_param(self, 'preflag_fluxcal_manualflag_antenna')
-        subs.param.del_param(self, 'preflag_polcal_manualflag_antenna')
-        subs.param.del_param(self, 'preflag_fluxcal_manualflag_corr')
-        subs.param.del_param(self, 'preflag_polcal_manualflag_corr')
-        subs.param.del_param(self, 'preflag_fluxcal_manualflag_baseline')
-        subs.param.del_param(self, 'preflag_polcal_manualflag_baseline')
-        subs.param.del_param(self, 'preflag_fluxcal_manualflag_channel')
-        subs.param.del_param(self, 'preflag_polcal_manualflag_channel')
-        subs.param.del_param(self, 'preflag_fluxcal_manualflag_time')
-        subs.param.del_param(self, 'preflag_polcal_manualflag_time')
+        subs_param.del_param(self, 'preflag_fluxcal_manualflag_antenna')
+        subs_param.del_param(self, 'preflag_polcal_manualflag_antenna')
+        subs_param.del_param(self, 'preflag_fluxcal_manualflag_corr')
+        subs_param.del_param(self, 'preflag_polcal_manualflag_corr')
+        subs_param.del_param(self, 'preflag_fluxcal_manualflag_baseline')
+        subs_param.del_param(self, 'preflag_polcal_manualflag_baseline')
+        subs_param.del_param(self, 'preflag_fluxcal_manualflag_channel')
+        subs_param.del_param(self, 'preflag_polcal_manualflag_channel')
+        subs_param.del_param(self, 'preflag_fluxcal_manualflag_time')
+        subs_param.del_param(self, 'preflag_polcal_manualflag_time')
 
     def summary(self):
-        '''
+        """
         Creates a general summary of the parameters in the parameter file generated during PREFLAG. No detailed summary is available for PREFLAG
         returns (DataFrame): A python pandas dataframe object, which can be looked at with the style function in the notebook
-        '''
+        """
 
         beams = 37
 
         # Load the parameters from the parameter file
 
-        FS = subs.param.get_param(self, 'preflag_fluxcal_shadow')
-        FG = subs.param.get_param(self, 'preflag_fluxcal_ghosts')
-        FE = subs.param.get_param(self, 'preflag_fluxcal_edges')
-        FMAu = subs.param.get_param(self, 'preflag_fluxcal_manualflag_auto')
-        FMAnt = subs.param.get_param(self, 'preflag_fluxcal_manualflag_antenna')
-        FMC = subs.param.get_param(self, 'preflag_fluxcal_manualflag_corr')
-        FMB = subs.param.get_param(self, 'preflag_fluxcal_manualflag_baseline')
-        FMCh = subs.param.get_param(self, 'preflag_fluxcal_manualflag_channel')
-        FMt = subs.param.get_param(self, 'preflag_fluxcal_manualflag_time')
-        FAO = subs.param.get_param(self, 'preflag_aoflagger_fluxcal_flag_status')
+        FS = subs_param.get_param(self, 'preflag_fluxcal_shadow')
+        FG = subs_param.get_param(self, 'preflag_fluxcal_ghosts')
+        FE = subs_param.get_param(self, 'preflag_fluxcal_edges')
+        FMAu = subs_param.get_param(self, 'preflag_fluxcal_manualflag_auto')
+        FMAnt = subs_param.get_param(self, 'preflag_fluxcal_manualflag_antenna')
+        FMC = subs_param.get_param(self, 'preflag_fluxcal_manualflag_corr')
+        FMB = subs_param.get_param(self, 'preflag_fluxcal_manualflag_baseline')
+        FMCh = subs_param.get_param(self, 'preflag_fluxcal_manualflag_channel')
+        FMt = subs_param.get_param(self, 'preflag_fluxcal_manualflag_time')
+        FAO = subs_param.get_param(self, 'preflag_aoflagger_fluxcal_flag_status')
 
-        PS = subs.param.get_param(self, 'preflag_polcal_shadow')
-        PG = subs.param.get_param(self, 'preflag_polcal_ghosts')
-        PE = subs.param.get_param(self, 'preflag_polcal_edges')
-        PMAu = subs.param.get_param(self, 'preflag_polcal_manualflag_auto')
-        PMAnt = subs.param.get_param(self, 'preflag_polcal_manualflag_antenna')
-        PMC = subs.param.get_param(self, 'preflag_polcal_manualflag_corr')
-        PMB = subs.param.get_param(self, 'preflag_polcal_manualflag_baseline')
-        PMCh = subs.param.get_param(self, 'preflag_polcal_manualflag_channel')
-        PMt = subs.param.get_param(self, 'preflag_polcal_manualflag_time')
-        PAO = subs.param.get_param(self, 'preflag_aoflagger_polcal_flag_status')
+        PS = subs_param.get_param(self, 'preflag_polcal_shadow')
+        PG = subs_param.get_param(self, 'preflag_polcal_ghosts')
+        PE = subs_param.get_param(self, 'preflag_polcal_edges')
+        PMAu = subs_param.get_param(self, 'preflag_polcal_manualflag_auto')
+        PMAnt = subs_param.get_param(self, 'preflag_polcal_manualflag_antenna')
+        PMC = subs_param.get_param(self, 'preflag_polcal_manualflag_corr')
+        PMB = subs_param.get_param(self, 'preflag_polcal_manualflag_baseline')
+        PMCh = subs_param.get_param(self, 'preflag_polcal_manualflag_channel')
+        PMt = subs_param.get_param(self, 'preflag_polcal_manualflag_time')
+        PAO = subs_param.get_param(self, 'preflag_aoflagger_polcal_flag_status')
 
-        TS = subs.param.get_param(self, 'preflag_targetbeams_shadow')
-        TG = subs.param.get_param(self, 'preflag_targetbeams_ghosts')
-        TE = subs.param.get_param(self, 'preflag_targetbeams_edges')
-        TMAu = subs.param.get_param(self, 'preflag_targetbeams_manualflag_auto')
-        TMAnt = subs.param.get_param(self, 'preflag_targetbeams_manualflag_antenna')
-        TMC = subs.param.get_param(self, 'preflag_targetbeams_manualflag_corr')
-        TMB = subs.param.get_param(self, 'preflag_targetbeams_manualflag_baseline')
-        TMCh = subs.param.get_param(self, 'preflag_targetbeams_manualflag_channel')
-        TMt = subs.param.get_param(self, 'preflag_targetbeams_manualflag_time')
-        TAO = subs.param.get_param(self, 'preflag_aoflagger_targetbeams_flag_status')
+        TS = subs_param.get_param(self, 'preflag_targetbeams_shadow')
+        TG = subs_param.get_param(self, 'preflag_targetbeams_ghosts')
+        TE = subs_param.get_param(self, 'preflag_targetbeams_edges')
+        TMAu = subs_param.get_param(self, 'preflag_targetbeams_manualflag_auto')
+        TMAnt = subs_param.get_param(self, 'preflag_targetbeams_manualflag_antenna')
+        TMC = subs_param.get_param(self, 'preflag_targetbeams_manualflag_corr')
+        TMB = subs_param.get_param(self, 'preflag_targetbeams_manualflag_baseline')
+        TMCh = subs_param.get_param(self, 'preflag_targetbeams_manualflag_channel')
+        TMt = subs_param.get_param(self, 'preflag_targetbeams_manualflag_time')
+        TAO = subs_param.get_param(self, 'preflag_aoflagger_targetbeams_flag_status')
 
         # Create the data frame
 
@@ -1190,11 +1185,11 @@ class preflag:
     ##########################################################################
 
     def show(self, showall=False):
-        '''
+        """
         show: Prints the current settings of the pipeline. Only shows keywords, which are in the default config file default.cfg
         showall: Set to true if you want to see all current settings instead of only the ones from the current step
-        '''
-        subs.setinit.setinitdirs(self)
+        """
+        subs_setinit.setinitdirs(self)
         config = ConfigParser.ConfigParser()
         config.readfp(open(self.apercaldir + '/modules/default.cfg'))
         for s in config.sections():
@@ -1219,63 +1214,63 @@ class preflag:
                     pass
 
     def reset(self):
-        '''
+        """
         Function to reset the current step and remove all generated data. Be careful! Deletes all data generated in this step!
-        '''
-        subs.setinit.setinitdirs(self)
+        """
+        subs_setinit.setinitdirs(self)
         self.logger.warning('### Deleting all raw data products and their directories. You will need to start with the PREPARE step again! ###')
-        subs.managefiles.director(self,'ch', self.basedir)
+        subs_managefiles.director(self,'ch', self.basedir)
         deldirs = glob.glob(self.basedir + '[0-9][0-9]' + '/' + self.rawsubdir)
         for dir in deldirs:
-            subs.managefiles.director(self,'rm', dir)
+            subs_managefiles.director(self,'rm', dir)
         self.logger.warning('### Deleting all parameter file entries for PREPARE and PREFLAG module ###')
-        subs.param.del_param(self, 'prepare_fluxcal_requested')
-        subs.param.del_param(self, 'prepare_fluxcal_diskstatus')
-        subs.param.del_param(self, 'prepare_fluxcal_altastatus')
-        subs.param.del_param(self, 'prepare_fluxcal_copystatus')
-        subs.param.del_param(self, 'prepare_fluxcal_rejreason')
-        subs.param.del_param(self, 'prepare_polcal_requested')
-        subs.param.del_param(self, 'prepare_polcal_diskstatus')
-        subs.param.del_param(self, 'prepare_polcal_altastatus')
-        subs.param.del_param(self, 'prepare_polcal_copystatus')
-        subs.param.del_param(self, 'prepare_polcal_rejreason')
-        subs.param.del_param(self, 'prepare_targetbeams_requested')
-        subs.param.del_param(self, 'prepare_targetbeams_diskstatus')
-        subs.param.del_param(self, 'prepare_targetbeams_altastatus')
-        subs.param.del_param(self, 'prepare_targetbeams_copystatus')
-        subs.param.del_param(self, 'prepare_targetbeams_rejreason')
+        subs_param.del_param(self, 'prepare_fluxcal_requested')
+        subs_param.del_param(self, 'prepare_fluxcal_diskstatus')
+        subs_param.del_param(self, 'prepare_fluxcal_altastatus')
+        subs_param.del_param(self, 'prepare_fluxcal_copystatus')
+        subs_param.del_param(self, 'prepare_fluxcal_rejreason')
+        subs_param.del_param(self, 'prepare_polcal_requested')
+        subs_param.del_param(self, 'prepare_polcal_diskstatus')
+        subs_param.del_param(self, 'prepare_polcal_altastatus')
+        subs_param.del_param(self, 'prepare_polcal_copystatus')
+        subs_param.del_param(self, 'prepare_polcal_rejreason')
+        subs_param.del_param(self, 'prepare_targetbeams_requested')
+        subs_param.del_param(self, 'prepare_targetbeams_diskstatus')
+        subs_param.del_param(self, 'prepare_targetbeams_altastatus')
+        subs_param.del_param(self, 'prepare_targetbeams_copystatus')
+        subs_param.del_param(self, 'prepare_targetbeams_rejreason')
 
-        subs.param.del_param(self, 'preflag_fluxcal_shadow')
-        subs.param.del_param(self, 'preflag_polcal_shadow')
-        subs.param.del_param(self, 'preflag_targetbeams_shadow')
-        subs.param.del_param(self, 'preflag_fluxcal_edges')
-        subs.param.del_param(self, 'preflag_polcal_edges')
-        subs.param.del_param(self, 'preflag_targetbeams_edges')
-        subs.param.del_param(self, 'preflag_fluxcal_ghosts')
-        subs.param.del_param(self, 'preflag_polcal_ghosts')
-        subs.param.del_param(self, 'preflag_targetbeams_ghosts')
-        subs.param.del_param(self, 'preflag_fluxcal_manualflag_auto')
-        subs.param.del_param(self, 'preflag_polcal_manualflag_auto')
-        subs.param.del_param(self, 'preflag_targetbeams_manualflag_auto')
-        subs.param.del_param(self, 'preflag_fluxcal_manualflag_antenna')
-        subs.param.del_param(self, 'preflag_polcal_manualflag_antenna')
-        subs.param.del_param(self, 'preflag_targetbeams_manualflag_antenna')
-        subs.param.del_param(self, 'preflag_fluxcal_manualflag_corr')
-        subs.param.del_param(self, 'preflag_polcal_manualflag_corr')
-        subs.param.del_param(self, 'preflag_targetbeams_manualflag_corr')
-        subs.param.del_param(self, 'preflag_fluxcal_manualflag_baseline')
-        subs.param.del_param(self, 'preflag_polcal_manualflag_baseline')
-        subs.param.del_param(self, 'preflag_targetbeams_manualflag_baseline')
-        subs.param.del_param(self, 'preflag_fluxcal_manualflag_channel')
-        subs.param.del_param(self, 'preflag_polcal_manualflag_channel')
-        subs.param.del_param(self, 'preflag_targetbeams_manualflag_channel')
-        subs.param.del_param(self, 'preflag_fluxcal_manualflag_time')
-        subs.param.del_param(self, 'preflag_polcal_manualflag_time')
-        subs.param.del_param(self, 'preflag_targetbeams_manualflag_time')
-        subs.param.del_param(self, 'preflag_aoflagger_bandpass_status')
-        subs.param.del_param(self, 'preflag_aoflagger_fluxcal_bandpass_apply')
-        subs.param.del_param(self, 'preflag_aoflagger_polcal_bandpass_apply')
-        subs.param.del_param(self, 'preflag_aoflagger_targetbeams_bandpass_apply')
-        subs.param.del_param(self, 'preflag_aoflagger_fluxcal_flag_status')
-        subs.param.del_param(self, 'preflag_aoflagger_polcal_flag_status')
-        subs.param.del_param(self, 'preflag_aoflagger_targetbeams_flag_status')
+        subs_param.del_param(self, 'preflag_fluxcal_shadow')
+        subs_param.del_param(self, 'preflag_polcal_shadow')
+        subs_param.del_param(self, 'preflag_targetbeams_shadow')
+        subs_param.del_param(self, 'preflag_fluxcal_edges')
+        subs_param.del_param(self, 'preflag_polcal_edges')
+        subs_param.del_param(self, 'preflag_targetbeams_edges')
+        subs_param.del_param(self, 'preflag_fluxcal_ghosts')
+        subs_param.del_param(self, 'preflag_polcal_ghosts')
+        subs_param.del_param(self, 'preflag_targetbeams_ghosts')
+        subs_param.del_param(self, 'preflag_fluxcal_manualflag_auto')
+        subs_param.del_param(self, 'preflag_polcal_manualflag_auto')
+        subs_param.del_param(self, 'preflag_targetbeams_manualflag_auto')
+        subs_param.del_param(self, 'preflag_fluxcal_manualflag_antenna')
+        subs_param.del_param(self, 'preflag_polcal_manualflag_antenna')
+        subs_param.del_param(self, 'preflag_targetbeams_manualflag_antenna')
+        subs_param.del_param(self, 'preflag_fluxcal_manualflag_corr')
+        subs_param.del_param(self, 'preflag_polcal_manualflag_corr')
+        subs_param.del_param(self, 'preflag_targetbeams_manualflag_corr')
+        subs_param.del_param(self, 'preflag_fluxcal_manualflag_baseline')
+        subs_param.del_param(self, 'preflag_polcal_manualflag_baseline')
+        subs_param.del_param(self, 'preflag_targetbeams_manualflag_baseline')
+        subs_param.del_param(self, 'preflag_fluxcal_manualflag_channel')
+        subs_param.del_param(self, 'preflag_polcal_manualflag_channel')
+        subs_param.del_param(self, 'preflag_targetbeams_manualflag_channel')
+        subs_param.del_param(self, 'preflag_fluxcal_manualflag_time')
+        subs_param.del_param(self, 'preflag_polcal_manualflag_time')
+        subs_param.del_param(self, 'preflag_targetbeams_manualflag_time')
+        subs_param.del_param(self, 'preflag_aoflagger_bandpass_status')
+        subs_param.del_param(self, 'preflag_aoflagger_fluxcal_bandpass_apply')
+        subs_param.del_param(self, 'preflag_aoflagger_polcal_bandpass_apply')
+        subs_param.del_param(self, 'preflag_aoflagger_targetbeams_bandpass_apply')
+        subs_param.del_param(self, 'preflag_aoflagger_fluxcal_flag_status')
+        subs_param.del_param(self, 'preflag_aoflagger_polcal_flag_status')
+        subs_param.del_param(self, 'preflag_aoflagger_targetbeams_flag_status')

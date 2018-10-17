@@ -1,7 +1,3 @@
-__author__ = "Bradley Frank, Bjoern Adebahr"
-__copyright__ = "ASTRON"
-__email__ = "frank@astron.nl, adebahr@astron.nl"
-
 import ConfigParser
 import logging
 import sys
@@ -11,19 +7,17 @@ import astropy.io.fits as pyfits
 import numpy as np
 import os
 
-import subs.setinit
-import subs.managefiles
+from apercal.subs import setinit as subs_setinit
+from apercal.subs import managefiles as subs_managefiles
 
-from libs import lib
-from subs import lsm
+from apercal.libs import lib
+from apercal.subs import lsm
 
-
-####################################################################################################
 
 class scal:
-    '''
+    """
     Selfcal class to do the self-calibration on a dataset. Can be done with several different algorithms.
-    '''
+    """
     def __init__(self, file=None, **kwargs):
         logging.basicConfig(level=logging.DEBUG)
         self.logger = logging.getLogger('SELFCAL')
@@ -38,21 +32,21 @@ class scal:
             for o in config.items(s):
                 setattr(self, o[0], eval(o[1]))
         self.default = config # Save the loaded config file as defaults for later usage
-        subs.setinit.setinitdirs(self)
-        subs.setinit.setdatasetnamestomiriad(self)
+        subs_setinit.setinitdirs(self)
+        subs_setinit.setdatasetnamestomiriad(self)
 
     ############################################################
     ##### Function to execute the self-calibration process #####
     ############################################################
 
     def go(self):
-        '''
+        """
         Executes the whole self-calibration process in the following order:
         splitdata
         flagline
         parametric
         selfcal_standard
-        '''
+        """
         self.logger.info("########## Starting SELF CALIBRATION ##########")
         self.splitdata()
         self.flagline()
@@ -61,13 +55,13 @@ class scal:
         self.logger.info("########## SELF CALIBRATION done ##########")
 
     def splitdata(self):
-        '''
+        """
         Applies calibrator corrections to data, splits the data into chunks in frequency and bins it to the given frequency resolution for the self-calibration
-        '''
+        """
         if self.splitdata:
-            subs.setinit.setinitdirs(self)
-            subs.setinit.setdatasetnamestomiriad(self)
-            subs.managefiles.director(self, 'ch', self.selfcaldir)
+            subs_setinit.setinitdirs(self)
+            subs_setinit.setdatasetnamestomiriad(self)
+            subs_managefiles.director(self, 'ch', self.selfcaldir)
             self.logger.info('### Splitting of target data into individual frequency chunks started ###')
             if os.path.isfile(self.selfcaldir + '/' + self.target):
                 self.logger.info('# Calibrator corrections already seem to have been applied #')
@@ -132,7 +126,7 @@ class scal:
                     start = 1 + chunk * chan_per_chunk
                     width = int(binchan)
                     step = int(width)
-                    subs.managefiles.director(self, 'mk', self.selfcaldir + '/' + str(counter).zfill(2))
+                    subs_managefiles.director(self, 'mk', self.selfcaldir + '/' + str(counter).zfill(2))
                     uvaver = lib.miriad('uvaver')
                     uvaver.vis = self.selfcaldir + '/' + self.target
                     uvaver.out = self.selfcaldir + '/' + str(counter).zfill(2) + '/' + str(counter).zfill(2) + '.mir'
@@ -145,16 +139,16 @@ class scal:
             self.logger.info('### Splitting of target data into individual frequency chunks done ###')
 
     def flagline(self):
-        '''
+        """
         Creates an image cube of the different chunks and measures the rms in each channel. All channels with an rms outside of a given sigma interval are flagged in the continuum calibration, but are still used for line imaging.
-        '''
+        """
         if self.selfcal_flagline:
-            subs.setinit.setinitdirs(self)
-            subs.setinit.setdatasetnamestomiriad(self)
+            subs_setinit.setinitdirs(self)
+            subs_setinit.setdatasetnamestomiriad(self)
             self.logger.info('### Automatic flagging of HI-line/RFI started ###')
-            subs.managefiles.director(self, 'ch', self.selfcaldir)
+            subs_managefiles.director(self, 'ch', self.selfcaldir)
             for chunk in self.list_chunks():
-                subs.managefiles.director(self, 'ch', self.selfcaldir + '/' + str(chunk))
+                subs_managefiles.director(self, 'ch', self.selfcaldir + '/' + str(chunk))
                 self.logger.info('# Looking through data chunk ' + str(chunk) + ' #')
                 invert = lib.miriad('invert')
                 invert.vis = chunk + '.mir'
@@ -189,26 +183,26 @@ class scal:
                         self.logger.info('# Flagged channel(s) ' + str(detections).lstrip('[').rstrip(']') + ' in data chunk ' + str(chunk) + ' #')
                     else:
                         self.logger.info('# No high noise found in data chunk ' + str(chunk) + ' #')
-                    subs.managefiles.director(self, 'rm', self.selfcaldir + '/' + str(chunk) + '/' + 'map')
-                    subs.managefiles.director(self, 'rm', self.selfcaldir + '/' + str(chunk) + '/' + 'map.fits')
-                    subs.managefiles.director(self, 'rm', self.selfcaldir + '/' + str(chunk) + '/' + 'beam')
+                    subs_managefiles.director(self, 'rm', self.selfcaldir + '/' + str(chunk) + '/' + 'map')
+                    subs_managefiles.director(self, 'rm', self.selfcaldir + '/' + str(chunk) + '/' + 'map.fits')
+                    subs_managefiles.director(self, 'rm', self.selfcaldir + '/' + str(chunk) + '/' + 'beam')
                 else:
                     self.logger.info('### No data in chunk ' + str(chunk) + '! ###')
             self.logger.info('### Automatic flagging of HI-line/RFI done ###')
 
     def parametric(self):
-        '''
+        """
         Parametric self calibration using an NVSS/FIRST skymodel and calculating spectral indices by source matching with WENSS.
-        '''
+        """
         if self.selfcal_parametric:
-            subs.setinit.setinitdirs(self)
-            subs.setinit.setdatasetnamestomiriad(self)
+            subs_setinit.setinitdirs(self)
+            subs_setinit.setdatasetnamestomiriad(self)
             self.logger.info('### Doing parametric self calibration ###')
-            subs.managefiles.director(self, 'ch', self.selfcaldir)
+            subs_managefiles.director(self, 'ch', self.selfcaldir)
             for chunk in self.list_chunks():
                 self.logger.info('# Starting parametric self calibration routine on chunk ' + chunk + ' #')
-                subs.managefiles.director(self, 'ch', self.selfcaldir + '/' + chunk)
-                subs.managefiles.director(self, 'mk', self.selfcaldir + '/' + chunk + '/' + 'pm')
+                subs_managefiles.director(self, 'ch', self.selfcaldir + '/' + chunk)
+                subs_managefiles.director(self, 'mk', self.selfcaldir + '/' + chunk + '/' + 'pm')
                 parametric_textfile = lsm.lsm_model(chunk + '.mir', self.selfcal_parametric_skymodel_radius, self.selfcal_parametric_skymodel_cutoff, self.selfcal_parametric_skymodel_distance)
                 lsm.write_model(self.selfcaldir + '/' + chunk + '/' + 'pm' + '/model.txt', parametric_textfile)
                 self.logger.info('# Creating model from textfile model.txt for chunk ' + chunk + ' #')
@@ -227,8 +221,8 @@ class scal:
                     uvmodel.out = 'pm/tmp' + str(n)
                     uvmodel.go()
                     uvmodel.vis = uvmodel.out
-                subs.managefiles.director(self, 'rn', 'pm/model', uvmodel.out) # Rename the last modelfile to model
-                subs.managefiles.director(self, 'rm', 'pm/tmp*') # Remove all the obsolete modelfiles
+                subs_managefiles.director(self, 'rn', 'pm/model', uvmodel.out) # Rename the last modelfile to model
+                subs_managefiles.director(self, 'rm', 'pm/tmp*') # Remove all the obsolete modelfiles
                 self.logger.info('# Doing parametric self-calibration on chunk ' + chunk + ' with solution interval ' + str(self.selfcal_parametric_solint) + ' min and uvrange limits of ' + str(self.selfcal_parametric_uvmin) + '~' + str(self.selfcal_parametric_uvmax) + ' klambda #')
                 selfcal = lib.miriad('selfcal')
                 selfcal.vis = chunk + '.mir'
@@ -252,16 +246,16 @@ class scal:
             self.logger.info('### Parametric self calibration disabled ###')
 
     def selfcal_standard(self):
-        '''
+        """
         Executes the standard method of self-calibration with the given parameters
-        '''
-        subs.setinit.setinitdirs(self)
-        subs.setinit.setdatasetnamestomiriad(self)
+        """
+        subs_setinit.setinitdirs(self)
+        subs_setinit.setdatasetnamestomiriad(self)
         self.logger.info('### Starting standard self calibration routine ###')
-        subs.managefiles.director(self, 'ch', self.selfcaldir)
+        subs_managefiles.director(self, 'ch', self.selfcaldir)
         for chunk in self.list_chunks():
             self.logger.info('# Starting standard self-calibration routine on frequency chunk ' + chunk + ' #')
-            subs.managefiles.director(self, 'ch', self.selfcaldir + '/' + chunk)
+            subs_managefiles.director(self, 'ch', self.selfcaldir + '/' + chunk)
             if os.path.isfile(self.selfcaldir + '/' + chunk + '/' + chunk + '.mir/visdata'):
                 theoretical_noise = self.calc_theoretical_noise(self.selfcaldir + '/' + chunk + '/' + chunk + '.mir')
                 self.logger.info('# Theoretical noise for chunk ' + chunk + ' is ' + str(theoretical_noise) + ' Jy/beam #')
@@ -271,7 +265,7 @@ class scal:
                 self.logger.info('# Your dynamic range limits are set to ' + str(dr_list) + ' for the major self-calibration cycles #')
                 for majc in range(self.selfcal_standard_majorcycle):
                     self.logger.info('# Major self-calibration cycle ' + str(majc) + ' for frequency chunk ' + chunk + ' started #')
-                    subs.managefiles.director(self, 'mk', self.selfcaldir + '/' + str(chunk) + '/' + str(majc).zfill(2))
+                    subs_managefiles.director(self, 'mk', self.selfcaldir + '/' + str(chunk) + '/' + str(majc).zfill(2))
                     dr_minlist = self.calc_dr_min(dr_list, majc, self.selfcal_standard_minorcycle, self.selfcal_standard_minorcycle_function)  # Calculate the dynamic ranges during minor cycles
                     self.logger.info('# The minor cycle dynamic range limits for major cycle ' + str(majc) + ' are ' + str(dr_minlist) + ' #')
                     for minc in range(self.selfcal_standard_minorcycle):
@@ -321,16 +315,16 @@ class scal:
     ############################################################
 
     def run_continuum_minoriteration(self, chunk, majc, minc, drmin, theoretical_noise_threshold):
-        '''
+        """
         Does a selfcal minor iteration for the standard mode
         chunk: The frequency chunk to image and calibrate
         maj: Current major iteration
         min: Current minor iteration
         drmin: maximum dynamic range for minor iteration
         theoretical_noise_threshold: calculated theoretical noise threshold
-        '''
-        subs.setinit.setinitdirs(self)
-        subs.setinit.setdatasetnamestomiriad(self)
+        """
+        subs_setinit.setinitdirs(self)
+        subs_setinit.setdatasetnamestomiriad(self)
         self.logger.info('# Minor self-calibration cycle ' + str(minc) + ' for frequency chunk ' + chunk + ' started #')
         if minc == 0:
             invert = lib.miriad('invert')  # Create the dirty image
@@ -358,7 +352,7 @@ class scal:
                 maths.go()
                 self.logger.info('# Mask with threshold ' + str(mask_threshold) + ' Jy/beam created #')
             else:
-                subs.managefiles.director(self, 'cp', str(majc).zfill(2) + '/mask_' + str(minc).zfill(2), file=str(majc - 1).zfill(2) + '/mask_' + str(self.selfcal_standard_minorcycle - 1).zfill(2))
+                subs_managefiles.director(self, 'cp', str(majc).zfill(2) + '/mask_' + str(minc).zfill(2), file=str(majc - 1).zfill(2) + '/mask_' + str(self.selfcal_standard_minorcycle - 1).zfill(2))
                 self.logger.info('# Mask from last minor iteration of last major cycle copied #')
             clean_cutoff = self.calc_clean_cutoff(mask_threshold)
             self.logger.info('# Clean threshold at major/minor cycle ' + str(majc) + '/' + str(minc) + ' was set to ' + str(clean_cutoff) + ' Jy/beam #')
@@ -431,14 +425,14 @@ class scal:
     ###################################################################
 
     def create_parametric_mask(self, dataset, radius, cutoff, cat, outputdir):
-        '''
+        """
         Creates a parametric mask using a model from an input catalogue.
         dataset (string): The dataset to get the coordiantes for the model from.
         radius (float): The radius around the pointing centre of the input dataset to consider sources in in deg.
         cutoff (float): The apparent flux percentage to consider sources from 0.0 accounts for no sources, 1.0 for all sources in the catalogue within the search radius of the target field.
         cat (string): The catalogue to search sources in. Possible options are 'NVSS', 'FIRST', and 'WENSS'.
         outputdir (string): The output directory to create the MIRIAD mask file in. The file is named mask.
-        '''
+        """
         lsm.write_mask(outputdir + '/mask.txt', lsm.lsm_mask(dataset, radius, cutoff, cat))
         mskfile = open(outputdir + '/mask.txt', 'r')
         object = mskfile.readline().rstrip('\n')
@@ -456,16 +450,16 @@ class scal:
         maths.mask = '"<' + outputdir + '/imgen>.gt.1e-6' + '"'
         maths.out = outputdir + '/mask'
         maths.go()
-        subs.managefiles.director(self, 'rm', outputdir + '/imgen')
+        subs_managefiles.director(self, 'rm', outputdir + '/imgen')
         self.single_mskcutoff = 1e-6
-        subs.managefiles.director(self, 'rm', outputdir + '/mask.txt')
+        subs_managefiles.director(self, 'rm', outputdir + '/mask.txt')
 
     def calc_irms(self, image):
-        '''
+        """
         Function to calculate the maximum of an image
         image (string): The name of the image file. Must be in MIRIAD-format
         returns (float): the maximum in the image
-        '''
+        """
         fits = lib.miriad('fits')
         fits.op = 'xyout'
         fits.in_ = image
@@ -475,15 +469,15 @@ class scal:
         data = image_data[0].data
         imax = np.nanstd(data) # Get the standard deviation
         image_data.close() # Close the image
-        subs.managefiles.director(self, 'rm', image + '.fits')
+        subs_managefiles.director(self, 'rm', image + '.fits')
         return imax
 
     def calc_imax(self, image):
-        '''
+        """
         Function to calculate the maximum of an image
         image (string): The name of the image file. Must be in MIRIAD-format
         returns (float): the maximum in the image
-        '''
+        """
         fits = lib.miriad('fits')
         fits.op = 'xyout'
         fits.in_ = image
@@ -493,15 +487,15 @@ class scal:
         data = image_data[0].data
         imax = np.nanmax(data) # Get the maximum
         image_data.close() # Close the image
-        subs.managefiles.director(self, 'rm', image + '.fits')
+        subs_managefiles.director(self, 'rm', image + '.fits')
         return imax
 
     def calc_isum(self, image):
-        '''
+        """
         Function to calculate the sum of the values of the pixels in an image
         image (string): The name of the image file. Must be in MIRIAD-format
         returns (float): the sum of the pxiels in the image
-                '''
+                """
         fits = lib.miriad('fits')
         fits.op = 'xyout'
         fits.in_ = image
@@ -511,18 +505,18 @@ class scal:
         data = image_data[0].data
         isum = np.nansum(data)  # Get the maximum
         image_data.close()  # Close the image
-        subs.managefiles.director(self, 'rm', image + '.fits')
+        subs_managefiles.director(self, 'rm', image + '.fits')
         return isum
 
     def calc_dr_maj(self, drinit, dr0, majorcycles, function):
-        '''
+        """
         Function to calculate the dynamic range limits during major cycles
         drinit (float): The initial dynamic range
         dr0 (float): Coefficient for increasing the dynamic range threshold at each major cycle
         majorcycles (int): The number of major cycles to execute
         function (string): The function to follow for increasing the dynamic ranges. Currently 'power' is supported.
         returns (list of floats): A list of floats for the dynamic range limits within the major cycles.
-        '''
+        """
         if function == 'square':
             dr_maj = [drinit * np.power(dr0, m) for m in range(majorcycles)]
         else:
@@ -531,14 +525,14 @@ class scal:
         return dr_maj
 
     def calc_dr_min(self, dr_maj, majc, minorcycles, function):
-        '''
+        """
         Function to calculate the dynamic range limits during minor cycles
         dr_maj (list of floats): List with dynamic range limits for major cycles. Usually from calc_dr_maj
         majc (int): The major cycles you want to calculate the minor cycle dynamic ranges for
         minorcycles (int): The number of minor cycles to use
         function (string): The function to follow for increasing the dynamic ranges. Currently 'square', 'power', and 'linear' is supported.
         returns (list of floats): A list of floats for the dynamic range limits within the minor cycles.
-        '''
+        """
         if majc == 0: # Take care about the first major cycle
             prevdr = 0
         else:
@@ -560,13 +554,13 @@ class scal:
         return dr_min
 
     def calc_mask_threshold(self,theoretical_noise_threshold, noise_threshold, dynamic_range_threshold):
-        '''
+        """
         Function to calculate the actual mask_threshold and the type of mask threshold from the theoretical noise threshold, noise threshold, and the dynamic range threshold
         theoretical_noise_threshold (float): The theoretical noise threshold calculated by calc_theoretical_noise_threshold
         noise_threshold (float): The noise threshold calculated by calc_noise_threshold
         dynamic_range_threshold (float): The dynamic range threshold calculated by calc_dynamic_range_threshold
         returns (float, string): The maximum of the three thresholds, the type of the maximum threshold
-        '''
+        """
         # if np.isinf(dynamic_range_threshold) or np.isnan(dynamic_range_threshold):
         #     dynamic_range_threshold = noise_threshold
         mask_threshold = np.max([theoretical_noise_threshold, noise_threshold, dynamic_range_threshold])
@@ -580,52 +574,52 @@ class scal:
         return mask_threshold, mask_threshold_type
 
     def calc_noise_threshold(self, imax, minor_cycle, major_cycle):
-        '''
+        """
         Calculates the noise threshold
         imax (float): the maximum in the input image
         minor_cycle (int): the current minor cycle the self-calibration is in
         major_cycle (int): the current major cycle the self-calibration is in
         returns (float): the noise threshold
-        '''
+        """
         noise_threshold = imax / ((self.selfcal_standard_c0 + (minor_cycle) * self.selfcal_standard_c0) * (major_cycle + 1))
         return noise_threshold
 
     def calc_clean_cutoff(self, mask_threshold):
-        '''
+        """
         Calculates the cutoff for the cleaning
         mask_threshold (float): the mask threshold to calculate the clean cutoff from
         returns (float): the clean cutoff
-        '''
+        """
         clean_cutoff = mask_threshold / self.selfcal_standard_c1
         return clean_cutoff
 
     def calc_dynamic_range_threshold(self, imax, dynamic_range, dynamic_range_minimum):
-        '''
+        """
         Calculates the dynamic range threshold
         imax (float): the maximum in the input image
         dynamic_range (float): the dynamic range you want to calculate the threshold for
         returns (float): the dynamic range threshold
-        '''
+        """
         if dynamic_range == 0:
             dynamic_range = dynamic_range_minimum
         dynamic_range_threshold = imax / dynamic_range
         return dynamic_range_threshold
 
     def calc_theoretical_noise_threshold(self, theoretical_noise):
-        '''
+        """
         Calculates the theoretical noise threshold from the theoretical noise
         theoretical_noise (float): the theoretical noise of the observation
         returns (float): the theoretical noise threshold
-        '''
+        """
         theoretical_noise_threshold = (self.selfcal_standard_nsigma * theoretical_noise)
         return theoretical_noise_threshold
 
     def calc_theoretical_noise(self, dataset):
-        '''
+        """
         Calculate the theoretical rms of a given dataset
         dataset (string): The input dataset to calculate the theoretical rms from
         returns (float): The theoretical rms of the input dataset as a float
-        '''
+        """
         uv = aipy.miriad.UV(dataset)
         obsrms = lib.miriad('obsrms')
         try:
@@ -652,11 +646,11 @@ class scal:
     ######################################################################
 
     def list_chunks(self):
-        '''
+        """
         Checks how many chunk directories exist and returns a list of them.
-        '''
-        subs.setinit.setinitdirs(self)
-        subs.setinit.setdatasetnamestomiriad(self)
+        """
+        subs_setinit.setinitdirs(self)
+        subs_setinit.setdatasetnamestomiriad(self)
         for n in range(100):
             if os.path.exists(self.selfcaldir + '/' + str(n).zfill(2)):
                 pass
@@ -671,11 +665,11 @@ class scal:
     #######################################################################
 
     def show(self, showall=False):
-        '''
+        """
         show: Prints the current settings of the pipeline. Only shows keywords, which are in the default config file default.cfg
         showall: Set to true if you want to see all current settings instead of only the ones from the current step
-        '''
-        subs.setinit.setinitdirs(self)
+        """
+        subs_setinit.setinitdirs(self)
         config = ConfigParser.ConfigParser()
         config.readfp(open(self.apercaldir + '/modules/default.cfg'))
         for s in config.sections():
@@ -700,11 +694,11 @@ class scal:
                     pass
 
     def reset(self):
-        '''
+        """
         Function to reset the current step and remove all generated data. Be careful! Deletes all data generated in this step!
-        '''
-        subs.setinit.setinitdirs(self)
-        subs.setinit.setdatasetnamestomiriad(self)
+        """
+        subs_setinit.setinitdirs(self)
+        subs_setinit.setdatasetnamestomiriad(self)
         self.logger.warning('### Deleting all self-calibrated data. ###')
-        subs.managefiles.director(self, 'ch', self.selfcaldir)
-        subs.managefiles.director(self, 'rm', self.selfcaldir + '/*')
+        subs_managefiles.director(self, 'ch', self.selfcaldir)
+        subs_managefiles.director(self, 'rm', self.selfcaldir + '/*')
