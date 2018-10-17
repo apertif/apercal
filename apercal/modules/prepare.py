@@ -10,14 +10,36 @@ from apercal.subs import setinit as subs_setinit
 from apercal.subs import managefiles as subs_managefiles
 from apercal.subs.param import get_param_def
 from apercal.subs import param as subs_param
+from apercal.subs.getdata_alta import getdata_alta
 
 
 class prepare:
     """
     Prepare class. Automatically copies the datasets into the directories and selects valid data (in case of multi-element observations)
     """
+    apercaldir = None
+    fluxcal = None
+    polcal = None
+    target = None
+    basedir = None
+    beam = None
+    rawsubdir = None
+    crosscalsubdir = None
+    selfcalsubdir = None
+    linesubdir = None
+    contsubdir = None
+    polsubdir = None
+    mossubdir = None
+    transfersubdir = None
+
+    prepare_date = None
+    prepare_obsnum_fluxcal = None
+    prepare_obsnum_polcal = None
+    prepare_obsnum_target = None
+    prepare_target_beams = None
+    prepare_bypass_alta = None
+
     def __init__(self, file=None, **kwargs):
-        logging.basicConfig(level=logging.DEBUG)
         self.logger = logging.getLogger('PREPARE')
         config = ConfigParser.ConfigParser()  # Initialise the config parser
         if file != None:
@@ -124,7 +146,7 @@ class prepare:
                     self.logger.warning('Flux calibrator data available on disk, but not in ALTA! #')
                 elif preparefluxcaldiskstatus == False and preparefluxcalaltastatus:
                     subs_managefiles.director(self, 'mk', self.basedir + '00' + '/' + self.rawsubdir, verbose=False)
-                    subs_irods.getdata_alta(int(self.prepare_date), int(self.prepare_obsnum_fluxcal), 0, targetdir=self.rawdir + '/' + self.fluxcal)
+                    getdata_alta(int(self.prepare_date), int(self.prepare_obsnum_fluxcal), 0, targetdir=self.rawdir + '/' + self.fluxcal)
                     if os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal):
                         preparefluxcalcopystatus = True
                         self.logger.debug('# Flux calibrator dataset successfully copied from ALTA #')
@@ -183,7 +205,7 @@ class prepare:
                     self.logger.warning('Polarisation calibrator data available on disk, but not in ALTA! #')
                 elif preparepolcaldiskstatus == False and preparepolcalaltastatus:
                     subs_managefiles.director(self, 'mk', self.basedir + '00' + '/' + self.rawsubdir, verbose=False)
-                    subs_irods.getdata_alta(int(self.prepare_date), int(self.prepare_obsnum_polcal), 0, targetdir=self.rawdir + '/' + self.polcal)
+                    getdata_alta(int(self.prepare_date), int(self.prepare_obsnum_polcal), 0, targetdir=self.rawdir + '/' + self.polcal)
                     if os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal):
                         preparepolcalcopystatus = True
                         self.logger.debug('# Polarisation calibrator dataset successfully copied from ALTA #')
@@ -254,7 +276,7 @@ class prepare:
                         self.logger.warning('Target dataset for beam ' + str(c).zfill(2) + ' available on disk, but not in ALTA! #')
                     elif preparetargetbeamsdiskstatus[c] == False and preparetargetbeamsaltastatus[c] and str(c).zfill(2) in reqbeams: # if target dataset is requested, but not on disk
                         subs_managefiles.director(self, 'mk', self.basedir + str(c).zfill(2) + '/' + self.rawsubdir, verbose=False)
-                        subs_irods.getdata_alta(int(self.prepare_date), int(self.prepare_obsnum_target), int(str(c).zfill(2)),targetdir=self.basedir + str(c).zfill(2) + '/' + self.rawsubdir + '/' + self.target)
+                        getdata_alta(int(self.prepare_date), int(self.prepare_obsnum_target), int(str(c).zfill(2)),targetdir=self.basedir + str(c).zfill(2) + '/' + self.rawsubdir + '/' + self.target)
                         # Check if copy was successful
                         if os.path.isdir(self.basedir + str(c).zfill(2) + '/' + self.rawsubdir + '/' + self.target):
                             preparetargetbeamscopystatus[c] = True
@@ -362,7 +384,7 @@ class prepare:
         """
         subs_setinit.setinitdirs(self)
         config = ConfigParser.ConfigParser()
-        config.readfp(open(self.apercaldir + '/modules/default.cfg'))
+        config.readfp(open(self.apercaldir + '/apercal/modules/default.cfg'))
         for s in config.sections():
             if showall:
                 print(s)

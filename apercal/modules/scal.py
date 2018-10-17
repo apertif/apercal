@@ -18,8 +18,61 @@ class scal:
     """
     Selfcal class to do the self-calibration on a dataset. Can be done with several different algorithms.
     """
+    apercaldir = None
+    fluxcal = None
+    polcal = None
+    target = None
+    basedir = None
+    beam = None
+    rawsubdir = None
+    crosscalsubdir = None
+    selfcalsubdir = None
+    linesubdir = None
+    contsubdir = None
+    polsubdir = None
+    mossubdir = None
+    transfersubdir = None
+
+    selfcal_image_imsize = None
+    selfcal_image_cellsize = None
+    selfcal_refant = None
+    selfcal_splitdata = None
+    selfcal_splitdata_chunkbandwidth = None
+    selfcal_splitdata_channelbandwidth = None
+    selfcal_flagantenna = None
+    selfcal_flagline = None
+    selfcal_flagline_sigma = None
+    selfcal_parametric = None
+    selfcal_parametric_skymodel_radius = None
+    selfcal_parametric_skymodel_cutoff = None
+    selfcal_parametric_skymodel_distance = None
+    selfcal_parametric_solint = None
+    selfcal_parametric_uvmin = None
+    selfcal_parametric_uvmax = None
+    selfcal_parametric_amp = None
+    selfcal_standard_majorcycle = None
+    selfcal_standard_majorcycle_function = None
+    selfcal_standard_minorcycle = None
+    selfcal_standard_minorcycle_function = None
+    selfcal_standard_c0 = None
+    selfcal_standard_c1 = None
+    selfcal_standard_minorcycle0_dr = None
+    selfcal_standard_drinit = None
+    selfcal_standard_dr0 = None
+    selfcal_standard_nsigma = None
+    selfcal_standard_uvmin = None
+    selfcal_standard_uvmax = None
+    selfcal_standard_solint = None
+    selfcal_standard_amp = None
+    selfcal_standard_amp_auto_limit = None
+    selfcal_standard_nfbin = None
+
+    # todo: this might be bug, they are not defined in the default config file
+    selfcaldir = None
+    crosscaldir = None
+    linedir = None
+
     def __init__(self, file=None, **kwargs):
-        logging.basicConfig(level=logging.DEBUG)
         self.logger = logging.getLogger('SELFCAL')
         config = ConfigParser.ConfigParser() # Initialise the config parser
         if file != None:
@@ -671,7 +724,7 @@ class scal:
         """
         subs_setinit.setinitdirs(self)
         config = ConfigParser.ConfigParser()
-        config.readfp(open(self.apercaldir + '/modules/default.cfg'))
+        config.readfp(open(self.apercaldir + '/apercal/modules/default.cfg'))
         for s in config.sections():
             if showall:
                 print(s)

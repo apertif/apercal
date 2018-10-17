@@ -11,7 +11,6 @@ class polarisation:
     """
 
     def __init__(self, file=None, **kwargs):
-        logging.basicConfig(level=logging.DEBUG)
         self.logger = logging.getLogger('POLARISATION')
         config = ConfigParser.ConfigParser()  # Initialise the config parser
         if file != None:

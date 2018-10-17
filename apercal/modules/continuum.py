@@ -24,8 +24,22 @@ class continuum:
     """
     Continuum class to produce continuum data products (Deep continuum images of individual frequency chunks and stacked continuum image).
     """
+    apercaldir = None
+    fluxcal = None
+    polcal = None
+    target = None
+    basedir = None
+    beam = None
+    rawsubdir = None
+    crosscalsubdir = None
+    selfcalsubdir = None
+    linesubdir = None
+    contsubdir = None
+    polsubdir = None
+    mossubdir = None
+    transfersubdir = None
+
     def __init__(self, file=None, **kwargs):
-        logging.basicConfig(level=logging.DEBUG)
         self.logger = logging.getLogger('CONTINUUM')
         config = ConfigParser.ConfigParser() # Initialise the config parser
         if file != None:
@@ -930,7 +944,7 @@ class continuum:
         """
         subs_setinit.setinitdirs(self)
         config = ConfigParser.ConfigParser()
-        config.readfp(open(self.apercaldir + '/modules/default.cfg'))
+        config.readfp(open(self.apercaldir + '/apercal/modules/default.cfg'))
         for s in config.sections():
             if showall:
                 print(s)

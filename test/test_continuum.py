@@ -10,5 +10,6 @@ class TestTransfer(unittest.TestCase):
 
     def test_prepare(self):
         p = continuum(path.join(here, 'test.cfg'))
+        p.apercaldir = path.join(here, '../apercal')
         p.show(showall=True)
         p.go()

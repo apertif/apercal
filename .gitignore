@@ -5,3 +5,4 @@ casa.log
 .idea
 .venv*/
 .virtualenv*/
+*.egg-info/

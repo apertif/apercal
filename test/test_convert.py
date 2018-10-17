@@ -8,5 +8,6 @@ here = path.dirname(__file__)
 class TestConvert(unittest.TestCase):
     def test_prepare(self):
         p = convert(path.join(here, 'test.cfg'))
+        p.apercaldir = path.join(here, '../apercal')
         p.show(showall=True)
         p.go()

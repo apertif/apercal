@@ -19,8 +19,47 @@ class preflag:
     """
     Preflagging class. Used to automatically flag data and apply preknown flags.
     """
+    apercaldir = None
+    fluxcal = None
+    polcal = None
+    target = None
+    basedir = None
+    beam = None
+    rawsubdir = None
+    crosscalsubdir = None
+    selfcalsubdir = None
+    linesubdir = None
+    contsubdir = None
+    polsubdir = None
+    mossubdir = None
+    transfersubdir = None
+
+    preflag_shadow = None
+    preflag_edges = None
+    preflag_ghosts = None
+    preflag_manualflag = None
+    preflag_manualflag_fluxcal = None
+    preflag_manualflag_polcal = None
+    preflag_manualflag_target = None
+    preflag_manualflag_targetbeams = None
+    preflag_manualflag_auto = None
+    preflag_manualflag_antenna = None
+    preflag_manualflag_corr = None
+    preflag_manualflag_baseline = None
+    preflag_manualflag_channel = None
+    preflag_manualflag_time = None
+    preflag_aoflagger = None
+    preflag_aoflagger_bandpass = None
+    preflag_aoflagger_fluxcal = None
+    preflag_aoflagger_polcal = None
+    preflag_aoflagger_target = None
+    preflag_aoflagger_targetbeams = None
+    preflag_aoflagger_fluxcalstrat = None
+    preflag_aoflagger_polcalstrat = None
+    preflag_aoflagger_targetstrat = None
+    
+    
     def __init__(self, filename=None, **kwargs):
-        logging.basicConfig(level=logging.DEBUG)
         self.logger = logging.getLogger('PREFLAG')
         config = ConfigParser.ConfigParser()  # Initialise the config parser
         if filename:
@@ -1191,7 +1230,7 @@ class preflag:
         """
         subs_setinit.setinitdirs(self)
         config = ConfigParser.ConfigParser()
-        config.readfp(open(self.apercaldir + '/modules/default.cfg'))
+        config.readfp(open(self.apercaldir + '/apercal/modules/default.cfg'))
         for s in config.sections():
             if showall:
                 print(s)

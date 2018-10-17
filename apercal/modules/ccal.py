@@ -15,8 +15,28 @@ class ccal:
     """
     Crosscal class to handle applying the calibrator gains and prepare the dataset for self-calibration.
     """
+
+    apercaldir = None
+    fluxcal = None
+    polcal = None
+    target = None
+    basedir = None
+    beam = None
+    rawsubdir = None
+    crosscalsubdir = None
+    selfcalsubdir = None
+    linesubdir = None
+    contsubdir = None
+    polsubdir = None
+    mossubdir = None
+    transfersubdir = None
+
+    crosscal_bandpass = None
+    crosscal_delay = None
+    crosscal_polarisation = None
+    crosscal_transfer_to_target = None
+
     def __init__(self, file=None, **kwargs):
-        logging.basicConfig(level=logging.DEBUG)
         self.logger = logging.getLogger('CROSSCAL')
         config = ConfigParser.ConfigParser() # Initialise the config parser
         if file != None:
@@ -164,7 +184,7 @@ class ccal:
         """
         subs_setinit.setinitdirs(self)
         config = ConfigParser.ConfigParser()
-        config.readfp(open(self.apercaldir + '/modules/default.cfg'))
+        config.readfp(open(self.apercaldir + '/apercal/modules/default.cfg'))
         for s in config.sections():
             if showall:
                 print(s)

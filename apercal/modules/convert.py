@@ -18,8 +18,28 @@ class convert:
     """
     Class to convert data from MS-format into UVFITS, and from UVFITS into MIRIAD format. Resulting datasets will have the endings .MS, .UVFITS, and .mir.
     """
+    apercaldir = None
+    fluxcal = None
+    polcal = None
+    target = None
+    basedir = None
+    beam = None
+    rawsubdir = None
+    crosscalsubdir = None
+    selfcalsubdir = None
+    linesubdir = None
+    contsubdir = None
+    polsubdir = None
+    mossubdir = None
+    transfersubdir = None
+
+    convert_fluxcal = True  # Convert the flux calibrator dataset
+    convert_polcal = True  # Convert the polarised calibrator dataset
+    convert_target = True  # Convert the target beam dataset
+    convert_targetbeams = 'all'  # Targetbeams to convert, options: 'all' or '00,01,02'
+    convert_removeuvfits = True  # Remove the UVFITS files
+
     def __init__(self, file=None, **kwargs):
-        logging.basicConfig(level=logging.DEBUG)
         self.logger = logging.getLogger('CONVERT')
         config = ConfigParser.ConfigParser()  # Initialise the config parser
         if file != None:
@@ -388,7 +408,7 @@ class convert:
         """
         subs_setinit.setinitdirs(self)
         config = ConfigParser.ConfigParser()
-        config.readfp(open(self.apercaldir + '/modules/default.cfg'))
+        config.readfp(open(self.apercaldir + '/apercal/modules/default.cfg'))
         for s in config.sections():
             if showall:
                 print(s)

@@ -8,10 +8,7 @@ import astropy.io.fits as pyfits
 import pylab as pl
 
 deg2rad = pl.pi / 180.
-# Its rather messy to reload the logging library, but is necessary if the logger is going to work.
-reload(logging)
 
-print 'Setup logger with lib.setup_logger()'
 
 logger = logging.getLogger(__name__)
 

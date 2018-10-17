@@ -11,9 +11,8 @@ import sys
 import pymp
 import time
 import timeit
-import cProfile
 
-from apercal.subs import setinint as subs_setinit
+from apercal.subs import setinit as subs_setinit
 from apercal.libs import lib
 
 
@@ -23,8 +22,59 @@ class line_parallel:
     """
     Line class to do continuum subtraction and prepare data for line imaging.
     """
+    apercaldir = None
+    fluxcal = None
+    polcal = None
+    target = None
+    basedir = None
+    beam = None
+    rawsubdir = None
+    crosscalsubdir = None
+    selfcalsubdir = None
+    linesubdir = None
+    contsubdir = None
+    polsubdir = None
+    mossubdir = None
+    transfersubdir = None
+
+    line_splitdata = None
+    line_splitdata_chunkbandwidth = None
+    line_splitdata_channelbandwidth = None
+    line_transfergains = None
+    line_subtract = None
+    line_subtract_mode = None
+    line_subtract_mode_uvmodel_majorcycle_function = None
+    line_subtract_mode_uvmodel_minorcycle_function = None
+    line_subtract_mode_uvmodel_minorcycle = None
+    line_subtract_mode_uvmodel_c0 = None
+    line_subtract_mode_uvmodel_c1 = None
+    line_subtract_mode_uvmodel_drinit = None
+    line_subtract_mode_uvmodel_dr0 = None
+    line_subtract_mode_uvmodel_nsigma = None
+    line_subtract_mode_uvmodel_imsize = None
+    line_subtract_mode_uvmodel_cellsize = None
+    line_subtract_mode_uvmodel_minorcycle0_dr = None
+    line_image = None
+    line_image_channels = None
+    line_image_imsize = None
+    line_image_cellsize = None
+    line_image_centre = None
+    line_image_robust = None
+    line_image_ratio_limit = None
+    line_image_c0 = None
+    line_image_c1 = None
+    line_image_nsigma = None
+    line_image_minorcycle0_dr = None
+    line_image_dr0 = None
+    line_image_restorbeam = None
+    line_image_convolbeam = None
+
+    # todo: this might be bug, they are not defined in the default config file
+    selfcaldir = None
+    crosscaldir = None
+    linedir = None
+
     def __init__(self, file=None, **kwargs):
-        logging.basicConfig(level=20)
         self.logger = logging.getLogger('LINE')
         config = ConfigParser.ConfigParser() # Initialise the config parser
         if file != None:
@@ -1805,7 +1855,7 @@ class line_parallel:
         """
         subs_setinit.setinitdirs(self)
         config = ConfigParser.ConfigParser()
-        config.readfp(open(self.apercaldir + '/modules/default.cfg'))
+        config.readfp(open(self.apercaldir + '/apercal/modules/default.cfg'))
         for s in config.sections():
             if showall:
                 print(s)
