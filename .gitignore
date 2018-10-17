@@ -3,3 +3,5 @@
 casa.log
 *.log
 .idea
+.venv*/
+.virtualenv*/

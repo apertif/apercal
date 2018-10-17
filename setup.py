@@ -1,0 +1,49 @@
+from setuptools import setup, find_packages
+
+__version__ = '2.0'
+
+scripts = []
+
+
+install_requires = [
+    'numpy',
+    'notebook',
+    'matplotlib',
+    'astroquery',
+    'pandas',
+    'drive-casa',
+    'python-casacore',
+    'aipy',
+    'pymp-pypi',
+]
+
+
+
+setup(
+    name="apercal",
+    version=__version__,
+    scripts=scripts,
+    packages=find_packages(),
+    install_requires=install_requires,
+    build_requires=['numpy'],
+    package_data={
+        '': ['*.txt', '*.rst'],
+        'kliko': ['schemas/*.yml'],
+    },
+    author="Gijs Molenaar",
+    author_email="gijs@pythonic.nl",
+    description="Scientific Compute Container Spec Parser",
+    license="GPL2",
+    keywords="science astronomy radio",
+    url="https://github.com/apertif/apercal",
+    classifiers=[
+        "Development Status :: 3 - Alpha",
+        "Intended Audience :: Science/Research",
+        "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
+        "Operating System :: POSIX",
+        "Programming Language :: Python :: 2.7",
+        "Topic :: Scientific/Engineering",
+        "Topic :: System :: Distributed Computing",
+        "Topic :: System :: Operating System Kernels :: Linux",
+        ]
+)
