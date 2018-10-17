@@ -10,8 +10,9 @@ class TestPrepare(unittest.TestCase):
 
     def test_prepare(self):
         p = prepare(path.join(here, 'test.cfg'))
-        p.apercaldir = path.join(here, '../apercal')
-        p.show(showall=True)
+        p.apercaldir = path.join(here, '..')
+        p.basedir = path.join(here, '../data/small')
+        p.show(showall=False)
         p.go()
 
 

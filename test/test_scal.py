@@ -8,6 +8,7 @@ here = path.dirname(__file__)
 class TestScal(unittest.TestCase):
     def test_prepare(self):
         p = scal(path.join(here, 'test.cfg'))
-        p.apercaldir = path.join(here, '../apercal')
-        p.show(showall=True)
+        p.apercaldir = path.join(here, '..')
+        p.basedir = path.join(here, '../data/small')
+        p.show(showall=False)
         p.go()
