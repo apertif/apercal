@@ -1,0 +1,11 @@
+.git
+*.pyc
+.ipynb_checkpoints
+casa.log
+*.log
+.idea
+.venv*/
+.virtualenv*/
+*.egg-info/
+notebooks/
+
