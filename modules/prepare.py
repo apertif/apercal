@@ -1,3 +1,7 @@
+__author__ = "V. A. Moss, Bjoern Adebahr"
+__copyright__ = "ASTRON"
+__email__ = "moss@astron.nl, adebahr@astro.rub.de"
+
 import ConfigParser
 import glob
 import logging
@@ -5,17 +9,17 @@ import pandas as pd
 import os
 import numpy as np
 
-from apercal.subs import irods as subs_irods
-from apercal.subs import setinit as subs_setinit
-from apercal.subs import managefiles as subs_managefiles
-from apercal.subs.param import get_param_def
-from apercal.subs import param as subs_param
+import subs.irods
+import subs.setinit
+import subs.managefiles
+from subs.param import get_param_def
 
+####################################################################################################
 
 class prepare:
-    """
+    '''
     Prepare class. Automatically copies the datasets into the directories and selects valid data (in case of multi-element observations)
-    """
+    '''
     def __init__(self, file=None, **kwargs):
         logging.basicConfig(level=logging.DEBUG)
         self.logger = logging.getLogger('PREPARE')
@@ -29,17 +33,17 @@ class prepare:
         for s in config.sections():
             for o in config.items(s):
                 setattr(self, o[0], eval(o[1]))
-        subs_setinit.setinitdirs(self)
+        subs.setinit.setinitdirs(self)
 
     ####################################################
     ##### Function to execute the data preparation #####
     ####################################################
 
     def go(self):
-        """
+        '''
         Executes the complete prepare step with the parameters indicated in the config-file in the following order:
         copyobs
-        """
+        '''
         self.logger.info('########## Preparing data for calibration ##########')
         self.copyobs()
         self.logger.info('########## Data prepared for calibration ##########')
@@ -49,11 +53,11 @@ class prepare:
     ##############################################
 
     def copyobs(self):
-        """
+        '''
         Prepares the directory structure and copies over the needed data from ALTA.
         Checks for data in the current working directories and copies only missing data.
-        """
-        subs_setinit.setinitdirs(self)
+        '''
+        subs.setinit.setinitdirs(self)
         beams = 37 # Number of beams
 
         ##########################################################################################################
@@ -111,7 +115,7 @@ class prepare:
                 self.logger.debug("Skipping fetching dataset from ALTA")
             else:
                 # Check if the flux calibrator dataset is available on ALTA
-                preparefluxcalaltastatus = subs_irods.getstatus_alta(self.prepare_date, self.prepare_obsnum_fluxcal, '00')
+                preparefluxcalaltastatus = subs.irods.getstatus_alta(self.prepare_date, self.prepare_obsnum_fluxcal, '00')
                 if preparefluxcalaltastatus:
                     self.logger.debug('Flux calibrator dataset available on ALTA #')
                 else:
@@ -123,8 +127,8 @@ class prepare:
                     preparefluxcalcopystatus = True
                     self.logger.warning('Flux calibrator data available on disk, but not in ALTA! #')
                 elif preparefluxcaldiskstatus == False and preparefluxcalaltastatus:
-                    subs_managefiles.director(self, 'mk', self.basedir + '00' + '/' + self.rawsubdir, verbose=False)
-                    subs_irods.getdata_alta(int(self.prepare_date), int(self.prepare_obsnum_fluxcal), 0, targetdir=self.rawdir + '/' + self.fluxcal)
+                    subs.managefiles.director(self, 'mk', self.basedir + '00' + '/' + self.rawsubdir, verbose=False)
+                    subs.irods.getdata_alta(int(self.prepare_date), int(self.prepare_obsnum_fluxcal), 0, targetdir=self.rawdir + '/' + self.fluxcal)
                     if os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal):
                         preparefluxcalcopystatus = True
                         self.logger.debug('# Flux calibrator dataset successfully copied from ALTA #')
@@ -146,11 +150,11 @@ class prepare:
 
         # Save the derived parameters for the fluxcal to the parameter file
 
-        subs_param.add_param(self, 'prepare_fluxcal_requested', preparefluxcalrequested)
-        subs_param.add_param(self, 'prepare_fluxcal_diskstatus', preparefluxcaldiskstatus)
-        subs_param.add_param(self, 'prepare_fluxcal_altastatus', preparefluxcalaltastatus)
-        subs_param.add_param(self, 'prepare_fluxcal_copystatus', preparefluxcalcopystatus)
-        subs_param.add_param(self, 'prepare_fluxcal_rejreason', preparefluxcalrejreason)
+        subs.param.add_param(self, 'prepare_fluxcal_requested', preparefluxcalrequested)
+        subs.param.add_param(self, 'prepare_fluxcal_diskstatus', preparefluxcaldiskstatus)
+        subs.param.add_param(self, 'prepare_fluxcal_altastatus', preparefluxcalaltastatus)
+        subs.param.add_param(self, 'prepare_fluxcal_copystatus', preparefluxcalcopystatus)
+        subs.param.add_param(self, 'prepare_fluxcal_rejreason', preparefluxcalrejreason)
 
         ########################################################
         # Start the preparation of the polarisation calibrator #
@@ -170,7 +174,7 @@ class prepare:
             else:
 
                 # Check if the polarisation calibrator dataset is available on ALTA
-                preparepolcalaltastatus = subs_irods.getstatus_alta(self.prepare_date, self.prepare_obsnum_polcal, '00')
+                preparepolcalaltastatus = subs.irods.getstatus_alta(self.prepare_date, self.prepare_obsnum_polcal, '00')
                 if preparepolcalaltastatus:
                     self.logger.debug('Polarisation calibrator dataset available on ALTA #')
                 else:
@@ -182,8 +186,8 @@ class prepare:
                     preparepolcalcopystatus = True
                     self.logger.warning('Polarisation calibrator data available on disk, but not in ALTA! #')
                 elif preparepolcaldiskstatus == False and preparepolcalaltastatus:
-                    subs_managefiles.director(self, 'mk', self.basedir + '00' + '/' + self.rawsubdir, verbose=False)
-                    subs_irods.getdata_alta(int(self.prepare_date), int(self.prepare_obsnum_polcal), 0, targetdir=self.rawdir + '/' + self.polcal)
+                    subs.managefiles.director(self, 'mk', self.basedir + '00' + '/' + self.rawsubdir, verbose=False)
+                    subs.irods.getdata_alta(int(self.prepare_date), int(self.prepare_obsnum_polcal), 0, targetdir=self.rawdir + '/' + self.polcal)
                     if os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal):
                         preparepolcalcopystatus = True
                         self.logger.debug('# Polarisation calibrator dataset successfully copied from ALTA #')
@@ -205,11 +209,11 @@ class prepare:
 
         # Save the derived parameters for the polcal to the parameter file
 
-        subs_param.add_param(self, 'prepare_polcal_requested', preparepolcalrequested)
-        subs_param.add_param(self, 'prepare_polcal_diskstatus', preparepolcaldiskstatus)
-        subs_param.add_param(self, 'prepare_polcal_altastatus', preparepolcalaltastatus)
-        subs_param.add_param(self, 'prepare_polcal_copystatus', preparepolcalcopystatus)
-        subs_param.add_param(self, 'prepare_polcal_rejreason', preparepolcalrejreason)
+        subs.param.add_param(self, 'prepare_polcal_requested', preparepolcalrequested)
+        subs.param.add_param(self, 'prepare_polcal_diskstatus', preparepolcaldiskstatus)
+        subs.param.add_param(self, 'prepare_polcal_altastatus', preparepolcalaltastatus)
+        subs.param.add_param(self, 'prepare_polcal_copystatus', preparepolcalcopystatus)
+        subs.param.add_param(self, 'prepare_polcal_rejreason', preparepolcalrejreason)
 
         ################################################
         # Start the preparation of the target datasets #
@@ -236,7 +240,7 @@ class prepare:
                     self.logger.debug("Skipping fetching dataset from ALTA")
                 else:
                     # Check which target datasets are available on ALTA
-                    preparetargetbeamsaltastatus[b] = subs_irods.getstatus_alta(self.prepare_date, self.prepare_obsnum_target, str(b).zfill(2))
+                    preparetargetbeamsaltastatus[b] = subs.irods.getstatus_alta(self.prepare_date, self.prepare_obsnum_target, str(b).zfill(2))
                     if preparetargetbeamsaltastatus[b]:
                         self.logger.debug('# Target dataset for beam ' + str(b).zfill(2) + ' available on ALTA #')
                     else:
@@ -253,8 +257,8 @@ class prepare:
                         preparetargetbeamscopystatus[c] = True
                         self.logger.warning('Target dataset for beam ' + str(c).zfill(2) + ' available on disk, but not in ALTA! #')
                     elif preparetargetbeamsdiskstatus[c] == False and preparetargetbeamsaltastatus[c] and str(c).zfill(2) in reqbeams: # if target dataset is requested, but not on disk
-                        subs_managefiles.director(self, 'mk', self.basedir + str(c).zfill(2) + '/' + self.rawsubdir, verbose=False)
-                        subs_irods.getdata_alta(int(self.prepare_date), int(self.prepare_obsnum_target), int(str(c).zfill(2)),targetdir=self.basedir + str(c).zfill(2) + '/' + self.rawsubdir + '/' + self.target)
+                        subs.managefiles.director(self, 'mk', self.basedir + str(c).zfill(2) + '/' + self.rawsubdir, verbose=False)
+                        subs.irods.getdata_alta(int(self.prepare_date), int(self.prepare_obsnum_target), int(str(c).zfill(2)),targetdir=self.basedir + str(c).zfill(2) + '/' + self.rawsubdir + '/' + self.target)
                         # Check if copy was successful
                         if os.path.isdir(self.basedir + str(c).zfill(2) + '/' + self.rawsubdir + '/' + self.target):
                             preparetargetbeamscopystatus[c] = True
@@ -277,41 +281,41 @@ class prepare:
 
         # Save the derived parameters for the target beams to the parameter file
 
-        subs_param.add_param(self, 'prepare_targetbeams_requested', preparetargetbeamsrequested)
-        subs_param.add_param(self, 'prepare_targetbeams_diskstatus', preparetargetbeamsdiskstatus)
-        subs_param.add_param(self, 'prepare_targetbeams_altastatus', preparetargetbeamsaltastatus)
-        subs_param.add_param(self, 'prepare_targetbeams_copystatus', preparetargetbeamscopystatus)
-        subs_param.add_param(self, 'prepare_targetbeams_rejreason', preparetargetbeamsrejreason)
+        subs.param.add_param(self, 'prepare_targetbeams_requested', preparetargetbeamsrequested)
+        subs.param.add_param(self, 'prepare_targetbeams_diskstatus', preparetargetbeamsdiskstatus)
+        subs.param.add_param(self, 'prepare_targetbeams_altastatus', preparetargetbeamsaltastatus)
+        subs.param.add_param(self, 'prepare_targetbeams_copystatus', preparetargetbeamscopystatus)
+        subs.param.add_param(self, 'prepare_targetbeams_rejreason', preparetargetbeamsrejreason)
 
         #################################################################
         ##### Functions to create the summaries of the PREPARE step #####
         #################################################################
 
     def summary(self):
-        """
+        '''
         Creates a general summary of the parameters in the parameter file generated during PREPARE. No detailed summary is available for PREPARE
         returns (DataFrame): A python pandas dataframe object, which can be looked at with the style function in the notebook
-        """
+        '''
 
         beams = 37
 
         # Load the parameters from the parameter file
 
-        FR = subs_param.get_param(self, 'prepare_fluxcal_requested')
-        FD = subs_param.get_param(self, 'prepare_fluxcal_diskstatus')
-        FA = subs_param.get_param(self, 'prepare_fluxcal_altastatus')
-        FC = subs_param.get_param(self, 'prepare_fluxcal_copystatus')
-        Frej = subs_param.get_param(self, 'prepare_fluxcal_rejreason')
-        PR = subs_param.get_param(self, 'prepare_polcal_requested')
-        PD = subs_param.get_param(self, 'prepare_polcal_diskstatus')
-        PA = subs_param.get_param(self, 'prepare_polcal_altastatus')
-        PC = subs_param.get_param(self, 'prepare_polcal_copystatus')
-        Prej = subs_param.get_param(self, 'prepare_polcal_rejreason')
-        TR = subs_param.get_param(self, 'prepare_targetbeams_requested')
-        TD = subs_param.get_param(self, 'prepare_targetbeams_diskstatus')
-        TA = subs_param.get_param(self, 'prepare_targetbeams_altastatus')
-        TC = subs_param.get_param(self, 'prepare_targetbeams_copystatus')
-        Trej = subs_param.get_param(self, 'prepare_targetbeams_rejreason')
+        FR = subs.param.get_param(self, 'prepare_fluxcal_requested')
+        FD = subs.param.get_param(self, 'prepare_fluxcal_diskstatus')
+        FA = subs.param.get_param(self, 'prepare_fluxcal_altastatus')
+        FC = subs.param.get_param(self, 'prepare_fluxcal_copystatus')
+        Frej = subs.param.get_param(self, 'prepare_fluxcal_rejreason')
+        PR = subs.param.get_param(self, 'prepare_polcal_requested')
+        PD = subs.param.get_param(self, 'prepare_polcal_diskstatus')
+        PA = subs.param.get_param(self, 'prepare_polcal_altastatus')
+        PC = subs.param.get_param(self, 'prepare_polcal_copystatus')
+        Prej = subs.param.get_param(self, 'prepare_polcal_rejreason')
+        TR = subs.param.get_param(self, 'prepare_targetbeams_requested')
+        TD = subs.param.get_param(self, 'prepare_targetbeams_diskstatus')
+        TA = subs.param.get_param(self, 'prepare_targetbeams_altastatus')
+        TC = subs.param.get_param(self, 'prepare_targetbeams_copystatus')
+        Trej = subs.param.get_param(self, 'prepare_targetbeams_rejreason')
 
         # Create the data frame
 
@@ -356,11 +360,11 @@ class prepare:
     ##########################################################################
 
     def show(self, showall=False):
-        """
+        '''
         show: Prints the current settings of the pipeline. Only shows keywords, which are in the default config file default.cfg
         showall: Set to true if you want to see all current settings instead of only the ones from the current step
-        """
-        subs_setinit.setinitdirs(self)
+        '''
+        subs.setinit.setinitdirs(self)
         config = ConfigParser.ConfigParser()
         config.readfp(open(self.apercaldir + '/modules/default.cfg'))
         for s in config.sections():
@@ -385,28 +389,28 @@ class prepare:
                     pass
 
     def reset(self):
-        """
+        '''
         Function to reset the current step and remove all generated data. Be careful! Deletes all data generated in this step!
-        """
-        subs_setinit.setinitdirs(self)
+        '''
+        subs.setinit.setinitdirs(self)
         self.logger.warning('### Deleting all raw data products and their directories. ###')
-        subs_managefiles.director(self,'ch', self.basedir)
+        subs.managefiles.director(self,'ch', self.basedir)
         deldirs = glob.glob(self.basedir + '[0-9][0-9]' + '/' + self.rawsubdir)
         for dir in deldirs:
-            subs_managefiles.director(self,'rm', dir)
+            subs.managefiles.director(self,'rm', dir)
         self.logger.warning('### Deleting all parameter file entries for PREPARE module ###')
-        subs_param.del_param(self, 'prepare_fluxcal_requested')
-        subs_param.del_param(self, 'prepare_fluxcal_diskstatus')
-        subs_param.del_param(self, 'prepare_fluxcal_altastatus')
-        subs_param.del_param(self, 'prepare_fluxcal_copystatus')
-        subs_param.del_param(self, 'prepare_fluxcal_rejreason')
-        subs_param.del_param(self, 'prepare_polcal_requested')
-        subs_param.del_param(self, 'prepare_polcal_diskstatus')
-        subs_param.del_param(self, 'prepare_polcal_altastatus')
-        subs_param.del_param(self, 'prepare_polcal_copystatus')
-        subs_param.del_param(self, 'prepare_polcal_rejreason')
-        subs_param.del_param(self, 'prepare_targetbeams_requested')
-        subs_param.del_param(self, 'prepare_targetbeams_diskstatus')
-        subs_param.del_param(self, 'prepare_targetbeams_altastatus')
-        subs_param.del_param(self, 'prepare_targetbeams_copystatus')
-        subs_param.del_param(self, 'prepare_targetbeams_rejreason')
+        subs.param.del_param(self, 'prepare_fluxcal_requested')
+        subs.param.del_param(self, 'prepare_fluxcal_diskstatus')
+        subs.param.del_param(self, 'prepare_fluxcal_altastatus')
+        subs.param.del_param(self, 'prepare_fluxcal_copystatus')
+        subs.param.del_param(self, 'prepare_fluxcal_rejreason')
+        subs.param.del_param(self, 'prepare_polcal_requested')
+        subs.param.del_param(self, 'prepare_polcal_diskstatus')
+        subs.param.del_param(self, 'prepare_polcal_altastatus')
+        subs.param.del_param(self, 'prepare_polcal_copystatus')
+        subs.param.del_param(self, 'prepare_polcal_rejreason')
+        subs.param.del_param(self, 'prepare_targetbeams_requested')
+        subs.param.del_param(self, 'prepare_targetbeams_diskstatus')
+        subs.param.del_param(self, 'prepare_targetbeams_altastatus')
+        subs.param.del_param(self, 'prepare_targetbeams_copystatus')
+        subs.param.del_param(self, 'prepare_targetbeams_rejreason')
