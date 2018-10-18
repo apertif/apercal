@@ -5,9 +5,8 @@ import sys
 from ConfigParser import SafeConfigParser
 
 import astropy.io.fits as pyfits
-import pylab as pl
-
-deg2rad = pl.pi / 180.
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 logger = logging.getLogger(__name__)
@@ -27,7 +26,7 @@ def qimplot(image=None, rmin=-2, rmax=2, cmap='gray'):
     logger.info("Quick Image Plot")
     if image is None:
         logger.critical("Please provide input image!")
-    pl.figure(figsize=(10, 10))
+    plt.figure(figsize=(10, 10))
     fits = miriad('fits')
     if not os.path.exists(image):
         logger.critical(image + " not found!")
@@ -38,13 +37,13 @@ def qimplot(image=None, rmin=-2, rmax=2, cmap='gray'):
     fits.go(rmfiles=True)
     imheader = pyfits.open(image + '.fits')
     imdata = imheader[0].data
-    rms = pl.rms_flat(imdata[0, 0, :, :])
+    rms = np.sqrt(np.mean(np.abs(imdata[0, 0, :, :]) ** 2))
     logger.info('RMS = ' + "{:2.2}".format(rms))
     logger.info("Plotting from " + str(rmin) + "*RMS to " + str(rmax) + str("*RMS"))
-    pl.imshow(pl.flipud(imdata[0, 0, :, :]), cmap=cmap, vmin=rmin * rms, vmax=rmax * rms)
-    pl.colorbar()
-    pl.xticks(())
-    pl.yticks(())
+    plt.imshow(np.flipud(imdata[0, 0, :, :]), cmap=cmap, vmin=rmin * rms, vmax=rmax * rms)
+    plt.colorbar()
+    plt.xticks(())
+    plt.yticks(())
 
 
 class source:

@@ -1,4 +1,3 @@
-import pylab as pl
 import os
 
 import libs.lib
