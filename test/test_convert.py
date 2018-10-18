@@ -1,6 +1,8 @@
 import unittest
 from apercal.modules.convert import convert
 from os import path
+import matplotlib as mpl
+mpl.use('TkAgg')
 
 here = path.dirname(__file__)
 
