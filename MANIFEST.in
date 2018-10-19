@@ -1,0 +1,2 @@
+recursive-include apercal *.cfg
+include LICENSE
