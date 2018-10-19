@@ -2,11 +2,14 @@ import logging
 import os
 import subprocess
 import sys
-from ConfigParser import SafeConfigParser
+from ConfigParser import SafeConfigParser, ConfigParser
 
 import astropy.io.fits as pyfits
 import matplotlib.pyplot as plt
 import numpy as np
+
+from apercal.subs import setinit as subs_setinit
+from apercal.modules import default_cfg
 
 
 logger = logging.getLogger(__name__)
@@ -689,3 +692,33 @@ def director(self, option, dest, file=None, verbose=True):
         basher("rm -r " + str(dest))
     else:
         print('### Option not supported! Only mk, ch, mv, rm, rn, and cp are supported! ###')
+
+
+def show(container, section, showall=False):
+    """
+    show: Prints the current settings of the pipeline. Only shows keywords, which are in the default config file default.cfg
+    showall: Set to true if you want to see all current settings instead of only the ones from the current step
+    """
+    subs_setinit.setinitdirs(container)
+    config = ConfigParser()
+    config.readfp(open(default_cfg))
+    for s in config.sections():
+        if showall:
+            print(s)
+            o = config.options(s)
+            for o in config.items(s):
+                try:
+                    print('\t' + str(o[0]) + ' = ' + str(container.__dict__.__getitem__(o[0])))
+                except KeyError:
+                    pass
+        else:
+            if s == section:
+                print(s)
+                o = config.options(s)
+                for o in config.items(s):
+                    try:
+                        print('\t' + str(o[0]) + ' = ' + str(container.__dict__.__getitem__(o[0])))
+                    except KeyError:
+                        pass
+            else:
+                pass

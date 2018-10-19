@@ -14,8 +14,8 @@ from apercal.subs import readmirhead as subs_readmirhead
 from apercal.subs import imstats as subs_imstats
 from apercal.subs import param as subs_param
 from apercal.subs.param import get_param_def
-
 from apercal.libs import lib
+from apercal.modules import default_cfg
 
 
 ####################################################################################################
@@ -933,38 +933,8 @@ class continuum:
 
         return df
 
-    ##########################################################################
-    ##### Individual functions to show the parameters and reset the step #####
-    ##########################################################################
-
     def show(self, showall=False):
-        """
-        show: Prints the current settings of the pipeline. Only shows keywords, which are in the default config file default.cfg
-        showall: Set to true if you want to see all current settings instead of only the ones from the current step
-        """
-        subs_setinit.setinitdirs(self)
-        config = ConfigParser.ConfigParser()
-        config.readfp(open(self.apercaldir + '/apercal/modules/default.cfg'))
-        for s in config.sections():
-            if showall:
-                print(s)
-                o = config.options(s)
-                for o in config.items(s):
-                    try:
-                        print('\t' + str(o[0]) + ' = ' + str(self.__dict__.__getitem__(o[0])))
-                    except KeyError:
-                        pass
-            else:
-                if s == 'CONTINUUM':
-                    print(s)
-                    o = config.options(s)
-                    for o in config.items(s):
-                        try:
-                            print('\t' + str(o[0]) + ' = ' + str(self.__dict__.__getitem__(o[0])))
-                        except KeyError:
-                            pass
-                else:
-                    pass
+        lib.show(self, 'CONTINUUM', showall)
 
     def reset(self):
         """

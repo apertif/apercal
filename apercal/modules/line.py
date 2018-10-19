@@ -11,6 +11,7 @@ import sys
 from apercal.subs import setinit as subs_setinit
 from apercal.libs import lib
 
+from apercal.modules import default_cfg
 
 
 class line:
@@ -872,38 +873,8 @@ class line:
         lastmajor = n
         return lastmajor
 
-    #######################################################################
-    ##### Manage the creation and moving of new directories and files #####
-    #######################################################################
-
     def show(self, showall=False):
-        """
-        show: Prints the current settings of the pipeline. Only shows keywords, which are in the default config file default.cfg
-        showall: Set to true if you want to see all current settings instead of only the ones from the current step
-        """
-        subs_setinit.setinitdirs(self)
-        config = ConfigParser.ConfigParser()
-        config.readfp(open(self.apercaldir + '/apercal/modules/default.cfg'))
-        for s in config.sections():
-            if showall:
-                print(s)
-                o = config.options(s)
-                for o in config.items(s):
-                    try:
-                        print('\t' + str(o[0]) + ' = ' + str(self.__dict__.__getitem__(o[0])))
-                    except KeyError:
-                        pass
-            else:
-                if s == 'LINE':
-                    print(s)
-                    o = config.options(s)
-                    for o in config.items(s):
-                        try:
-                            print('\t' + str(o[0]) + ' = ' + str(self.__dict__.__getitem__(o[0])))
-                        except KeyError:
-                            pass
-                else:
-                    pass
+        lib.show(self, 'LINE', showall)
 
     def reset(self):
         """

@@ -13,6 +13,9 @@ from apercal.subs import setinit as subs_setinit
 from apercal.subs import managefiles as subs_managefiles
 from apercal.subs import param as subs_param
 from apercal.subs.param import get_param_def
+from apercal.modules import default_cfg
+from apercal.ao_strategies import ao_strategies
+from apercal.libs import lib
 
 
 class preflag:
@@ -57,8 +60,7 @@ class preflag:
     preflag_aoflagger_fluxcalstrat = None
     preflag_aoflagger_polcalstrat = None
     preflag_aoflagger_targetstrat = None
-    
-    
+
     def __init__(self, filename=None, **kwargs):
         self.logger = logging.getLogger('PREFLAG')
         config = ConfigParser.ConfigParser()  # Initialise the config parser
@@ -66,7 +68,7 @@ class preflag:
             config.readfp(open(filename))
             self.logger.info('### Configuration file ' + filename + ' successfully read! ###')
         else:
-            config.readfp(open(os.path.realpath(__file__).rstrip('preflag.pyc') + 'default.cfg'))
+            config.readfp(open(default_cfg))
             self.logger.info('### No configuration file given or file not found! Using default values! ###')
         for s in config.sections():
             for o in config.items(s):
@@ -1033,15 +1035,15 @@ class preflag:
                         self.logger.info('# Using AOFlagger to flag flux calibrator dataset #')
                         preflagaoflaggerfluxcalbandpassapply = get_param_def(self, 'preflag_aoflagger_fluxcal_bandpass_apply', False) # Check if bandpass was applied successfully
                         if self.aoflagger_bandpass and preflagaoflaggerfluxcalbandpassapply:
-                            os.system('aoflagger -strategy ' + self.apercaldir + '/ao_strategies/' + self.preflag_aoflagger_fluxcalstrat + ' -column CORRECTED_DATA ' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal)
+                            os.system('aoflagger -strategy ' + ao_strategies + self.preflag_aoflagger_fluxcalstrat + ' -column CORRECTED_DATA ' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal)
                             self.logger.debug('# Used AOFlagger to flag flux calibrator with preliminary bandpass applied #')
                             preflagaoflaggerfluxcalflag = True
                         elif self.aoflagger_bandpass == True and preflagaoflaggerfluxcalbandpassapply == False:
-                            os.system('aoflagger -strategy ' + self.apercaldir + '/ao_strategies/' + self.preflag_aoflagger_fluxcalstrat + ' ' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal)
+                            os.system('aoflagger -strategy ' + ao_strategies + self.preflag_aoflagger_fluxcalstrat + ' ' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal)
                             self.logger.warning('# Used AOFlagger to flag flux calibrator without preliminary bandpass applied. Better results are usually obtained with a preliminary bandpass applied. #')
                             preflagaoflaggerfluxcalflag = True
                         elif self.aoflagger_bandpass == False:
-                            os.system('aoflagger -strategy ' + self.apercaldir + '/ao_strategies/' + self.preflag_aoflagger_fluxcalstrat + ' ' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal)
+                            os.system('aoflagger -strategy ' + ao_strategies + self.preflag_aoflagger_fluxcalstrat + ' ' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal)
                             self.logger.info('# Used AOFlagger to flag flux calibrator without preliminary bandpass applied. Better results are usually obtained with a preliminary bandpass applied. #')
                             preflagaoflaggerfluxcalflag = True
                     else:
@@ -1055,15 +1057,15 @@ class preflag:
                         self.logger.info('# Using AOFlagger to flag polarised calibrator dataset #')
                         preflagaoflaggerpolcalbandpassapply = get_param_def(self, 'preflag_aoflagger_polcal_bandpass_apply', False) # Check if bandpass was applied successfully
                         if self.aoflagger_bandpass and preflagaoflaggerpolcalbandpassapply:
-                            os.system('aoflagger -strategy ' + self.apercaldir + '/ao_strategies/' + self.preflag_aoflagger_polcalstrat + ' -column CORRECTED_DATA ' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal)
+                            os.system('aoflagger -strategy ' + ao_strategies + self.preflag_aoflagger_polcalstrat + ' -column CORRECTED_DATA ' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal)
                             self.logger.debug('# Used AOFlagger to flag polarised calibrator with preliminary bandpass applied #')
                             preflagaoflaggerpolcalflag = True
                         elif self.aoflagger_bandpass == True and preflagaoflaggerpolcalbandpassapply == False:
-                            os.system('aoflagger -strategy ' + self.apercaldir + '/ao_strategies/' + self.preflag_aoflagger_polcalstrat + ' ' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal)
+                            os.system('aoflagger -strategy ' + ao_strategies + self.preflag_aoflagger_polcalstrat + ' ' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal)
                             self.logger.warning('# Used AOFlagger to flag polarised calibrator without preliminary bandpass applied. Better results are usually obtained with a preliminary bandpass applied. #')
                             preflagaoflaggerpolcalflag = True
                         elif self.aoflagger_bandpass == False:
-                            os.system('aoflagger -strategy ' + self.apercaldir + '/ao_strategies/' + self.preflag_aoflagger_polcalstrat + ' ' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal)
+                            os.system('aoflagger -strategy ' + ao_strategies + self.preflag_aoflagger_polcalstrat + ' ' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal)
                             self.logger.info('# Used AOFlagger to flag polarised calibrator without preliminary bandpass applied. Better results are usually obtained with a preliminary bandpass applied. #')
                             preflagaoflaggerpolcalflag = True
                     else:
@@ -1085,15 +1087,15 @@ class preflag:
                     for vis in datasets:
                         if preflagaoflaggertargetbeamsflag[int(vis.split('/')[-3])] == False:
                             if self.aoflagger_bandpass and preflagaoflaggertargetbeamsbandpassapply[int(vis.split('/')[-3])]:
-                                os.system('aoflagger -strategy ' + self.apercaldir + '/ao_strategies/' + self.preflag_aoflagger_targetstrat + ' -column CORRECTED_DATA ' + vis)
+                                os.system('aoflagger -strategy ' + ao_strategies + self.preflag_aoflagger_targetstrat + ' -column CORRECTED_DATA ' + vis)
                                 self.logger.debug('# Used AOFlagger to flag target beam ' + vis.split('/')[-3] + ' with preliminary bandpass applied #')
                                 preflagaoflaggertargetbeamsflag[int(vis.split('/')[-3])] = True
                             elif self.aoflagger_bandpass == True and preflagaoflaggertargetbeamsbandpassapply[int(vis.split('/')[-3])] == False:
-                                os.system('aoflagger -strategy ' + self.apercaldir + '/ao_strategies/' + self.preflag_aoflagger_targetstrat + ' ' + vis)
+                                os.system('aoflagger -strategy ' + ao_strategies + self.preflag_aoflagger_targetstrat + ' ' + vis)
                                 self.logger.warning('# Used AOFlagger to flag target beam ' + vis.split('/')[-3] + ' without preliminary bandpass applied. Better results are usually obtained with a preliminary bandpass applied. #')
                                 preflagaoflaggertargetbeamsflag[int(vis.split('/')[-3])] = True
                             elif self.aoflagger_bandpass == False:
-                                os.system('aoflagger -strategy ' + self.apercaldir + '/ao_strategies/' + self.preflag_aoflagger_targetstrat + ' ' + vis)
+                                os.system('aoflagger -strategy ' + ao_strategies + self.preflag_aoflagger_targetstrat + ' ' + vis)
                                 self.logger.warning('# Used AOFlagger to flag target beam ' + vis.split('/')[-3] + ' without preliminary bandpass applied. Better results are usually obtained with a preliminary bandpass applied. #')
                                 preflagaoflaggertargetbeamsflag[int(vis.split('/')[-3])] = True
                         else:
@@ -1218,39 +1220,8 @@ class preflag:
 
         return df
 
-
-    ##########################################################################
-    ##### Individual functions to show the parameters and reset the step #####
-    ##########################################################################
-
     def show(self, showall=False):
-        """
-        show: Prints the current settings of the pipeline. Only shows keywords, which are in the default config file default.cfg
-        showall: Set to true if you want to see all current settings instead of only the ones from the current step
-        """
-        subs_setinit.setinitdirs(self)
-        config = ConfigParser.ConfigParser()
-        config.readfp(open(self.apercaldir + '/apercal/modules/default.cfg'))
-        for s in config.sections():
-            if showall:
-                print(s)
-                o = config.options(s)
-                for o in config.items(s):
-                    try:
-                        print('\t' + str(o[0]) + ' = ' + str(self.__dict__.__getitem__(o[0])))
-                    except KeyError:
-                        pass
-            else:
-                if s == 'PREFLAG':
-                    print(s)
-                    o = config.options(s)
-                    for o in config.items(s):
-                        try:
-                            print('\t' + str(o[0]) + ' = ' + str(self.__dict__.__getitem__(o[0])))
-                        except KeyError:
-                            pass
-                else:
-                    pass
+        lib.show(self, 'PREFLAG', showall)
 
     def reset(self):
         """
