@@ -11,6 +11,7 @@ from apercal.subs import setinit as subs_setinit
 from apercal.subs import managefiles as subs_managefiles
 from apercal.subs.param import get_param_def
 from apercal.subs import param as subs_param
+from apercal.subs import msutils as subs_msutils
 from apercal.libs import lib
 
 
@@ -124,11 +125,15 @@ class convert:
                     if convertfluxcalmsavailable:
                         self.logger.debug('# Converting flux calibrator dataset from MS to UVFITS format. #')
                         subs_managefiles.director(self, 'mk', self.basedir + '00' + '/' + self.crosscalsubdir, verbose=False)
-                        fc_convert = 'exportuvfits(vis="' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal + '", fitsfile="' + self.basedir + '00' + '/' + self.crosscalsubdir + '/' + str(self.fluxcal).rstrip('MS') + 'UVFITS' + '", datacolumn="data", combinespw=True, padwithflags=True, multisource=True, writestation=True)'
+                        if (subs_msutils.has_correcteddata(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal)):
+                            fc_convert = 'exportuvfits(vis="' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal + '", fitsfile="' + self.basedir + '00' + '/' + self.crosscalsubdir + '/' + str(self.fluxcal).rstrip('MS') + 'UVFITS' + '", datacolumn="corrected", combinespw=True, padwithflags=True, multisource=True, writestation=True)'
+                        else:
+                            fc_convert = 'exportuvfits(vis="' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal + '", fitsfile="' + self.basedir + '00' + '/' + self.crosscalsubdir + '/' + str(self.fluxcal).rstrip('MS') + 'UVFITS' + '", datacolumn="data", combinespw=True, padwithflags=True, multisource=True, writestation=True)'
+                            self.logger.warning('# Flux calibrator does not have a corrected_data column! Using uncorrected data for conversion! #')
                         casacmd = [fc_convert]
                         casa = drivecasa.Casapy()
                         casa.run_script(casacmd, raise_on_severe=False, timeout=3600)
-                        if os.path.isfile( self.basedir + '00' + '/' + self.crosscalsubdir + '/' + self.fluxcal.rstrip('MS') + 'UVFITS'):
+                        if os.path.isfile(self.basedir + '00' + '/' + self.crosscalsubdir + '/' + self.fluxcal.rstrip('MS') + 'UVFITS'):
                             convertfluxcalms2uvfits = True
                             self.logger.info('# Converted flux calibrator dataset from MS to UVFITS format! #')
                         else:
@@ -149,7 +154,11 @@ class convert:
                     if convertpolcalmsavailable:
                         self.logger.debug('# Converting polarised calibrator dataset from MS to UVFITS format. #')
                         subs_managefiles.director(self, 'mk', self.basedir + '00' + '/' + self.crosscalsubdir, verbose=False)
-                        pc_convert = 'exportuvfits(vis="' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal + '", fitsfile="' + self.basedir + '00' + '/' + self.crosscalsubdir + '/' + str(self.polcal).rstrip('MS') + 'UVFITS' + '", datacolumn="data", combinespw=True, padwithflags=True, multisource=True, writestation=True)'
+                        if (subs_msutils.has_correcteddata(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal)):
+                            pc_convert = 'exportuvfits(vis="' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal + '", fitsfile="' + self.basedir + '00' + '/' + self.crosscalsubdir + '/' + str(self.polcal).rstrip('MS') + 'UVFITS' + '", datacolumn="corrected", combinespw=True, padwithflags=True, multisource=True, writestation=True)'
+                        else:
+                            pc_convert = 'exportuvfits(vis="' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal + '", fitsfile="' + self.basedir + '00' + '/' + self.crosscalsubdir + '/' + str(self.polcal).rstrip('MS') + 'UVFITS' + '", datacolumn="data", combinespw=True, padwithflags=True, multisource=True, writestation=True)'
+                            self.logger.warning('# Polarised calibrator does not have a corrected_data column! Using uncorrected data for conversion! #')
                         casacmd = [pc_convert]
                         casa = drivecasa.Casapy()
                         casa.run_script(casacmd, raise_on_severe=False, timeout=3600)
@@ -182,7 +191,11 @@ class convert:
                     if converttargetbeamsuvfits2miriad[int(vis.split('/')[-3])] == False:
                         if converttargetbeamsmsavailable[int(vis.split('/')[-3])]:
                             subs_managefiles.director(self, 'mk', self.basedir + vis.split('/')[-3] + '/' + self.crosscalsubdir, verbose=False)
-                            tg_convert = 'exportuvfits(vis="' + self.basedir + vis.split('/')[-3] + '/' + self.rawsubdir + '/' + self.target + '", fitsfile="' + self.basedir + vis.split('/')[-3] + '/' + self.crosscalsubdir + '/' + self.target.rstrip('MS') + 'UVFITS' + '", datacolumn="data", combinespw=True, padwithflags=True, multisource=True, writestation=True)'
+                            if subs_msutils.has_correcteddata(self.basedir + vis.split('/')[-3] + '/' + self.rawsubdir + '/' + self.target):
+                                tg_convert = 'exportuvfits(vis="' + self.basedir + vis.split('/')[-3] + '/' + self.rawsubdir + '/' + self.target + '", fitsfile="' + self.basedir + vis.split('/')[-3] + '/' + self.crosscalsubdir + '/' + self.target.rstrip('MS') + 'UVFITS' + '", datacolumn="corrected", combinespw=True, padwithflags=True, multisource=True, writestation=True)'
+                            else:
+                                tg_convert = 'exportuvfits(vis="' + self.basedir + vis.split('/')[-3] + '/' + self.rawsubdir + '/' + self.target + '", fitsfile="' + self.basedir + vis.split('/')[-3] + '/' + self.crosscalsubdir + '/' + self.target.rstrip('MS') + 'UVFITS' + '", datacolumn="data", combinespw=True, padwithflags=True, multisource=True, writestation=True)'
+                                self.logger.warning('# Target beam dataset ' + vis.split('/')[-3] + ' does not have a corrected_data column! Using uncorrected data for conversion! #')
                             casacmd = [tg_convert]
                             casa = drivecasa.Casapy()
                             casa.run_script(casacmd, raise_on_severe=False, timeout=7200)
