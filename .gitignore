@@ -6,3 +6,4 @@ casa.log
 .venv*/
 .virtualenv*/
 *.egg-info/
+.eggs/
