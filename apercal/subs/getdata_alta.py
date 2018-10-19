@@ -9,6 +9,8 @@ import sys
 import time
 import logging
 
+from apercal.exceptions import ApercalException
+
 
 def parse_list(spec):
     """Convert a string specification like 00-04,07,09-12 into a list [0,1,2,3,4,7,9,10,11,12]
@@ -98,12 +100,12 @@ def getdata_alta(date, task_ids, beams, targetdir=".", tmpdir=".", alta_exceptio
     if targetdir[-1] != "/":
         targetdir += "/"
 
-    logger.info('########## Start getting data from ALTA ##########')
+    logger.info('####### Start getting data from ALTA ##########')
     logging.info('Beams: %s'%beams)
 
     for beam_nr in beams:
 
-        logger.info('###### Processing beam %.3d... ######' % beam_nr)
+        logger.info('### Processing beam %.3d... ######' % beam_nr)
 
         for task_id in task_ids:
             logger.info('Processing task ID %.3d...' % task_id)
@@ -118,7 +120,7 @@ def getdata_alta(date, task_ids, beams, targetdir=".", tmpdir=".", alta_exceptio
     # Add verification at the end of the transfer
     for beam_nr in beams:
 
-        logger.info('###### Verifying beam %.3d... ######' % beam_nr)
+        logger.info('### Verifying beam %.3d... ######' % beam_nr)
 
         for task_id in task_ids:
             logger.info('Verifying task ID %.3d...' % task_id)
@@ -171,22 +173,21 @@ if __name__ == "__main__":
     try:
         date = args[1]
     except:
-        print("Date required! Format: YYMMDD e.g. 180309")
-        sys.exit()
+        raise ApercalException("Date required! Format: YYMMDD e.g. 180309")
+
 
     # Get date
     try:
         irange = args[2]
     except:
-        print("ID range required! Format: NNN-NNN e.g. 002-010")
-        sys.exit()
+        raise ApercalException("ID range required! Format: NNN-NNN e.g. 002-010")
+
 
     # Get beams
     try:
         brange = args[3]
     except:
-        print("Beam range required! Format: NN-NN e.g. 00-37")
-        sys.exit()
+        raise ApercalException("Beam range required! Format: NN-NN e.g. 00-37")
 
     # Get beams
     try:

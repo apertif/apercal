@@ -15,13 +15,16 @@ import timeit
 from apercal.subs import setinit as subs_setinit
 from apercal.libs import lib
 
+from apercal.exceptions import ApercalException
+
+
+logger = logging.getLogger(__name__)
 
 
 class line_parallel:
     """
     Line class to do continuum subtraction and prepare data for line imaging.
     """
-    apercaldir = None
     fluxcal = None
     polcal = None
     target = None
@@ -68,30 +71,14 @@ class line_parallel:
     line_image_restorbeam = None
     line_image_convolbeam = None
 
-    # todo: this might be bug, they are not defined in the default config file
     selfcaldir = None
     crosscaldir = None
     linedir = None
 
     def __init__(self, file=None, **kwargs):
-        self.logger = logging.getLogger('LINE')
-        config = ConfigParser.ConfigParser() # Initialise the config parser
-        if file != None:
-            config.readfp(open(file))
-            self.logger.info('### Configuration file ' + file + ' successfully read! ###')
-        else:
-            config.readfp(open(os.path.realpath(__file__).rstrip('calibrate.pyc') + 'default.cfg'))
-            self.logger.info('### No configuration file given or file not found! Using default values! ###')
-        for s in config.sections():
-            for o in config.items(s):
-                setattr(self, o[0], eval(o[1]))
-        self.default = config # Save the loaded config file as defaults for later usage
+        self.default = lib.load_config(self, file)
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
-
-    #################################################################
-    ##### Function to execute the continuum subtraction process #####
-    #################################################################
 
     def go(self):
         """
@@ -100,12 +87,12 @@ class line_parallel:
         transfergains
         subtract
         """
-        self.logger.info("########## Starting CONTINUUM SUBTRACTION ##########")
+        logger.info("########## Starting CONTINUUM SUBTRACTION ##########")
         self.splitdata()
         self.transfergains()
         self.subtract()
         self.image_line()
-        self.logger.info("########## CONTINUUM SUBTRACTION done ##########")
+        logger.info("########## CONTINUUM SUBTRACTION done ##########")
 
 #new:
     def go_timed(self):
@@ -115,48 +102,48 @@ class line_parallel:
         transfergains
         subtract
         """
-        self.logger.info("########## Starting CONTINUUM SUBTRACTION ##########")
+        logger.info("########## Starting CONTINUUM SUBTRACTION ##########")
         start = time.time()
         #self.splitdata(threads)
         # not sure this is entirely recommended: if each thread opens own copy of entire file, memory could become full
         timeit_splitdata_time = timeit.Timer(lambda: self.splitdata(), setup="from apercal import *").timeit(number=1)
         end = time.time()
         splitdata_time = end - start
-        self.logger.info("### (ORIGINAL) Splitting data: " + str(splitdata_time) + " s ###")
-        self.logger.info("### (ORIGINAL) Splitting data (timeit): " + str(timeit_splitdata_time) + " s ###")
+        logger.info("### (ORIGINAL) Splitting data: " + str(splitdata_time) + " s ###")
+        logger.info("### (ORIGINAL) Splitting data (timeit): " + str(timeit_splitdata_time) + " s ###")
         start = time.time()
         #self.transfergains()
         timeit_transfergains_time = timeit.Timer(lambda: self.transfergains(), setup="from apercal import *").timeit(number=1)
         end = time.time()
         transfergains_time = end - start
-        self.logger.info("### (ORIGINAL) Transfer gains: " + str(transfergains_time) + " s ###")
-        self.logger.info("### (ORIGINAL) Transfer gains (timeit): " + str(timeit_transfergains_time) + " s ###")
+        logger.info("### (ORIGINAL) Transfer gains: " + str(transfergains_time) + " s ###")
+        logger.info("### (ORIGINAL) Transfer gains (timeit): " + str(timeit_transfergains_time) + " s ###")
         start = time.time()
         #self.subtract()
         timeit_subtract_time = timeit.Timer(lambda: self.subtract(), setup="from apercal import *").timeit(number=1)
         end = time.time()
         subtract_time = end - start
-        self.logger.info("### (ORIGINAL) Subtract continuum: " + str(subtract_time) + " s ###")
-        self.logger.info("### (ORIGINAL) Subtract continuum (timeit): " + str(timeit_subtract_time) + " s ###")
+        logger.info("### (ORIGINAL) Subtract continuum: " + str(subtract_time) + " s ###")
+        logger.info("### (ORIGINAL) Subtract continuum (timeit): " + str(timeit_subtract_time) + " s ###")
         start = time.time()
         #self.image_line(threads)
         timeit_image_line_time = timeit.Timer(lambda: self.image_line(threads), setup="from apercal import *").timeit(number=1)
         end = time.time()
         image_line_time = end - start
-        self.logger.info("### (ORIGINAL) Line imaging: " + str(image_line_time) + " s ###")
-        self.logger.info("### (ORIGINAL) Line imaging (timeit): " + str(timeit_image_line_time) + " s ###")
-        self.logger.info("### (ORIGINAL) Timing summary: ###")
-        self.logger.info("### (ORIGINAL) Splitting data: " + str(splitdata_time) + " s ###")
-        self.logger.info("### (ORIGINAL) Splitting data (timeit): " + str(timeit_splitdata_time) + " s ###")
-        self.logger.info("### (ORIGINAL) Transfer gains: " + str(transfergains_time) + " s ###")
-        self.logger.info("### (ORIGINAL) Transfer gains (timeit): " + str(timeit_transfergains_time) + " s ###")
-        self.logger.info("### (ORIGINAL) Subtract continuum: " + str(subtract_time) + " s ###")
-        self.logger.info("### (ORIGINAL) Subtract continuum (timeit): " + str(timeit_subtract_time) + " s ###")
-        self.logger.info("### (ORIGINAL) Line imaging: " + str(image_line_time) + " s ###")
-        self.logger.info("### (ORIGINAL) Line imaging (timeit): " + str(timeit_image_line_time) + " s ###")
-        self.logger.info("### (ORIGINAL) Full line module: " + str(splitdata_time + transfergains_time + subtract_time + image_line_time) + " s ###")
-        self.logger.info("### (ORIGINAL) Full line module (timeit): " + str(timeit_splitdata_time + timeit_transfergains_time + timeit_subtract_time + timeit_image_line_time) + " s ###")
-        self.logger.info("########## CONTINUUM SUBTRACTION done ##########")
+        logger.info("### (ORIGINAL) Line imaging: " + str(image_line_time) + " s ###")
+        logger.info("### (ORIGINAL) Line imaging (timeit): " + str(timeit_image_line_time) + " s ###")
+        logger.info("### (ORIGINAL) Timing summary: ###")
+        logger.info("### (ORIGINAL) Splitting data: " + str(splitdata_time) + " s ###")
+        logger.info("### (ORIGINAL) Splitting data (timeit): " + str(timeit_splitdata_time) + " s ###")
+        logger.info("### (ORIGINAL) Transfer gains: " + str(transfergains_time) + " s ###")
+        logger.info("### (ORIGINAL) Transfer gains (timeit): " + str(timeit_transfergains_time) + " s ###")
+        logger.info("### (ORIGINAL) Subtract continuum: " + str(subtract_time) + " s ###")
+        logger.info("### (ORIGINAL) Subtract continuum (timeit): " + str(timeit_subtract_time) + " s ###")
+        logger.info("### (ORIGINAL) Line imaging: " + str(image_line_time) + " s ###")
+        logger.info("### (ORIGINAL) Line imaging (timeit): " + str(timeit_image_line_time) + " s ###")
+        logger.info("### (ORIGINAL) Full line module: " + str(splitdata_time + transfergains_time + subtract_time + image_line_time) + " s ###")
+        logger.info("### (ORIGINAL) Full line module (timeit): " + str(timeit_splitdata_time + timeit_transfergains_time + timeit_subtract_time + timeit_image_line_time) + " s ###")
+        logger.info("########## CONTINUUM SUBTRACTION done ##########")
 
     def go_sequential(self):
         """
@@ -165,12 +152,12 @@ class line_parallel:
         transfergains
         subtract
         """
-        self.logger.info("########## Starting CONTINUUM SUBTRACTION ##########")
+        logger.info("########## Starting CONTINUUM SUBTRACTION ##########")
         self.splitdata_sequential()
         self.transfergains()
         self.subtract()
         self.image_line_sequential()
-        self.logger.info("########## CONTINUUM SUBTRACTION done ##########")
+        logger.info("########## CONTINUUM SUBTRACTION done ##########")
 
     def go_sequential_timed(self):
         """
@@ -179,48 +166,48 @@ class line_parallel:
         transfergains
         subtract
         """
-        self.logger.info("########## Starting CONTINUUM SUBTRACTION ##########")
+        logger.info("########## Starting CONTINUUM SUBTRACTION ##########")
         start = time.time()
         #self.splitdata_sequential(threads)
         # not sure this is entirely recommended: if each thread opens own copy of entire file, memory could become full
         timeit_splitdata_time = timeit.Timer(lambda: self.splitdata_sequential(), setup="from apercal import *").timeit(number=1)
         end = time.time()
         splitdata_time = end - start
-        self.logger.info("### (SEQUENTIAL) Splitting data: " + str(splitdata_time) + " s ###")
-        self.logger.info("### (SEQUENTIAL) Splitting data (timeit): " + str(timeit_splitdata_time) + " s ###")
+        logger.info("### (SEQUENTIAL) Splitting data: " + str(splitdata_time) + " s ###")
+        logger.info("### (SEQUENTIAL) Splitting data (timeit): " + str(timeit_splitdata_time) + " s ###")
         start = time.time()
         #self.transfergains()
         timeit_transfergains_time = timeit.Timer(lambda: self.transfergains(), setup="from apercal import *").timeit(number=1)
         end = time.time()
         transfergains_time = end - start
-        self.logger.info("### (SEQUENTIAL) Transfer gains: " + str(transfergains_time) + " s ###")
-        self.logger.info("### (SEQUENTIAL) Transfer gains (timeit): " + str(timeit_transfergains_time) + " s ###")
+        logger.info("### (SEQUENTIAL) Transfer gains: " + str(transfergains_time) + " s ###")
+        logger.info("### (SEQUENTIAL) Transfer gains (timeit): " + str(timeit_transfergains_time) + " s ###")
         start = time.time()
         #self.subtract()
         timeit_subtract_time = timeit.Timer(lambda: self.subtract(), setup="from apercal import *").timeit(number=1)
         end = time.time()
         subtract_time = end - start
-        self.logger.info("### (SEQUENTIAL) Subtract continuum: " + str(subtract_time) + " s ###")
-        self.logger.info("### (SEQUENTIAL) Subtract continuum (timeit): " + str(timeit_subtract_time) + " s ###")
+        logger.info("### (SEQUENTIAL) Subtract continuum: " + str(subtract_time) + " s ###")
+        logger.info("### (SEQUENTIAL) Subtract continuum (timeit): " + str(timeit_subtract_time) + " s ###")
         start = time.time()
         #self.image_line_sequential(threads)
         timeit_image_line_time = timeit.Timer(lambda: self.image_line_sequential(), setup="from apercal import *").timeit(number=1)
         end = time.time()
         image_line_time = end - start
-        self.logger.info("### (SEQUENTIAL) Line imaging: " + str(image_line_time) + " s ###")
-        self.logger.info("### (SEQUENTIAL) Line imaging (timeit): " + str(timeit_image_line_time) + " s ###")
-        self.logger.info("### (SEQUENTIAL) Timing summary: ###")
-        self.logger.info("### (SEQUENTIAL) Splitting data: " + str(splitdata_time) + " s ###")
-        self.logger.info("### (SEQUENTIAL) Splitting data (timeit): " + str(timeit_splitdata_time) + " s ###")
-        self.logger.info("### (SEQUENTIAL) Transfer gains: " + str(transfergains_time) + " s ###")
-        self.logger.info("### (SEQUENTIAL) Transfer gains (timeit): " + str(timeit_transfergains_time) + " s ###")
-        self.logger.info("### (SEQUENTIAL) Subtract continuum: " + str(subtract_time) + " s ###")
-        self.logger.info("### (SEQUENTIAL) Subtract continuum (timeit): " + str(timeit_subtract_time) + " s ###")
-        self.logger.info("### (SEQUENTIAL) Line imaging: " + str(image_line_time) + " s ###")
-        self.logger.info("### (SEQUENTIAL) Line imaging (timeit): " + str(timeit_image_line_time) + " s ###")
-        self.logger.info("### (SEQUENTIAL) Full line module: " + str(splitdata_time + transfergains_time + subtract_time + image_line_time) + " s ###")
-        self.logger.info("### (SEQUENTIAL) Full line module (timeit): " + str(timeit_splitdata_time + timeit_transfergains_time + timeit_subtract_time + timeit_image_line_time) + " s ###")
-        self.logger.info("########## CONTINUUM SUBTRACTION done ##########")
+        logger.info("### (SEQUENTIAL) Line imaging: " + str(image_line_time) + " s ###")
+        logger.info("### (SEQUENTIAL) Line imaging (timeit): " + str(timeit_image_line_time) + " s ###")
+        logger.info("### (SEQUENTIAL) Timing summary: ###")
+        logger.info("### (SEQUENTIAL) Splitting data: " + str(splitdata_time) + " s ###")
+        logger.info("### (SEQUENTIAL) Splitting data (timeit): " + str(timeit_splitdata_time) + " s ###")
+        logger.info("### (SEQUENTIAL) Transfer gains: " + str(transfergains_time) + " s ###")
+        logger.info("### (SEQUENTIAL) Transfer gains (timeit): " + str(timeit_transfergains_time) + " s ###")
+        logger.info("### (SEQUENTIAL) Subtract continuum: " + str(subtract_time) + " s ###")
+        logger.info("### (SEQUENTIAL) Subtract continuum (timeit): " + str(timeit_subtract_time) + " s ###")
+        logger.info("### (SEQUENTIAL) Line imaging: " + str(image_line_time) + " s ###")
+        logger.info("### (SEQUENTIAL) Line imaging (timeit): " + str(timeit_image_line_time) + " s ###")
+        logger.info("### (SEQUENTIAL) Full line module: " + str(splitdata_time + transfergains_time + subtract_time + image_line_time) + " s ###")
+        logger.info("### (SEQUENTIAL) Full line module (timeit): " + str(timeit_splitdata_time + timeit_transfergains_time + timeit_subtract_time + timeit_image_line_time) + " s ###")
+        logger.info("########## CONTINUUM SUBTRACTION done ##########")
 
     def go_parallel(self, first_level_threads = 4, second_level_threads = 6):
         """
@@ -229,7 +216,7 @@ class line_parallel:
         transfergains
         subtract
         """
-        self.logger.info("########## Starting CONTINUUM SUBTRACTION ##########")
+        logger.info("########## Starting CONTINUUM SUBTRACTION ##########")
         # build in check on number of threads to prevent excessive demands? (here?)
         original_nested = pymp.config.nested
         threads = [first_level_threads, second_level_threads]
@@ -240,7 +227,7 @@ class line_parallel:
         self.subtract_parallel(nthreads)
         self.image_line_parallel(threads)
         pymp.config.nested = original_nested
-        self.logger.info("########## CONTINUUM SUBTRACTION done ##########")
+        logger.info("########## CONTINUUM SUBTRACTION done ##########")
 
     def go_parallel_timed(self, first_level_threads = 4, second_level_threads = 6):
         """
@@ -249,7 +236,7 @@ class line_parallel:
         transfergains
         subtract
         """
-        self.logger.info("########## Starting CONTINUUM SUBTRACTION ##########")
+        logger.info("########## Starting CONTINUUM SUBTRACTION ##########")
         # build in check on number of threads to prevent excessive demands? (here?)
         original_nested = pymp.config.nested
         threads = [first_level_threads, second_level_threads]
@@ -260,42 +247,42 @@ class line_parallel:
         timeit_splitdata_time = timeit.Timer(lambda: self.splitdata_parallel(threads), setup="from apercal import *").timeit(number=1)
         end = time.time()
         splitdata_time = end - start
-        self.logger.info("### (PARALLEL) Splitting data for " + str(threads) + " ([1st,2nd] level nested) threads: " + str(splitdata_time) + " s ###")
-        self.logger.info("### (PARALLEL) Splitting data for " + str(threads) + " ([1st,2nd] level nested) threads (timeit): " + str(timeit_splitdata_time) + " s ###")
+        logger.info("### (PARALLEL) Splitting data for " + str(threads) + " ([1st,2nd] level nested) threads: " + str(splitdata_time) + " s ###")
+        logger.info("### (PARALLEL) Splitting data for " + str(threads) + " ([1st,2nd] level nested) threads (timeit): " + str(timeit_splitdata_time) + " s ###")
         start = time.time()
         #self.transfergains_parallel(nthreads)
         timeit_transfergains_time = timeit.Timer(lambda: self.transfergains_parallel(nthreads), setup="from apercal import *").timeit(number=1)
         end = time.time()
         transfergains_time = end - start
-        self.logger.info("### (PARALLEL) Transfer gains for " + str(nthreads) + " threads: " + str(transfergains_time) + " s ###")
-        self.logger.info("### (PARALLEL) Transfer gains for " + str(nthreads) + " threads (timeit): " + str(timeit_transfergains_time) + " s ###")
+        logger.info("### (PARALLEL) Transfer gains for " + str(nthreads) + " threads: " + str(transfergains_time) + " s ###")
+        logger.info("### (PARALLEL) Transfer gains for " + str(nthreads) + " threads (timeit): " + str(timeit_transfergains_time) + " s ###")
         start = time.time()
         #self.subtract_parallel(nthreads)
         timeit_subtract_time = timeit.Timer(lambda: self.subtract_parallel(nthreads), setup="from apercal import *").timeit(number=1)
         end = time.time()
         subtract_time = end - start
-        self.logger.info("### (PARALLEL) Subtract continuum for " + str(nthreads) + " threads: " + str(subtract_time) + " s ###")
-        self.logger.info("### (PARALLEL) Subtract continuum for " + str(nthreads) + " threads (timeit): " + str(timeit_subtract_time) + " s ###")
+        logger.info("### (PARALLEL) Subtract continuum for " + str(nthreads) + " threads: " + str(subtract_time) + " s ###")
+        logger.info("### (PARALLEL) Subtract continuum for " + str(nthreads) + " threads (timeit): " + str(timeit_subtract_time) + " s ###")
         start = time.time()
         #self.image_line_parallel(threads)
         timeit_image_line_time = timeit.Timer(lambda: self.image_line_parallel(threads), setup="from apercal import *").timeit(number=1)
         end = time.time()
         image_line_time = end - start
-        self.logger.info("### (PARALLEL) Line imaging for " + str(threads) + " ([1st,2nd] level nested) threads: " + str(image_line_time) + " s ###")
-        self.logger.info("### (PARALLEL) Line imaging for " + str(threads) + " ([1st,2nd] level nested) threads (timeit): " + str(timeit_image_line_time) + " s ###")
-        self.logger.info("### (PARALLEL) Timing summary: ###")
-        self.logger.info("### (PARALLEL) Splitting data for " + str(threads) + " ([1st,2nd] level nested) threads: " + str(splitdata_time) + " s ###")
-        self.logger.info("### (PARALLEL) Splitting data for " + str(threads) + " ([1st,2nd] level nested) threads (timeit): " + str(timeit_splitdata_time) + " s ###")
-        self.logger.info("### (PARALLEL) Transfer gains for " + str(nthreads) + " threads: " + str(transfergains_time) + " s ###")
-        self.logger.info("### (PARALLEL) Transfer gains for " + str(nthreads) + " threads (timeit): " + str(timeit_transfergains_time) + " s ###")
-        self.logger.info("### (PARALLEL) Subtract continuum for " + str(nthreads) + " threads: " + str(subtract_time) + " s ###")
-        self.logger.info("### (PARALLEL) Subtract continuum for " + str(nthreads) + " threads (timeit): " + str(timeit_subtract_time) + " s ###")
-        self.logger.info("### (PARALLEL) Line imaging for " + str(threads) + " ([1st,2nd] level nested) threads: " + str(image_line_time) + " s ###")
-        self.logger.info("### (PARALLEL) Line imaging for " + str(threads) + " ([1st,2nd] level nested) threads (timeit): " + str(timeit_image_line_time) + " s ###")
-        self.logger.info("### (PARALLEL) Full line module: " + str(splitdata_time + transfergains_time + subtract_time + image_line_time) + " s ###")
-        self.logger.info("### (PARALLEL) Full line module (timeit): " + str(timeit_splitdata_time + timeit_transfergains_time + timeit_subtract_time + timeit_image_line_time) + " s ###")
+        logger.info("### (PARALLEL) Line imaging for " + str(threads) + " ([1st,2nd] level nested) threads: " + str(image_line_time) + " s ###")
+        logger.info("### (PARALLEL) Line imaging for " + str(threads) + " ([1st,2nd] level nested) threads (timeit): " + str(timeit_image_line_time) + " s ###")
+        logger.info("### (PARALLEL) Timing summary: ###")
+        logger.info("### (PARALLEL) Splitting data for " + str(threads) + " ([1st,2nd] level nested) threads: " + str(splitdata_time) + " s ###")
+        logger.info("### (PARALLEL) Splitting data for " + str(threads) + " ([1st,2nd] level nested) threads (timeit): " + str(timeit_splitdata_time) + " s ###")
+        logger.info("### (PARALLEL) Transfer gains for " + str(nthreads) + " threads: " + str(transfergains_time) + " s ###")
+        logger.info("### (PARALLEL) Transfer gains for " + str(nthreads) + " threads (timeit): " + str(timeit_transfergains_time) + " s ###")
+        logger.info("### (PARALLEL) Subtract continuum for " + str(nthreads) + " threads: " + str(subtract_time) + " s ###")
+        logger.info("### (PARALLEL) Subtract continuum for " + str(nthreads) + " threads (timeit): " + str(timeit_subtract_time) + " s ###")
+        logger.info("### (PARALLEL) Line imaging for " + str(threads) + " ([1st,2nd] level nested) threads: " + str(image_line_time) + " s ###")
+        logger.info("### (PARALLEL) Line imaging for " + str(threads) + " ([1st,2nd] level nested) threads (timeit): " + str(timeit_image_line_time) + " s ###")
+        logger.info("### (PARALLEL) Full line module: " + str(splitdata_time + transfergains_time + subtract_time + image_line_time) + " s ###")
+        logger.info("### (PARALLEL) Full line module (timeit): " + str(timeit_splitdata_time + timeit_transfergains_time + timeit_subtract_time + timeit_image_line_time) + " s ###")
         pymp.config.nested = original_nested
-        self.logger.info("########## CONTINUUM SUBTRACTION done ##########")
+        logger.info("########## CONTINUUM SUBTRACTION done ##########")
 
     def splitdata(self):
         """
@@ -305,29 +292,28 @@ class line_parallel:
             subs_setinit.setinitdirs(self)
             subs_setinit.setdatasetnamestomiriad(self)
             self.director('ch', self.linedir)
-            self.logger.info('### Splitting of target data into individual frequency chunks started ###')
+            logger.info(' Splitting of target data into individual frequency chunks started')
             if os.path.isfile(self.linedir + '/' + self.target):
-                self.logger.info('# Calibrator corrections already seem to have been applied #')
+                logger.info('# Calibrator corrections already seem to have been applied #')
             else:
-                self.logger.info('# Applying calibrator solutions to target data before averaging #')
+                logger.info('# Applying calibrator solutions to target data before averaging #')
                 uvaver = lib.miriad('uvaver')
                 uvaver.vis = self.crosscaldir + '/' + self.target
                 uvaver.out = self.linedir + '/' + self.target
                 uvaver.go()
-                self.logger.info('# Calibrator solutions to target data applied #')
+                logger.info('# Calibrator solutions to target data applied #')
             try:
                 uv = aipy.miriad.UV(self.linedir + '/' + self.target)
             except RuntimeError:
-                self.logger.error('### No data in your crosscal directory! Exiting pipeline! ###')
-                sys.exit(1)
+                raise ApercalException(' No data in your crosscal directory! Exiting pipeline!')
             try:
                 nsubband = len(uv['nschan']) # Number of subbands in data
             except TypeError:
                 nsubband = 1 # Only one subband in data since exception was triggered
-            self.logger.info('# Found ' + str(nsubband) + ' subband(s) in target data #')
+            logger.info('# Found ' + str(nsubband) + ' subband(s) in target data #')
             counter = 0 # Counter for naming the chunks and directories
             for subband in range(nsubband):
-                self.logger.info('# Started splitting of subband ' + str(subband) + ' #')
+                logger.info('# Started splitting of subband ' + str(subband) + ' #')
                 if nsubband == 1:
                     numchan = uv['nschan']
                     finc = np.fabs(uv['sdf'])
@@ -340,13 +326,13 @@ class line_parallel:
                 if subband_chunks == 0:
                     subband_chunks = 1
                 chunkbandwidth = (numchan/subband_chunks)*finc
-                self.logger.info('# Adjusting chunk size to ' + str(chunkbandwidth) + ' GHz for regular gridding of the data chunks over frequency #')
+                logger.info('# Adjusting chunk size to ' + str(chunkbandwidth) + ' GHz for regular gridding of the data chunks over frequency #')
                 for chunk in range(subband_chunks):
-                    self.logger.info('# Starting splitting of data chunk ' + str(chunk) + ' for subband ' + str(subband) + ' #')
+                    logger.info('# Starting splitting of data chunk ' + str(chunk) + ' for subband ' + str(subband) + ' #')
                     binchan = round(self.line_splitdata_channelbandwidth / finc)  # Number of channels per frequency bin
                     chan_per_chunk = numchan / subband_chunks
                     if chan_per_chunk % binchan == 0: # Check if the freqeuncy bin exactly fits
-                        self.logger.info('# Using frequency binning of ' + str(self.line_splitdata_channelbandwidth) + ' for all subbands #')
+                        logger.info('# Using frequency binning of ' + str(self.line_splitdata_channelbandwidth) + ' for all subbands #')
                     else:
                         while chan_per_chunk % binchan != 0: # Increase the frequency bin to keep a regular grid for the chunks
                             binchan = binchan + 1
@@ -355,8 +341,8 @@ class line_parallel:
                                 pass
                             else:
                                 binchan = chan_per_chunk # Set the frequency bin to the number of channels in the chunk of the subband
-                        self.logger.info('# Increasing frequency bin of data chunk ' + str(chunk) + ' to keep bandwidth of chunks equal over the whole bandwidth #')
-                        self.logger.info('# New frequency bin is ' + str(binchan * finc) + ' GHz #')
+                        logger.info('# Increasing frequency bin of data chunk ' + str(chunk) + ' to keep bandwidth of chunks equal over the whole bandwidth #')
+                        logger.info('# New frequency bin is ' + str(binchan * finc) + ' GHz #')
                     nchan = int(chan_per_chunk/binchan) # Total number of output channels per chunk
                     start = 1 + chunk * chan_per_chunk
                     width = int(binchan)
@@ -369,9 +355,9 @@ class line_parallel:
                     uvaver.line = "'" + 'channel,' + str(nchan) + ',' + str(start) + ',' + str(width) + ',' + str(step) + "'"
                     uvaver.go()
                     counter = counter + 1
-                    self.logger.info('# Splitting of data chunk ' + str(chunk) + ' for subband ' + str(subband) + ' done #')
-                self.logger.info('# Splitting of data for subband ' + str(subband) + ' done #')
-            self.logger.info('### Splitting of target data into individual frequency chunks done ###')
+                    logger.info('# Splitting of data chunk ' + str(chunk) + ' for subband ' + str(subband) + ' done #')
+                logger.info('# Splitting of data for subband ' + str(subband) + ' done #')
+            logger.info(' Splitting of target data into individual frequency chunks done')
 
     def splitdata_sequential(self):
         """
@@ -381,26 +367,25 @@ class line_parallel:
             subs_setinit.setinitdirs(self)
             subs_setinit.setdatasetnamestomiriad(self)
             self.director('ch', self.linedir)
-            self.logger.info('### (SEQUENTIAL) Splitting of target data into individual frequency chunks started ###')
+            logger.info(' (SEQUENTIAL) Splitting of target data into individual frequency chunks started')
             if os.path.isfile(self.linedir + '/' + self.target):
-                self.logger.info('# (SEQUENTIAL) Calibrator corrections already seem to have been applied #')
+                logger.info('# (SEQUENTIAL) Calibrator corrections already seem to have been applied #')
             else:
-                self.logger.info('# (SEQUENTIAL) Applying calibrator solutions to target data before averaging #')
+                logger.info('# (SEQUENTIAL) Applying calibrator solutions to target data before averaging #')
                 uvaver = lib.miriad('uvaver')
                 uvaver.vis = self.crosscaldir + '/' + self.target
                 uvaver.out = self.linedir + '/' + self.target
                 uvaver.go()
-                self.logger.info('# (SEQUENTIAL) Calibrator solutions to target data applied #')
+                logger.info('# (SEQUENTIAL) Calibrator solutions to target data applied #')
             try:
                 uv = aipy.miriad.UV(self.linedir + '/' + self.target)
             except RuntimeError:
-                self.logger.error('### (SEQUENTIAL) No data in your crosscal directory! Exiting pipeline! ###')
-                sys.exit(1)
+                raise ApercalException(' (SEQUENTIAL) No data in your crosscal directory! Exiting pipeline!')
             try:
-                nsubband = len(uv['nschan']) # Number of subbands in data
+                nsubband = len(uv['nschan'])  # Number of subbands in data
             except TypeError:
                 nsubband = 1 # Only one subband in data since exception was triggered
-            self.logger.info('# (SEQUENTIAL) Found ' + str(nsubband) + ' subband(s) in target data #')
+            logger.info('# (SEQUENTIAL) Found ' + str(nsubband) + ' subband(s) in target data #')
             #old:
             #counter = 0 # Counter for naming the chunks and directories
             #new:
@@ -413,7 +398,7 @@ class line_parallel:
                 subband_channels.append(numchan)
             #old:
             for subband in range(nsubband):
-                self.logger.info('# (SEQUENTIAL) Started splitting of subband ' + str(subband) + ' #')
+                logger.info('# (SEQUENTIAL) Started splitting of subband ' + str(subband) + ' #')
                 if nsubband == 1:
                     #old:
                     #numchan = uv['nschan']
@@ -432,17 +417,17 @@ class line_parallel:
                 if subband_chunks == 0:
                     subband_chunks = 1
                 chunkbandwidth = (numchan/subband_chunks)*finc
-                self.logger.info('# (SEQUENTIAL) Adjusting chunk size to ' + str(chunkbandwidth) + ' GHz for regular gridding of the data chunks over frequency #')
+                logger.info('# (SEQUENTIAL) Adjusting chunk size to ' + str(chunkbandwidth) + ' GHz for regular gridding of the data chunks over frequency #')
                 #new:
                 base_counter = sum(subband_channels[:subband]) # for subband = 0 this returns 0, which is what we want
                 for chunk in range(subband_chunks):
-                    self.logger.info('# (SEQUENTIAL) Starting splitting of data chunk ' + str(chunk) + ' for subband ' + str(subband) + ' #')
+                    logger.info('# (SEQUENTIAL) Starting splitting of data chunk ' + str(chunk) + ' for subband ' + str(subband) + ' #')
                     #new:
                     counter = base_counter + chunk
                     binchan = round(self.line_splitdata_channelbandwidth / finc)  # Number of channels per frequency bin
                     chan_per_chunk = numchan / subband_chunks
                     if chan_per_chunk % binchan == 0: # Check if the freqeuncy bin exactly fits
-                        self.logger.info('# (SEQUENTIAL) Using frequency binning of ' + str(self.line_splitdata_channelbandwidth) + ' for all subbands #')
+                        logger.info('# (SEQUENTIAL) Using frequency binning of ' + str(self.line_splitdata_channelbandwidth) + ' for all subbands #')
                     else:
                         while chan_per_chunk % binchan != 0: # Increase the frequency bin to keep a regular grid for the chunks
                             binchan = binchan + 1
@@ -451,8 +436,8 @@ class line_parallel:
                                 pass
                             else:
                                 binchan = chan_per_chunk # Set the frequency bin to the number of channels in the chunk of the subband
-                        self.logger.info('# (SEQUENTIAL) Increasing frequency bin of data chunk ' + str(chunk) + ' to keep bandwidth of chunks equal over the whole bandwidth #')
-                        self.logger.info('# (SEQUENTIAL) New frequency bin is ' + str(binchan * finc) + ' GHz #')
+                        logger.info('# (SEQUENTIAL) Increasing frequency bin of data chunk ' + str(chunk) + ' to keep bandwidth of chunks equal over the whole bandwidth #')
+                        logger.info('# (SEQUENTIAL) New frequency bin is ' + str(binchan * finc) + ' GHz #')
                     nchan = int(chan_per_chunk/binchan) # Total number of output channels per chunk
                     start = 1 + chunk * chan_per_chunk
                     width = int(binchan)
@@ -466,9 +451,9 @@ class line_parallel:
                     uvaver.go()
                     #old:
                     #counter = counter + 1
-                    self.logger.info('# (SEQUENTIAL) Splitting of data chunk ' + str(chunk) + ' for subband ' + str(subband) + ' done #')
-                self.logger.info('# (SEQUENTIAL) Splitting of data for subband ' + str(subband) + ' done #')
-            self.logger.info('### (SEQUENTIAL) Splitting of target data into individual frequency chunks done ###')
+                    logger.info('# (SEQUENTIAL) Splitting of data chunk ' + str(chunk) + ' for subband ' + str(subband) + ' done #')
+                logger.info('# (SEQUENTIAL) Splitting of data for subband ' + str(subband) + ' done #')
+            logger.info(' (SEQUENTIAL) Splitting of target data into individual frequency chunks done')
 
     def splitdata_parallel(self,threads=[1]):
         """
@@ -478,26 +463,25 @@ class line_parallel:
             subs_setinit.setinitdirs(self)
             subs_setinit.setdatasetnamestomiriad(self)
             self.director('ch', self.linedir)
-            self.logger.info('### (PARALLEL) Splitting of target data into individual frequency chunks started ###')
+            logger.info(' (PARALLEL) Splitting of target data into individual frequency chunks started')
             if os.path.isfile(self.linedir + '/' + self.target):
-                self.logger.info('# (PARALLEL) Calibrator corrections already seem to have been applied #')
+                logger.info('# (PARALLEL) Calibrator corrections already seem to have been applied #')
             else:
-                self.logger.info('# (PARALLEL) Applying calibrator solutions to target data before averaging #')
+                logger.info('# (PARALLEL) Applying calibrator solutions to target data before averaging #')
                 uvaver = lib.miriad('uvaver')
                 uvaver.vis = self.crosscaldir + '/' + self.target
                 uvaver.out = self.linedir + '/' + self.target
                 uvaver.go()
-                self.logger.info('# (PARALLEL) Calibrator solutions to target data applied #')
+                logger.info('# (PARALLEL) Calibrator solutions to target data applied #')
             try:
                 uv = aipy.miriad.UV(self.linedir + '/' + self.target)
             except RuntimeError:
-                self.logger.error('### (PARALLEL) No data in your crosscal directory! Exiting pipeline! ###')
-                sys.exit(1)
+                raise ApercalException(' (PARALLEL) No data in your crosscal directory!')
             try:
                 nsubband = len(uv['nschan']) # Number of subbands in data
             except TypeError:
                 nsubband = 1 # Only one subband in data since exception was triggered
-            self.logger.info('# (PARALLEL) Found ' + str(nsubband) + ' subband(s) in target data #')
+            logger.info('# (PARALLEL) Found ' + str(nsubband) + ' subband(s) in target data #')
             #old:
             #counter = 0 # Counter for naming the chunks and directories
             #new:
@@ -517,7 +501,7 @@ class line_parallel:
             #new:
             with pymp.Parallel(threads[0]) as p1:
                 for subband in p1.range(nsubband):
-                    self.logger.info('# (PARALLEL) Started splitting of subband ' + str(subband) + ' (thread ' + str(p1.thread_num + 1) + ' out of ' + str(p1.num_threads) + ' 1st level) #')
+                    logger.info('# (PARALLEL) Started splitting of subband ' + str(subband) + ' (thread ' + str(p1.thread_num + 1) + ' out of ' + str(p1.num_threads) + ' 1st level) #')
                     if nsubband == 1:
                         #old:
                         #numchan = uv['nschan']
@@ -536,20 +520,20 @@ class line_parallel:
                     if subband_chunks == 0:
                         subband_chunks = 1
                     chunkbandwidth = (numchan/subband_chunks)*finc
-                    self.logger.info('# (PARALLEL) Adjusting chunk size to ' + str(chunkbandwidth) + ' GHz for regular gridding of the data chunks over frequency (thread ' + str(p1.thread_num + 1) + '/' + str(p1.num_threads) + ' 1st level) #')
+                    logger.info('# (PARALLEL) Adjusting chunk size to ' + str(chunkbandwidth) + ' GHz for regular gridding of the data chunks over frequency (thread ' + str(p1.thread_num + 1) + '/' + str(p1.num_threads) + ' 1st level) #')
                     #old:
                     #for chunk in range(subband_chunks):
                     #new:
                     base_counter = sum(subband_channels[:subband]) # for subband = 0 this returns 0, which is what we want
                     with pymp.Parallel(threads[1]) as p2:
                         for chunk in p2.range(subband_chunks):
-                            self.logger.info('# (PARALLEL) Starting splitting of data chunk ' + str(chunk) + ' for subband ' + str(subband) + ' (threads [' + str(p1.thread_num + 1) + '/' + str(p1.num_threads) + ',' + str(p2.thread_num + 1) + '/' + str(p2.num_threads) + '] [1st,2nd]) #')
+                            logger.info('# (PARALLEL) Starting splitting of data chunk ' + str(chunk) + ' for subband ' + str(subband) + ' (threads [' + str(p1.thread_num + 1) + '/' + str(p1.num_threads) + ',' + str(p2.thread_num + 1) + '/' + str(p2.num_threads) + '] [1st,2nd]) #')
                             #new:
                             counter = base_counter + chunk
                             binchan = round(self.line_splitdata_channelbandwidth / finc)  # Number of channels per frequency bin
                             chan_per_chunk = numchan / subband_chunks
                             if chan_per_chunk % binchan == 0: # Check if the freqeuncy bin exactly fits
-                                self.logger.info('# (PARALLEL) Using frequency binning of ' + str(self.line_splitdata_channelbandwidth) + ' for all subbands (threads [' + str(p1.thread_num + 1) + '/' + str(p1.num_threads) + ',' + str(p2.thread_num + 1) + '/' + str(p2.num_threads) + '] [1st,2nd]) #')
+                                logger.info('# (PARALLEL) Using frequency binning of ' + str(self.line_splitdata_channelbandwidth) + ' for all subbands (threads [' + str(p1.thread_num + 1) + '/' + str(p1.num_threads) + ',' + str(p2.thread_num + 1) + '/' + str(p2.num_threads) + '] [1st,2nd]) #')
                             else:
                                 while chan_per_chunk % binchan != 0: # Increase the frequency bin to keep a regular grid for the chunks
                                     binchan = binchan + 1
@@ -558,8 +542,8 @@ class line_parallel:
                                         pass
                                     else:
                                         binchan = chan_per_chunk # Set the frequency bin to the number of channels in the chunk of the subband
-                                self.logger.info('# (PARALLEL) Increasing frequency bin of data chunk ' + str(chunk) + ' to keep bandwidth of chunks equal over the whole bandwidth (threads [' + str(p1.thread_num + 1) + '/' + str(p1.num_threads) + ',' + str(p2.thread_num + 1) + '/' + str(p2.num_threads) + '] [1st,2nd]) #')
-                                self.logger.info('# (PARALLEL) New frequency bin is ' + str(binchan * finc) + ' GHz (threads [' + str(p1.thread_num + 1) + '/' + str(p1.num_threads) + ',' + str(p2.thread_num + 1) + '/' + str(p2.num_threads) + '] [1st,2nd]) #')
+                                logger.info('# (PARALLEL) Increasing frequency bin of data chunk ' + str(chunk) + ' to keep bandwidth of chunks equal over the whole bandwidth (threads [' + str(p1.thread_num + 1) + '/' + str(p1.num_threads) + ',' + str(p2.thread_num + 1) + '/' + str(p2.num_threads) + '] [1st,2nd]) #')
+                                logger.info('# (PARALLEL) New frequency bin is ' + str(binchan * finc) + ' GHz (threads [' + str(p1.thread_num + 1) + '/' + str(p1.num_threads) + ',' + str(p2.thread_num + 1) + '/' + str(p2.num_threads) + '] [1st,2nd]) #')
                             nchan = int(chan_per_chunk/binchan) # Total number of output channels per chunk
                             start = 1 + chunk * chan_per_chunk
                             width = int(binchan)
@@ -573,11 +557,11 @@ class line_parallel:
                             uvaver.go()
                             #old:
                             #counter = counter + 1
-                            self.logger.info('# (PARALLEL) Splitting of data chunk ' + str(chunk) + ' for subband ' + str(subband) + ' done (threads [' + str(p1.thread_num + 1) + '/' + str(p1.num_threads) + ',' + str(p2.thread_num + 1) + '/' + str(p2.num_threads) + '] [1st,2nd]) #')
-                    self.logger.info('# (PARALLEL) Splitting of data for subband ' + str(subband) + ' done (thread ' + str(p1.thread_num + 1) + '/' + str(p1.num_threads) + ' 1st level) #')
+                            logger.info('# (PARALLEL) Splitting of data chunk ' + str(chunk) + ' for subband ' + str(subband) + ' done (threads [' + str(p1.thread_num + 1) + '/' + str(p1.num_threads) + ',' + str(p2.thread_num + 1) + '/' + str(p2.num_threads) + '] [1st,2nd]) #')
+                    logger.info('# (PARALLEL) Splitting of data for subband ' + str(subband) + ' done (thread ' + str(p1.thread_num + 1) + '/' + str(p1.num_threads) + ' 1st level) #')
             #new:
             pymp.config.nested = original_nested
-            self.logger.info('### (PARALLEL) Splitting of target data into individual frequency chunks done ###')
+            logger.info(' (PARALLEL) Splitting of target data into individual frequency chunks done')
 
     def transfergains(self):
         """
@@ -587,17 +571,17 @@ class line_parallel:
             subs_setinit.setinitdirs(self)
             subs_setinit.setdatasetnamestomiriad(self)
             self.director('ch', self.linedir)
-            self.logger.info('### Copying gains from continuum to line data ###')
+            logger.info(' Copying gains from continuum to line data')
             for chunk in self.list_chunks():
                 if os.path.isfile(self.selfcaldir + '/' + chunk + '/' + chunk + '.mir' + '/gains'):
                     gpcopy = lib.miriad('gpcopy')
                     gpcopy.vis = self.selfcaldir + '/' + chunk + '/' + chunk + '.mir'
                     gpcopy.out = chunk + '/' + chunk + '.mir'
                     gpcopy.go()
-                    self.logger.info('# Copying gains from continuum to line data for chunk ' + chunk + ' #')
+                    logger.info('# Copying gains from continuum to line data for chunk ' + chunk + ' #')
                 else:
-                    self.logger.warning('# Dataset ' + chunk + '.mir does not seem to have self calibration gains. Cannot copy gains to line data! #')
-            self.logger.info('### Gains from continuum to line data copied ###')
+                    logger.warning('# Dataset ' + chunk + '.mir does not seem to have self calibration gains. Cannot copy gains to line data! #')
+            logger.info(' Gains from continuum to line data copied')
 
     def transfergains_parallel(self, nthreads=1):
         """
@@ -607,7 +591,7 @@ class line_parallel:
             subs_setinit.setinitdirs(self)
             subs_setinit.setdatasetnamestomiriad(self)
             self.director('ch', self.linedir)
-            self.logger.info('### (PARALLEL) Copying gains from continuum to line data ###')
+            logger.info(' (PARALLEL) Copying gains from continuum to line data')
             #new:
             chunks_list = self.list_chunks()
             with pymp.Parallel(nthreads) as p:
@@ -618,10 +602,10 @@ class line_parallel:
                         gpcopy.vis = self.selfcaldir + '/' + chunk + '/' + chunk + '.mir'
                         gpcopy.out = chunk + '/' + chunk + '.mir'
                         gpcopy.go()
-                        self.logger.info('# (PARALLEL) Copying gains from continuum to line data for chunk ' + chunk + ' (thread ' + str(p.thread_num + 1) + ' out of ' + str(p.num_threads) + ') #')
+                        logger.info('# (PARALLEL) Copying gains from continuum to line data for chunk ' + chunk + ' (thread ' + str(p.thread_num + 1) + ' out of ' + str(p.num_threads) + ') #')
                     else:
-                        self.logger.warning('# (PARALLEL) Dataset ' + chunk + '.mir does not seem to have self calibration gains. Cannot copy gains to line data! (thread ' + str(p.thread_num + 1) + ' out of ' + str(p.num_threads) + ') #')
-            self.logger.info('### (PARALLEL) Gains from continuum to line data copied ###')
+                        logger.warning('# (PARALLEL) Dataset ' + chunk + '.mir does not seem to have self calibration gains. Cannot copy gains to line data! (thread ' + str(p.thread_num + 1) + ' out of ' + str(p.num_threads) + ') #')
+            logger.info(' (PARALLEL) Gains from continuum to line data copied')
 
     def subtract(self):
         """
@@ -632,25 +616,25 @@ class line_parallel:
             subs_setinit.setdatasetnamestomiriad(self)
             self.director('ch', self.linedir)
             if self.line_subtract_mode == 'uvlin':
-                self.logger.info('### Starting continuum subtraction of individual chunks using uvlin ###')
+                logger.info(' Starting continuum subtraction of individual chunks using uvlin')
                 for chunk in self.list_chunks():
                     uvlin = lib.miriad('uvlin')
                     uvlin.vis = chunk + '/' + chunk + '.mir'
                     uvlin.out = chunk + '/' + chunk + '_line.mir'
                     uvlin.go()
-                    self.logger.info('# Continuum subtraction using uvlin method for chunk ' + chunk + ' done #')
-                self.logger.info('### Continuum subtraction using uvlin done! ###')
+                    logger.info('# Continuum subtraction using uvlin method for chunk ' + chunk + ' done #')
+                logger.info(' Continuum subtraction using uvlin done!')
             elif self.line_subtract_mode == 'uvmodel':
-                self.logger.info('### Starting continuum subtraction of individual chunks using uvmodel ###')
+                logger.info(' Starting continuum subtraction of individual chunks using uvmodel')
                 for chunk in self.list_chunks():
                     self.director('ch', self.linedir + '/' + chunk)
                     uvcat = lib.miriad('uvcat')
                     uvcat.vis = chunk + '.mir'
                     uvcat.out = chunk + '_uvcat.mir'
                     uvcat.go()
-                    self.logger.info('# Applied gains to chunk ' + chunk + ' for subtraction of continuum model #')
+                    logger.info('# Applied gains to chunk ' + chunk + ' for subtraction of continuum model #')
                     if os.path.isdir(self.contdir + '/stack/' + chunk + '/model_' + str(self.line_subtract_mode_uvmodel_minorcycle-1).zfill(2)):
-                        self.logger.info('# Found model for subtraction in final continuum directory. No need to redo continuum imaging #')
+                        logger.info('# Found model for subtraction in final continuum directory. No need to redo continuum imaging #')
                         self.director('cp', self.linedir + '/' + chunk, file=self.contdir + '/stack/' + chunk + '/model_' + str(self.line_subtract_mode_uvmodel_minorcycle-1).zfill(2))
                     else:
                         self.create_uvmodel(chunk)
@@ -662,13 +646,13 @@ class line_parallel:
                         uvmodel.out = chunk + '_line.mir'
                         uvmodel.go()
                         self.director('rm', chunk + '_uvcat.mir')
-                        self.logger.info('### Continuum subtraction using uvmodel method for chunk ' + chunk + ' successful! ###')
+                        logger.info(' Continuum subtraction using uvmodel method for chunk ' + chunk + ' successful!')
                     except:
-                        self.logger.warning('### Continuum subtraction using uvmodel method for chunk ' + chunk + ' NOT successful! No continuum subtraction done! ###')
-                self.logger.info('### Continuum subtraction using uvmodel done! ###')
+                        logger.warning(' Continuum subtraction using uvmodel method for chunk ' + chunk + ' NOT successful! No continuum subtraction done!')
+                logger.info(' Continuum subtraction using uvmodel done!')
             else:
-                self.logger.error('### Subtract mode not know. Exiting! ###')
-                sys.exit(1)
+                raise ApercalException(' Subtract mode not know')
+
 
     def subtract_parallel(self, nthreads=1):
         """
@@ -679,7 +663,7 @@ class line_parallel:
             subs_setinit.setdatasetnamestomiriad(self)
             self.director('ch', self.linedir)
             if self.line_subtract_mode == 'uvlin':
-                self.logger.info('### (PARALLEL) Starting continuum subtraction of individual chunks using uvlin ###')
+                logger.info(' (PARALLEL) Starting continuum subtraction of individual chunks using uvlin')
                 #new:
                 chunks_list = self.list_chunks()
                 with pymp.Parallel(nthreads) as p:
@@ -689,10 +673,10 @@ class line_parallel:
                         uvlin.vis = chunk + '/' + chunk + '.mir'
                         uvlin.out = chunk + '/' + chunk + '_line.mir'
                         uvlin.go()
-                        self.logger.info('# (PARALLEL) Continuum subtraction using uvlin method for chunk ' + chunk + ' done #')
-                self.logger.info('### (PARALLEL) Continuum subtraction using uvlin done! ###')
+                        logger.info('# (PARALLEL) Continuum subtraction using uvlin method for chunk ' + chunk + ' done #')
+                logger.info(' (PARALLEL) Continuum subtraction using uvlin done!')
             elif self.line_subtract_mode == 'uvmodel':
-                self.logger.info('### (PARALLEL) Starting continuum subtraction of individual chunks using uvmodel ###')
+                logger.info(' (PARALLEL) Starting continuum subtraction of individual chunks using uvmodel')
                 #new:
                 chunks_list = self.list_chunks()
                 with pymp.Parallel(nthreads) as p:
@@ -703,9 +687,9 @@ class line_parallel:
                         uvcat.vis = chunk + '.mir'
                         uvcat.out = chunk + '_uvcat.mir'
                         uvcat.go()
-                        self.logger.info('# (PARALLEL) Applied gains to chunk ' + chunk + ' for subtraction of continuum model (thread ' + str(p.thread_num + 1) + ' out of ' + str(p.num_threads) + ') #')
+                        logger.info('# (PARALLEL) Applied gains to chunk ' + chunk + ' for subtraction of continuum model (thread ' + str(p.thread_num + 1) + ' out of ' + str(p.num_threads) + ') #')
                         if os.path.isdir(self.contdir + '/stack/' + chunk + '/model_' + str(self.line_subtract_mode_uvmodel_minorcycle-1).zfill(2)):
-                            self.logger.info('# (PARALLEL) Found model for subtraction in final continuum directory. No need to redo continuum imaging (thread ' + str(p.thread_num + 1) + ' out of ' + str(p.num_threads) + ') #')
+                            logger.info('# (PARALLEL) Found model for subtraction in final continuum directory. No need to redo continuum imaging (thread ' + str(p.thread_num + 1) + ' out of ' + str(p.num_threads) + ') #')
                             self.director('cp', self.linedir + '/' + chunk, file=self.contdir + '/stack/' + chunk + '/model_' + str(self.line_subtract_mode_uvmodel_minorcycle-1).zfill(2))
                         else:
                             self.create_uvmodel(chunk)
@@ -717,13 +701,13 @@ class line_parallel:
                             uvmodel.out = chunk + '_line.mir'
                             uvmodel.go()
                             self.director('rm', chunk + '_uvcat.mir')
-                            self.logger.info('### (PARALLEL) Continuum subtraction using uvmodel method for chunk ' + chunk + ' successful! (thread ' + str(p.thread_num + 1) + ' out of ' + str(p.num_threads) + ') ###')
+                            logger.info(' (PARALLEL) Continuum subtraction using uvmodel method for chunk ' + chunk + ' successful! (thread ' + str(p.thread_num + 1) + ' out of ' + str(p.num_threads) + ')')
                         except:
-                            self.logger.warning('### (PARALLEL) Continuum subtraction using uvmodel method for chunk ' + chunk + ' NOT successful! No continuum subtraction done! (thread ' + str(p.thread_num + 1) + ' out of ' + str(p.num_threads) + ') ###')
-                self.logger.info('### (PARALLEL) Continuum subtraction using uvmodel done! ###')
+                            logger.warning(' (PARALLEL) Continuum subtraction using uvmodel method for chunk ' + chunk + ' NOT successful! No continuum subtraction done! (thread ' + str(p.thread_num + 1) + ' out of ' + str(p.num_threads) + ')')
+                logger.info(' (PARALLEL) Continuum subtraction using uvmodel done!')
             else:
-                self.logger.error('### (PARALLEL) Subtract mode not know. Exiting! ###')
-                sys.exit(1)
+                raise ApercalException(' (PARALLEL) Subtract mode not know. Exiting!')
+
 
     def image_line(self):
         """
@@ -732,10 +716,10 @@ class line_parallel:
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
         if self.line_image:
-            self.logger.info('### Starting line imaging of dataset ###')
+            logger.info(' Starting line imaging of dataset')
             self.director('ch', self.linedir)
             self.director('ch', self.linedir + '/cubes')
-            self.logger.info('# Imaging each individual channel separately #')
+            logger.info('# Imaging each individual channel separately #')
             channel_counter = 0  # Counter for numbering the channels for the whole dataset
             nchunks = len(self.list_chunks())
             for chunk in self.list_chunks():
@@ -764,7 +748,7 @@ class line_parallel:
                                 invert.options = 'mfs,double,sdb'
                             invertcmd = invert.go()
                             if invertcmd[5].split(' ')[2] == '0':
-                                self.logger.info('# 0 visibilities in channel ' + str(channel_counter).zfill(5) + '! Skipping channel! #')
+                                logger.info('# 0 visibilities in channel ' + str(channel_counter).zfill(5) + '! Skipping channel! #')
                                 channel_counter = channel_counter + 1
                             else:
                                 #theoretical_noise = invertcmd[11].split(' ')[3]
@@ -777,7 +761,7 @@ class line_parallel:
                                     nminiter = self.calc_miniter(maxdr, self.line_image_dr0)
                                     imclean, masklevels = self.calc_line_masklevel(nminiter, self.line_image_dr0, maxdr, self.line_image_minorcycle0_dr, imax)
                                     if imclean:
-                                        self.logger.info('# Emission found in channel ' + str(channel_counter).zfill(5) + '. Cleaning! #')
+                                        logger.info('# Emission found in channel ' + str(channel_counter).zfill(5) + '. Cleaning! #')
                                         for minc in range(nminiter):  # Iterate over the minor imaging cycles and masking
                                             mask_threshold = masklevels[minc]
                                             if minc == 0:
@@ -898,11 +882,11 @@ class line_parallel:
                                 fits.region = '"images(1,1)"'
                                 fits.out = 'cube_beam_' + str(channel_counter).zfill(5) + '.fits'
                                 fits.go()
-                                self.logger.info('# Finished processing channel ' + str(channel_counter).zfill(5) + '/' + str((nchunks * nchannel) - 1).zfill(5) + '. #')
+                                logger.info('# Finished processing channel ' + str(channel_counter).zfill(5) + '/' + str((nchunks * nchannel) - 1).zfill(5) + '. #')
                                 channel_counter = channel_counter + 1
                         else:
                             channel_counter = channel_counter + 1
-                    self.logger.info('# All channels of chunk ' + chunk + ' imaged #')
+                    logger.info('# All channels of chunk ' + chunk + ' imaged #')
                     self.director('rm', self.linedir + '/cubes/' + 'image*')
                     self.director('rm', self.linedir + '/cubes/' + 'beam*')
                     self.director('rm', self.linedir + '/cubes/' + 'mask*')
@@ -910,20 +894,20 @@ class line_parallel:
                     self.director('rm', self.linedir + '/cubes/' + 'map*')
                     self.director('rm', self.linedir + '/cubes/' + 'convol*')
                     self.director('rm', self.linedir + '/cubes/' + 'residual*')
-                    self.logger.info('# Cleaned up the directory for chunk ' + chunk + ' #')
+                    logger.info('# Cleaned up the directory for chunk ' + chunk + ' #')
                 else:
-                    self.logger.warning('### No continuum subtracted data available for chunk ' + chunk + '! ###')
-            self.logger.info('# Combining images to line cubes #')
+                    logger.warning(' No continuum subtracted data available for chunk ' + chunk + '!')
+            logger.info('# Combining images to line cubes #')
             if self.line_image_channels != '':
                 nchans = int(str(self.line_image_channels).split(',')[1]) - int(str(self.line_image_channels).split(',')[0])
             else:
                 nchans = nchunks * nchannel
             startfreq = self.get_freqstart(self.crosscaldir + '/' + self.target, int(str(self.line_image_channels).split(',')[0]))
             self.create_linecube(self.linedir + '/cubes/cube_image_*.fits', 'HI_image_cube.fits', nchans, int(str(self.line_image_channels).split(',')[0]), startfreq)
-            self.logger.info('# Created HI-image cube #')
+            logger.info('# Created HI-image cube #')
             self.create_linecube(self.linedir + '/cubes/cube_beam_*.fits', 'HI_beam_cube.fits', nchans, int(str(self.line_image_channels).split(',')[0]), startfreq)
-            self.logger.info('# Created HI-beam cube #')
-            self.logger.info('# Removing obsolete files #')
+            logger.info('# Created HI-beam cube #')
+            logger.info('# Removing obsolete files #')
             self.director('rm', self.linedir + '/cubes/' + 'cube_*')
 
     def image_line_sequential(self):
@@ -933,10 +917,10 @@ class line_parallel:
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
         if self.line_image:
-            self.logger.info('### (SEQUENTIAL) Starting line imaging of dataset ###')
+            logger.info(' (SEQUENTIAL) Starting line imaging of dataset')
             self.director('ch', self.linedir)
             self.director('ch', self.linedir + '/cubes')
-            self.logger.info('# (SEQUENTIAL) Imaging each individual channel separately #')
+            logger.info('# (SEQUENTIAL) Imaging each individual channel separately #')
             #old:
             #channel_counter = 0  # Counter for numbering the channels for the whole dataset
             nchunks = len(self.list_chunks())
@@ -981,7 +965,7 @@ class line_parallel:
                                 invert.options = 'mfs,double,sdb'
                             invertcmd = invert.go()
                             if invertcmd[5].split(' ')[2] == '0':
-                                self.logger.info('# (SEQUENTIAL) 0 visibilities in channel ' + str(channel_counter).zfill(5) + '! Skipping channel! #')
+                                logger.info('# (SEQUENTIAL) 0 visibilities in channel ' + str(channel_counter).zfill(5) + '! Skipping channel! #')
                                 #old:
                                 #channel_counter = channel_counter + 1
                             else:
@@ -994,7 +978,7 @@ class line_parallel:
                                     nminiter = self.calc_miniter(maxdr, self.line_image_dr0)
                                     imclean, masklevels = self.calc_line_masklevel(nminiter, self.line_image_dr0, maxdr, self.line_image_minorcycle0_dr, imax)
                                     if imclean:
-                                        self.logger.info('# (SEQUENTIAL) Emission found in channel ' + str(channel_counter).zfill(5) + '. Cleaning! #')
+                                        logger.info('# (SEQUENTIAL) Emission found in channel ' + str(channel_counter).zfill(5) + '. Cleaning! #')
                                         for minc in range(nminiter):  # Iterate over the minor imaging cycles and masking
                                             mask_threshold = masklevels[minc]
                                             if minc == 0:
@@ -1115,7 +1099,7 @@ class line_parallel:
                                 fits.region = '"images(1,1)"'
                                 fits.out = 'cube_beam_' + str(channel_counter).zfill(5) + '.fits'
                                 fits.go()
-                                self.logger.info('# (SEQUENTIAL) Finished processing channel ' + str(channel_counter).zfill(5) + '/' + str((nchunks * nchannel) - 1).zfill(5) + '. #')
+                                logger.info('# (SEQUENTIAL) Finished processing channel ' + str(channel_counter).zfill(5) + '/' + str((nchunks * nchannel) - 1).zfill(5) + '. #')
                                 #old:
                                 #channel_counter = channel_counter + 1
                         else:
@@ -1123,7 +1107,7 @@ class line_parallel:
                             #channel_counter = channel_counter + 1
                             #new:
                             pass
-                    self.logger.info('# (SEQUENTIAL) All channels of chunk ' + chunk + ' imaged #')
+                    logger.info('# (SEQUENTIAL) All channels of chunk ' + chunk + ' imaged #')
                     self.director('rm', self.linedir + '/cubes/' + 'image*')
                     self.director('rm', self.linedir + '/cubes/' + 'beam*')
                     self.director('rm', self.linedir + '/cubes/' + 'mask*')
@@ -1131,20 +1115,20 @@ class line_parallel:
                     self.director('rm', self.linedir + '/cubes/' + 'map*')
                     self.director('rm', self.linedir + '/cubes/' + 'convol*')
                     self.director('rm', self.linedir + '/cubes/' + 'residual*')
-                    self.logger.info('# (SEQUENTIAL) Cleaned up the directory for chunk ' + chunk + ' #')
+                    logger.info('# (SEQUENTIAL) Cleaned up the directory for chunk ' + chunk + ' #')
                 else:
-                    self.logger.warning('### (SEQUENTIAL) No continuum subtracted data available for chunk ' + chunk + '! ###')
-            self.logger.info('# (SEQUENTIAL) Combining images to line cubes #')
+                    logger.warning(' (SEQUENTIAL) No continuum subtracted data available for chunk ' + chunk + '!')
+            logger.info('# (SEQUENTIAL) Combining images to line cubes #')
             if self.line_image_channels != '':
                 nchans = int(str(self.line_image_channels).split(',')[1]) - int(str(self.line_image_channels).split(',')[0])
             else:
                 nchans = nchunks * nchannel
             startfreq = self.get_freqstart(self.crosscaldir + '/' + self.target, int(str(self.line_image_channels).split(',')[0]))
             self.create_linecube(self.linedir + '/cubes/cube_image_*.fits', 'HI_image_cube.fits', nchans, int(str(self.line_image_channels).split(',')[0]), startfreq)
-            self.logger.info('# (SEQUENTIAL) Created HI-image cube #')
+            logger.info('# (SEQUENTIAL) Created HI-image cube #')
             self.create_linecube(self.linedir + '/cubes/cube_beam_*.fits', 'HI_beam_cube.fits', nchans, int(str(self.line_image_channels).split(',')[0]), startfreq)
-            self.logger.info('# (SEQUENTIAL) Created HI-beam cube #')
-            self.logger.info('# (SEQUENTIAL) Removing obsolete files #')
+            logger.info('# (SEQUENTIAL) Created HI-beam cube #')
+            logger.info('# (SEQUENTIAL) Removing obsolete files #')
             self.director('rm', self.linedir + '/cubes/' + 'cube_*')
 
     def image_line_parallel(self, threads=[1]):
@@ -1154,10 +1138,10 @@ class line_parallel:
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
         if self.line_image:
-            self.logger.info('### (PARALLEL) Starting line imaging of dataset ###')
+            logger.info(' (PARALLEL) Starting line imaging of dataset')
             self.director('ch', self.linedir)
             self.director('ch', self.linedir + '/cubes')
-            self.logger.info('# (PARALLEL) Imaging each individual channel separately #')
+            logger.info('# (PARALLEL) Imaging each individual channel separately #')
             #old:
             #channel_counter = 0  # Counter for numbering the channels for the whole dataset
             nchunks = len(self.list_chunks())
@@ -1212,7 +1196,7 @@ class line_parallel:
                                         invert.options = 'mfs,double,sdb'
                                     invertcmd = invert.go()
                                     if invertcmd[5].split(' ')[2] == '0':
-                                        self.logger.info('# (PARALLEL) 0 visibilities in channel ' + str(channel_counter).zfill(5) + '! Skipping channel! (threads [' + str(p1.thread_num + 1) + '/' + str(p1.num_threads) + ',' + str(p2.thread_num + 1) + '/' + str(p2.num_threads) + '] [1st,2nd]) #')
+                                        logger.info('# (PARALLEL) 0 visibilities in channel ' + str(channel_counter).zfill(5) + '! Skipping channel! (threads [' + str(p1.thread_num + 1) + '/' + str(p1.num_threads) + ',' + str(p2.thread_num + 1) + '/' + str(p2.num_threads) + '] [1st,2nd]) #')
                                         #old:
                                         #channel_counter = channel_counter + 1
                                     else:
@@ -1225,7 +1209,7 @@ class line_parallel:
                                             nminiter = self.calc_miniter(maxdr, self.line_image_dr0)
                                             imclean, masklevels = self.calc_line_masklevel(nminiter, self.line_image_dr0, maxdr, self.line_image_minorcycle0_dr, imax)
                                             if imclean:
-                                                self.logger.info('# (PARALLEL) Emission found in channel ' + str(channel_counter).zfill(5) + '. Cleaning! (threads [' + str(p1.thread_num + 1) + '/' + str(p1.num_threads) + ',' + str(p2.thread_num + 1) + '/' + str(p2.num_threads) + '] [1st,2nd]) #')
+                                                logger.info('# (PARALLEL) Emission found in channel ' + str(channel_counter).zfill(5) + '. Cleaning! (threads [' + str(p1.thread_num + 1) + '/' + str(p1.num_threads) + ',' + str(p2.thread_num + 1) + '/' + str(p2.num_threads) + '] [1st,2nd]) #')
                                                 for minc in range(nminiter):  # Iterate over the minor imaging cycles and masking
                                                     mask_threshold = masklevels[minc]
                                                     if minc == 0:
@@ -1346,7 +1330,7 @@ class line_parallel:
                                         fits.region = '"images(1,1)"'
                                         fits.out = 'cube_beam_' + str(channel_counter).zfill(5) + '.fits'
                                         fits.go()
-                                        self.logger.info('# (PARALLEL) Finished processing channel ' + str(channel_counter).zfill(5) + '/' + str((nchunks * nchannel) - 1).zfill(5) + '. (threads [' + str(p1.thread_num + 1) + '/' + str(p1.num_threads) + ',' + str(p2.thread_num + 1) + '/' + str(p2.num_threads) + '] [1st,2nd]) #')
+                                        logger.info('# (PARALLEL) Finished processing channel ' + str(channel_counter).zfill(5) + '/' + str((nchunks * nchannel) - 1).zfill(5) + '. (threads [' + str(p1.thread_num + 1) + '/' + str(p1.num_threads) + ',' + str(p2.thread_num + 1) + '/' + str(p2.num_threads) + '] [1st,2nd]) #')
                                         #old:
                                         #channel_counter = channel_counter + 1
                                 else:
@@ -1354,11 +1338,11 @@ class line_parallel:
                                     #channel_counter = channel_counter + 1
                                     #new:
                                     pass
-                        self.logger.info('# (PARALLEL) All channels of chunk ' + chunk + ' imaged (thread ' + str(p1.thread_num + 1) + ' out of ' + str(p1.num_threads) + ' 1st level) #')
+                        logger.info('# (PARALLEL) All channels of chunk ' + chunk + ' imaged (thread ' + str(p1.thread_num + 1) + ' out of ' + str(p1.num_threads) + ' 1st level) #')
                         #new:
                         #removal of intermediate files held off until all are done
                     else:
-                        self.logger.warning('### (PARALLEL) No continuum subtracted data available for chunk ' + chunk + '! (thread ' + str(p1.thread_num + 1) + ' out of ' + str(p1.num_threads) + ' 1st level) ###')
+                        logger.warning(' (PARALLEL) No continuum subtracted data available for chunk ' + chunk + '! (thread ' + str(p1.thread_num + 1) + ' out of ' + str(p1.num_threads) + ' 1st level)')
             #new:
             self.director('rm', self.linedir + '/cubes/' + 'image*')
             self.director('rm', self.linedir + '/cubes/' + 'beam*')
@@ -1367,19 +1351,19 @@ class line_parallel:
             self.director('rm', self.linedir + '/cubes/' + 'map*')
             self.director('rm', self.linedir + '/cubes/' + 'convol*')
             self.director('rm', self.linedir + '/cubes/' + 'residual*')
-            self.logger.info('# (PARALLEL) Cleaned up the cubes directory #')
+            logger.info('# (PARALLEL) Cleaned up the cubes directory #')
             pymp.config.nested = original_nested
-            self.logger.info('# (PARALLEL) Combining images to line cubes #')
+            logger.info('# (PARALLEL) Combining images to line cubes #')
             if self.line_image_channels != '':
                 nchans = int(str(self.line_image_channels).split(',')[1]) - int(str(self.line_image_channels).split(',')[0])
             else:
                 nchans = nchunks * nchannel
             startfreq = self.get_freqstart(self.crosscaldir + '/' + self.target, int(str(self.line_image_channels).split(',')[0]))
             self.create_linecube(self.linedir + '/cubes/cube_image_*.fits', 'HI_image_cube.fits', nchans, int(str(self.line_image_channels).split(',')[0]), startfreq)
-            self.logger.info('# (PARALLEL) Created HI-image cube #')
+            logger.info('# (PARALLEL) Created HI-image cube #')
             self.create_linecube(self.linedir + '/cubes/cube_beam_*.fits', 'HI_beam_cube.fits', nchans, int(str(self.line_image_channels).split(',')[0]), startfreq)
-            self.logger.info('# (PARALLEL) Created HI-beam cube #')
-            #self.logger.info('# (PARALLEL) Removing obsolete files #')
+            logger.info('# (PARALLEL) Created HI-beam cube #')
+            #logger.info('# (PARALLEL) Removing obsolete files #')
             #self.director('rm', self.linedir + '/cubes/' + 'cube_*')
 
     ####################################
@@ -1393,21 +1377,21 @@ class line_parallel:
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
         majc = int(self.get_last_major_iteration(chunk) + 1)
-        self.logger.info('# Last major self-calibration cycle seems to have been ' + str(majc - 1) + ' #')
+        logger.info('# Last major self-calibration cycle seems to have been ' + str(majc - 1) + ' #')
         if os.path.isfile(self.linedir + '/' + chunk + '/' + chunk + '.mir/gains'):  # Check if a chunk could be calibrated and has data left
             theoretical_noise = self.calc_theoretical_noise(self.linedir + '/' + chunk + '/' + chunk + '.mir')
-            self.logger.info('# Theoretical noise for chunk ' + chunk + ' is ' + str(theoretical_noise / 1000) + ' Jy/beam #')
+            logger.info('# Theoretical noise for chunk ' + chunk + ' is ' + str(theoretical_noise / 1000) + ' Jy/beam #')
             theoretical_noise_threshold = self.calc_theoretical_noise_threshold(theoretical_noise)
-            self.logger.info('# Your theoretical noise threshold will be ' + str(self.line_subtract_mode_uvmodel_nsigma) + ' times the theoretical noise corresponding to ' + str(theoretical_noise_threshold) + ' Jy/beam #')
+            logger.info('# Your theoretical noise threshold will be ' + str(self.line_subtract_mode_uvmodel_nsigma) + ' times the theoretical noise corresponding to ' + str(theoretical_noise_threshold) + ' Jy/beam #')
             dr_list = self.calc_dr_maj(self.line_subtract_mode_uvmodel_drinit, self.line_subtract_mode_uvmodel_dr0, majc, self.line_subtract_mode_uvmodel_majorcycle_function)
             dr_minlist = self.calc_dr_min(dr_list, majc - 1, self.line_subtract_mode_uvmodel_minorcycle, self.line_subtract_mode_uvmodel_minorcycle_function)
-            self.logger.info('# Dynamic range limits for the final minor iterations to clean are ' + str(dr_minlist) + ' #')
+            logger.info('# Dynamic range limits for the final minor iterations to clean are ' + str(dr_minlist) + ' #')
             try:
                 for minc in range(self.line_subtract_mode_uvmodel_minorcycle):  # Iterate over the minor imaging cycles and masking
                     self.run_continuum_minoriteration(chunk, majc, minc, dr_minlist[minc], theoretical_noise_threshold, self.line_subtract_mode_uvmodel_c0)
-                self.logger.info('### Continuum imaging for subtraction for chunk ' + chunk + ' successful! ###')
+                logger.info(' Continuum imaging for subtraction for chunk ' + chunk + ' successful!')
             except:
-                self.logger.warning('### Continuum imaging for subtraction for chunk ' + chunk + ' NOT successful! Continuum subtraction will provide bad or no results! ###')
+                logger.warning(' Continuum imaging for subtraction for chunk ' + chunk + ' NOT successful! Continuum subtraction will provide bad or no results!')
 
     def run_continuum_minoriteration(self, chunk, majc, minc, drmin, theoretical_noise_threshold, c0):
         """
@@ -1436,9 +1420,9 @@ class line_parallel:
             dynamic_range_threshold = self.calc_dynamic_range_threshold(imax, drmin, self.line_subtract_mode_uvmodel_minorcycle0_dr)
             mask_threshold, mask_threshold_type = self.calc_mask_threshold(theoretical_noise_threshold, noise_threshold, dynamic_range_threshold)
             self.director('cp', 'mask_' + str(minc).zfill(2), file=self.selfcaldir + '/' + chunk + '/' + str(majc - 2).zfill(2) + '/mask_' + str(self.line_subtract_mode_uvmodel_minorcycle - 1).zfill(2))
-            self.logger.info('# Last mask from self-calibration copied #')
+            logger.info('# Last mask from self-calibration copied #')
             clean_cutoff = self.calc_clean_cutoff(mask_threshold, self.line_image_c1)
-            self.logger.info('# Clean threshold for minor cycle ' + str(minc) + ' was set to ' + str(clean_cutoff) + ' Jy/beam #')
+            logger.info('# Clean threshold for minor cycle ' + str(minc) + ' was set to ' + str(clean_cutoff) + ' Jy/beam #')
             clean = lib.miriad('clean')  # Clean the image down to the calculated threshold
             clean.map = 'map_' + str(0).zfill(2)
             clean.beam = 'beam_' + str(0).zfill(2)
@@ -1447,7 +1431,7 @@ class line_parallel:
             clean.niters = 100000
             clean.region = '"' + 'mask(mask_' + str(minc).zfill(2) + ')' + '"'
             clean.go()
-            self.logger.info('# Minor cycle ' + str(minc) + ' cleaning done #')
+            logger.info('# Minor cycle ' + str(minc) + ' cleaning done #')
             restor = lib.miriad('restor')
             restor.model = 'model_' + str(minc).zfill(2)
             restor.beam = 'beam_' + str(0).zfill(2)
@@ -1455,28 +1439,28 @@ class line_parallel:
             restor.out = 'image_' + str(minc).zfill(2)
             restor.mode = 'clean'
             restor.go()  # Create the cleaned image
-            self.logger.info('# Cleaned image for minor cycle ' + str(minc) + ' created #')
+            logger.info('# Cleaned image for minor cycle ' + str(minc) + ' created #')
             restor.mode = 'residual'
             restor.out = 'residual_' + str(minc).zfill(2)
             restor.go()  # Create the residual image
-            self.logger.info('# Residual image for minor cycle ' + str(minc) + ' created #')
-            self.logger.info('# Peak of the residual image is ' + str(self.calc_imax('residual_' + str(minc).zfill(2))) + ' Jy/beam #')
-            self.logger.info('# RMS of the residual image is ' + str(self.calc_irms('residual_' + str(minc).zfill(2))) + ' Jy/beam #')
+            logger.info('# Residual image for minor cycle ' + str(minc) + ' created #')
+            logger.info('# Peak of the residual image is ' + str(self.calc_imax('residual_' + str(minc).zfill(2))) + ' Jy/beam #')
+            logger.info('# RMS of the residual image is ' + str(self.calc_irms('residual_' + str(minc).zfill(2))) + ' Jy/beam #')
         else:
             imax = self.calc_imax('map_' + str(0).zfill(2))
             noise_threshold = self.calc_noise_threshold(imax, minc, majc, c0)
             dynamic_range_threshold = self.calc_dynamic_range_threshold(imax, drmin, self.line_subtract_mode_uvmodel_minorcycle0_dr)
             mask_threshold, mask_threshold_type = self.calc_mask_threshold(theoretical_noise_threshold, noise_threshold, dynamic_range_threshold)
-            self.logger.info('# Mask threshold for final imaging minor cycle ' + str(minc) + ' set to ' + str(mask_threshold) + ' Jy/beam #')
-            self.logger.info('# Mask threshold set by ' + str(mask_threshold_type) + ' #')
+            logger.info('# Mask threshold for final imaging minor cycle ' + str(minc) + ' set to ' + str(mask_threshold) + ' Jy/beam #')
+            logger.info('# Mask threshold set by ' + str(mask_threshold_type) + ' #')
             maths = lib.miriad('maths')
             maths.out = 'mask_' + str(minc).zfill(2)
             maths.exp = '"<' + 'image_' + str(minc - 1).zfill(2) + '>"'
             maths.mask = '"<' + 'image_' + str(minc - 1).zfill(2) + '>.gt.' + str(mask_threshold) + '"'
             maths.go()
-            self.logger.info('# Mask with threshold ' + str(mask_threshold) + ' Jy/beam created #')
+            logger.info('# Mask with threshold ' + str(mask_threshold) + ' Jy/beam created #')
             clean_cutoff = self.calc_clean_cutoff(mask_threshold, self.line_image_c1)
-            self.logger.info('# Clean threshold for minor cycle ' + str(minc) + ' was set to ' + str(clean_cutoff) + ' Jy/beam #')
+            logger.info('# Clean threshold for minor cycle ' + str(minc) + ' was set to ' + str(clean_cutoff) + ' Jy/beam #')
             clean = lib.miriad('clean')  # Clean the image down to the calculated threshold
             clean.map = 'map_' + str(0).zfill(2)
             clean.beam = 'beam_' + str(0).zfill(2)
@@ -1486,7 +1470,7 @@ class line_parallel:
             clean.niters = 100000
             clean.region = '"' + 'mask(' + 'mask_' + str(minc).zfill(2) + ')' + '"'
             clean.go()
-            self.logger.info('# Minor cycle ' + str(minc) + ' cleaning done #')
+            logger.info('# Minor cycle ' + str(minc) + ' cleaning done #')
             restor = lib.miriad('restor')
             restor.model = 'model_' + str(minc).zfill(2)
             restor.beam = 'beam_' + str(0).zfill(2)
@@ -1494,13 +1478,13 @@ class line_parallel:
             restor.out = 'image_' + str(minc).zfill(2)
             restor.mode = 'clean'
             restor.go()  # Create the cleaned image
-            self.logger.info('# Cleaned image for minor cycle ' + str(minc) + ' created #')
+            logger.info('# Cleaned image for minor cycle ' + str(minc) + ' created #')
             restor.mode = 'residual'
             restor.out = 'residual_' + str(minc).zfill(2)
             restor.go()
-            self.logger.info('# Residual image for minor cycle ' + str(minc) + ' created #')
-            self.logger.info('# Peak of the residual image is ' + str(self.calc_imax('residual_' + str(minc).zfill(2))) + ' Jy/beam #')
-            self.logger.info('# RMS of the residual image is ' + str(self.calc_irms('residual_' + str(minc).zfill(2))) + ' Jy/beam #')
+            logger.info('# Residual image for minor cycle ' + str(minc) + ' created #')
+            logger.info('# Peak of the residual image is ' + str(self.calc_imax('residual_' + str(minc).zfill(2))) + ' Jy/beam #')
+            logger.info('# RMS of the residual image is ' + str(self.calc_irms('residual_' + str(minc).zfill(2))) + ' Jy/beam #')
 
     ###########################################################
     ##### Subfunctions for creating the line images/cubes #####
@@ -1699,8 +1683,8 @@ class line_parallel:
         if function == 'square':
             dr_maj = [drinit * np.power(dr0, m) for m in range(majorcycles)]
         else:
-            self.logger.error('### Function for major cycles not supported! Exiting! ###')
-            sys.exit(1)
+            raise ApercalException('Function for major cycles not supported! Exiting!')
+
         return dr_maj
 
     def calc_dr_min(self, dr_maj, majc, minorcycles, function):
@@ -1724,8 +1708,7 @@ class line_parallel:
         elif function == 'linear':
             dr_min = [(prevdr + ((dr_maj[majc] - prevdr) / (minorcycles - 1)) * n) for n in range(minorcycles)]
         else:
-            self.logger.error('### Function for minor cycles not supported! Exiting! ###')
-            sys.exit(1)
+            raise ApercalException('Function for minor cycles not supported!')
         return dr_min
 
     def calc_mask_threshold(self, theoretical_noise_threshold, noise_threshold, dynamic_range_threshold):
@@ -1852,7 +1835,7 @@ class line_parallel:
         """
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
-        self.logger.warning('### Deleting all continuum subtracted line data. ###')
+        logger.warning(' Deleting all continuum subtracted line data.')
         self.director('ch', self.linedir)
         self.director('rm', self.linedir + '/*')
 
@@ -1871,7 +1854,7 @@ class line_parallel:
             else:
                 os.mkdir(dest)
                 if verbose == True:
-                    self.logger.info('# Creating directory ' + str(dest) + ' #')
+                    logger.info('# Creating directory ' + str(dest) + ' #')
         elif option == 'ch':
             if os.getcwd() == dest:
                 pass
@@ -1882,11 +1865,11 @@ class line_parallel:
                 except:
                     os.mkdir(dest)
                     if verbose == True:
-                        self.logger.info('# Creating directory ' + str(dest) + ' #')
+                        logger.info('# Creating directory ' + str(dest) + ' #')
                     os.chdir(dest)
                 self.cwd = os.getcwd()  # Save the current working directory in a variable
                 if verbose == True:
-                    self.logger.info('# Moved to directory ' + str(dest) + ' #')
+                    logger.info('# Moved to directory ' + str(dest) + ' #')
         elif option == 'mv':  # Move
             if os.path.exists(dest):
                 lib.basher("mv " + str(file) + " " + str(dest))
@@ -1900,4 +1883,4 @@ class line_parallel:
         elif option == 'rm':  # Remove
             lib.basher("rm -r " + str(dest))
         else:
-            print('### Option not supported! Only mk, ch, mv, rm, rn, and cp are supported! ###')
+            print(' Option not supported! Only mk, ch, mv, rm, rn, and cp are supported!')

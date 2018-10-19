@@ -14,14 +14,13 @@ from apercal.subs import combim as subs_combim
 from apercal.subs.param import get_param_def
 from apercal.libs import lib
 
-from apercal.modules import default_cfg
+logger = logging.getLogger(__name__)
 
 
 class mosaic:
     """
     Mosaic class to produce mosaics of continuum, line and polarisation images.
     """
-    apercaldir = None
     fluxcal = None
     polcal = None
     target = None
@@ -36,30 +35,16 @@ class mosaic:
     mossubdir = None
     transfersubdir = None
 
+    mosdir = None
     mosaic_continuum_stack = None
     mosaic_continuum_chunks = None
     mosaic_line = None
     mosaic_polarisation = None
 
     def __init__(self, file=None, **kwargs):
-        self.logger = logging.getLogger('MOSAIC')
-        config = ConfigParser.ConfigParser() # Initialise the config parser
-        if file != None:
-            config.readfp(open(file))
-            self.logger.info('### Configuration file ' + file + ' successfully read! ###')
-        else:
-            config.readfp(open(os.path.realpath(__file__).rstrip('calibrate.pyc') + 'default.cfg'))
-            self.logger.info('### No configuration file given or file not found! Using default values! ###')
-        for s in config.sections():
-            for o in config.items(s):
-                setattr(self, o[0], eval(o[1]))
-        self.default = config # Save the loaded config file as defaults for later usage
+        self.default = lib.load_config(self, file)
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
-
-    #############################################
-    ##### Function to execute the mosaicing #####
-    #############################################
 
     def go(self):
         """
@@ -68,12 +53,12 @@ class mosaic:
         mosaic_line
         mosaic_polarisation
         """
-        self.logger.info("########## Starting MOSAICKING ##########")
+        logger.info("########## Starting MOSAICKING ##########")
         self.mosaic_continuum_images()
         self.mosaic_continuum_chunk_images()
         self.mosaic_line_cubes()
         self.mosaic_stokes_images()
-        self.logger.info("########## MOSAICKING done ##########")
+        logger.info("########## MOSAICKING done ##########")
 
     ##############################################
     # Continuum mosaicing of the stacked images #
@@ -107,11 +92,11 @@ class mosaic:
         #######################################################
 
         if self.mosaic_continuum_stack:
-            self.logger.info('### Starting mosaicing of stacked continuum images ###')
+            logger.info(' Starting mosaicing of stacked continuum images')
             subs_managefiles.director(self, 'ch', self.mosdir + '/continuum')
             # Check if the mosaicked image is already there
             if os.path.isfile(self.target.rstrip('.mir') + '_contmosaic.fits'):
-                self.logger.warning('### Stacked continuum mosaic already present. ###')
+                logger.warning(' Stacked continuum mosaic already present.')
             else:
                 # Check the status of the stacked continuum image
                 for b in np.arange(beams):
@@ -119,16 +104,16 @@ class mosaic:
                         mosaiccontinuumstackedinputstatus[b] = subs_param.get_param(self, 'continuum_B' + str(b).zfill(2) + '_stackedimagestatus')
                         if mosaiccontinuumstackedinputstatus[b]:
                             mosaiccontinuumstackedcontinuumstatus[b] = True
-                            self.logger.debug('# Continuum imaging for Beam ' + str(b).zfill(2) + ' successful. Added in mosaicing! #')
+                            logger.debug('# Continuum imaging for Beam ' + str(b).zfill(2) + ' successful. Added in mosaicing! #')
                         else:
                             mosaiccontinuumstackedcontinuumstatus[b] = False
                             mosaiccontinuumstackedrejreason[b] = 'Continuum imaging not successful'
-                            self.logger.warning('# Continuum imaging for Beam ' + str(b).zfill(2) + ' not successful. Not added in mosaicing! #')
+                            logger.warning('# Continuum imaging for Beam ' + str(b).zfill(2) + ' not successful. Not added in mosaicing! #')
                     else:
                         mosaiccontinuumstackedinputstatus[b] = False
                         mosaiccontinuumstackedcontinuumstatus[b] = False
                         mosaiccontinuumstackedrejreason[b] = 'No data available'
-                        self.logger.warning('# No data avaialble for Beam ' + str(b).zfill(2) + '. Not added in mosaicing! #')
+                        logger.warning('# No data avaialble for Beam ' + str(b).zfill(2) + '. Not added in mosaicing! #')
 
                 # Copy the continuum images over to the mosaic directory
                 for b in np.arange(beams):
@@ -136,12 +121,12 @@ class mosaic:
                         subs_managefiles.director(self, 'cp', str(b).zfill(2), file=self.basedir + '/' + str(b).zfill(2) + '/' + self.contsubdir + '/' + self.target.rstrip('.mir') + '_stack')
                         if os.path.isdir(str(b).zfill(2)):
                             mosaiccontinuumstackedcopystatus[b] = True
-                            self.logger.debug('# Successfully copied continuum image for Beam ' + str(b).zfill(2) + '! #')
+                            logger.debug('# Successfully copied continuum image for Beam ' + str(b).zfill(2) + '! #')
                         else:
                             mosaiccontinuumstackedinputstatus[b] = False
                             mosaiccontinuumstackedcopystatus[b] = False
                             mosaiccontinuumstackedrejreason[b] = 'Copying of continuum image not successful'
-                            self.logger.warning('# Copying the continuum image for Beam ' + str(b).zfill(2) + ' was not successful. Not added in mosaicing! #')
+                            logger.warning('# Copying the continuum image for Beam ' + str(b).zfill(2) + ' was not successful. Not added in mosaicing! #')
                     else:
                         pass
 
@@ -163,19 +148,19 @@ class mosaic:
                 rejbeams, stackbeam = subs_combim.calc_synbeam(avbeams, beamarray)
                 mosaiccontinuumstackedbeamstatus = mosaiccontinuumstackedinputstatus
                 if len(rejbeams) == 0:
-                    self.logger.debug('# No beams are rejected due to synthesised beam parameters. #')
+                    logger.debug('# No beams are rejected due to synthesised beam parameters. #')
                 else:
                     for rb in rejbeams:
                         avbeams.remove(rb)
                         notavbeams.extend(rb)
-                        self.logger.warning('# Stacked image of beam ' + str(rb).zfill(2) + ' was rejected due to synthesised beam parameters! #')
+                        logger.warning('# Stacked image of beam ' + str(rb).zfill(2) + ' was rejected due to synthesised beam parameters! #')
                         mosaiccontinuumstackedinputstatus[int(rb)] = False
                         mosaiccontinuumstackedbeamstatus[int(rb)] = False
                         mosaiccontinuumstackedrejreason[int(rb)] = 'Synthesised beam parameters'
                     sorted(avbeams)
                     sorted(notavbeams)
 
-                self.logger.info('# Final beam size is fwhm = ' + str(stackbeam[0]) + ' arcsec , ' + str(stackbeam[1]) + ' arcsec, pa = ' + str(stackbeam[2]) + ' deg')
+                logger.info('# Final beam size is fwhm = ' + str(stackbeam[0]) + ' arcsec , ' + str(stackbeam[1]) + ' arcsec, pa = ' + str(stackbeam[2]) + ' deg')
 
                 # Convol the individual stacked images to the same synthesised beam
                 convolimages = ''
@@ -189,22 +174,22 @@ class mosaic:
                         convol.options = 'final'
                         convol.go()
                         if os.path.isdir('c' + str(b).zfill(2)): # Check if the convolved image was created
-                            self.logger.debug('# Convolved image of beam ' + str(b).zfill(2) + ' created successfully! #')
+                            logger.debug('# Convolved image of beam ' + str(b).zfill(2) + ' created successfully! #')
                             convmin, convmax, convstd = subs_imstats.getimagestats(self, str(b).zfill(2))
                             if convstd != np.nan and convmax <= 10000 and convmin >= -10:  # Check if the image is valid
                                 convolimages = convolimages + convol.out + ','
                                 mosaiccontinuumstackedconvolstatus[b] = True
-                                self.logger.debug('# Convolved image of beam ' + str(b).zfill(2) + ' is valid! #')
+                                logger.debug('# Convolved image of beam ' + str(b).zfill(2) + ' is valid! #')
                             else:
                                 mosaiccontinuumstackedinputstatus[b] = False
                                 mosaiccontinuumstackedconvolstatus[b] = False
                                 mosaiccontinuumstackedrejreason[b] = 'Convolved image not valid'
-                                self.logger.warning('# Convolved image of beam ' + str(b).zfill(2) + ' is empty or shows high values! #')
+                                logger.warning('# Convolved image of beam ' + str(b).zfill(2) + ' is empty or shows high values! #')
                         else:
                             mosaiccontinuumstackedinputstatus[b] = False
                             mosaiccontinuumstackedconvolstatus[b] = False
                             mosaiccontinuumstackedrejreason[b] = 'Convolved image not created'
-                            self.logger.warning('# Convolved image of beam ' + str(b).zfill(2) + ' could not successfully be created! #')
+                            logger.warning('# Convolved image of beam ' + str(b).zfill(2) + ' could not successfully be created! #')
                     else:
                         pass
 
@@ -225,26 +210,26 @@ class mosaic:
 
                 # Check if the final image is there, is valid and convert to fits
                 if os.path.isdir(self.target.rstrip('.mir') + '_contmosaic'):
-                    self.logger.debug('# Stacked continuum mosaic created successfully! #')
+                    logger.debug('# Stacked continuum mosaic created successfully! #')
                     contmosmin, contmosmax, contmosstd = subs_imstats.getimagestats(self, self.target.rstrip('.mir') + '_contmosaic')
                     if contmosstd != np.nan and contmosmax <= 10000 and contmosmin >= -10:  # Check if the image is valid
-                        self.logger.debug('# Stacked continuum mosaic image is valid! #')
+                        logger.debug('# Stacked continuum mosaic image is valid! #')
                         subs_managefiles.imagetofits(self, self.target.rstrip('.mir') + '_contmosaic', self.target.rstrip('.mir') + '_contmosaic.fits')
                         mosaiccontinuumstackedimagestatus = True
                         for b in np.arange(beams): # Remove the obsolete files
                             subs_managefiles.director(self, 'rm', self.target.rstrip('.mir') + '_contmosaic')
                             subs_managefiles.director(self, 'rm', str(b).zfill(2))
                             subs_managefiles.director(self, 'rm', 'c' + str(b).zfill(2))
-                        self.logger.debug('# Removed all obsolete files #')
-                        self.logger.info('### Mosaicing of stacked continuum images successful! ###')
+                        logger.debug('# Removed all obsolete files #')
+                        logger.info(' Mosaicing of stacked continuum images successful!')
                     else:
                         mosaiccontinuumstackedimagestatus = False
-                        self.logger.warning('# Final stacked continuum mosaic is empty or shows high values! #')
+                        logger.warning('# Final stacked continuum mosaic is empty or shows high values! #')
                 else:
                     mosaiccontinuumstackedimagestatus = False
-                    self.logger.warning('# Final stacked continuum mosaic could not be created! #')
+                    logger.warning('# Final stacked continuum mosaic could not be created! #')
 
-            self.logger.info('### Mosaicing of stacked continuum images done ###')
+            logger.info(' Mosaicing of stacked continuum images done')
 
             # Save the derived parameters to the parameter file
 
@@ -309,13 +294,13 @@ class mosaic:
         ################################################
 
         if self.mosaic_continuum_chunks:
-            self.logger.info('### Starting mosaicing of continuum images of individual frequency chunks ###')
+            logger.info(' Starting mosaicing of continuum images of individual frequency chunks')
             subs_managefiles.director(self, 'ch', self.mosdir + '/continuum')
 
             for c in np.arange(nch):
                 # Check if a continuum image for a chunk is already present
                 if os.path.isfile(self.target.rstrip('.mir') + '_contmosaic' + '_chunk_' + str(c).zfill(2) + '.fits'):
-                    self.logger.warning('### Continuum mosaic for chunk ' + str(c).zfill(2) + ' already present. ###')
+                    logger.warning(' Continuum mosaic for chunk ' + str(c).zfill(2) + ' already present.')
                 else:
 
                     # Check for which chunks continuum imaging was successful
@@ -325,15 +310,15 @@ class mosaic:
                             if mosaiccontinuumchunksinputstatus[b, c]:
                                 mosaiccontinuumchunkscontinuumstatus[b, c] = True
                                 mosaiccontinuumchunksiterations[b, c] = subs_param.get_param(self, 'continuum_B' + str(b).zfill(2) + '_minoriterations')[c]
-                                self.logger.debug('# Continuum imaging for frequency chunk ' + str(c).zfill(2) + ' of beam ' + str(b).zfill(2) + ' successful! Added in mosaicing! #')
+                                logger.debug('# Continuum imaging for frequency chunk ' + str(c).zfill(2) + ' of beam ' + str(b).zfill(2) + ' successful! Added in mosaicing! #')
                             else:
                                 mosaiccontinuumchunkscontinuumstatus[b, c] = False
                                 mosaiccontinuumchunksiterations[b, c] = np.nan
                                 mosaiccontinuumchunksrejreason[b, c] = 'Continuum imaging not successful'
-                                self.logger.warning('# Continuum imaging for frequency chunk ' + str(c).zfill(2) + ' of beam ' + str(b).zfill(2) + ' not successful! Not added in mosaicing! #')
+                                logger.warning('# Continuum imaging for frequency chunk ' + str(c).zfill(2) + ' of beam ' + str(b).zfill(2) + ' not successful! Not added in mosaicing! #')
                         else:
                             mosaiccontinuumchunksrejreason[b, c] = 'No data available'
-                            self.logger.warning('# No data availbale for chunk ' + str(c).zfill(2) + ' of beam ' + str(b).zfill(2) + '! Not added in mosaicing! #')
+                            logger.warning('# No data availbale for chunk ' + str(c).zfill(2) + ' of beam ' + str(b).zfill(2) + '! Not added in mosaicing! #')
 
                     # Run through each chunk and copy the available images
                     for b in np.arange(beams):
@@ -341,12 +326,12 @@ class mosaic:
                             subs_managefiles.director(self, 'cp', 'C' + str(c).zfill(2) + 'B' + str(b).zfill(2), self.basedir + str(b).zfill(2) + '/' + self.contsubdir + '/' + 'stack' + '/' + str(c).zfill(2) + '/' + 'image_' + str(int(mosaiccontinuumchunksiterations[b, c])).zfill(2))
                             if os.path.isdir('C' + str(c).zfill(2) + 'B' + str(b).zfill(2)):
                                 mosaiccontinuumchunkscopystatus[b, c] = True
-                                self.logger.debug('# Successfully copyied image of frequency chunk ' + str(c).zfill(2) + ' of beam ' + str(b).zfill(2) + '! #')
+                                logger.debug('# Successfully copyied image of frequency chunk ' + str(c).zfill(2) + ' of beam ' + str(b).zfill(2) + '! #')
                             else:
                                 mosaiccontinuumchunksinputstatus[b, c] = False
                                 mosaiccontinuumchunkscopystatus[b, c] = False
                                 mosaiccontinuumchunksrejreason[b, c] = 'Copy of continuum image not successful'
-                                self.logger.warning('# Copying image of frequency chunk ' + str(c).zfill(2) + ' of beam ' + str(b).zfill(2) + ' failed! #')
+                                logger.warning('# Copying image of frequency chunk ' + str(c).zfill(2) + ' of beam ' + str(b).zfill(2) + ' failed! #')
 
                     # Get the parameters for each image
                     for b in np.arange(beams):
@@ -366,19 +351,19 @@ class mosaic:
                     rejbeams, mosaiccontinuumchunksbeams[c, :] = subs_combim.calc_synbeam(avbeams, beamarray)
                     mosaiccontinuumchunksbeamstatus[:, c] = mosaiccontinuumchunksinputstatus[:, c]
                     if len(rejbeams) == 0:
-                        self.logger.debug('# No beams are rejected due to synthesised beam parameters for chunk ' + str(c).zfill(2) + '! #')
+                        logger.debug('# No beams are rejected due to synthesised beam parameters for chunk ' + str(c).zfill(2) + '! #')
                     else:
                         for rb in rejbeams:
                             avbeams.remove(rb)
                             notavbeams.extend(rb)
-                            self.logger.warning('# Stacked image of beam ' + str(rb).zfill(2) + ' for chunk ' + str(c).zfill(2) + ' was rejected due to synthesised beam parameters! #')
+                            logger.warning('# Stacked image of beam ' + str(rb).zfill(2) + ' for chunk ' + str(c).zfill(2) + ' was rejected due to synthesised beam parameters! #')
                             mosaiccontinuumchunksinputstatus[int(rb), c] = False
                             mosaiccontinuumchunksbeamstatus[int(rb), c] = False
                             mosaiccontinuumchunksrejreason[int(rb), c] = 'Synthesised beam parameters'
                     sorted(avbeams)
                     sorted(notavbeams)
 
-                    self.logger.info('# Final beam size for chunk ' + str(c).zfill(2) + ' is fwhm = ' + str(mosaiccontinuumchunksbeams[c, 0]) + ' arcsec , ' + str(mosaiccontinuumchunksbeams[c, 1]) + ' arcsec, pa = ' + str(mosaiccontinuumchunksbeams[c, 2]) + ' deg')
+                    logger.info('# Final beam size for chunk ' + str(c).zfill(2) + ' is fwhm = ' + str(mosaiccontinuumchunksbeams[c, 0]) + ' arcsec , ' + str(mosaiccontinuumchunksbeams[c, 1]) + ' arcsec, pa = ' + str(mosaiccontinuumchunksbeams[c, 2]) + ' deg')
 
                     # Convol the individual frequency chunk images to the same synthesised beam
                     for b in np.arange(beams):
@@ -394,17 +379,17 @@ class mosaic:
                                 convmin, convmax, convstd = subs_imstats.getimagestats(self, 'c' + 'C' + str(c).zfill(2) + 'B' + str(b).zfill(2))
                                 if convstd != np.nan and convmax <= 10000 and convmin >= -10:  # Check if the image is valid
                                     mosaiccontinuumchunksconvolstatus[b, c] = True
-                                    self.logger.debug('# Convolution of image of beam ' + str(b).zfill(2) + ' for chunk ' + str(c).zfill(2) + ' successful! #')
+                                    logger.debug('# Convolution of image of beam ' + str(b).zfill(2) + ' for chunk ' + str(c).zfill(2) + ' successful! #')
                                 else:
                                     mosaiccontinuumchunksinputstatus[b, c] = False
                                     mosaiccontinuumchunksconvolstatus[b, c] = False
                                     mosaiccontinuumchunksrejreason[b, c] = 'Convolved image not valid'
-                                    self.logger.warning('# Convolved image of beam ' + str(b).zfill(2) + ' for chunk ' + str(c).zfill(2) + ' is empty or shows high values! #')
+                                    logger.warning('# Convolved image of beam ' + str(b).zfill(2) + ' for chunk ' + str(c).zfill(2) + ' is empty or shows high values! #')
                             else:
                                 mosaiccontinuumchunksinputstatus[b, c] = False
                                 mosaiccontinuumchunksconvolstatus[b, c] = False
                                 mosaiccontinuumchunksrejreason[b, c] = 'Convolved image not created'
-                                self.logger.warning('# Convolved image of beam ' + str(b).zfill(2) + ' for chunk ' + str(c).zfill(2) + ' could not successfully be created! #')
+                                logger.warning('# Convolved image of beam ' + str(b).zfill(2) + ' for chunk ' + str(c).zfill(2) + ' could not successfully be created! #')
                         else:
                             pass
 
@@ -427,26 +412,26 @@ class mosaic:
 
                     # Check if the final images are there, are valid and convert them to fits
                     if os.path.isdir(self.target.rstrip('.mir') + '_contmosaic' + '_chunk_' + str(c).zfill(2)):
-                        self.logger.debug('# Continuum mosaic of chunk ' + str(c).zfill(2) + ' created successfully! #')
+                        logger.debug('# Continuum mosaic of chunk ' + str(c).zfill(2) + ' created successfully! #')
                         contmosmin, contmosmax, contmosstd = subs_imstats.getimagestats(self, self.target.rstrip('.mir') + '_contmosaic' + '_chunk_' + str(c).zfill(2))
                         if contmosstd != np.nan and contmosmax <= 10000 and contmosmin >= -10:  # Check if the image is valid
-                            self.logger.debug('# Continuum mosaic of chunk ' + str(c).zfill(2) + ' is valid! #')
+                            logger.debug('# Continuum mosaic of chunk ' + str(c).zfill(2) + ' is valid! #')
                             subs_managefiles.imagetofits(self, self.target.rstrip('.mir') + '_contmosaic' + '_chunk_' + str(c).zfill(2), self.target.rstrip('.mir') + '_contmosaic' + '_chunk_' + str(c).zfill(2) + '.fits')
                             mosaiccontinuumchunksimagestatus[c] = True
                             for b in np.arange(beams): # Remove the obsolete files
                                 subs_managefiles.director(self, 'rm', self.target.rstrip('.mir') + '_contmosaic' + '_chunk_' + str(c).zfill(2))
                                 subs_managefiles.director(self, 'rm', 'C' + str(c).zfill(2) + 'B' + str(b).zfill(2))
                                 subs_managefiles.director(self, 'rm', 'c' + 'C' + str(c).zfill(2) + 'B' + str(b).zfill(2))
-                            self.logger.debug('# Removed all obsolete files #')
-                            self.logger.info('### Mosaicing of continuum images successful for chunk ' + str(c).zfill(2) + '! ###')
+                            logger.debug('# Removed all obsolete files #')
+                            logger.info(' Mosaicing of continuum images successful for chunk ' + str(c).zfill(2) + '!')
                         else:
                             mosaiccontinuumchunksimagestatus[c] = False
-                            self.logger.warning('# Final continuum mosaic is empty or shows high values for chunk ' + str(c).zfill(2) + '! #')
+                            logger.warning('# Final continuum mosaic is empty or shows high values for chunk ' + str(c).zfill(2) + '! #')
                     else:
                         mosaiccontinuumchunksimagestatus[c] = False
-                        self.logger.warning('# Final continuum mosaic could not be created for chunk ' + str(c).zfill(2) + '! #')
+                        logger.warning('# Final continuum mosaic could not be created for chunk ' + str(c).zfill(2) + '! #')
 
-            self.logger.info('### Mosaicing of continuum images for individual frequency chunks done ###')
+            logger.info(' Mosaicing of continuum images for individual frequency chunks done')
 
             # Save the derived parameters to the parameter file
 
@@ -475,7 +460,7 @@ class mosaic:
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
         if self.mosaic_line:
-            self.logger.error('### Mosaicing of line cubes not implemented yet ###')
+            logger.error(' Mosaicing of line cubes not implemented yet')
 
 
 
@@ -488,7 +473,7 @@ class mosaic:
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
         if self.mosaic_polarisation:
-            self.logger.error('### Mosaicing of Stokes cubes not implemented yet ###')
+            logger.error(' Mosaicing of Stokes cubes not implemented yet')
 
 
 
@@ -672,10 +657,10 @@ class mosaic:
         """
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
-        self.logger.warning('### Deleting all mosaicked data products. ###')
+        logger.warning(' Deleting all mosaicked data products.')
         subs_managefiles.director(self,'ch', self.basedir)
         subs_managefiles.director(self,'rm', self.mosdir)
-        self.logger.warning('### Deleteing all parameter file entries for MOSAIC module ###')
+        logger.warning(' Deleteing all parameter file entries for MOSAIC module')
         subs_param.del_param(self, 'mosaic_continuum_stacked_beams_inputstatus')
         subs_param.del_param(self, 'mosaic_continuum_stacked_beams_inputsynthbeamparams')
         subs_param.del_param(self, 'mosaic_continuum_stacked_beams_inputimagestats')

@@ -1,4 +1,3 @@
-import ConfigParser
 import glob
 import logging
 
@@ -10,13 +9,14 @@ from apercal.subs import managefiles as subs_managefiles
 from apercal.subs import param as subs_param
 from apercal.libs import lib
 
+logger = logging.getLogger(__name__)
+
 
 class transfer:
     """
     Transfer class to combine the calibrated data chunks with full spectral resolution into one file and export to UVFITS.
     Gain tables and flags are already applied. Data is then ready to get ingested into ALTA.
     """
-    apercaldir = None
     fluxcal = None
     polcal = None
     target = None
@@ -35,37 +35,23 @@ class transfer:
     transfer_convert_lineuv2uvfits = None
 
     def __init__(self, file=None, **kwargs):
-        self.logger = logging.getLogger('TRANSFER')
-        config = ConfigParser.ConfigParser() # Initialise the config parser
-        if file != None:
-            config.readfp(open(file))
-            self.logger.info('### Configuration file ' + file + ' successfully read! ###')
-        else:
-            config.readfp(open(os.path.realpath(__file__).rstrip('calibrate.pyc') + 'default.cfg'))
-            self.logger.info('### No configuration file given or file not found! Using default values! ###')
-        for s in config.sections():
-            for o in config.items(s):
-                setattr(self, o[0], eval(o[1]))
-        self.default = config # Save the loaded config file as defaults for later usage
+        self.default = lib.load_config(self, file)
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
-
-    ####################################################
-    ##### Function to execute the transfer process #####
-    ####################################################
 
     def go(self):
         """
         Executes the continuum imaging process in the following order
         convert_lineuv2uvfits
         """
-        self.logger.info("########## Starting TRANSFER process of all beams ##########")
+        logger.info("########## Starting TRANSFER process of all beams ##########")
         self.convert_lineuv2uvfits()
-        self.logger.info("########## TRANSFER process for all beams done ##########")
+        logger.info("########## TRANSFER process for all beams done ##########")
 
     def convert_lineuv2uvfits(self):
         """
-        Looks for all calibrated datasets created by the line module, combines the chunks of individual beams and converts them to UVFITS format
+        Looks for all calibrated datasets created by the line module, combines the chunks of individual beams and
+        converts them to UVFITS format
         """
         subs_setinit.setinitdirs(self)
         subs_managefiles.director(self, 'ch', self.transferdir, verbose=False)
@@ -77,23 +63,23 @@ class transfer:
             uvgluestatusarray = np.full((len(beamnames)), False)
             uvfitsstatusarray = np.full((len(beamnames)), False)
             if os.path.isfile(self.target.rstrip('.mir') + '_B' + beam.split('/')[-1] + '.UVFITS'):
-                self.logger.warning('# UVFITS file for beam ' + beam.split('/')[-1] + ' already exists! #')
+                logger.warning('# UVFITS file for beam ' + beam.split('/')[-1] + ' already exists! #')
             else:
                 chunklist = sorted(glob.glob(beam + '/' + self.linesubdir + '/' + '[0-9][0-9]/[0-9][0-9]' + '.mir'))
                 chunknames = [chunk.split('/')[-2] for chunk in chunklist]
                 subs_param.add_param(self, 'transfer_input_beam_' + str(beamnames[b]) + '_chunks', chunknames)
                 uvcatstatusarray = np.full((len(chunknames)), False)
-                self.logger.debug('# Starting combination of frequency chunks for beam ' + beam.split('/')[-1] + ' #')
+                logger.debug('# Starting combination of frequency chunks for beam ' + beam.split('/')[-1] + ' #')
                 for c, chunk in enumerate(chunklist):
                     uvcat = lib.miriad('uvcat')
                     uvcat.vis = chunk
                     uvcat.out = self.transferdir + '/' + 'B' + beam.split('/')[-1] + '_' + str(c+1)
                     uvcat.go()
                     if os.path.isdir(self.transferdir + '/' + 'B' + beam.split('/')[-1] + '_' + str(c+1)): # Check if file has been copied successfully
-                        self.logger.debug('# Chunk ' + str(chunk).zfill(2) + ' for beam ' + str(beam.split('/')[-1]) + ' copied successfully! #')
+                        logger.debug('# Chunk ' + str(chunk).zfill(2) + ' for beam ' + str(beam.split('/')[-1]) + ' copied successfully! #')
                         uvcatstatusarray[c] = True
                     else:
-                        self.logger.warning('# Chunk ' + str(chunk).zfill(2) + ' for beam ' + str(beam.split('/')[-1]) + ' NOT copied successfully! #')
+                        logger.warning('# Chunk ' + str(chunk).zfill(2) + ' for beam ' + str(beam.split('/')[-1]) + ' NOT copied successfully! #')
                         uvcatstatusarray[c] = False
                 subs_param.add_param(self, 'transfer_input_beam_' + str(beamnames[b]) + '_copy_status', uvcatstatusarray)
                 uvglue = lib.miriad('uvglue')
@@ -102,11 +88,11 @@ class transfer:
                 uvglue.out = self.target.rstrip('.mir') + '_B' + beam.split('/')[-1] + '.mir'
                 uvglue.go()
                 if os.path.isdir(self.target.rstrip('.mir') + '_B' + beam.split('/')[-1] + '.mir'):
-                    self.logger.debug('# Combination of frequency chunks for beam ' + beam.split('/')[-1] + ' successful! #')
+                    logger.debug('# Combination of frequency chunks for beam ' + beam.split('/')[-1] + ' successful! #')
                     subs_managefiles.director(self, 'rm', 'B' + beam.split('/')[-1] + '*')
                     uvgluestatusarray[b] = True
                 else:
-                    self.logger.warning('# Combination of frequency chunks for beam ' + beam.split('/')[-1] + ' not successful! #')
+                    logger.warning('# Combination of frequency chunks for beam ' + beam.split('/')[-1] + ' not successful! #')
                     uvgluestatusarray[b] = False
                 fits = lib.miriad('fits')
                 fits.op = 'uvout'
@@ -114,11 +100,11 @@ class transfer:
                 fits.out = self.target.rstrip('.mir') + '_B' + beam.split('/')[-1] + '.UVFITS'
                 fits.go()
                 if os.path.isfile(self.target.rstrip('.mir') + '_B' + beam.split('/')[-1] + '.UVFITS'):
-                    self.logger.debug('# Conversion of MIRIAD file to UVFITS for beam '  + beam.split('/')[-1] + ' successful! #')
+                    logger.debug('# Conversion of MIRIAD file to UVFITS for beam '  + beam.split('/')[-1] + ' successful! #')
                     subs_managefiles.director(self, 'rm', self.target.rstrip('.mir') + '_B' + beam.split('/')[-1] + '.mir')
                     uvfitsstatusarray[b] = True
                 else:
-                    self.logger.warning('# Conversion of MIRIAD file to UVFITS for beam '  + beam.split('/')[-1] + ' NOT successful! #')
+                    logger.warning('# Conversion of MIRIAD file to UVFITS for beam '  + beam.split('/')[-1] + ' NOT successful! #')
                     uvfitsstatusarray[b] = False
             subs_param.add_param(self, 'transfer_input_beams_uvglue', uvgluestatusarray)
             subs_param.add_param(self, 'transfer_input_beams_uvfits', uvfitsstatusarray)
@@ -128,10 +114,11 @@ class transfer:
 
     def reset(self):
         """
-        Function to reset the current step and remove all generated data. Be careful! Deletes all data generated in this step!
+        Function to reset the current step and remove all generated data. Be careful! Deletes all data generated in
+        this step!
         """
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
-        self.logger.warning('### Deleting all data products ready for transfer. ###')
+        logger.warning(' Deleting all data products ready for transfer.')
         subs_managefiles.director(self,'ch', self.basedir)
         subs_managefiles.director(self,'rm', self.transferdir)

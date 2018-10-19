@@ -1,8 +1,9 @@
-import ConfigParser
 import logging
-import os
-
 from apercal.subs import setinit as subs_setinit
+from apercal.libs import lib
+
+
+logger = logging.getLogger(__name__)
 
 
 class polarisation:
@@ -11,18 +12,7 @@ class polarisation:
     """
 
     def __init__(self, file=None, **kwargs):
-        self.logger = logging.getLogger('POLARISATION')
-        config = ConfigParser.ConfigParser()  # Initialise the config parser
-        if file != None:
-            config.readfp(open(file))
-            self.logger.info('### Configuration file ' + file + ' successfully read! ###')
-        else:
-            config.readfp(open(os.path.realpath(__file__).rstrip('calibrate.pyc') + 'default.cfg'))
-            self.logger.info('### No configuration file given or file not found! Using default values! ###')
-        for s in config.sections():
-            for o in config.items(s):
-                setattr(self, o[0], eval(o[1]))
-        self.default = config  # Save the loaded config file as defaults for later usage
+        self.default = lib.load_config(self, file)
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
 
@@ -33,4 +23,4 @@ class polarisation:
         """
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
-        self.logger.info('### Polarisation imaging is going to be implemented later ###')
+        logger.info(' Polarisation imaging is going to be implemented later')
