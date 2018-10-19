@@ -1,7 +1,7 @@
 import unittest
-from apercal.modules.prepare import prepare
 import matplotlib as mpl
 mpl.use('TkAgg')
+from apercal.modules.prepare import prepare
 
 from os import path
 

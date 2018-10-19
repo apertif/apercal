@@ -1,8 +1,8 @@
 import unittest
-from apercal.modules.ccal import ccal
-from os import path
 import matplotlib as mpl
 mpl.use('TkAgg')
+from apercal.modules.ccal import ccal
+from os import path
 
 here = path.abspath(path.dirname(__file__))
 
