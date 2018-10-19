@@ -10,7 +10,10 @@ here = path.dirname(__file__)
 class TestPreflag(unittest.TestCase):
     def test_preflag(self):
         p = preflag(path.join(here, 'test.cfg'))
-        p.apercaldir = path.join(here, '..')
-        p.basedir = path.join(here, '../data/small')
-        p.show(showall=False)
+        p.apercaldir = path.join(here, '../')
+        p.basedir = path.join(here, '../data/small/')
+        p.fluxcal = '3C295.MS'
+        p.polcal = '3C138.MS'
+        p.target = 'NGC807.MS'
+        #p.show(showall=False)
         p.go()
