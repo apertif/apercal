@@ -1,23 +1,18 @@
 cwlVersion: v1.0
 class: Workflow
 
-requirements:
-  ScatterFeatureRequirement: {}
-
 inputs:
-  targets: Directory[]
-  fluxcal: Directory
-  polcal: Directory
+  ms: Directory
 
 outputs:
-  calibrated_targets: Directory[]
+  msout:
+    type: Directory
+    outputSource: preflag/msout
 
 steps:
   preflag:
     run: steps/preflag.cwl
     in:
-      targets: targets
-      fluxcal: fluxcal
-      polcal: polcal
+      ms: ms
     out:
-        [calibrated_targets]
+        [msout]
