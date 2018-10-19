@@ -42,7 +42,7 @@ class continuum:
     def __init__(self, file=None, **kwargs):
         self.logger = logging.getLogger('CONTINUUM')
         config = ConfigParser.ConfigParser() # Initialise the config parser
-        if file != None:
+        if file:
             config.readfp(open(file))
             self.logger.info('### Configuration file ' + file + ' successfully read! ###')
         else:
@@ -499,8 +499,8 @@ class continuum:
                             continuumstatus[int(chunk)] = True
                         else:
                             continuumstatus[int(chunk)] = False
-                            self.logger.warning('###  Continuum imaging for chunk ' + str(chunk) + ' not successful! ' + file +  ' was not found! ###')
-                            continuumchunkstackrejreason[int(chunk)] = file + ' missing'
+                            self.logger.warning('###  Continuum imaging for chunk ' + str(chunk) + ' not successful! ' + f +  ' was not found! ###')
+                            continuumchunkstackrejreason[int(chunk)] = 'Chunk {} file {} missing'.format(chunk, f)
                             break
             else:
                 continuumchunkstackrejreason[int(chunk)] = 'Self-calibration failed'
