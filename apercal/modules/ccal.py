@@ -17,7 +17,7 @@ from apercal.subs import setinit as subs_setinit
 from apercal.subs import managefiles as subs_managefiles
 from apercal.subs import msutils as subs_msutils
 from apercal.subs import calmodels as subs_calmodels
-from apercal.subs_param import get_param_def
+from apercal.subs.param import get_param_def
 from apercal.subs import param as subs_param
 
 from apercal.libs import lib
