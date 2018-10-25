@@ -16,20 +16,20 @@ from apercal.subs.pb import wsrtBeam
 from apercal.subs.readmirhead import getradec
 
 
-
-
-######################################################################
 ##### Functions to query, generate, and modify a local sky model #####
-######################################################################
 
 def query_catalogue(infile, catalogue, radius, minflux=0.0):
     """
     query_catalogue: module to query the FIRST, NVSS, or WENSS catalogue from Vizier and write it to a record array
+
     skycoords: coordinates of the pointing centre in astropy format
     catalogue: catalogue to ask for (NVSS, WENSS, or FIRST)
     radius: radius around the pointing centre to ask for in degreees
-    minflux: minimum real source flux to receive from a VIZIER query. Default is 0.0 since for most operations you want all sources in the radius region
-    returns: record array with RA, DEC, Major axis, Minor axis, parallactic angle, and flux of the sources in the catalogue
+    minflux: minimum real source flux to receive from a VIZIER query. Default is 0.0 since for most operations you
+             want all sources in the radius region
+
+    returns: record array with RA, DEC, Major axis, Minor axis, parallactic angle, and flux of the sources in the
+             catalogue
     """
     try:
         if catalogue == 'FIRST':
@@ -89,7 +89,8 @@ def calc_appflux(infile, cat, beam):
     infile: Input MIRIAD uv-file
     cat: catalogue (most likely from query_catalogue)
     beam: the beam type to correct for. Only 'WSRT' allowed at the moment
-    returns: an extended catalogue file including the distances RA- and DEC-offsets and apparent fluxes from the pointing centre
+    returns: an extended catalogue file including the distances RA- and DEC-offsets and apparent fluxes from th
+             pointing centre
     """
     if beam == 'WSRT':  # Check which beam model to use. APERTIF going to be included later.
         logging.info(' Using standard WSRT beam for calculating apparent fluxes!')
@@ -105,7 +106,9 @@ def calc_appflux(infile, cat, beam):
 
 def sort_catalogue(catalogue, column):
     """
-    sort_catalogue: Sorts a catalogue after a certain column. Most likely after a calc_appflux call to generate a flux sorted local skymodel
+    Sorts a catalogue after a certain column. Most likely after a calc_appflux call to generate a
+    flux sorted local skymodel
+
     catalogue: an input catalogue (most likely from a query_catalogue call)
     column: the column to sort for
     returns: an updated sorted catalogue
@@ -136,7 +139,10 @@ def cutoff_catalogue(catalogue, cutoff):
 
 def calc_SI(cat1, cat2, limit):
     """
-    calc_SI: module to use a catalogue at a different frequency, do cross matching, and calculate the spectral index. The module also looks for multiple matches and assigns the flux of one source matching multiple ones linearly to calculate the spectral index. I tonly looks into sources which are not further apart as the limit parameter.
+    module to use a catalogue at a different frequency, do cross matching, and calculate the spectral index
+    The module also looks for multiple matches and assigns the flux of one source matching multiple ones linearly to
+    calculate the spectral index. I tonly looks into sources which are not further apart as the limit parameter.
+
     cat1: The catalogue where you want to add the spectral index to the sources. Usually NVSS or FIRST.
     cat2: The catalogue to match and calculate the spectral index from. Usually WENSS.
     limit: Maximum distance in arcseconds for two sources to match each other.
@@ -144,7 +150,7 @@ def calc_SI(cat1, cat2, limit):
     """
     try:  # Handle the exception if the WENSS query did not give any results.
         coords1 = SkyCoord(ra=cat1.RA, dec=cat1.DEC, unit=(
-        u.deg, u.deg))  # Convert the coordinates of the two source catalogues to the right format
+            u.deg, u.deg))  # Convert the coordinates of the two source catalogues to the right format
         coords2 = SkyCoord(ra=cat2.RA, dec=cat2.DEC, unit=(u.deg, u.deg))
         idx, d2d, d3d = coords1.match_to_catalog_sky(
             coords2)  # Get the indices of the matches (idx), and their distance on the sky (d2d)
@@ -171,19 +177,20 @@ def calc_SI(cat1, cat2, limit):
         si = np.zeros(len(idx))  # Create the array for the spectral index and put the values into the right position
         si[nomatch] = -0.7
         si[match] = src_si
-        si[si < -3] = -0.7;
-        si[
-            si > 2] = -0.7  # Change the value to -0.7 in case of high absolute values. Maybe wrong source match or variable source
+        si[si < -3] = -0.7
+        # Change the value to -0.7 in case of high absolute values. Maybe wrong source match or variable source
+        si[si > 2] = -0.7
         cat = mplab.rec_append_fields(cat1, 'SI', si, dtypes=float)
     except:
-        cat = mplab.rec_append_fields(cat1, 'SI', -0.7,
-                                      dtypes=float)  # In case the queried area is not covered by WENSS give all sources a spectral index of -0.7.
+        # In case the queried area is not covered by WENSS give all sources a spectral index of -0.7.
+        cat = mplab.rec_append_fields(cat1, 'SI', -0.7, dtypes=float)
     return cat
 
 
-#############################################################################################################################################
-##### Functions to generate a file for the parametric self calibration and/or a first mask for the self-calibration from a VIZIER query #####
-#############################################################################################################################################
+
+# Functions to generate a file for the parametric self calibration and/or a first mask for the self-calibration from a
+# VIZIER query
+
 
 def lsm_model(infile, radius, cutoff, limit):
     """
@@ -191,7 +198,8 @@ def lsm_model(infile, radius, cutoff, limit):
     infile: The MIRIAD (u,v)-dataset to calibrate on to get frequency and pointing information
     radius: The radius for the cone search to consider sources for the skymodel
     cutoff: The percentage of total apparent flux of the field to use for the skymodel (0.0-1.0)
-    limit: The distance in arcseconds for considering a source as a match for the source matching algorithm to calculate the spectral indices
+    limit: The distance in arcseconds for considering a source as a match for the source matching algorithm to
+          calculate the spectral indices
     returns: A catalogue of sources with spectral indices and the set cutoff. Used as input for write_model.
     """
     cat = query_catalogue(infile, 'FIRST', radius)
@@ -269,9 +277,7 @@ def write_mask(outfile, cat):
     logging.info(' Wrote mask textfile to ' + str(outfile) + '!')
 
 
-##################################################################################################################
-##### Helper functions to get coordinates and central frequency of a dataset and fix the coordinate notation #####
-##################################################################################################################
+# Helper functions to get coordinates and central frequency of a dataset and fix the coordinate notation #####
 
 def getradec(infile):
     """

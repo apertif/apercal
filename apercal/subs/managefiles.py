@@ -4,7 +4,6 @@ import logging
 from apercal.libs import lib
 from apercal.subs import setinit as subs_setinit
 
-
 logger = logging.getLogger(__name__)
 
 
