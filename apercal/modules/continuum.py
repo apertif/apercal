@@ -607,9 +607,8 @@ class continuum:
                             continuumstatus[int(chunk)] = True
                         else:
                             continuumstatus[int(chunk)] = False
-                            logger.warning('  Continuum imaging for chunk ' + str(
-                                chunk) + ' not successful! ' + file + ' was not found!')
-                            continuumchunkstackrejreason[int(chunk)] = file + ' missing'
+                            logger.warning('###  Continuum imaging for chunk ' + str(chunk) + ' not successful! ' + f +  ' was not found! ###')
+                            continuumchunkstackrejreason[int(chunk)] = 'Chunk {} file {} missing'.format(chunk, f)
                             break
             else:
                 continuumchunkstackrejreason[int(chunk)] = 'Self-calibration failed'
@@ -1085,6 +1084,7 @@ class continuum:
         """
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
+<<<<<<< HEAD
         logger.warning(' Deleting all continuum data products.')
         subs_managefiles.director(self, 'ch', self.contdir)
         subs_managefiles.director(self, 'rm', self.contdir + '/*')
