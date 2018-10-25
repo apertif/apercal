@@ -82,16 +82,17 @@ class line:
         transfergains
         subtract
         """
-        logger.info("########## Starting CONTINUUM SUBTRACTION ##########")
+        logger.info("Starting CONTINUUM SUBTRACTION ")
         self.splitdata()
         self.transfergains()
         self.subtract()
         self.image_line()
-        logger.info("########## CONTINUUM SUBTRACTION done ##########")
+        logger.info("CONTINUUM SUBTRACTION done ")
 
     def splitdata(self):
         """
-        Applies calibrator corrections to data, splits the data into chunks in frequency and bins it to the given frequency resolution for the self-calibration
+        Applies calibrator corrections to data, splits the data into chunks in frequency and bins it to the given
+        frequency resolution for the self-calibration
         """
         if self.splitdata:
             subs_setinit.setinitdirs(self)
@@ -99,56 +100,65 @@ class line:
             self.director('ch', self.linedir)
             logger.info(' Splitting of target data into individual frequency chunks started')
             if os.path.isfile(self.linedir + '/' + self.target):
-                logger.info('# Calibrator corrections already seem to have been applied #')
+                logger.info('Calibrator corrections already seem to have been applied #')
             else:
-                logger.info('# Applying calibrator solutions to target data before averaging #')
+                logger.info('Applying calibrator solutions to target data before averaging #')
                 uvcat = lib.miriad('uvcut')
                 uvcat.vis = self.crosscaldir + '/' + self.target
                 uvcat.out = self.linedir + '/' + self.target
                 uvcat.go()
-                logger.info('# Calibrator solutions to target data applied #')
+                logger.info('Calibrator solutions to target data applied #')
             try:
                 uv = aipy.miriad.UV(self.linedir + '/' + self.target)
             except RuntimeError:
                 raise ApercalException('No data in your crosscal directory')
             try:
-                nsubband = len(uv['nschan']) # Number of subbands in data
+                nsubband = len(uv['nschan'])  # Number of subbands in data
             except TypeError:
-                nsubband = 1 # Only one subband in data since exception was triggered
-            logger.info('# Found ' + str(nsubband) + ' subband(s) in target data #')
-            counter = 0 # Counter for naming the chunks and directories
+                nsubband = 1  # Only one subband in data since exception was triggered
+            logger.info('Found ' + str(nsubband) + ' subband(s) in target data #')
+            counter = 0  # Counter for naming the chunks and directories
             for subband in range(nsubband):
-                logger.info('# Started splitting of subband ' + str(subband) + ' #')
+                logger.info('Started splitting of subband ' + str(subband) + ' #')
                 if nsubband == 1:
                     numchan = uv['nschan']
                     finc = np.fabs(uv['sdf'])
                 else:
-                    numchan = uv['nschan'][subband] # Number of channels per subband
+                    numchan = uv['nschan'][subband]  # Number of channels per subband
                     finc = np.fabs(uv['sdf'][subband])  # Frequency increment for each channel
-                subband_bw = numchan * finc # Bandwidth of one subband
+                subband_bw = numchan * finc  # Bandwidth of one subband
                 subband_chunks = round(subband_bw / self.line_splitdata_chunkbandwidth)
-                subband_chunks = int(np.power(2, np.ceil(np.log(subband_chunks) / np.log(2)))) # Round to the closest power of 2 for frequency chunks with the same bandwidth over the frequency range of a subband
+                # Round to the closest power of 2 for frequency chunks with the same bandwidth over the frequency range
+                # of a subband
+                subband_chunks = int(np.power(2, np.ceil(np.log(subband_chunks) / np.log(2))))
                 if subband_chunks == 0:
                     subband_chunks = 1
-                chunkbandwidth = (numchan/subband_chunks)*finc
-                logger.info('# Adjusting chunk size to ' + str(chunkbandwidth) + ' GHz for regular gridding of the data chunks over frequency #')
+                chunkbandwidth = (numchan / subband_chunks) * finc
+                logger.info('Adjusting chunk size to ' + str(
+                    chunkbandwidth) + ' GHz for regular gridding of the data chunks over frequency #')
                 for chunk in range(subband_chunks):
-                    logger.info('# Starting splitting of data chunk ' + str(chunk) + ' for subband ' + str(subband) + ' #')
+                    logger.info(
+                        'Starting splitting of data chunk ' + str(chunk) + ' for subband ' + str(subband) + ' #')
                     binchan = round(self.line_splitdata_channelbandwidth / finc)  # Number of channels per frequency bin
                     chan_per_chunk = numchan / subband_chunks
-                    if chan_per_chunk % binchan == 0: # Check if the freqeuncy bin exactly fits
-                        logger.info('# Using frequency binning of ' + str(self.line_splitdata_channelbandwidth) + ' for all subbands #')
+                    if chan_per_chunk % binchan == 0:  # Check if the freqeuncy bin exactly fits
+                        logger.info('Using frequency binning of ' + str(
+                            self.line_splitdata_channelbandwidth) + ' for all subbands #')
                     else:
-                        while chan_per_chunk % binchan != 0: # Increase the frequency bin to keep a regular grid for the chunks
+                        # Increase the frequency bin to keep a regular grid for the chunks
+                        while chan_per_chunk % binchan != 0:
                             binchan = binchan + 1
                         else:
-                            if chan_per_chunk >= binchan: # Check if the calculated bin is not larger than the subband channel number
+                            # Check if the calculated bin is not larger than the subband channel number
+                            if chan_per_chunk >= binchan:
                                 pass
                             else:
-                                binchan = chan_per_chunk # Set the frequency bin to the number of channels in the chunk of the subband
-                        logger.info('# Increasing frequency bin of data chunk ' + str(chunk) + ' to keep bandwidth of chunks equal over the whole bandwidth #')
-                        logger.info('# New frequency bin is ' + str(binchan * finc) + ' GHz #')
-                    nchan = int(chan_per_chunk/binchan) # Total number of output channels per chunk
+                                # Set the frequency bin to the number of channels in the chunk of the subband
+                                binchan = chan_per_chunk
+                        logger.info('Increasing frequency bin of data chunk ' + str(
+                            chunk) + ' to keep bandwidth of chunks equal over the whole bandwidth #')
+                        logger.info('New frequency bin is ' + str(binchan * finc) + ' GHz #')
+                    nchan = int(chan_per_chunk / binchan)  # Total number of output channels per chunk
                     start = 1 + chunk * chan_per_chunk
                     width = int(binchan)
                     step = int(width)
@@ -156,12 +166,13 @@ class line:
                     uvcat = lib.miriad('uvcat')
                     uvcat.vis = self.linedir + '/' + self.target
                     uvcat.out = self.linedir + '/' + str(counter).zfill(2) + '/' + str(counter).zfill(2) + '.mir'
-                    uvcat.select = "'" + 'window(' + str(subband+1) + ')' + "'"
-                    uvcat.line = "'" + 'channel,' + str(nchan) + ',' + str(start) + ',' + str(width) + ',' + str(step) + "'"
+                    uvcat.select = "'" + 'window(' + str(subband + 1) + ')' + "'"
+                    uvcat.line = "'" + 'channel,' + str(nchan) + ',' + str(start) + ',' + str(width) + ',' + str(
+                        step) + "'"
                     uvcat.go()
                     counter = counter + 1
-                    logger.info('# Splitting of data chunk ' + str(chunk) + ' for subband ' + str(subband) + ' done #')
-                logger.info('# Splitting of data for subband ' + str(subband) + ' done #')
+                    logger.info('Splitting of data chunk ' + str(chunk) + ' for subband ' + str(subband) + ' done #')
+                logger.info('Splitting of data for subband ' + str(subband) + ' done #')
             logger.info(' Splitting of target data into individual frequency chunks done')
 
     def transfergains(self):
@@ -179,9 +190,10 @@ class line:
                     gpcopy.vis = self.selfcaldir + '/' + chunk + '/' + chunk + '.mir'
                     gpcopy.out = chunk + '/' + chunk + '.mir'
                     gpcopy.go()
-                    logger.info('# Copying gains from continuum to line data for chunk ' + chunk + ' #')
+                    logger.info('Copying gains from continuum to line data for chunk ' + chunk + ' #')
                 else:
-                    logger.warning('# Dataset ' + chunk + '.mir does not seem to have self calibration gains. Cannot copy gains to line data! #')
+                    logger.warning('Dataset ' + chunk + '.mir does not seem to have self calibration gains. '
+                                                        'Cannot copy gains to line data! #')
             logger.info(' Gains from continuum to line data copied')
 
     def subtract(self):
@@ -200,7 +212,7 @@ class line:
                     uvlin.vis = chunk + '/' + chunk + '.mir'
                     uvlin.out = chunk + '/' + chunk + '_line.mir'
                     uvlin.go()
-                    logger.info('# Continuum subtraction using uvlin method for chunk ' + chunk + ' done #')
+                    logger.info('Continuum subtraction using uvlin method for chunk ' + chunk + ' done #')
                 logger.info(' Continuum subtraction using uvlin done!')
             elif self.line_subtract_mode == 'uvmodel':
                 logger.info(' Starting continuum subtraction of individual chunks using uvmodel')
@@ -210,23 +222,28 @@ class line:
                     uvcat.vis = chunk + '.mir'
                     uvcat.out = chunk + '_uvcat.mir'
                     uvcat.go()
-                    logger.info('# Applied gains to chunk ' + chunk + ' for subtraction of continuum model #')
-                    if os.path.isdir(self.contdir + '/stack/' + chunk + '/model_' + str(self.line_subtract_mode_uvmodel_minorcycle-1).zfill(2)):
-                        logger.info('# Found model for subtraction in final continuum directory. No need to redo continuum imaging #')
-                        self.director('cp', self.linedir + '/' + chunk, file=self.contdir + '/stack/' + chunk + '/model_' + str(self.line_subtract_mode_uvmodel_minorcycle-1).zfill(2))
+                    logger.info('Applied gains to chunk ' + chunk + ' for subtraction of continuum model #')
+                    if os.path.isdir(self.contdir + '/stack/' + chunk + '/model_' + str(
+                            self.line_subtract_mode_uvmodel_minorcycle - 1).zfill(2)):
+                        logger.info('Found model for subtraction in final continuum directory. '
+                                    'No need to redo continuum imaging #')
+                        self.director('cp', self.linedir + '/' + chunk,
+                                      file=self.contdir + '/stack/' + chunk + '/model_' + str(
+                                          self.line_subtract_mode_uvmodel_minorcycle - 1).zfill(2))
                     else:
                         self.create_uvmodel(chunk)
                     try:
                         uvmodel = lib.miriad('uvmodel')
                         uvmodel.vis = chunk + '_uvcat.mir'
-                        uvmodel.model = 'model_' + str(self.line_subtract_mode_uvmodel_minorcycle-1).zfill(2)
+                        uvmodel.model = 'model_' + str(self.line_subtract_mode_uvmodel_minorcycle - 1).zfill(2)
                         uvmodel.options = 'subtract,mfs'
                         uvmodel.out = chunk + '_line.mir'
                         uvmodel.go()
                         self.director('rm', chunk + '_uvcat.mir')
                         logger.info(' Continuum subtraction using uvmodel method for chunk ' + chunk + ' successful!')
                     except:
-                        logger.warning(' Continuum subtraction using uvmodel method for chunk ' + chunk + ' NOT successful! No continuum subtraction done!')
+                        logger.warning('Continuum subtraction using uvmodel method for chunk ' +
+                                       chunk + ' NOT successful! No continuum subtraction done!')
                 logger.info(' Continuum subtraction using uvmodel done!')
             else:
                 raise ApercalException('Subtract mode not know. Exiting')
@@ -241,7 +258,7 @@ class line:
             logger.info(' Starting line imaging of dataset')
             self.director('ch', self.linedir)
             self.director('ch', self.linedir + '/cubes')
-            logger.info('# Imaging each individual channel separately #')
+            logger.info('Imaging each individual channel separately #')
             channel_counter = 0  # Counter for numbering the channels for the whole dataset
             nchunks = len(self.list_chunks())
             for chunk in self.list_chunks():
@@ -249,7 +266,8 @@ class line:
                     uv = aipy.miriad.UV(self.linedir + '/' + chunk + '/' + chunk + '_line.mir')
                     nchannel = uv['nschan']  # Number of channels in the dataset
                     for channel in range(nchannel):
-                        if channel_counter in range(int(str(self.line_image_channels).split(',')[0]), int(str(self.line_image_channels).split(',')[1]), 1):
+                        if channel_counter in range(int(str(self.line_image_channels).split(',')[0]),
+                                                    int(str(self.line_image_channels).split(',')[1]), 1):
                             invert = lib.miriad('invert')
                             invert.vis = self.linedir + '/' + chunk + '/' + chunk + '_line.mir'
                             invert.map = 'map_00_' + str(channel_counter).zfill(5)
@@ -270,57 +288,76 @@ class line:
                                 invert.options = 'mfs,double,sdb'
                             invertcmd = invert.go()
                             if invertcmd[5].split(' ')[2] == '0':
-                                logger.info('# 0 visibilities in channel ' + str(channel_counter).zfill(5) + '! Skipping channel! #')
+                                logger.info('0 visibilities in channel ' + str(channel_counter).zfill(
+                                    5) + '! Skipping channel! #')
                                 channel_counter = channel_counter + 1
                             else:
                                 theoretical_noise = invertcmd[11].split(' ')[3]
-                                theoretical_noise_threshold = self.calc_theoretical_noise_threshold(float(theoretical_noise), self.line_image_nsigma)
+                                theoretical_noise_threshold = self.calc_theoretical_noise_threshold(
+                                    float(theoretical_noise), self.line_image_nsigma)
                                 ratio = self.calc_max_min_ratio('map_00_' + str(channel_counter).zfill(5))
                                 if ratio >= self.line_image_ratio_limit:
                                     imax = self.calc_imax('map_00_' + str(channel_counter).zfill(5))
                                     maxdr = np.divide(imax, float(theoretical_noise_threshold))
                                     nminiter = self.calc_miniter(maxdr, self.line_image_dr0)
-                                    imclean, masklevels = self.calc_line_masklevel(nminiter, self.line_image_dr0, maxdr, self.line_image_minorcycle0_dr, imax)
+                                    imclean, masklevels = self.calc_line_masklevel(nminiter, self.line_image_dr0, maxdr,
+                                                                                   self.line_image_minorcycle0_dr, imax)
                                     if imclean:
-                                        logger.info('# Emission found in channel ' + str(channel_counter).zfill(5) + '. Cleaning! #')
-                                        for minc in range(nminiter):  # Iterate over the minor imaging cycles and masking
+                                        logger.info('Emission found in channel ' + str(channel_counter).zfill(
+                                            5) + '. Cleaning! #')
+                                        for minc in range(
+                                                nminiter):  # Iterate over the minor imaging cycles and masking
                                             mask_threshold = masklevels[minc]
                                             if minc == 0:
                                                 maths = lib.miriad('maths')
                                                 maths.out = 'mask_00_' + str(channel_counter).zfill(5)
                                                 maths.exp = '"<' + 'map_00_' + str(channel_counter).zfill(5) + '>"'
-                                                maths.mask = '"<' + 'map_00_' + str(channel_counter).zfill(5) + '>.gt.' + str(mask_threshold) + '"'
+                                                maths.mask = '"<' + 'map_00_' + str(channel_counter).zfill(
+                                                    5) + '>.gt.' + str(mask_threshold) + '"'
                                                 maths.go()
-                                                clean_cutoff = self.calc_clean_cutoff(mask_threshold, self.line_image_c1)
-                                                clean = lib.miriad('clean')  # Clean the image down to the calculated threshold
+                                                clean_cutoff = self.calc_clean_cutoff(mask_threshold,
+                                                                                      self.line_image_c1)
+                                                clean = lib.miriad(
+                                                    'clean')  # Clean the image down to the calculated threshold
                                                 clean.map = 'map_00_' + str(channel_counter).zfill(5)
                                                 clean.beam = 'beam_00_' + str(channel_counter).zfill(5)
                                                 clean.out = 'model_00_' + str(channel_counter).zfill(5)
                                                 clean.cutoff = clean_cutoff
                                                 clean.niters = 100000
-                                                clean.region = '"' + 'mask(mask_00_' + str(channel_counter).zfill(5) + ')' + '"'
+                                                clean.region = '"' + 'mask(mask_00_' + str(channel_counter).zfill(
+                                                    5) + ')' + '"'
                                                 clean.go()
                                             else:
                                                 maths = lib.miriad('maths')
-                                                maths.out = 'mask_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(5)
-                                                maths.exp = '"<' + 'image_' + str(minc - 1).zfill(2) + '_' + str(channel_counter).zfill(5) + '>"'
-                                                maths.mask = '"<' + 'image_' + str(minc - 1).zfill(2) + '_' + str(channel_counter).zfill(5) + '>.gt.' + str(mask_threshold) + '"'
+                                                maths.out = 'mask_' + str(minc).zfill(2) + '_' + str(
+                                                    channel_counter).zfill(5)
+                                                maths.exp = '"<' + 'image_' + str(minc - 1).zfill(2) + '_' + str(
+                                                    channel_counter).zfill(5) + '>"'
+                                                maths.mask = '"<' + 'image_' + str(minc - 1).zfill(2) + '_' + str(
+                                                    channel_counter).zfill(5) + '>.gt.' + str(mask_threshold) + '"'
                                                 maths.go()
-                                                clean_cutoff = self.calc_clean_cutoff(mask_threshold, self.line_image_c1)
-                                                clean = lib.miriad('clean')  # Clean the image down to the calculated threshold
+                                                clean_cutoff = self.calc_clean_cutoff(mask_threshold,
+                                                                                      self.line_image_c1)
+                                                clean = lib.miriad(
+                                                    'clean')  # Clean the image down to the calculated threshold
                                                 clean.map = 'map_00_' + str(channel_counter).zfill(5)
-                                                clean.model = 'model_' + str(minc - 1).zfill(2) + '_' + str(channel_counter).zfill(5)
+                                                clean.model = 'model_' + str(minc - 1).zfill(2) + '_' + str(
+                                                    channel_counter).zfill(5)
                                                 clean.beam = 'beam_00_' + str(channel_counter).zfill(5)
-                                                clean.out = 'model_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(5)
+                                                clean.out = 'model_' + str(minc).zfill(2) + '_' + str(
+                                                    channel_counter).zfill(5)
                                                 clean.cutoff = clean_cutoff
                                                 clean.niters = 100000
-                                                clean.region = '"' + 'mask(mask_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(5) + ')' + '"'
+                                                clean.region = '"' + 'mask(mask_' + str(minc).zfill(2) + '_' + str(
+                                                    channel_counter).zfill(5) + ')' + '"'
                                                 clean.go()
                                             restor = lib.miriad('restor')
-                                            restor.model = 'model_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(5)
+                                            restor.model = 'model_' + str(minc).zfill(2) + '_' + str(
+                                                channel_counter).zfill(5)
                                             restor.beam = 'beam_00_' + str(channel_counter).zfill(5)
                                             restor.map = 'map_00_' + str(channel_counter).zfill(5)
-                                            restor.out = 'image_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(5)
+                                            restor.out = 'image_' + str(minc).zfill(2) + '_' + str(
+                                                channel_counter).zfill(5)
                                             restor.mode = 'clean'
                                             if self.line_image_restorbeam != '':
                                                 beam_parameters = self.line_image_restorbeam.split(',')
@@ -330,10 +367,13 @@ class line:
                                                 pass
                                             restor.go()  # Create the cleaned image
                                             restor.mode = 'residual'
-                                            restor.out = 'residual_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(5)
+                                            restor.out = 'residual_' + str(minc).zfill(2) + '_' + str(
+                                                channel_counter).zfill(5)
                                             restor.go()  # Create the residual image
                                     else:
-                                        clean = lib.miriad('clean')  # Do one iteration of clean to create a model map for usage with restor to give the beam size.
+                                        # Do one iteration of clean to create a model map for usage with restor to give
+                                        # the beam size.
+                                        clean = lib.miriad('clean')
                                         clean.map = 'map_00_' + str(channel_counter).zfill(5)
                                         clean.beam = 'beam_00_' + str(channel_counter).zfill(5)
                                         clean.out = 'model_00_' + str(channel_counter).zfill(5)
@@ -354,15 +394,20 @@ class line:
                                         beam_parameters = self.line_image_convolbeam.split(',')
                                         convol.fwhm = str(beam_parameters[0]) + ',' + str(beam_parameters[1])
                                         convol.pa = str(beam_parameters[2])
-                                        convol.out = 'convol_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(5)
+                                        convol.out = 'convol_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(
+                                            5)
                                         convol.options = 'final'
                                         convol.go()
-                                        self.director('rn', 'image_' + str(channel_counter).zfill(5), file='convol_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(5))
+                                        self.director('rn', 'image_' + str(channel_counter).zfill(5),
+                                                      file='convol_' + str(minc).zfill(2) + '_' + str(
+                                                          channel_counter).zfill(5))
                                     else:
                                         pass
                                 else:
                                     minc = 0
-                                    clean = lib.miriad('clean')  # Do one iteration of clean to create a model map for usage with restor to give the beam size.
+                                    # Do one iteration of clean to create a model map for usage with restor to give the
+                                    # beam size.
+                                    clean = lib.miriad('clean')
                                     clean.map = 'map_00_' + str(channel_counter).zfill(5)
                                     clean.beam = 'beam_00_' + str(channel_counter).zfill(5)
                                     clean.out = 'model_00_' + str(channel_counter).zfill(5)
@@ -391,7 +436,8 @@ class line:
                                 fits = lib.miriad('fits')
                                 fits.op = 'xyout'
                                 if self.line_image_convolbeam:
-                                    if os.path.exists('convol_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(5)):
+                                    if os.path.exists(
+                                            'convol_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(5)):
                                         fits.in_ = 'convol_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(5)
                                     else:
                                         fits.in_ = 'image_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(5)
@@ -403,11 +449,12 @@ class line:
                                 fits.region = '"images(1,1)"'
                                 fits.out = 'cube_beam_' + str(channel_counter).zfill(5) + '.fits'
                                 fits.go()
-                                logger.info('# Finished processing channel ' + str(channel_counter).zfill(5) + '/' + str((nchunks * nchannel) - 1).zfill(5) + '. #')
+                                logger.info('Finished processing channel ' + str(channel_counter).zfill(5) + '/' + str(
+                                    (nchunks * nchannel) - 1).zfill(5) + '. #')
                                 channel_counter = channel_counter + 1
                         else:
                             channel_counter = channel_counter + 1
-                    logger.info('# All channels of chunk ' + chunk + ' imaged #')
+                    logger.info('All channels of chunk ' + chunk + ' imaged #')
                     self.director('rm', self.linedir + '/cubes/' + 'image*')
                     self.director('rm', self.linedir + '/cubes/' + 'beam*')
                     self.director('rm', self.linedir + '/cubes/' + 'mask*')
@@ -415,20 +462,24 @@ class line:
                     self.director('rm', self.linedir + '/cubes/' + 'map*')
                     self.director('rm', self.linedir + '/cubes/' + 'convol*')
                     self.director('rm', self.linedir + '/cubes/' + 'residual*')
-                    logger.info('# Cleaned up the directory for chunk ' + chunk + ' #')
+                    logger.info('Cleaned up the directory for chunk ' + chunk + ' #')
                 else:
                     logger.warning(' No continuum subtracted data available for chunk ' + chunk + '!')
-            logger.info('# Combining images to line cubes #')
+            logger.info('Combining images to line cubes #')
             if self.line_image_channels != '':
-                nchans = int(str(self.line_image_channels).split(',')[1]) - int(str(self.line_image_channels).split(',')[0])
+                nchans = int(str(self.line_image_channels).split(',')[1]) - int(
+                    str(self.line_image_channels).split(',')[0])
             else:
                 nchans = nchunks * nchannel
-            startfreq = self.get_freqstart(self.crosscaldir + '/' + self.target, int(str(self.line_image_channels).split(',')[0]))
-            self.create_linecube(self.linedir + '/cubes/cube_image_*.fits', 'HI_image_cube.fits', nchans, int(str(self.line_image_channels).split(',')[0]), startfreq)
-            logger.info('# Created HI-image cube #')
-            self.create_linecube(self.linedir + '/cubes/cube_beam_*.fits', 'HI_beam_cube.fits', nchans, int(str(self.line_image_channels).split(',')[0]), startfreq)
-            logger.info('# Created HI-beam cube #')
-            logger.info('# Removing obsolete files #')
+            startfreq = self.get_freqstart(self.crosscaldir + '/' + self.target,
+                                           int(str(self.line_image_channels).split(',')[0]))
+            self.create_linecube(self.linedir + '/cubes/cube_image_*.fits', 'HI_image_cube.fits', nchans,
+                                 int(str(self.line_image_channels).split(',')[0]), startfreq)
+            logger.info('Created HI-image cube #')
+            self.create_linecube(self.linedir + '/cubes/cube_beam_*.fits', 'HI_beam_cube.fits', nchans,
+                                 int(str(self.line_image_channels).split(',')[0]), startfreq)
+            logger.info('Created HI-beam cube #')
+            logger.info('Removing obsolete files #')
             self.director('rm', self.linedir + '/cubes/' + 'cube_*')
 
     ####################################
@@ -442,21 +493,29 @@ class line:
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
         majc = int(self.get_last_major_iteration(chunk) + 1)
-        logger.info('# Last major self-calibration cycle seems to have been ' + str(majc - 1) + ' #')
-        if os.path.isfile(self.linedir + '/' + chunk + '/' + chunk + '.mir/gains'):  # Check if a chunk could be calibrated and has data left
+        logger.info('Last major self-calibration cycle seems to have been ' + str(majc - 1) + ' #')
+        # Check if a chunk could be calibrated and has data left
+        if os.path.isfile(self.linedir + '/' + chunk + '/' + chunk + '.mir/gains'):
             theoretical_noise = self.calc_theoretical_noise(self.linedir + '/' + chunk + '/' + chunk + '.mir')
-            logger.info('# Theoretical noise for chunk ' + chunk + ' is ' + str(theoretical_noise / 1000) + ' Jy/beam #')
+            logger.info('Theoretical noise for chunk ' + chunk + ' is ' + str(theoretical_noise / 1000) + ' Jy/beam #')
             theoretical_noise_threshold = self.calc_theoretical_noise_threshold(theoretical_noise)
-            logger.info('# Your theoretical noise threshold will be ' + str(self.line_subtract_mode_uvmodel_nsigma) + ' times the theoretical noise corresponding to ' + str(theoretical_noise_threshold) + ' Jy/beam #')
-            dr_list = self.calc_dr_maj(self.line_subtract_mode_uvmodel_drinit, self.line_subtract_mode_uvmodel_dr0, majc, self.line_subtract_mode_uvmodel_majorcycle_function)
-            dr_minlist = self.calc_dr_min(dr_list, majc - 1, self.line_subtract_mode_uvmodel_minorcycle, self.line_subtract_mode_uvmodel_minorcycle_function)
-            logger.info('# Dynamic range limits for the final minor iterations to clean are ' + str(dr_minlist) + ' #')
+            logger.info('Your theoretical noise threshold will be ' + str(
+                self.line_subtract_mode_uvmodel_nsigma) + ' times the theoretical noise corresponding to ' + str(
+                theoretical_noise_threshold) + ' Jy/beam #')
+            dr_list = self.calc_dr_maj(self.line_subtract_mode_uvmodel_drinit, self.line_subtract_mode_uvmodel_dr0,
+                                       majc, self.line_subtract_mode_uvmodel_majorcycle_function)
+            dr_minlist = self.calc_dr_min(dr_list, majc - 1, self.line_subtract_mode_uvmodel_minorcycle,
+                                          self.line_subtract_mode_uvmodel_minorcycle_function)
+            logger.info('Dynamic range limits for the final minor iterations to clean are ' + str(dr_minlist) + ' #')
             try:
-                for minc in range(self.line_subtract_mode_uvmodel_minorcycle):  # Iterate over the minor imaging cycles and masking
-                    self.run_continuum_minoriteration(chunk, majc, minc, dr_minlist[minc], theoretical_noise_threshold, self.line_subtract_mode_uvmodel_c0)
+                # Iterate over the minor imaging cycles and masking
+                for minc in range(self.line_subtract_mode_uvmodel_minorcycle):
+                    self.run_continuum_minoriteration(chunk, majc, minc, dr_minlist[minc], theoretical_noise_threshold,
+                                                      self.line_subtract_mode_uvmodel_c0)
                 logger.info(' Continuum imaging for subtraction for chunk ' + chunk + ' successful!')
             except:
-                logger.warning(' Continuum imaging for subtraction for chunk ' + chunk + ' NOT successful! Continuum subtraction will provide bad or no results!')
+                logger.warning('Continuum imaging for subtraction for chunk ' +
+                               chunk + ' NOT successful! Continuum subtraction will provide bad or no results!')
 
     def run_continuum_minoriteration(self, chunk, majc, minc, drmin, theoretical_noise_threshold, c0):
         """
@@ -482,12 +541,17 @@ class line:
             invert.go()
             imax = self.calc_imax('map_' + str(minc).zfill(2))
             noise_threshold = self.calc_noise_threshold(imax, minc, majc, c0)
-            dynamic_range_threshold = self.calc_dynamic_range_threshold(imax, drmin, self.line_subtract_mode_uvmodel_minorcycle0_dr)
-            mask_threshold, mask_threshold_type = self.calc_mask_threshold(theoretical_noise_threshold, noise_threshold, dynamic_range_threshold)
-            self.director('cp', 'mask_' + str(minc).zfill(2), file=self.selfcaldir + '/' + chunk + '/' + str(majc - 2).zfill(2) + '/mask_' + str(self.line_subtract_mode_uvmodel_minorcycle - 1).zfill(2))
-            logger.info('# Last mask from self-calibration copied #')
+            dynamic_range_threshold = self.calc_dynamic_range_threshold(imax, drmin,
+                                                                        self.line_subtract_mode_uvmodel_minorcycle0_dr)
+            mask_threshold, mask_threshold_type = self.calc_mask_threshold(theoretical_noise_threshold, noise_threshold,
+                                                                           dynamic_range_threshold)
+            self.director('cp', 'mask_' + str(minc).zfill(2),
+                          file=self.selfcaldir + '/' + chunk + '/' + str(majc - 2).zfill(2) + '/mask_' + str(
+                              self.line_subtract_mode_uvmodel_minorcycle - 1).zfill(2))
+            logger.info('Last mask from self-calibration copied #')
             clean_cutoff = self.calc_clean_cutoff(mask_threshold, self.line_image_c1)
-            logger.info('# Clean threshold for minor cycle ' + str(minc) + ' was set to ' + str(clean_cutoff) + ' Jy/beam #')
+            logger.info(
+                'Clean threshold for minor cycle ' + str(minc) + ' was set to ' + str(clean_cutoff) + ' Jy/beam #')
             clean = lib.miriad('clean')  # Clean the image down to the calculated threshold
             clean.map = 'map_' + str(0).zfill(2)
             clean.beam = 'beam_' + str(0).zfill(2)
@@ -496,7 +560,7 @@ class line:
             clean.niters = 100000
             clean.region = '"' + 'mask(mask_' + str(minc).zfill(2) + ')' + '"'
             clean.go()
-            logger.info('# Minor cycle ' + str(minc) + ' cleaning done #')
+            logger.info('Minor cycle ' + str(minc) + ' cleaning done #')
             restor = lib.miriad('restor')
             restor.model = 'model_' + str(minc).zfill(2)
             restor.beam = 'beam_' + str(0).zfill(2)
@@ -504,28 +568,34 @@ class line:
             restor.out = 'image_' + str(minc).zfill(2)
             restor.mode = 'clean'
             restor.go()  # Create the cleaned image
-            logger.info('# Cleaned image for minor cycle ' + str(minc) + ' created #')
+            logger.info('Cleaned image for minor cycle ' + str(minc) + ' created #')
             restor.mode = 'residual'
             restor.out = 'residual_' + str(minc).zfill(2)
             restor.go()  # Create the residual image
-            logger.info('# Residual image for minor cycle ' + str(minc) + ' created #')
-            logger.info('# Peak of the residual image is ' + str(self.calc_imax('residual_' + str(minc).zfill(2))) + ' Jy/beam #')
-            logger.info('# RMS of the residual image is ' + str(self.calc_irms('residual_' + str(minc).zfill(2))) + ' Jy/beam #')
+            logger.info('Residual image for minor cycle ' + str(minc) + ' created #')
+            logger.info(
+                'Peak of the residual image is ' + str(self.calc_imax('residual_' + str(minc).zfill(2))) + ' Jy/beam #')
+            logger.info(
+                'RMS of the residual image is ' + str(self.calc_irms('residual_' + str(minc).zfill(2))) + ' Jy/beam #')
         else:
             imax = self.calc_imax('map_' + str(0).zfill(2))
             noise_threshold = self.calc_noise_threshold(imax, minc, majc, c0)
-            dynamic_range_threshold = self.calc_dynamic_range_threshold(imax, drmin, self.line_subtract_mode_uvmodel_minorcycle0_dr)
-            mask_threshold, mask_threshold_type = self.calc_mask_threshold(theoretical_noise_threshold, noise_threshold, dynamic_range_threshold)
-            logger.info('# Mask threshold for final imaging minor cycle ' + str(minc) + ' set to ' + str(mask_threshold) + ' Jy/beam #')
-            logger.info('# Mask threshold set by ' + str(mask_threshold_type) + ' #')
+            dynamic_range_threshold = self.calc_dynamic_range_threshold(imax, drmin,
+                                                                        self.line_subtract_mode_uvmodel_minorcycle0_dr)
+            mask_threshold, mask_threshold_type = self.calc_mask_threshold(theoretical_noise_threshold, noise_threshold,
+                                                                           dynamic_range_threshold)
+            logger.info('Mask threshold for final imaging minor cycle ' + str(minc) + ' set to ' + str(
+                mask_threshold) + ' Jy/beam #')
+            logger.info('Mask threshold set by ' + str(mask_threshold_type) + ' #')
             maths = lib.miriad('maths')
             maths.out = 'mask_' + str(minc).zfill(2)
             maths.exp = '"<' + 'image_' + str(minc - 1).zfill(2) + '>"'
             maths.mask = '"<' + 'image_' + str(minc - 1).zfill(2) + '>.gt.' + str(mask_threshold) + '"'
             maths.go()
-            logger.info('# Mask with threshold ' + str(mask_threshold) + ' Jy/beam created #')
+            logger.info('Mask with threshold ' + str(mask_threshold) + ' Jy/beam created #')
             clean_cutoff = self.calc_clean_cutoff(mask_threshold, self.line_image_c1)
-            logger.info('# Clean threshold for minor cycle ' + str(minc) + ' was set to ' + str(clean_cutoff) + ' Jy/beam #')
+            logger.info(
+                'Clean threshold for minor cycle ' + str(minc) + ' was set to ' + str(clean_cutoff) + ' Jy/beam #')
             clean = lib.miriad('clean')  # Clean the image down to the calculated threshold
             clean.map = 'map_' + str(0).zfill(2)
             clean.beam = 'beam_' + str(0).zfill(2)
@@ -535,7 +605,7 @@ class line:
             clean.niters = 100000
             clean.region = '"' + 'mask(' + 'mask_' + str(minc).zfill(2) + ')' + '"'
             clean.go()
-            logger.info('# Minor cycle ' + str(minc) + ' cleaning done #')
+            logger.info('Minor cycle ' + str(minc) + ' cleaning done #')
             restor = lib.miriad('restor')
             restor.model = 'model_' + str(minc).zfill(2)
             restor.beam = 'beam_' + str(0).zfill(2)
@@ -543,17 +613,17 @@ class line:
             restor.out = 'image_' + str(minc).zfill(2)
             restor.mode = 'clean'
             restor.go()  # Create the cleaned image
-            logger.info('# Cleaned image for minor cycle ' + str(minc) + ' created #')
+            logger.info('Cleaned image for minor cycle ' + str(minc) + ' created #')
             restor.mode = 'residual'
             restor.out = 'residual_' + str(minc).zfill(2)
             restor.go()
-            logger.info('# Residual image for minor cycle ' + str(minc) + ' created #')
-            logger.info('# Peak of the residual image is ' + str(self.calc_imax('residual_' + str(minc).zfill(2))) + ' Jy/beam #')
-            logger.info('# RMS of the residual image is ' + str(self.calc_irms('residual_' + str(minc).zfill(2))) + ' Jy/beam #')
+            logger.info('Residual image for minor cycle ' + str(minc) + ' created #')
+            logger.info(
+                'Peak of the residual image is ' + str(self.calc_imax('residual_' + str(minc).zfill(2))) + ' Jy/beam #')
+            logger.info(
+                'RMS of the residual image is ' + str(self.calc_irms('residual_' + str(minc).zfill(2))) + ' Jy/beam #')
 
-    ###########################################################
     ##### Subfunctions for creating the line images/cubes #####
-    ###########################################################
 
     def get_freqstart(self, dataset, startchan):
         """
@@ -573,8 +643,8 @@ class line:
         """
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
-        filelist = glob.glob(searchpattern) # Get a list of the fits files in the directory
-        firstfile = pyfits.open(filelist[0]) # Open the first file to get the header information and array sizes
+        filelist = glob.glob(searchpattern)  # Get a list of the fits files in the directory
+        firstfile = pyfits.open(filelist[0])  # Open the first file to get the header information and array sizes
         firstheader = firstfile[0].header
         naxis1 = firstheader['NAXIS1']
         naxis2 = firstheader['NAXIS2']
@@ -584,7 +654,7 @@ class line:
             if os.path.isfile(searchpattern[:-6] + str(chan).zfill(5) + '.fits'):
                 fitsfile = pyfits.open(searchpattern[:-6] + str(chan).zfill(5) + '.fits')
                 fitsfile_data = fitsfile[0].data
-                nancube[chan - startchan,:,:] = fitsfile_data
+                nancube[chan - startchan, :, :] = fitsfile_data
                 fitsfile.close()
             else:
                 pass
@@ -603,7 +673,8 @@ class line:
     def calc_miniter(self, maxdr, dr0):
         """
         Calculate the number of minor cycles needed for cleaning a line channel
-        maxdr (float): The maximum dynamic range reachable calculated by the theoretical noise and maximum pixel value in the image
+        maxdr (float): The maximum dynamic range reachable calculated by the theoretical noise and maximum pixel value
+                       in the image
         dr0 (float): The increase for each cycle to clean deeper
         returns (int): Number of minor cycle iterations for cleaning
         """
@@ -616,13 +687,13 @@ class line:
             masklevels = 1
         else:
             really = True
-            drlevels = [np.power(dr0, n+1) for n in range(miniter)]
+            drlevels = [np.power(dr0, n + 1) for n in range(miniter)]
             drlevels[-1] = maxdr
             if drlevels[0] >= minorcycle0_dr:
                 drlevels[0] = minorcycle0_dr
             else:
                 pass
-            masklevels = imax/drlevels
+            masklevels = imax / drlevels
         return really, masklevels
 
     def calc_irms(self, image):
@@ -675,10 +746,10 @@ class line:
         image_data = pyfits.open(image + '.fits')  # Open the image
         data = image_data[0].data
         imax = np.nanmax(data)  # Get the maximum
-        imin = np.nanmin(data) # Get the minimum
-        max_min = np.abs(imax/imin) # Calculate the ratios
-        min_max = np.abs(imin/imax)
-        ratio = np.nanmax([max_min,min_max]) # Take the maximum of both ratios and return it
+        imin = np.nanmin(data)  # Get the minimum
+        max_min = np.abs(imax / imin)  # Calculate the ratios
+        min_max = np.abs(imin / imax)
+        ratio = np.nanmax([max_min, min_max])  # Take the maximum of both ratios and return it
         image_data.close()  # Close the image
         self.director('rm', image + '.fits')
         return ratio
@@ -722,7 +793,8 @@ class line:
         dr_maj (list of floats): List with dynamic range limits for major cycles. Usually from calc_dr_maj
         majc (int): The major cycles you want to calculate the minor cycle dynamic ranges for
         minorcycles (int): The number of minor cycles to use
-        function (string): The function to follow for increasing the dynamic ranges. Currently 'square', 'power', and 'linear' is supported.
+        function (string): The function to follow for increasing the dynamic ranges. Currently 'square', 'power', and
+                           'linear' is supported.
         returns (list of floats): A list of floats for the dynamic range limits within the minor cycles.
         """
         if majc == 0:  # Take care about the first major cycle
@@ -731,7 +803,8 @@ class line:
             prevdr = dr_maj[majc - 1]
         # The different options to increase the minor cycle threshold
         if function == 'square':
-            dr_min = [prevdr + ((dr_maj[majc] - prevdr) * (n ** 2.0)) / ((minorcycles - 1) ** 2.0) for n in range(minorcycles)]
+            dr_min = [prevdr + ((dr_maj[majc] - prevdr) * (n ** 2.0)) / ((minorcycles - 1) ** 2.0) for n in
+                      range(minorcycles)]
         elif function == 'power':
             # Not exactly need to work on this, but close
             dr_min = [prevdr + np.power((dr_maj[majc] - prevdr), (1.0 / (n))) for n in range(minorcycles)][::-1]
@@ -889,7 +962,7 @@ class line:
             else:
                 os.mkdir(dest)
                 if verbose == True:
-                    logger.info('# Creating directory ' + str(dest) + ' #')
+                    logger.info('Creating directory ' + str(dest) + ' #')
         elif option == 'ch':
             if os.getcwd() == dest:
                 pass
@@ -900,11 +973,11 @@ class line:
                 except:
                     os.mkdir(dest)
                     if verbose == True:
-                        logger.info('# Creating directory ' + str(dest) + ' #')
+                        logger.info('Creating directory ' + str(dest) + ' #')
                     os.chdir(dest)
                 self.cwd = os.getcwd()  # Save the current working directory in a variable
                 if verbose == True:
-                    logger.info('# Moved to directory ' + str(dest) + ' #')
+                    logger.info('Moved to directory ' + str(dest) + ' #')
         elif option == 'mv':  # Move
             if os.path.exists(dest):
                 lib.basher("mv " + str(file) + " " + str(dest))

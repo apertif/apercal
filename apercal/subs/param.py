@@ -35,14 +35,14 @@ def del_param(step, parameter):
     """
     subs_setinit.setinitdirs(step)
     if not os.path.isfile(step.basedir + 'param.npy'):
-        print('# Parameter file not found! Cannot remove parameter ' + str(parameter) + ' #')
+        print('Parameter file not found! Cannot remove parameter ' + str(parameter) + ' #')
     else:
         d = np.load(step.basedir + 'param.npy').item()
         try:
             del d[parameter]
             np.save(step.basedir + 'param.npy', d)
         except KeyError:
-            print('# Parameter file does not have parameter ' + str(parameter) + ' #')
+            print('Parameter file does not have parameter ' + str(parameter) + ' #')
 
 
 def get_param(step, parameter):
@@ -53,7 +53,7 @@ def get_param(step, parameter):
     """
     subs_setinit.setinitdirs(step)
     if not os.path.isfile(step.basedir + 'param.npy'):
-        print('# Parameter file not found! Cannot load parameter ' + str(parameter) + ' #')
+        print('Parameter file not found! Cannot load parameter ' + str(parameter) + ' #')
     else:
         d = np.load(step.basedir + 'param.npy').item()
         values = d[parameter]
@@ -75,7 +75,7 @@ def get_param_def(step, parameter, default):
     else:
         d = np.load(step.basedir + 'param.npy').item()
         if parameter in d:
-            print('# Parameter ' + str(parameter) + ' found in cache (param.npy). #')
+            print('Parameter ' + str(parameter) + ' found in cache (param.npy). #')
             return d[parameter]
     return default
 
@@ -88,7 +88,7 @@ def check_param(step, parameter):
     """
     subs_setinit.setinitdirs(step)
     if not os.path.isfile(step.basedir + 'param.npy'):
-        print('# Parameter file not found! Cannot load parameter ' + str(parameter) + ' #')
+        print('Parameter file not found! Cannot load parameter ' + str(parameter) + ' #')
         create_param_file(step)
     else:
         d = np.load(step.basedir + 'param.npy').item()
@@ -103,7 +103,7 @@ def show_param(step):
     """
     subs_setinit.setinitdirs(step)
     if os.path.isfile(step.basedir + 'param.npy') != True:
-        print('# Parameter file not found! #')
+        print('Parameter file not found! #')
     else:
         d = np.load(step.basedir + 'param.npy').item()
         for k, v in d.items():

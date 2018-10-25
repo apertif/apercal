@@ -8,7 +8,8 @@ logger = logging.getLogger(__name__)
 
 class polarisation:
     """
-    Final class to produce final data products (Deep continuum images, line cubes, and polairsation images and Faraday-cubes).
+    Final class to produce final data products (Deep continuum images, line cubes, and polairsation images and
+    Faraday-cubes).
     """
 
     def __init__(self, file=None, **kwargs):

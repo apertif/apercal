@@ -12,7 +12,6 @@ from apercal.subs import setinit as subs_setinit
 from apercal.modules import default_cfg
 from apercal.exceptions import ApercalException
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -256,7 +255,6 @@ def get_source_names(vis=None):
         return sources[0:-1]
     else:
         raise ApercalException("get_source_names needs a vis!")
-
 
 
 class maths:
@@ -655,7 +653,7 @@ def director(self, option, dest, file=None, verbose=True):
         else:
             os.mkdir(dest)
             if verbose == True:
-                self.logger.info('# Creating directory ' + str(dest) + ' #')
+                self.logger.info('Creating directory ' + str(dest) + ' #')
     elif option == 'ch':
         if os.getcwd() == dest:
             pass
@@ -666,11 +664,11 @@ def director(self, option, dest, file=None, verbose=True):
             except:
                 os.mkdir(dest)
                 if verbose == True:
-                    self.logger.info('# Creating directory ' + str(dest) + ' #')
+                    self.logger.info('Creating directory ' + str(dest) + ' #')
                 os.chdir(dest)
             self.cwd = os.getcwd()  # Save the current working directory in a variable
             if verbose == True:
-                self.logger.info('# Moved to directory ' + str(dest) + ' #')
+                self.logger.info('Moved to directory ' + str(dest) + ' #')
     elif option == 'mv':  # Move
         if os.path.exists(dest):
             basher("mv " + str(file) + " " + str(dest))
@@ -689,7 +687,8 @@ def director(self, option, dest, file=None, verbose=True):
 
 def show(config_object, section, showall=False):
     """
-    show: Prints the current settings of the pipeline. Only shows keywords, which are in the default config file default.cfg
+    show: Prints the current settings of the pipeline. Only shows keywords, which are in the default config file
+            default.cfg
     showall: Set to true if you want to see all current settings instead of only the ones from the current step
     """
     subs_setinit.setinitdirs(config_object)
@@ -717,7 +716,7 @@ def show(config_object, section, showall=False):
                 pass
 
 
-def load_config(config_object, file_= None):
+def load_config(config_object, file_=None):
     config = ConfigParser()  # Initialise the config parser
     if file_:
         config.readfp(open(file_))

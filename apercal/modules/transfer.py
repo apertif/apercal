@@ -44,9 +44,9 @@ class transfer:
         Executes the continuum imaging process in the following order
         convert_lineuv2uvfits
         """
-        logger.info("########## Starting TRANSFER process of all beams ##########")
+        logger.info("Starting TRANSFER process of all beams ")
         self.convert_lineuv2uvfits()
-        logger.info("########## TRANSFER process for all beams done ##########")
+        logger.info("TRANSFER process for all beams done ")
 
     def convert_lineuv2uvfits(self):
         """
@@ -58,41 +58,46 @@ class transfer:
         beamlist = sorted(glob.glob(self.basedir + '[0-9][0-9]'))
         beamnames = [beam.split('/')[-1] for beam in beamlist]
         subs_param.add_param(self, 'transfer_input_beams', beamnames)
-#        transferstatusarray = np.full((len(beamnames, 2), np.False))
+        # transferstatusarray = np.full((len(beamnames, 2), np.False))
         for b, beam in enumerate(beamlist):
             uvgluestatusarray = np.full((len(beamnames)), False)
             uvfitsstatusarray = np.full((len(beamnames)), False)
             if os.path.isfile(self.target.rstrip('.mir') + '_B' + beam.split('/')[-1] + '.UVFITS'):
-                logger.warning('# UVFITS file for beam ' + beam.split('/')[-1] + ' already exists! #')
+                logger.warning('UVFITS file for beam ' + beam.split('/')[-1] + ' already exists! #')
             else:
                 chunklist = sorted(glob.glob(beam + '/' + self.linesubdir + '/' + '[0-9][0-9]/[0-9][0-9]' + '.mir'))
                 chunknames = [chunk.split('/')[-2] for chunk in chunklist]
                 subs_param.add_param(self, 'transfer_input_beam_' + str(beamnames[b]) + '_chunks', chunknames)
                 uvcatstatusarray = np.full((len(chunknames)), False)
-                logger.debug('# Starting combination of frequency chunks for beam ' + beam.split('/')[-1] + ' #')
+                logger.debug('Starting combination of frequency chunks for beam ' + beam.split('/')[-1] + ' #')
                 for c, chunk in enumerate(chunklist):
                     uvcat = lib.miriad('uvcat')
                     uvcat.vis = chunk
-                    uvcat.out = self.transferdir + '/' + 'B' + beam.split('/')[-1] + '_' + str(c+1)
+                    uvcat.out = self.transferdir + '/' + 'B' + beam.split('/')[-1] + '_' + str(c + 1)
                     uvcat.go()
-                    if os.path.isdir(self.transferdir + '/' + 'B' + beam.split('/')[-1] + '_' + str(c+1)): # Check if file has been copied successfully
-                        logger.debug('# Chunk ' + str(chunk).zfill(2) + ' for beam ' + str(beam.split('/')[-1]) + ' copied successfully! #')
+                    # Check if file has been copied successfully
+                    if os.path.isdir(self.transferdir + '/' + 'B' + beam.split('/')[-1] + '_' + str(c + 1)):
+                        logger.debug('Chunk ' + str(chunk).zfill(2) + ' for beam ' + str(
+                            beam.split('/')[-1]) + ' copied successfully! #')
                         uvcatstatusarray[c] = True
                     else:
-                        logger.warning('# Chunk ' + str(chunk).zfill(2) + ' for beam ' + str(beam.split('/')[-1]) + ' NOT copied successfully! #')
+                        logger.warning('Chunk ' + str(chunk).zfill(2) + ' for beam ' + str(
+                            beam.split('/')[-1]) + ' NOT copied successfully! #')
                         uvcatstatusarray[c] = False
-                subs_param.add_param(self, 'transfer_input_beam_' + str(beamnames[b]) + '_copy_status', uvcatstatusarray)
+                subs_param.add_param(self, 'transfer_input_beam_' + str(beamnames[b]) + '_copy_status',
+                                     uvcatstatusarray)
                 uvglue = lib.miriad('uvglue')
                 uvglue.vis = 'B' + beam.split('/')[-1]
                 uvglue.nfiles = len(chunklist)
                 uvglue.out = self.target.rstrip('.mir') + '_B' + beam.split('/')[-1] + '.mir'
                 uvglue.go()
                 if os.path.isdir(self.target.rstrip('.mir') + '_B' + beam.split('/')[-1] + '.mir'):
-                    logger.debug('# Combination of frequency chunks for beam ' + beam.split('/')[-1] + ' successful! #')
+                    logger.debug('Combination of frequency chunks for beam ' + beam.split('/')[-1] + ' successful! #')
                     subs_managefiles.director(self, 'rm', 'B' + beam.split('/')[-1] + '*')
                     uvgluestatusarray[b] = True
                 else:
-                    logger.warning('# Combination of frequency chunks for beam ' + beam.split('/')[-1] + ' not successful! #')
+                    logger.warning('Combination of frequency chunks for beam ' + beam.split('/')[-1] +
+                                   ' not successful! #')
                     uvgluestatusarray[b] = False
                 fits = lib.miriad('fits')
                 fits.op = 'uvout'
@@ -100,11 +105,14 @@ class transfer:
                 fits.out = self.target.rstrip('.mir') + '_B' + beam.split('/')[-1] + '.UVFITS'
                 fits.go()
                 if os.path.isfile(self.target.rstrip('.mir') + '_B' + beam.split('/')[-1] + '.UVFITS'):
-                    logger.debug('# Conversion of MIRIAD file to UVFITS for beam '  + beam.split('/')[-1] + ' successful! #')
-                    subs_managefiles.director(self, 'rm', self.target.rstrip('.mir') + '_B' + beam.split('/')[-1] + '.mir')
+                    logger.debug(
+                        'Conversion of MIRIAD file to UVFITS for beam ' + beam.split('/')[-1] + ' successful! #')
+                    subs_managefiles.director(self, 'rm',
+                                              self.target.rstrip('.mir') + '_B' + beam.split('/')[-1] + '.mir')
                     uvfitsstatusarray[b] = True
                 else:
-                    logger.warning('# Conversion of MIRIAD file to UVFITS for beam '  + beam.split('/')[-1] + ' NOT successful! #')
+                    logger.warning(
+                        'Conversion of MIRIAD file to UVFITS for beam ' + beam.split('/')[-1] + ' NOT successful! #')
                     uvfitsstatusarray[b] = False
             subs_param.add_param(self, 'transfer_input_beams_uvglue', uvgluestatusarray)
             subs_param.add_param(self, 'transfer_input_beams_uvfits', uvfitsstatusarray)
@@ -120,5 +128,5 @@ class transfer:
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
         logger.warning(' Deleting all data products ready for transfer.')
-        subs_managefiles.director(self,'ch', self.basedir)
-        subs_managefiles.director(self,'rm', self.transferdir)
+        subs_managefiles.director(self, 'ch', self.basedir)
+        subs_managefiles.director(self, 'rm', self.transferdir)
