@@ -1,0 +1,8 @@
+services:                             
+  - docker                            
+install:
+  - docker build . -t apertif/apercal
+script:
+  - docker run apertif/apercal pycodestyle apercal --ignore=E501
+  - docker run apertif/apercal pytest test
+

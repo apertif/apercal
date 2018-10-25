@@ -8,4 +8,5 @@ casa.log
 .virtualenv*/
 *.egg-info/
 notebooks/
-
+__pycache__
+.eggs/

@@ -5,6 +5,9 @@ RUN docker-apt-install \
           python-casacore python-ephem
 
 ADD . /code
-RUN pip install /code
+WORKDIR /code/data
+RUN make
+WORKDIR /code
+RUN pip install . pytest pycodestyle
 
 
