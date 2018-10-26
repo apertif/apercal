@@ -1084,7 +1084,6 @@ class continuum:
         """
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
-<<<<<<< HEAD
         logger.warning(' Deleting all continuum data products.')
         subs_managefiles.director(self, 'ch', self.contdir)
         subs_managefiles.director(self, 'rm', self.contdir + '/*')
