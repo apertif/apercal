@@ -497,8 +497,9 @@ class line:
         # Check if a chunk could be calibrated and has data left
         if os.path.isfile(self.linedir + '/' + chunk + '/' + chunk + '.mir/gains'):
             theoretical_noise = self.calc_theoretical_noise(self.linedir + '/' + chunk + '/' + chunk + '.mir')
+
             logger.info('# Theoretical noise for chunk ' + chunk + ' is ' + str(theoretical_noise / 1000) + ' Jy/beam #')
-            theoretical_noise_threshold = self.calc_theoretical_noise_threshold(float(theoretical_noise), self.line_image_nsigma)
+            theoretical_noise_threshold = self.calc_theoretical_noise_threshold(float(theoretical_noise), self.line_subtract_mode_uvmodel_nsigma)
             logger.info('# Your theoretical noise threshold will be ' + str(self.line_subtract_mode_uvmodel_nsigma) + 
                 ' times the theoretical noise corresponding to ' + str(theoretical_noise_threshold) + ' Jy/beam #')
             dr_list = self.calc_dr_maj(self.line_subtract_mode_uvmodel_drinit, self.line_subtract_mode_uvmodel_dr0,
@@ -506,6 +507,7 @@ class line:
             dr_minlist = self.calc_dr_min(dr_list, majc - 1, self.line_subtract_mode_uvmodel_minorcycle,
                                           self.line_subtract_mode_uvmodel_minorcycle_function)
             logger.info('# Dynamic range limits for the final minor iterations to clean are ' + str(dr_minlist) + ' #')
+
             try:
                 # Iterate over the minor imaging cycles and masking
                 for minc in range(self.line_subtract_mode_uvmodel_minorcycle):
