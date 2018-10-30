@@ -1,7 +1,10 @@
 import os
+import logging
 
 from apercal.libs import lib
 from apercal.subs import setinit as subs_setinit
+
+logger = logging.getLogger(__name__)
 
 
 def imagetofits(self, mirimage, fitsimage):
@@ -34,7 +37,7 @@ def director(self, option, dest, file=None, verbose=True):
         else:
             os.makedirs(dest)
             if verbose == True:
-                self.logger.debug('# Creating directory ' + str(dest) + ' #')
+                logger.debug('Creating directory ' + str(dest) + ' #')
     elif option == 'ch':
         if os.getcwd() == dest:
             pass
@@ -45,11 +48,11 @@ def director(self, option, dest, file=None, verbose=True):
             except:
                 os.makedirs(dest)
                 if verbose == True:
-                    self.logger.debug('# Creating directory ' + str(dest) + ' #')
+                    logger.debug('Creating directory ' + str(dest) + ' #')
                 os.chdir(dest)
             self.cwd = os.getcwd()  # Save the current working directory in a variable
             if verbose == True:
-                self.logger.debug('# Moved to directory ' + str(dest) + ' #')
+                logger.debug('Moved to directory ' + str(dest) + ' #')
     elif option == 'mv':  # Move
         if os.path.exists(dest):
             lib.basher("mv " + str(file) + " " + str(dest))
@@ -63,4 +66,4 @@ def director(self, option, dest, file=None, verbose=True):
     elif option == 'rm':  # Remove
         lib.basher("rm -r " + str(dest))
     else:
-        self.logger.warning('### Option not supported! Only mk, ch, mv, rm, rn, and cp are supported! ###')
+        logger.warning(' Option not supported! Only mk, ch, mv, rm, rn, and cp are supported!')

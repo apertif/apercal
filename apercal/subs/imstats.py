@@ -32,8 +32,8 @@ def getimagestats(self, image):
             print('Image format not supported. Only MIRIAD and FITS formats are supported!')
         data = image_data[0].data
         imagestats = np.full((3), np.nan)
-        imagestats[0] = np.nanmin(data) # Get the maxmimum of the image
-        imagestats[1] = np.nanmax(data) # Get the minimum of the image
+        imagestats[0] = np.nanmin(data)  # Get the maxmimum of the image
+        imagestats[1] = np.nanmax(data)  # Get the minimum of the image
         imagestats[2] = np.nanstd(data)  # Get the standard deviation
         image_data.close()  # Close the image
         subs.managetmp.clean_tempdir('images')

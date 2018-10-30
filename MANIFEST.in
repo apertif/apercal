@@ -1,0 +1,3 @@
+recursive-include apercal *.cfg
+recursive-include apercal/ao_strategies *.rfis
+include LICENSE

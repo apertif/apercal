@@ -40,7 +40,8 @@ def get_gains(file):
     """
     Function to create a complex python array of amplitude and phase gains from a dataset
     file (str): u,v file with the bandpass calibration
-    return(array, array): an array with the amplitude and phase gains for each antenna and solution interval, a datetime array with the actual solution timesteps
+    return(array, array): an array with the amplitude and phase gains for each antenna and solution interval, a
+                          datetime array with the actual solution timesteps
     """
     char_set = string.ascii_uppercase + string.digits  # Create a charset for random gain log file generation
     tempdir = subs.managetmp.manage_tempdir('mirlog')
@@ -79,7 +80,8 @@ def get_bp(file):
     """
     Function to create a python array from a bandpass calibrated dataset to analyse
     file (str): u,v file with the bandpass calibration
-    return(array, array): The bandpass array in the following order (antenna, frequencies, solution intervals) and a list of the frequencies
+    return(array, array): The bandpass array in the following order (antenna, frequencies, solution intervals) and a
+                          list of the frequencies
     """
     char_set = string.ascii_uppercase + string.digits  # Create a charset for random gain log file generation
     tempdir = subs.managetmp.manage_tempdir('mirlog')
@@ -106,7 +108,8 @@ def get_delays(file):
     """
     Function to create a numpy array with the antenna delays for each solution interval
     file (str): u,v file with the bandpass calibration
-    return(array, array): an array with the delays for each antenna and solution interval in nsec, a datetime array with the actual solution timesteps
+    return(array, array): an array with the delays for each antenna and solution interval in nsec, a datetime array
+                          with the actual solution timesteps
     """
     char_set = string.ascii_uppercase + string.digits  # Create a charset for random gain log file generation
     tempdir = subs.managetmp.manage_tempdir('mirlog')

@@ -60,7 +60,8 @@ def theostats(infile):
 
 def check_blank(infile):
     """
-    check_blank: Checks if an image is completely blanked. Mostly used for checking if self calibration cycles produced a valid output.
+    check_blank: Checks if an image is completely blanked. Mostly used for checking if self calibration cycles
+                 produced a valid output.
     infile: The input image to check
     return: True if image is blank
     """

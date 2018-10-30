@@ -2,13 +2,15 @@ import logging
 import os
 import subprocess
 import sys
-from ConfigParser import SafeConfigParser
+from ConfigParser import SafeConfigParser, ConfigParser
 
 import astropy.io.fits as pyfits
-import pylab as pl
+import matplotlib.pyplot as plt
+import numpy as np
 
-deg2rad = pl.pi / 180.
-
+from apercal.subs import setinit as subs_setinit
+from apercal.modules import default_cfg
+from apercal.exceptions import ApercalException
 
 logger = logging.getLogger(__name__)
 
@@ -27,24 +29,23 @@ def qimplot(image=None, rmin=-2, rmax=2, cmap='gray'):
     logger.info("Quick Image Plot")
     if image is None:
         logger.critical("Please provide input image!")
-    pl.figure(figsize=(10, 10))
+    plt.figure(figsize=(10, 10))
     fits = miriad('fits')
     if not os.path.exists(image):
-        logger.critical(image + " not found!")
-        sys.exit(0)
+        raise ApercalException(image + " not found!")
     fits.in_ = image
     fits.out = image + '.fits'
     fits.op = 'xyout'
     fits.go(rmfiles=True)
     imheader = pyfits.open(image + '.fits')
     imdata = imheader[0].data
-    rms = pl.rms_flat(imdata[0, 0, :, :])
+    rms = np.sqrt(np.mean(np.abs(imdata[0, 0, :, :]) ** 2))
     logger.info('RMS = ' + "{:2.2}".format(rms))
     logger.info("Plotting from " + str(rmin) + "*RMS to " + str(rmax) + str("*RMS"))
-    pl.imshow(pl.flipud(imdata[0, 0, :, :]), cmap=cmap, vmin=rmin * rms, vmax=rmax * rms)
-    pl.colorbar()
-    pl.xticks(())
-    pl.yticks(())
+    plt.imshow(np.flipud(imdata[0, 0, :, :]), cmap=cmap, vmin=rmin * rms, vmax=rmax * rms)
+    plt.colorbar()
+    plt.xticks(())
+    plt.yticks(())
 
 
 class source:
@@ -131,7 +132,6 @@ class FatalMiriadError(Exception):
         else:
             self.message = "Fatal MIRIAD Task Error: \n" + error
         super(FatalMiriadError, self).__init__(self.message)
-        sys.exit(self.message)
 
 
 def exceptioner(O, E):
@@ -191,8 +191,9 @@ def masher(task=None, **kwargs):
             out = basher(cmd, showasinfo=False)
         return out
     else:
-        logger.critical("Usage = masher(task='sometask', arg1=val1, arg2=val2...)")
-        sys.exit(0)
+        error = "Usage = masher(task='sometask', arg1=val1, arg2=val2...)"
+        logger.critical(error)
+        raise ApercalException
 
 
 def basher(cmd, showasinfo=False):
@@ -253,8 +254,7 @@ def get_source_names(vis=None):
             sources.append(s.replace('  ', ' ').split(' ')[0])
         return sources[0:-1]
     else:
-        logger.critical("get_source_names needs a vis!")
-        sys.exit(0)
+        raise ApercalException("get_source_names needs a vis!")
 
 
 class maths:
@@ -468,15 +468,13 @@ def ms2uvfits(ms=None, uvf=None):
     ms = os.path.split(ms)[1]
     logger.info("ms2uvfits: Converting MS to UVFITS Format")
     if ms is None:
-        logger.error("MS not specified. Please check parameters")
-        sys.exit(0)
+        raise ApercalException("MS not specified. Please check parameters")
     if path2ms != '':
         try:
             os.chdir(path2ms)
             logger.info("Moved to path " + path2ms)
         except:
-            logger.error("Error: Directory or MS does not exist!")
-            sys.exit(0)
+            raise ApercalException("Directory or MS does not exist!")
 
     # Start the processing by setting up an output name and reporting the status.
     if uvf is None:
@@ -512,21 +510,20 @@ def importuvfitsys(uvfits=None, uv=None, tsys=True):
         # Default output name if a custom name isn't provided.
         uv = uvfits.split('.')[0] + '.UV'
     if uvfits is None:
-        logger.error("UVFITS not specified. Please check parameters")
-        sys.exit(0)
+        raise ApercalException("UVFITS not specified. Please check parameters")
+
     if path2uvfits != '':
         try:
             os.chdir(path2uvfits)
             logger.info("Moved to path " + path2uvfits)
         except:
-            logger.error("Error: Directory does not exist!")
-            sys.exit(0)
+            raise ApercalException("Error: Directory does not exist!")
+
     # cmd = 'wsrtfits in='+uvf+' op=uvin velocity=optbary out='+uv
     if uvfits.split('.')[1] == 'MS':
         uvfits = uvfits.split('.')[0] + '.UVF'
     if not os.path.exists(uvfits):
-        logger.critical(uvfits + " does not exist!")
-        sys.exit(0)
+        raise ApercalException(uvfits + " does not exist!")
     if os.path.exists(uv):
         logger.warn(uv + ' exists! I won\'t clobber. Skipping this part...')
         logger.info("Exiting gracefully.")
@@ -555,14 +552,12 @@ def uvflag(vis=None, select=None):
     vis = os.path.split(vis)[1]
     logger.info("uvflag: Flagging Tool")
     if vis is None or select is None:
-        logger.error("Vis or Flags not specified. Check parameters.")
-        sys.exit(0)
+        raise ApercalException("Vis or Flags not specified. Check parameters.")
     try:
         os.chdir(path2vis)
         logger.info("Moved to path " + path2vis)
     except:
-        logger.error("Error: path to vis does not exist!")
-        sys.exit(0)
+        raise ApercalException("Path to vis does not exist!")
     # Flag each selection in a for-loop
     for s in select.split(';'):
         o = masher(task='uvflag', vis=vis, select='"' + s + '"', flagval='flag')
@@ -587,16 +582,14 @@ def pgflag(vis=None, flagpar='6,2,2,2,5,3', settings=None, stokes='qq'):
     logger = logging.getLogger('pgflag')
     logger.info("PGFLAG: Automated Flagging using SumThresholding")
     if vis is None and settings is None:
-        logger.error("No inputs - please provide either vis and flagpar or settings.")
-        sys.exit(0)
+        raise ApercalException("No inputs - please provide either vis and flagpar or settings.")
     path2vis = os.path.split(vis)[0]
     vis = os.path.split(vis)[1]
     try:
         os.chdir(path2vis)
         logger.info("Moved to path " + path2vis)
     except:
-        logger.error("Error: path to vis does not exist!")
-        sys.exit(0)
+        raise ApercalException("Error: path to vis does not exist!")
 
     # Do pgflag with the settings parameters if provided.
     if settings is not None and vis is not None:
@@ -660,7 +653,7 @@ def director(self, option, dest, file=None, verbose=True):
         else:
             os.mkdir(dest)
             if verbose == True:
-                self.logger.info('# Creating directory ' + str(dest) + ' #')
+                self.logger.info('Creating directory ' + str(dest) + ' #')
     elif option == 'ch':
         if os.getcwd() == dest:
             pass
@@ -671,11 +664,11 @@ def director(self, option, dest, file=None, verbose=True):
             except:
                 os.mkdir(dest)
                 if verbose == True:
-                    self.logger.info('# Creating directory ' + str(dest) + ' #')
+                    self.logger.info('Creating directory ' + str(dest) + ' #')
                 os.chdir(dest)
             self.cwd = os.getcwd()  # Save the current working directory in a variable
             if verbose == True:
-                self.logger.info('# Moved to directory ' + str(dest) + ' #')
+                self.logger.info('Moved to directory ' + str(dest) + ' #')
     elif option == 'mv':  # Move
         if os.path.exists(dest):
             basher("mv " + str(file) + " " + str(dest))
@@ -689,4 +682,51 @@ def director(self, option, dest, file=None, verbose=True):
     elif option == 'rm':  # Remove
         basher("rm -r " + str(dest))
     else:
-        print('### Option not supported! Only mk, ch, mv, rm, rn, and cp are supported! ###')
+        print(' Option not supported! Only mk, ch, mv, rm, rn, and cp are supported!')
+
+
+def show(config_object, section, showall=False):
+    """
+    show: Prints the current settings of the pipeline. Only shows keywords, which are in the default config file
+            default.cfg
+    showall: Set to true if you want to see all current settings instead of only the ones from the current step
+    """
+    subs_setinit.setinitdirs(config_object)
+    config = ConfigParser()
+    config.readfp(open(default_cfg))
+    for s in config.sections():
+        if showall:
+            print(s)
+            o = config.options(s)
+            for o in config.items(s):
+                try:
+                    print('\t' + str(o[0]) + ' = ' + str(config_object.__dict__.__getitem__(o[0])))
+                except KeyError:
+                    pass
+        else:
+            if s == section:
+                print(s)
+                o = config.options(s)
+                for o in config.items(s):
+                    try:
+                        print('\t' + str(o[0]) + ' = ' + str(config_object.__dict__.__getitem__(o[0])))
+                    except KeyError:
+                        pass
+            else:
+                pass
+
+
+def load_config(config_object, file_=None):
+    config = ConfigParser()  # Initialise the config parser
+    if file_:
+        config.readfp(open(file_))
+        logger.info(' Configuration file ' + file_ + ' successfully read!')
+    else:
+        config.readfp(open(default_cfg))
+        logger.info(' No configuration file given or file not found! Using default values!')
+
+    for s in config.sections():
+
+        for o in config.items(s):
+            setattr(config_object, o[0], eval(o[1]))
+    return config  # Save the loaded config file as defaults for later usage

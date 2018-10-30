@@ -26,10 +26,7 @@ setup(
     packages=find_packages(),
     install_requires=install_requires,
     tests_require=['pytest'],
-    package_data={
-        '': ['*.txt', '*.rst'],
-        'kliko': ['schemas/*.yml'],
-    },
+    include_package_data=True,
     author="Bjoern Adebahr",
     author_email="adebahr@astron.nl",
     description="Scientific Compute Container Spec Parser",

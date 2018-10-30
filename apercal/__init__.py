@@ -1,4 +1,3 @@
-import pylab as pl
 import os
 
 import libs.lib
@@ -24,4 +23,7 @@ import subs.imstats
 import subs.param
 import subs.combim
 import subs.irods
+import subs.msutils
+import subs.calmodels
+
 # import subs.masking
