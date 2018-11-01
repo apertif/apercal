@@ -63,14 +63,11 @@ def get_alta_dir(date, task_id, beam_nr, alta_exception):
         '/altaZone/archive/apertif_main/visibilities_default/181205005/WSRTA181205005_B035.MS'
     """
     if int(date) < 180216:
-        return "/altaZone/home/apertif_main/wcudata/WSRTA{date}{task_id:02d}/WSRTA{date}{task_id:02d}_B{beam_nr:03d}.MS".format(
-            **locals())
+        return "/altaZone/home/apertif_main/wcudata/WSRTA{date}{task_id:02d}/WSRTA{date}{task_id:02d}_B{beam_nr:03d}.MS".format(**locals())
     elif int(date) < 181003 or alta_exception:
-        return "/altaZone/home/apertif_main/wcudata/WSRTA{date}{task_id:03d}/WSRTA{date}{task_id:03d}_B{beam_nr:03d}.MS".format(
-            **locals())
+        return "/altaZone/home/apertif_main/wcudata/WSRTA{date}{task_id:03d}/WSRTA{date}{task_id:03d}_B{beam_nr:03d}.MS".format(**locals())
     else:
-        return "/altaZone/archive/apertif_main/visibilities_default/{date}{task_id:03d}/WSRTA{date}{task_id:03d}_B{beam_nr:03d}.MS".format(
-            **locals())
+        return "/altaZone/archive/apertif_main/visibilities_default/{date}{task_id:03d}/WSRTA{date}{task_id:03d}_B{beam_nr:03d}.MS".format(**locals())
 
 
 def getdata_alta(date, task_ids, beams, targetdir=".", tmpdir=".", alta_exception=False):
@@ -105,21 +102,21 @@ def getdata_alta(date, task_ids, beams, targetdir=".", tmpdir=".", alta_exceptio
     if targetdir[-1] != "/":
         targetdir += "/"
 
-    logger.info('Start getting data from ALTA ##########')
-    logging.info('Beams: %s' % beams)
+    logger.debug('Start getting data from ALTA')
+    logging.debug('Beams: %s' % beams)
 
     for beam_nr in beams:
 
-        logger.info('Processing beam %.3d... ######' % beam_nr)
+        logger.debug('Processing beam %.3d' % beam_nr)
 
         for task_id in task_ids:
-            logger.info('Processing task ID %.3d...' % task_id)
+            logger.debug('Processing task ID %.3d' % task_id)
 
             alta_dir = get_alta_dir(date, task_id, beam_nr, alta_exception)
             cmd = "iget -rfPIT -X {tmpdir}WSRTA{date}{task_id:03d}_B{beam_nr:03d}-icat.irods-status --lfrestart " \
                   "{tmpdir}WSRTA{date}{task_id:03d}_B{beam_nr:03d}-icat.lf-irods-status --retries 5 {alta_dir} " \
                   "{targetdir}".format(**locals())
-            logger.info(cmd)
+            logger.debug(cmd)
             os.system(cmd)
 
     os.system('rm -rf {tmpdir}*irods-status'.format(**locals()))
@@ -147,7 +144,7 @@ def getdata_alta(date, task_ids, beams, targetdir=".", tmpdir=".", alta_exceptio
     # Check for failed files
     for task_id in task_ids:
         break  # Hack TJD: disable checking failed files
-        logger.info('Checking failed files for task ID %.3d...' % task_id)
+        logger.debug('Checking failed files for task ID %.3d' % task_id)
 
         cmd = os.popen('cat {tmpdir}transfer_WSRTA{date}{task_id:03d}_to_alta_verify.log | wc -l'.format(**locals()))
         for x in cmd:
@@ -170,8 +167,8 @@ def getdata_alta(date, task_ids, beams, targetdir=".", tmpdir=".", alta_exceptio
 
     # Print the results
     diff = (end - start) / 60.  # in min
-    logger.info("Total time to transfer data: %.2f min" % diff)
-    logger.info("Done getting data from ALTA ")
+    logger.debug("Total time to transfer data: %.2f min" % diff)
+    logger.debug("Done getting data from ALTA")
 
 
 if __name__ == "__main__":

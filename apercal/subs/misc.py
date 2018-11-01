@@ -13,3 +13,4 @@ def create_feednames():
     returns(list): A list of strings with the feed names
     """
     feednames = ['X', 'Y']
+    return feednames

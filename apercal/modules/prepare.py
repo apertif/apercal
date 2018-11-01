@@ -50,9 +50,9 @@ class prepare:
         Executes the complete prepare step with the parameters indicated in the config-file in the following order:
         copyobs
         """
-        logger.info('Preparing data for calibration ##########')
+        logger.info('Preparing data for calibration')
         self.copyobs()
-        logger.info('Data prepared for calibration ##########')
+        logger.info('Data prepared for calibration')
 
     ##############################################
     # Continuum mosaicing of the stacked images #
@@ -114,8 +114,7 @@ class prepare:
         preparepolcalrejreason = get_param_def(self, 'prepare_polcal_rejreason', np.full((1), '', dtype='U50'))
 
         # Reason for a beam dataset not being there
-        preparetargetbeamsrejreason = get_param_def(self, 'prepare_targetbeams_rejreason',
-                                                    np.full((beams), '', dtype='U50'))
+        preparetargetbeamsrejreason = get_param_def(self, 'prepare_targetbeams_rejreason', np.full((beams), '', dtype='U50'))
 
         ################################################
         # Start the preparation of the flux calibrator #
@@ -127,9 +126,9 @@ class prepare:
             fluxcal = self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal
             preparefluxcaldiskstatus = os.path.isdir(fluxcal)
             if preparefluxcaldiskstatus:
-                logger.debug('Flux calibrator dataset found on disk ({})#'.format(fluxcal))
+                logger.debug('Flux calibrator dataset found on disk ({})'.format(fluxcal))
             else:
-                logger.debug('Flux calibrator dataset not on disk ({})#'.format(fluxcal))
+                logger.debug('Flux calibrator dataset not on disk ({})'.format(fluxcal))
 
             if hasattr(self, 'prepare_bypass_alta') and self.prepare_bypass_alta:
                 logger.debug("Skipping fetching dataset from ALTA")
@@ -138,38 +137,36 @@ class prepare:
                 preparefluxcalaltastatus = subs_irods.getstatus_alta(self.prepare_date, self.prepare_obsnum_fluxcal,
                                                                      '00')
                 if preparefluxcalaltastatus:
-                    logger.debug('Flux calibrator dataset available on ALTA #')
+                    logger.debug('Flux calibrator dataset available on ALTA')
                 else:
-                    logger.warning('Flux calibrator dataset not available on ALTA #')
+                    logger.warning('Flux calibrator dataset not available on ALTA')
                 # Copy the flux calibrator data from ALTA if needed
                 if preparefluxcaldiskstatus and preparefluxcalaltastatus:
                     preparefluxcalcopystatus = True
                 elif preparefluxcaldiskstatus and preparefluxcalaltastatus == False:
                     preparefluxcalcopystatus = True
-                    logger.warning('Flux calibrator data available on disk, but not in ALTA! #')
+                    logger.warning('Flux calibrator data available on disk, but not in ALTA!')
                 elif preparefluxcaldiskstatus == False and preparefluxcalaltastatus:
                     subs_managefiles.director(self, 'mk', self.basedir + '00' + '/' + self.rawsubdir, verbose=False)
-                    getdata_alta(int(self.prepare_date), int(self.prepare_obsnum_fluxcal), 0,
-                                 targetdir=self.rawdir + '/' + self.fluxcal)
+                    getdata_alta(int(self.prepare_date), int(self.prepare_obsnum_fluxcal), 0, targetdir=self.rawdir + '/' + self.fluxcal)
                     if os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal):
                         preparefluxcalcopystatus = True
-                        logger.debug('Flux calibrator dataset successfully copied from ALTA #')
+                        logger.debug('Flux calibrator dataset successfully copied from ALTA')
                     else:
                         preparefluxcalcopystatus = False
                         preparefluxcalrejreason[0] = 'Copy from ALTA not successful'
-                        logger.error('Flux calibrator dataset available on ALTA, but NOT successfully copied! #')
+                        logger.error('Flux calibrator dataset available on ALTA, but NOT successfully copied!')
                 elif preparefluxcaldiskstatus == False and preparefluxcalaltastatus == False:
                     preparefluxcalcopystatus = False
                     preparefluxcalrejreason[0] = 'Dataset not on ALTA or disk'
-                    logger.error(
-                        'Flux calibrator dataset not available on disk nor in ALTA! The next steps will not work! #')
+                    logger.error('Flux calibrator dataset not available on disk nor in ALTA! The next steps will not work!')
         else:  # In case the flux calibrator is not specified meaning the parameter is empty.
             preparefluxcalrequested = False
             preparefluxcaldiskstatus = False
             preparefluxcalaltastatus = False
             preparefluxcalcopystatus = False
             preparefluxcalrejreason[0] = 'Dataset not specified'
-            logger.error('No flux calibrator dataset specified. The next steps will not work! #')
+            logger.error('No flux calibrator dataset specified. The next steps will not work!')
 
         # Save the derived parameters for the fluxcal to the parameter file
 
@@ -188,9 +185,9 @@ class prepare:
             preparepolcalrequested = True
             preparepolcaldiskstatus = os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal)
             if preparepolcaldiskstatus:
-                logger.debug('Polarisation calibrator dataset found on disk #')
+                logger.debug('Polarisation calibrator dataset found on disk')
             else:
-                logger.debug('Polarisation calibrator dataset not on disk #')
+                logger.debug('Polarisation calibrator dataset not on disk')
 
             if hasattr(self, 'prepare_bypass_alta') and self.prepare_bypass_alta:
                 logger.debug("Skipping fetching dataset from ALTA")
@@ -199,39 +196,36 @@ class prepare:
                 # Check if the polarisation calibrator dataset is available on ALTA
                 preparepolcalaltastatus = subs_irods.getstatus_alta(self.prepare_date, self.prepare_obsnum_polcal, '00')
                 if preparepolcalaltastatus:
-                    logger.debug('Polarisation calibrator dataset available on ALTA #')
+                    logger.debug('Polarisation calibrator dataset available on ALTA')
                 else:
-                    logger.warning('Polarisation calibrator dataset not available on ALTA #')
+                    logger.warning('Polarisation calibrator dataset not available on ALTA')
                 # Copy the polarisation calibrator data from ALTA if needed
                 if preparepolcaldiskstatus and preparepolcalaltastatus:
                     preparepolcalcopystatus = True
                 elif preparepolcaldiskstatus and preparepolcalaltastatus == False:
                     preparepolcalcopystatus = True
-                    logger.warning('Polarisation calibrator data available on disk, but not in ALTA! #')
+                    logger.warning('Polarisation calibrator data available on disk, but not in ALTA!')
                 elif preparepolcaldiskstatus == False and preparepolcalaltastatus:
                     subs_managefiles.director(self, 'mk', self.basedir + '00' + '/' + self.rawsubdir, verbose=False)
-                    getdata_alta(int(self.prepare_date), int(self.prepare_obsnum_polcal), 0,
-                                 targetdir=self.rawdir + '/' + self.polcal)
+                    getdata_alta(int(self.prepare_date), int(self.prepare_obsnum_polcal), 0, targetdir=self.rawdir + '/' + self.polcal)
                     if os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal):
                         preparepolcalcopystatus = True
-                        logger.debug('Polarisation calibrator dataset successfully copied from ALTA #')
+                        logger.debug('Polarisation calibrator dataset successfully copied from ALTA')
                     else:
                         preparepolcalcopystatus = False
                         preparepolcalrejreason[0] = 'Copy from ALTA not successful'
-                        logger.error(
-                            'Polarisation calibrator dataset available on ALTA, but NOT successfully copied! #')
+                        logger.error('Polarisation calibrator dataset available on ALTA, but NOT successfully copied!')
                 elif preparepolcaldiskstatus == False and preparepolcalaltastatus == False:
                     preparepolcalcopystatus = False
                     preparepolcalrejreason[0] = 'Dataset not on ALTA or disk'
-                    logger.warning('Polarisation calibrator dataset not available on disk nor in ALTA! Polarisation '
-                                   'calibration will not work! #')
+                    logger.warning('Polarisation calibrator dataset not available on disk nor in ALTA! Polarisation calibration will not work!')
         else:  # In case the polarisation calibrator is not specified meaning the parameter is empty.
             preparepolcalrequested = False
             preparepolcaldiskstatus = False
             preparepolcalaltastatus = False
             preparepolcalcopystatus = False
             preparepolcalrejreason[0] = 'Dataset not specified'
-            logger.warning('No polarisation calibrator dataset specified. Polarisation calibration will not work! #')
+            logger.warning('No polarisation calibrator dataset specified. Polarisation calibration will not work!')
 
         # Save the derived parameters for the polcal to the parameter file
 
@@ -259,21 +253,19 @@ class prepare:
                 preparetargetbeamsdiskstatus[b] = os.path.isdir(
                     self.basedir + str(b).zfill(2) + '/' + self.rawsubdir + '/' + self.target)
                 if preparetargetbeamsdiskstatus[b]:
-                    logger.debug('Target dataset for beam ' + str(b).zfill(2) + ' found on disk #')
+                    logger.debug('Target dataset for beam ' + str(b).zfill(2) + ' found on disk')
                 else:
-                    logger.debug('Target dataset for beam ' + str(b).zfill(2) + ' NOT found on disk #')
+                    logger.debug('Target dataset for beam ' + str(b).zfill(2) + ' NOT found on disk')
 
                 if hasattr(self, 'prepare_bypass_alta') and self.prepare_bypass_alta:
                     logger.debug("Skipping fetching dataset from ALTA")
                 else:
                     # Check which target datasets are available on ALTA
-                    preparetargetbeamsaltastatus[b] = subs_irods.getstatus_alta(self.prepare_date,
-                                                                                self.prepare_obsnum_target,
-                                                                                str(b).zfill(2))
+                    preparetargetbeamsaltastatus[b] = subs_irods.getstatus_alta(self.prepare_date, self.prepare_obsnum_target, str(b).zfill(2))
                     if preparetargetbeamsaltastatus[b]:
-                        logger.debug('Target dataset for beam ' + str(b).zfill(2) + ' available on ALTA #')
+                        logger.debug('Target dataset for beam ' + str(b).zfill(2) + ' available on ALTA')
                     else:
-                        logger.debug('Target dataset for beam ' + str(b).zfill(2) + ' NOT available on ALTA #')
+                        logger.debug('Target dataset for beam ' + str(b).zfill(2) + ' NOT available on ALTA')
 
             if hasattr(self, 'prepare_bypass_alta') and self.prepare_bypass_alta:
                 logger.debug("Skipping fetching dataset from ALTA")
@@ -284,30 +276,23 @@ class prepare:
                         preparetargetbeamscopystatus[c] = True
                     elif preparetargetbeamsdiskstatus[c] and preparetargetbeamsaltastatus[c] == False:
                         preparetargetbeamscopystatus[c] = True
-                        logger.warning(
-                            'Target dataset for beam ' + str(c).zfill(2) + ' available on disk, but not in ALTA! #')
-                    elif preparetargetbeamsdiskstatus[c] == False and preparetargetbeamsaltastatus[c] and str(c).zfill(
-                            2) in reqbeams:  # if target dataset is requested, but not on disk
-                        subs_managefiles.director(self, 'mk', self.basedir + str(c).zfill(2) + '/' + self.rawsubdir,
-                                                  verbose=False)
-                        getdata_alta(int(self.prepare_date), int(self.prepare_obsnum_target), int(str(c).zfill(2)),
-                                     targetdir=self.basedir + str(c).zfill(
-                                         2) + '/' + self.rawsubdir + '/' + self.target)
+                        logger.warning('Target dataset for beam ' + str(c).zfill(2) + ' available on disk, but not in ALTA!')
+                    elif preparetargetbeamsdiskstatus[c] == False and preparetargetbeamsaltastatus[c] and str(c).zfill(2) in reqbeams:  # if target dataset is requested, but not on disk
+                        subs_managefiles.director(self, 'mk', self.basedir + str(c).zfill(2) + '/' + self.rawsubdir, verbose=False)
+                        getdata_alta(int(self.prepare_date), int(self.prepare_obsnum_target), int(str(c).zfill(2)), targetdir=self.basedir + str(c).zfill(2) + '/' + self.rawsubdir + '/' + self.target)
                         # Check if copy was successful
                         if os.path.isdir(self.basedir + str(c).zfill(2) + '/' + self.rawsubdir + '/' + self.target):
                             preparetargetbeamscopystatus[c] = True
                         else:
                             preparetargetbeamscopystatus[c] = False
                             preparetargetbeamsrejreason[int(c)] = 'Copy from ALTA not successful'
-                            logger.error('Target beam dataset available on ALTA, but NOT successfully copied! #')
-                    elif preparetargetbeamsdiskstatus[c] == False and preparetargetbeamsaltastatus[c] == False and str(
-                            c).zfill(2) in reqbeams:
+                            logger.error('Target beam dataset available on ALTA, but NOT successfully copied!')
+                    elif preparetargetbeamsdiskstatus[c] == False and preparetargetbeamsaltastatus[c] == False and str(c).zfill(2) in reqbeams:
                         preparetargetbeamscopystatus[c] = False
                         preparetargetbeamsrejreason[int(c)] = 'Dataset not on ALTA or disk'
-                        logger.error('Target beam dataset not available on disk nor in ALTA! Requested beam cannot be'
-                                     'processed! #')
+                        logger.error('Target beam dataset not available on disk nor in ALTA! Requested beam cannot be processed!')
         else:  # If no target dataset is requested meaning the parameter is empty
-            logger.warning('No target datasets specified! #')
+            logger.warning('No target datasets specified!')
             for b in range(beams):
                 preparetargetbeamsrequested[b] = False
                 preparetargetbeamsdiskstatus[b] = False
@@ -327,11 +312,9 @@ class prepare:
 
     def summary(self):
         """
-        Creates a general summary of the parameters in the parameter file generated during PREPARE. No detailed
-        summary is available for PREPARE
+        Creates a general summary of the parameters in the parameter file generated during PREPARE. No detailed summary is available for PREPARE
 
-        returns (DataFrame): A python pandas dataframe object, which can be looked at with the style function in
-                            notebook
+        returns (DataFrame): A python pandas dataframe object, which can be looked at with the style function in notebook
         """
 
         beams = 37
@@ -358,8 +341,7 @@ class prepare:
 
         beam_range = range(beams)
         dataset_beams = [self.target[:-3] + ' Beam ' + str(b).zfill(2) for b in beam_range]
-        dataset_indices = ['Flux calibrator (' + self.fluxcal[:-3] + ')',
-                           'Polarised calibrator (' + self.polcal[:-3] + ')'] + dataset_beams
+        dataset_indices = ['Flux calibrator (' + self.fluxcal[:-3] + ')', 'Polarised calibrator (' + self.polcal[:-3] + ')'] + dataset_beams
 
         all_r = np.full(39, False)
         all_r[0] = FR
@@ -398,16 +380,15 @@ class prepare:
 
     def reset(self):
         """
-        Function to reset the current step and remove all generated data. Be careful! Deletes all data generated in
-        this step!
+        Function to reset the current step and remove all generated data. Be careful! Deletes all data generated in this step!
         """
         subs_setinit.setinitdirs(self)
-        logger.warning(' Deleting all raw data products and their directories.')
+        logger.warning('Deleting all raw data products and their directories.')
         subs_managefiles.director(self, 'ch', self.basedir)
         deldirs = glob.glob(self.basedir + '[0-9][0-9]' + '/' + self.rawsubdir)
         for dir in deldirs:
             subs_managefiles.director(self, 'rm', dir)
-        logger.warning(' Deleting all parameter file entries for PREPARE module')
+        logger.warning('Deleting all parameter file entries for PREPARE module')
         subs_param.del_param(self, 'prepare_fluxcal_requested')
         subs_param.del_param(self, 'prepare_fluxcal_diskstatus')
         subs_param.del_param(self, 'prepare_fluxcal_altastatus')
