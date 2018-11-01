@@ -13,7 +13,6 @@ hints:
     inplaceUpdate: true
 
 requirements:
-  InlineJavascriptRequirement: {}
   InitialWorkDirRequirement:
       listing:
       - entry: $(inputs.ms)
@@ -30,11 +29,10 @@ outputs:
   msout:
     type: Directory
     outputBinding:
-      glob: "$( inputs.ms )"
+      glob: $(inputs.ms.path)
 
 arguments:
-  - position: 0
-    prefix: '-c'
+  - prefix: '-c'
     valueFrom: |
         from apercal.modules.preflag import preflag
         from os import getcwd
