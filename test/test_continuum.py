@@ -15,7 +15,7 @@ here = path.dirname(__file__)
 class TestTransfer(unittest.TestCase):
 
     def test_continuum(self):
-        p = continuum(path.join(here, 'test.cfg'))
+        p = continuum()
         p.basedir = path.join(here, '../data/small/')
         p.fluxcal = '3C295.MS'
         p.polcal = '3C138.MS'

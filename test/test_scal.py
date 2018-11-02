@@ -14,7 +14,7 @@ here = path.dirname(__file__)
 
 class TestScal(unittest.TestCase):
     def test_scal(self):
-        p = scal(path.join(here, 'test.cfg'))
+        p = scal()
         p.basedir = path.join(here, '../data/small/')
         p.fluxcal = '3C295.MS'
         p.polcal = '3C138.MS'
