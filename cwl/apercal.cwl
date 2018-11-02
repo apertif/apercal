@@ -2,17 +2,21 @@ cwlVersion: v1.0
 class: Workflow
 
 inputs:
-  ms: Directory
+  target: Directory
+  fluxcal: Directory
+  polcal: Directory
 
 outputs:
-  msout:
+  calibrated:
     type: Directory
-    outputSource: preflag/msout
+    outputSource: preflag/preflagged
 
 steps:
   preflag:
     run: steps/preflag.cwl
     in:
-      ms: ms
+      target: target
+      fluxcal: fluxcal
+      polcal: polcal
     out:
-        [msout]
+        [preflagged]

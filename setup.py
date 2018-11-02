@@ -4,7 +4,6 @@ __version__ = '2.0'
 
 scripts = []
 
-
 install_requires = [
     'numpy',
     'notebook',
@@ -16,7 +15,6 @@ install_requires = [
     'aipy',
     'pymp-pypi',
 ]
-
 
 
 setup(

@@ -15,30 +15,39 @@ hints:
 requirements:
   InitialWorkDirRequirement:
       listing:
-      - entry: $(inputs.ms)
+      - entry: $(inputs.target)
         writable: true
 
 
 baseCommand: [python]
 
 inputs:
-  ms:
+  target:
+    type: Directory
+
+  polcal:
+    type: Directory
+
+  fluxcal:
     type: Directory
 
 outputs:
-  msout:
+  preflagged:
     type: Directory
     outputBinding:
-      glob: $(inputs.ms.path)
+      glob: $(inputs.target.basename)
 
 arguments:
   - prefix: '-c'
     valueFrom: |
+        import logging
+        logging.basicConfig(level=logging.INFO)
         from apercal.modules.preflag import preflag
         from os import getcwd
 
         p = preflag()
-        p.target = "$( inputs.ms.basename )"
-        p.basedir = getcwd() + '/'
-        p.show(showall=True)
+        p.target = "$(inputs.target.path)"
+        p.fluxcal = "$(inputs.fluxcal.path)"
+        p.polcal = "$(inputs.polcal.path)"
+        p.subdirification = False
         p.go()

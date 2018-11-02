@@ -1,19 +1,19 @@
 import unittest
 import matplotlib as mpl
+
 mpl.use('TkAgg')
 from apercal.modules.ccal import ccal
 from os import path
-from apercal.libs import lib
+import logging
 
-
-lib.setup_logger('debug')
+logging.basicConfig(level=logging.DEBUG)
 
 here = path.abspath(path.dirname(__file__))
 
 
 class TestCcal(unittest.TestCase):
     def test_ccal(self):
-        p = ccal(path.join(here, 'test.cfg'))
+        p = ccal()
         p.basedir = path.join(here, '../data/small/')
         p.fluxcal = '3C295.MS'
         p.polcal = '3C138.MS'
@@ -22,4 +22,4 @@ class TestCcal(unittest.TestCase):
 
 
 if __name__ == "__main__":
-        unittest.main()
+    unittest.main()

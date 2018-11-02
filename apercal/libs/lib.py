@@ -81,17 +81,10 @@ def write2file(header, text2write, file2write):
     f.close()
 
 
-def implotter(fname, i=0, ni=3, j=0, nj=3):
-    """
-    """
-    # put some code here
-
-
 def setup_logger(level='info', logfile=None, quiet=False):
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
     logger.propagate = False
-
     fh_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s : %(message)s',
                                      datefmt='%m/%d/%Y %I:%M:%S %p')
     if logfile is None:
@@ -101,7 +94,6 @@ def setup_logger(level='info', logfile=None, quiet=False):
     fh.setLevel(logging.DEBUG)
     fh.setFormatter(fh_formatter)
     logger.addHandler(fh)
-
     if not quiet:
         ch_formatter = logging.Formatter('%(name)s - %(levelname)s : %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
         ch = logging.StreamHandler()
@@ -115,6 +107,7 @@ def setup_logger(level='info', logfile=None, quiet=False):
         if logfile is not None:
             logger.info('To see the log in a bash window use the following command:')
             logger.info("tail -n +1 -f " + logfile)
+
     elif logfile is not None:
         print "Logging to file. To see the log in a bash window use the following command:"
         print "tail -n +1 -f " + logfile
@@ -723,7 +716,7 @@ def load_config(config_object, file_=None):
         logger.info(' Configuration file ' + file_ + ' successfully read!')
     else:
         config.readfp(open(default_cfg))
-        logger.info(' No configuration file given or file not found! Using default values!')
+        logger.info(' No configuration file given or file not found, using default values.')
 
     for s in config.sections():
 
