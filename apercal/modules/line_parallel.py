@@ -1761,7 +1761,7 @@ class line_parallel:
                 pass
         firstfile = pyfits.open(filelist[0], memmap=True)
         firstheader = firstfile[0].header
-        # change suggested by JV, added by JMH    # commented out by JMH 
+        # change suggested by JV, added by JMH commented out by JMH
         naxis = firstheader['NAXIS']  # put this line somewhere before that keyword is assigned the value 3
         # end change
         #        firstheader['NAXIS'] = 3    # commented out by JMH

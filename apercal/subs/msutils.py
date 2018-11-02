@@ -51,7 +51,7 @@ def add_caltables(ct, interp, addct, addinterp):
     interp (string): Interpolation string
     addct (string): Calibration table string to add
     addinterp (string): Interpolation string to add
-    
+
     returns(string, string): The updated calibration table string, the updated inteprolation string
     """
     if ct == '""' and interp == '""':

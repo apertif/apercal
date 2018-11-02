@@ -143,7 +143,7 @@ class prepare:
                 # Copy the flux calibrator data from ALTA if needed
                 if preparefluxcaldiskstatus and preparefluxcalaltastatus:
                     preparefluxcalcopystatus = True
-                elif preparefluxcaldiskstatus and not preparefluxcalaltastatus :
+                elif preparefluxcaldiskstatus and not preparefluxcalaltastatus:
                     preparefluxcalcopystatus = True
                     logger.warning('Flux calibrator data available on disk, but not in ALTA!')
                 elif not preparefluxcaldiskstatus and preparefluxcalaltastatus:

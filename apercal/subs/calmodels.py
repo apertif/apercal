@@ -53,5 +53,5 @@ def get_calparameters(calibrator):
         spix = '0.0'
         reffreq = '1.2496GHz'
         rotmeas = '0.0'
-        
+
     return av, fluxdensity, spix, reffreq, rotmeas

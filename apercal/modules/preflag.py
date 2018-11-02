@@ -246,7 +246,7 @@ class preflag(BaseModule):
             if self.target != '':
                 # Flag the subband edges of the the target beam datasets
                 # Collect all the available target beam datasets
-                for vis, beam in  self.get_datasets():
+                for vis, beam in self.get_datasets():
                     if preflagtargetbeamsedges[int(beam)]:
                         logger.info('Subband edges for target beam ' + beam + ' were already flagged')
                     else:
@@ -702,8 +702,8 @@ class preflag(BaseModule):
                 else:
                     logger.warning('No flux calibrator dataset specified. Specified baselines(s) for flux calibrator dataset will not be flagged!')
             # Flag correlation(s) for the polarised calibrator
-            if preflagpolcalmanualflagbaseline[
-                0] == self.preflag_manualflag_baseline and self.preflag_manualflag_polcal:
+            if preflagpolcalmanualflagbaseline[0] == self.preflag_manualflag_baseline and \
+                    self.preflag_manualflag_polcal:
                 logger.info('Baseline(s) ' + self.preflag_manualflag_baseline + ' for polarised calibrator were already flagged')
             else:
                 if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()):

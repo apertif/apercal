@@ -403,7 +403,7 @@ class line:
                                         convol.options = 'final'
                                         convol.go()
                                         self.director('rn', 'image_' + str(channel_counter).zfill(5),
-                                                      file='convol_' + str(minc).zfill(2) + '_' + str(
+                                                      file_='convol_' + str(minc).zfill(2) + '_' + str(
                                                           channel_counter).zfill(5))
                                     else:
                                         pass
@@ -500,8 +500,8 @@ class line:
 
             logger.info('# Theoretical noise for chunk ' + chunk + ' is ' + str(theoretical_noise / 1000) + ' Jy/beam #')
             theoretical_noise_threshold = calc_theoretical_noise_threshold(float(theoretical_noise), self.line_subtract_mode_uvmodel_nsigma)
-            logger.info('# Your theoretical noise threshold will be ' + str(self.line_subtract_mode_uvmodel_nsigma) + 
-                ' times the theoretical noise corresponding to ' + str(theoretical_noise_threshold) + ' Jy/beam #')
+            logger.info('# Your theoretical noise threshold will be ' + str(self.line_subtract_mode_uvmodel_nsigma) +
+                        ' times the theoretical noise corresponding to ' + str(theoretical_noise_threshold) + ' Jy/beam #')
             dr_list = calc_dr_maj(self.line_subtract_mode_uvmodel_drinit, self.line_subtract_mode_uvmodel_dr0,
                                        majc, self.line_subtract_mode_uvmodel_majorcycle_function)
             dr_minlist = calc_dr_min(dr_list, majc - 1, self.line_subtract_mode_uvmodel_minorcycle,

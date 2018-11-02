@@ -940,7 +940,7 @@ class ccal(BaseModule):
                         # Check for the TEC calibration table to apply on-the-fly
                         TECstatus = subs_param.get_param(self, 'ccal_targetbeams_TEC')
                         if TECstatus[int(beam)]:
-                            ###### fix this for right location of TEC table ######
+                            # fix this for right location of TEC table
                             prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
                                                                             '"' + vis.rstrip('.MS') + '.tecim"',
                                                                             '"nearest"')
@@ -1254,9 +1254,8 @@ class ccal(BaseModule):
                 casacmd = [cc_dataset_clear, cc_dataset_resetflags, cc_dataset_removeflagtable]
                 casa = drivecasa.Casapy()
                 casa.run_script(casacmd, raise_on_severe=False, timeout=10000)
-            except:
-                logger.error(
-                    '# Calibration could not completely be removed from ' + dataset + '. Flags might also not have be properly reset!')
+            except Exception:
+                logger.error('Calibration could not completely be removed from ' + dataset + '. Flags might also not have be properly reset!')
         # Remove the keywords in the parameter file
         logger.warning('Deleting all parameter file entries for CROSSCAL module')
         subs_param.del_param(self, 'ccal_fluxcal_TEC')
