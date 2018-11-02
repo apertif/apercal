@@ -19,3 +19,6 @@ class TestMosaic(unittest.TestCase):
         p.target = 'NGC807.MS'
         #p.show(showall=False)
         p.go()
+
+if __name__ == "__main__":
+        unittest.main()

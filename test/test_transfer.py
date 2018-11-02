@@ -18,4 +18,7 @@ class TestTransfer(unittest.TestCase):
         p.polcal = '3C138.MS'
         p.target = 'NGC807.MS'
         #p.show(showall=False)
+
+if __name__ == "__main__":
+        unittest.main()
         p.go()
