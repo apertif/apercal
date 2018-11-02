@@ -227,6 +227,8 @@ def basher(cmd, showasinfo=False):
         logger.debug(err)
     # NOTE: Returns the STD output.
     exceptioner(out, err)
+    if proc.returncode != 0:
+        raise RuntimeError()
     logger.debug("Returning output.")
     # Standard output error are returned in a more convenient way
     return out.split('\n')[0:-1]
@@ -642,7 +644,7 @@ def director(self, option, dest, file_=None, verbose=True):
         else:
             os.mkdir(dest)
             if verbose:
-                self.logger.info('Creating directory ' + str(dest) + ' #')
+                self.logger.info('Creating directory ' + str(dest))
     elif option == 'ch':
         if os.getcwd() == dest:
             pass
@@ -653,11 +655,11 @@ def director(self, option, dest, file_=None, verbose=True):
             except Exception:
                 os.mkdir(dest)
                 if verbose:
-                    self.logger.info('Creating directory ' + str(dest) + ' #')
+                    self.logger.info('Creating directory ' + str(dest))
                 os.chdir(dest)
             self.cwd = os.getcwd()  # Save the current working directory in a variable
             if verbose:
-                self.logger.info('Moved to directory ' + str(dest) + ' #')
+                self.logger.info('Moved to directory ' + str(dest))
     elif option == 'mv':  # Move
         if os.path.exists(dest):
             basher("mv " + str(file_) + " " + str(dest))
