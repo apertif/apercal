@@ -15,6 +15,8 @@ from apercal.subs.param import get_param_def
 from apercal.subs.bandpass import create_bandpass
 from apercal.ao_strategies import ao_strategies
 from apercal.libs import lib
+from apercal.exceptions import ApercalException
+
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +67,14 @@ class preflag:
         self.default = lib.load_config(self, filename)
         subs_setinit.setinitdirs(self)
 
+    def get_fluxcal_path(self):
+        return self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal
+
+    def get_polcal_path(self):
+        return self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal
+
+    def get_datasets(self):
+        return glob.glob(self.basedir + '[0-9][0-9]' + '/' + self.rawsubdir + '/' + self.target)
 
     ##### Function to execute the preflagging #####
 
@@ -115,9 +125,9 @@ class preflag:
             if preflagfluxcalshadow:
                 logger.info('Shadowed antenna(s) for flux calibrator were already flagged')
             else:
-                if self.fluxcal != '' and os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal):
+                if self.fluxcal != '' and os.path.isdir(self.get_fluxcal_path()):
                     logger.debug('Flagging shadowed antennas for flux calibrator')
-                    fc_shadow = 'flagdata(vis="' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal + '", mode="shadow", flagbackup=False)'
+                    fc_shadow = 'flagdata(vis="' + self.get_fluxcal_path() + '", mode="shadow", flagbackup=False)'
                     casacmd = [fc_shadow]
                     casa = drivecasa.Casapy()
                     casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
@@ -129,9 +139,9 @@ class preflag:
             if preflagpolcalshadow:
                 logger.info('Shadowed antenna(s) for polarised calibrator were already flagged')
             else:
-                if self.polcal != '' and os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal):
+                if self.polcal != '' and os.path.isdir(self.get_polcal_path()):
                     logger.debug('Flagging shadowed antennas for polarised calibrator')
-                    pc_shadow = 'flagdata(vis="' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal + '", mode="shadow", flagbackup=False)'
+                    pc_shadow = 'flagdata(vis="' + self.get_polcal_path() + '", mode="shadow", flagbackup=False)'
                     casacmd = [pc_shadow]
                     casa = drivecasa.Casapy()
                     casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
@@ -141,7 +151,7 @@ class preflag:
                     preflagpolcalshadow = False
             # Flag the target beams
             if self.target != '':
-                datasets = glob.glob(self.basedir + '[0-9][0-9]' + '/' + self.rawsubdir + '/' + self.target)
+                datasets = self.get_datasets()
                 for vis in datasets:
                     if preflagtargetbeamsshadow[int(vis.split('/')[-3])]:
                         logger.info('Shadowed antenna(s) for beam ' + vis.split('/')[-3] + ' were already flagged')
@@ -186,18 +196,18 @@ class preflag:
                 logger.info('Subband edges for flux calibrator were already flagged')
             else:
                 if self.fluxcal != '' and os.path.isdir(
-                        self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal):
+                        self.get_fluxcal_path()):
                     # Flag the subband edges of the flux calibrator data set
                     logger.debug('Flagging subband edges for flux calibrator')
                     # Get the number of channels of the flux calibrator data set
-                    nchannel = self._getnchan(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal)
+                    nchannel = self._getnchan(self.get_fluxcal_path())
                     # Calculate the subband edges of the flux calibrator data set
                     a = range(0, nchannel, 64)
                     b = range(1, nchannel, 64)
                     c = range(63, nchannel, 64)
                     l = a + b + c
                     m = ';'.join(str(ch) for ch in l)
-                    fc_edges_flagcmd = 'flagdata(vis="' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal + '", spw="0:' + m + '", flagbackup=False)'
+                    fc_edges_flagcmd = 'flagdata(vis="' + self.get_fluxcal_path() + '", spw="0:' + m + '", flagbackup=False)'
                     casacmd_fcflag = [fc_edges_flagcmd]
                     casa = drivecasa.Casapy()
                     casa.run_script(casacmd_fcflag, raise_on_severe=True, timeout=1800)
@@ -209,18 +219,18 @@ class preflag:
             if preflagpolcaledges:
                 logger.info('Subband edges for polarised calibrator were already flagged')
             else:
-                if self.polcal != '' and os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal):
+                if self.polcal != '' and os.path.isdir(self.get_polcal_path()):
                     # Flag the subband edges of the polarised calibrator data set
                     logger.debug('Flagging subband edges for polarised calibrator #')
                     # Get the number of channels of the polarised calibrator data set
-                    nchannel = self._getnchan(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal)
+                    nchannel = self._getnchan(self.get_polcal_path())
                     # Calculate the subband edges of the polarised calibrator data set
                     a = range(0, nchannel, 64)
                     b = range(1, nchannel, 64)
                     c = range(63, nchannel, 64)
                     l = a + b + c
                     m = ';'.join(str(ch) for ch in l)
-                    pc_edges_flagcmd = 'flagdata(vis="' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal + '", spw="0:' + m + '", flagbackup=False)'
+                    pc_edges_flagcmd = 'flagdata(vis="' + self.get_polcal_path() + '", spw="0:' + m + '", flagbackup=False)'
                     casacmd_pcflag = [pc_edges_flagcmd]
                     casa = drivecasa.Casapy()
                     casa.run_script(casacmd_pcflag, raise_on_severe=True, timeout=1800)
@@ -231,7 +241,7 @@ class preflag:
             if self.target != '':
                 # Flag the subband edges of the the target beam datasets
                 # Collect all the available target beam datasets
-                datasets = glob.glob(self.basedir + '[0-9][0-9]' + '/' + self.rawsubdir + '/' + self.target)
+                datasets = self.get_datasets()
                 for vis in datasets:
                     if preflagtargetbeamsedges[int(vis.split('/')[-3])]:
                         logger.info('Subband edges for target beam ' + vis.split('/')[-3] + ' were already flagged')
@@ -282,17 +292,17 @@ class preflag:
             if preflagfluxcalghosts:
                 logger.info('Ghost channels for flux calibrator were already flagged')
             else:
-                if self.fluxcal != '' and os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal):
+                if self.fluxcal != '' and os.path.isdir(self.get_fluxcal_path()):
                     # Flag the ghosts in the flux calibrator data set
                     logger.debug('Flagging ghost channels for flux calibrator')
                     # Get the number of channels of the flux calibrator data set
-                    nchannel = self._getnchan(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal)
+                    nchannel = self._getnchan(self.get_fluxcal_path())
                     # Calculate the ghost positions for the flux calibrator data set
                     a = range(16, nchannel, 64)
                     b = range(48, nchannel, 64)
                     l = a + b
                     m = ';'.join(str(ch) for ch in l)
-                    fc_ghosts_flagcmd = 'flagdata(vis="' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal + '", spw="0:' + m + '", flagbackup=False)'
+                    fc_ghosts_flagcmd = 'flagdata(vis="' + self.get_fluxcal_path() + '", spw="0:' + m + '", flagbackup=False)'
                     casacmd_fcflag = [fc_ghosts_flagcmd]
                     casa = drivecasa.Casapy()
                     casa.run_script(casacmd_fcflag, raise_on_severe=True, timeout=1800)
@@ -304,17 +314,17 @@ class preflag:
             if preflagpolcalghosts:
                 logger.info('Ghost channels for polarised calibrator were already flagged')
             else:
-                if self.polcal != '' and os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal):
+                if self.polcal != '' and os.path.isdir(self.get_polcal_path()):
                     # Flag the ghosts in the polarised calibrator data set
                     logger.debug('Flagging ghost channels for polarised calibrator')
                     # Get the number of channels of the polarised calibrator data set
-                    nchannel = self._getnchan(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal)
+                    nchannel = self._getnchan(self.get_polcal_path())
                     # Calculate the subband edges of the polarised calibrator data set
                     a = range(0, nchannel, 64)
                     b = range(1, nchannel, 64)
                     l = a + b
                     m = ';'.join(str(ch) for ch in l)
-                    pc_ghosts_flagcmd = 'flagdata(vis="' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal + '", spw="0:' + m + '", flagbackup=False)'
+                    pc_ghosts_flagcmd = 'flagdata(vis="' + self.get_polcal_path() + '", spw="0:' + m + '", flagbackup=False)'
                     casacmd_pcflag = [pc_ghosts_flagcmd]
                     casa = drivecasa.Casapy()
                     casa.run_script(casacmd_pcflag, raise_on_severe=True, timeout=1800)
@@ -325,7 +335,7 @@ class preflag:
             if self.target != '':
                 # Flag the ghosts in the target beam datasets
                 # Collect all the available target beam datasets
-                datasets = glob.glob(self.basedir + '[0-9][0-9]' + '/' + self.rawsubdir + '/' + self.target)
+                datasets = self.get_datasets()
                 for vis in datasets:
                     if preflagtargetbeamsghosts[int(vis.split('/')[-3])]:
                         logger.info('Ghost channels for target beam ' + vis.split('/')[-3] + ' were already flagged')
@@ -408,8 +418,8 @@ class preflag:
             if preflagfluxcalmanualflagauto and self.preflag_manualflag_fluxcal:
                 logger.info('Auto-correlations for flux calibrator were already flagged')
             else:
-                if self.preflag_manualflag_fluxcal and os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal):
-                    fc_auto = 'flagdata(vis="' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal + '", autocorr=True, flagbackup=False)'
+                if self.preflag_manualflag_fluxcal and os.path.isdir(self.get_fluxcal_path()):
+                    fc_auto = 'flagdata(vis="' + self.get_fluxcal_path() + '", autocorr=True, flagbackup=False)'
                     casacmd = [fc_auto]
                     casa = drivecasa.Casapy()
                     casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
@@ -422,8 +432,8 @@ class preflag:
             if preflagpolcalmanualflagauto and self.preflag_manualflag_polcal:
                 logger.info('Auto-correlations for polarised calibrator were already flagged')
             else:
-                if self.preflag_manualflag_polcal and os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal):
-                    pc_auto = 'flagdata(vis="' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal + '", autocorr=True, flagbackup=False)'
+                if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()):
+                    pc_auto = 'flagdata(vis="' + self.get_polcal_path() + '", autocorr=True, flagbackup=False)'
                     casacmd = [pc_auto]
                     casa = drivecasa.Casapy()
                     casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
@@ -435,7 +445,7 @@ class preflag:
             # Flag the auto-correlations for the target beams
             if self.preflag_manualflag_target:
                 if self.preflag_manualflag_targetbeams == 'all':
-                    datasets = glob.glob(self.basedir + '[0-9][0-9]' + '/' + self.rawsubdir + '/' + self.target)
+                    datasets = self.get_datasets()
                     logger.debug('Flagging auto-correlations for all target beams')
                 else:
                     beams = self.preflag_manualflag_targetbeams.split(",")
@@ -483,8 +493,8 @@ class preflag:
             if preflagfluxcalmanualflagantenna[0] == self.preflag_manualflag_antenna and self.preflag_manualflag_fluxcal == True:
                 logger.info('Antenna(s) ' + self.preflag_manualflag_antenna + ' for flux calibrator were already flagged')
             else:
-                if self.preflag_manualflag_fluxcal and os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal):
-                    fc_ant = 'flagdata(vis="' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal + '", antenna="' + self.preflag_manualflag_antenna + '", flagbackup=False)'
+                if self.preflag_manualflag_fluxcal and os.path.isdir(self.get_fluxcal_path()):
+                    fc_ant = 'flagdata(vis="' + self.get_fluxcal_path() + '", antenna="' + self.preflag_manualflag_antenna + '", flagbackup=False)'
                     casacmd = [fc_ant]
                     casa = drivecasa.Casapy()
                     casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
@@ -502,8 +512,8 @@ class preflag:
             if preflagpolcalmanualflagantenna[0] == self.preflag_manualflag_antenna and self.preflag_manualflag_polcal == True:
                 logger.info('Antenna(s) ' + self.preflag_manualflag_antenna + ' for polarised calibrator were already flagged')
             else:
-                if self.preflag_manualflag_polcal and os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal):
-                    pc_ant = 'flagdata(vis="' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal + '", antenna="' + self.preflag_manualflag_antenna + '", flagbackup=False)'
+                if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()):
+                    pc_ant = 'flagdata(vis="' + self.get_polcal_path() + '", antenna="' + self.preflag_manualflag_antenna + '", flagbackup=False)'
                     casacmd = [pc_ant]
                     casa = drivecasa.Casapy()
                     casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
@@ -520,7 +530,7 @@ class preflag:
             # Flag antenna(s) for target beams
             if self.preflag_manualflag_target:
                 if self.preflag_manualflag_targetbeams == 'all':
-                    datasets = glob.glob(self.basedir + '[0-9][0-9]' + '/' + self.rawsubdir + '/' + self.target)
+                    datasets = self.get_datasets()
                     logger.debug('Flagging antenna(s) ' + self.preflag_manualflag_antenna + ' for all target beams')
                 else:
                     beams = self.preflag_manualflag_targetbeams.split(",")
@@ -571,9 +581,9 @@ class preflag:
             if preflagfluxcalmanualflagcorr[0] == self.preflag_manualflag_corr and self.preflag_manualflag_fluxcal == True:
                 logger.info('Correlation(s) ' + self.preflag_manualflag_corr + ' for flux calibrator were already flagged')
             else:
-                if self.preflag_manualflag_fluxcal and os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal):
+                if self.preflag_manualflag_fluxcal and os.path.isdir(self.get_fluxcal_path()):
                     subs_setinit.setinitdirs(self)
-                    fc_corr = 'flagdata(vis="' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal + '", correlation="' + self.preflag_manualflag_corr + '", flagbackup=False)'
+                    fc_corr = 'flagdata(vis="' + self.get_fluxcal_path() + '", correlation="' + self.preflag_manualflag_corr + '", flagbackup=False)'
                     casacmd = [fc_corr]
                     casa = drivecasa.Casapy()
                     casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
@@ -591,9 +601,9 @@ class preflag:
             if preflagpolcalmanualflagcorr[0] == self.preflag_manualflag_corr and self.preflag_manualflag_polcal == True:
                 logger.info('Correlation(s) ' + self.preflag_manualflag_corr + ' for polarised calibrator were already flagged')
             else:
-                if self.preflag_manualflag_polcal and os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal):
+                if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()):
                     subs_setinit.setinitdirs(self)
-                    pc_corr = 'flagdata(vis="' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal + '", correlation="' + self.preflag_manualflag_corr + '", flagbackup=False)'
+                    pc_corr = 'flagdata(vis="' + self.get_polcal_path() + '", correlation="' + self.preflag_manualflag_corr + '", flagbackup=False)'
                     casacmd = [pc_corr]
                     casa = drivecasa.Casapy()
                     casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
@@ -610,7 +620,7 @@ class preflag:
             # Flag correlation(s) for target beams
             if self.preflag_manualflag_target:
                 if self.preflag_manualflag_targetbeams == 'all':
-                    datasets = glob.glob(self.basedir + '[0-9][0-9]' + '/' + self.rawsubdir + '/' + self.target)
+                    datasets = self.get_datasets()
                     logger.debug('Flagging correlation(s) ' + self.preflag_manualflag_corr + ' for all target beams')
                 else:
                     beams = self.preflag_manualflag_targetbeams.split(",")
@@ -662,8 +672,8 @@ class preflag:
                 logger.info('Baseline(s) ' + self.preflag_manualflag_baseline + ' for flux calibrator were already flagged')
             else:
                 if self.preflag_manualflag_fluxcal and os.path.isdir(
-                        self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal):
-                    fc_baseline = 'flagdata(vis="' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal + '", antenna="' + self.preflag_manualflag_baseline + '", flagbackup=False)'
+                        self.get_fluxcal_path()):
+                    fc_baseline = 'flagdata(vis="' + self.get_fluxcal_path() + '", antenna="' + self.preflag_manualflag_baseline + '", flagbackup=False)'
                     casacmd = [fc_baseline]
                     casa = drivecasa.Casapy()
                     casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
@@ -682,8 +692,8 @@ class preflag:
                 0] == self.preflag_manualflag_baseline and self.preflag_manualflag_polcal == True:
                 logger.info('Baseline(s) ' + self.preflag_manualflag_baseline + ' for polarised calibrator were already flagged')
             else:
-                if self.preflag_manualflag_polcal and os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal):
-                    pc_baseline = 'flagdata(vis="' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal + '", antenna="' + self.preflag_manualflag_baseline + '", flagbackup=False)'
+                if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()):
+                    pc_baseline = 'flagdata(vis="' + self.get_polcal_path() + '", antenna="' + self.preflag_manualflag_baseline + '", flagbackup=False)'
                     casacmd = [pc_baseline]
                     casa = drivecasa.Casapy()
                     casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
@@ -700,7 +710,7 @@ class preflag:
             # Flag correlation(s) for the target beams
             if self.preflag_manualflag_target:
                 if self.preflag_manualflag_targetbeams == 'all':
-                    datasets = glob.glob(self.basedir + '[0-9][0-9]' + '/' + self.rawsubdir + '/' + self.target)
+                    datasets = self.get_datasets()
                     logger.debug('Flagging baseline(s) ' + self.preflag_manualflag_baseline + ' for all target beams')
                 else:
                     beams = self.preflag_manualflag_targetbeams.split(",")
@@ -750,8 +760,8 @@ class preflag:
             if preflagfluxcalmanualflagchannel[0] == self.preflag_manualflag_channel and self.preflag_manualflag_fluxcal == True:
                 logger.info('Channel(s) ' + self.preflag_manualflag_channel + ' for flux calibrator were already flagged')
             else:
-                if self.preflag_manualflag_fluxcal and os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal):
-                    fc_channel = 'flagdata(vis="' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal + '", spw="0:' + self.preflag_manualflag_channel + '", flagbackup=False)'
+                if self.preflag_manualflag_fluxcal and os.path.isdir(self.get_fluxcal_path()):
+                    fc_channel = 'flagdata(vis="' + self.get_fluxcal_path() + '", spw="0:' + self.preflag_manualflag_channel + '", flagbackup=False)'
                     casacmd = [fc_channel]
                     casa = drivecasa.Casapy()
                     casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
@@ -769,8 +779,8 @@ class preflag:
             if preflagpolcalmanualflagchannel[0] == self.preflag_manualflag_channel and self.preflag_manualflag_polcal == True:
                 logger.info('Channel(s) ' + self.preflag_manualflag_channel + ' for polarised calibrator were already flagged')
             else:
-                if self.preflag_manualflag_polcal and os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal):
-                    pc_channel = 'flagdata(vis="' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal + '", spw="0:' + self.preflag_manualflag_channel + '", flagbackup=False)'
+                if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()):
+                    pc_channel = 'flagdata(vis="' + self.get_polcal_path() + '", spw="0:' + self.preflag_manualflag_channel + '", flagbackup=False)'
                     casacmd = [pc_channel]
                     casa = drivecasa.Casapy()
                     casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
@@ -787,7 +797,7 @@ class preflag:
             # Flag channel(s) for the target beams
             if self.preflag_manualflag_target:
                 if self.preflag_manualflag_targetbeams == 'all':
-                    datasets = glob.glob(self.basedir + '[0-9][0-9]' + '/' + self.rawsubdir + '/' + self.target)
+                    datasets = self.get_datasets()
                     logger.debug('Flagging channel(s) ' + self.preflag_manualflag_channel + ' for all target beams')
                 else:
                     beams = self.preflag_manualflag_targetbeams.split(",")
@@ -837,8 +847,8 @@ class preflag:
             if preflagfluxcalmanualflagtime[0] == self.preflag_manualflag_time and self.preflag_manualflag_fluxcal == True:
                 logger.info('Time range ' + self.preflag_manualflag_time + ' for flux calibrator was already flagged')
             else:
-                if self.preflag_manualflag_fluxcal and os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal):
-                    fc_time = 'flagdata(vis="' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal + '", timerange="' + self.preflag_manualflag_time + '", flagbackup=False)'
+                if self.preflag_manualflag_fluxcal and os.path.isdir(self.get_fluxcal_path()):
+                    fc_time = 'flagdata(vis="' + self.get_fluxcal_path() + '", timerange="' + self.preflag_manualflag_time + '", flagbackup=False)'
                     casacmd = [fc_time]
                     casa = drivecasa.Casapy()
                     casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
@@ -851,13 +861,14 @@ class preflag:
                             else:
                                 preflagfluxcalmanualflagtime[0] = preflagfluxcalmanualflagtime[0] + ',' + time
                 else:
-                    logger.warning('No flux calibrator dataset specified. Specified time range(s) for flux calibrator dataset will not be flagged!')
+                    logger.warning('No flux calibrator dataset specified. Specified time range(s) for '
+                                   'flux calibrator dataset will not be flagged!')
             # Flag time range for the polarised calibrator
             if preflagpolcalmanualflagtime[0] == self.preflag_manualflag_time and self.preflag_manualflag_polcal == True:
                 logger.info('Time range ' + self.preflag_manualflag_time + ' for polarised calibrator was already flagged')
             else:
-                if self.preflag_manualflag_polcal and os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal):
-                    pc_time = 'flagdata(vis="' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal + '", timerange="' + self.preflag_manualflag_time + '", flagbackup=False)'
+                if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()):
+                    pc_time = 'flagdata(vis="' + self.get_polcal_path() + '", timerange="' + self.preflag_manualflag_time + '", flagbackup=False)'
                     casacmd = [pc_time]
                     casa = drivecasa.Casapy()
                     casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
@@ -870,11 +881,12 @@ class preflag:
                             else:
                                 preflagpolcalmanualflagtime[0] = preflagpolcalmanualflagtime[0] + ',' + time
                 else:
-                    logger.warning('No polariased calibrator dataset specified. Specified time range(s) for polarised calibrator dataset will not be flagged!')
+                    logger.warning('No polariased calibrator dataset specified. Specified time range(s) '
+                                   'for polarised calibrator dataset will not be flagged!')
             # Flag time range for the target beams
             if self.preflag_manualflag_target:
                 if self.preflag_manualflag_targetbeams == 'all':
-                    datasets = glob.glob(self.basedir + '[0-9][0-9]' + '/' + self.rawsubdir + '/' + self.target)
+                    datasets = self.get_datasets()
                     logger.debug('Flagging time range ' + self.preflag_manualflag_time + ' for all target beams')
                 else:
                     beams = self.preflag_manualflag_targetbeams.split(",")
@@ -905,37 +917,41 @@ class preflag:
         subs_param.add_param(self, 'preflag_targetbeams_manualflag_time', preflagtargetbeamsmanualflagtime)
 
 
-    ##### Subfunctions for the different AOFlagger steps #####
-
     def aoflagger_bandpass(self):
         """
-        Creates a bandpass from a known frequency behaviour of the telescope. This is usually applied on the fly when using aoflagger.
+        Creates a bandpass from a known frequency behaviour of the telescope. This is usually applied on the fly
+        when using aoflagger.
         """
         subs_setinit.setinitdirs(self)
 
         # Create the parameters for the parameter file for the bandpass step of the AOFLagger step
 
-        preflagaoflaggerbandpassstatus = get_param_def(self, 'preflag_aoflagger_bandpass_status', False)  # Bandpass successfully derived
+        # Bandpass successfully derived
+        preflagaoflaggerbandpassstatus = get_param_def(self, 'preflag_aoflagger_bandpass_status', False)
 
         if self.preflag_aoflagger_bandpass:
             # Check if bandpass was already derived and bandpass table is available
-            if os.path.isfile(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal[:-3] + '_Bpass.txt'):
+            if os.path.isfile(self.get_fluxcal_path()[:-3] + '_Bpass.txt'):
                 logger.info('Preliminary bandpass table was already derived')
             # If not, calculate the bandpass for the setup of the observation using the flux calibrator
             elif preflagaoflaggerbandpassstatus == False:
-                if self.fluxcal != '' and os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal):
-                    create_bandpass(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal, self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal[:-3] + '_Bpass.txt')
-                    if os.path.isfile(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal[:-3] + '_Bpass.txt'):
+                if self.fluxcal != '' and os.path.isdir(self.get_fluxcal_path()):
+                    create_bandpass(self.get_fluxcal_path(), self.get_fluxcal_path()[:-3] + '_Bpass.txt')
+                    if os.path.isfile(self.get_fluxcal_path()[:-3] + '_Bpass.txt'):
                         preflagaoflaggerbandpassstatus = True
                         logger.info('Derived preliminary bandpass table for AOFlagging')
                     else:
-                        preflagaoflaggerbandpassstatus = False
-                        logger.error('Preliminary bandpass table for flux calibrator was not derived successfully!')
+                        error = 'Preliminary bandpass table for flux calibrator was not derived successfully!'
+                        logger.error(error)
+                        raise ApercalException(error)
                 else:
-                    preflagaoflaggerbandpassstatus = False
-                    self.logger.error('Bandpass calibrator not specified or dataset not available!')
+                    error = 'Bandpass calibrator not specified or dataset not available!'
+                    logger.error(error)
+                    raise ApercalException(error)
             else:
-                logger.error('Bandpass table not available. Preliminary bandpass cannot be applied')
+                error = 'Bandpass table not available. Preliminary bandpass cannot be applied'
+                logger.error(error)
+                raise ApercalException(error)
 
         # Save the derived parameters for the AOFlagger bandpass status to the parameter file
 
@@ -951,55 +967,68 @@ class preflag:
 
         # Create the parameters for the parameter file for the bandpass step of the AOFlagger step
 
-        preflagaoflaggerfluxcalflag = get_param_def(self, 'preflag_aoflagger_fluxcal_flag_status', False)  # AOFlagged the flux calibrator?
-        preflagaoflaggerpolcalflag = get_param_def(self, 'preflag_aoflagger_polcal_flag_status', False)  # AOFlagged the polarised calibrator?
-        preflagaoflaggertargetbeamsflag = get_param_def(self, 'preflag_aoflagger_targetbeams_flag_status', np.full((beams), False))  # AOFlagged the target beams?
+        # AOFlagged the flux calibrator?
+        preflagaoflaggerfluxcalflag = get_param_def(self, 'preflag_aoflagger_fluxcal_flag_status', False)
+
+        # AOFlagged the polarised calibrator?
+        preflagaoflaggerpolcalflag = get_param_def(self, 'preflag_aoflagger_polcal_flag_status', False)
+
+        # AOFlagged the target beams?
+        preflagaoflaggertargetbeamsflag = get_param_def(self, 'preflag_aoflagger_targetbeams_flag_status',
+                                                        np.full((beams), False))
 
         if self.preflag_aoflagger:
             # Flag the flux calibrator with AOFLagger
             if self.preflag_aoflagger_fluxcal:
                 if not preflagaoflaggerfluxcalflag:
-                    if self.fluxcal != '' and os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal) and self.preflag_aoflagger_fluxcalstrat != '':
+                    if self.fluxcal != '' and os.path.isdir(self.get_fluxcal_path()) and self.preflag_aoflagger_fluxcalstrat != '':
                         logger.info('Using AOFlagger to flag flux calibrator dataset')
                         preflagaoflaggerbandpassstatus = get_param_def(self, 'preflag_aoflagger_bandpass_status', False) # Check if bandpass table was derived successfully
                         if self.aoflagger_bandpass and preflagaoflaggerbandpassstatus:
-                            print('aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_fluxcalstrat + ' -bandpass ' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal[:-3] + '_Bpass.txt ' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal)
-                            os.system('aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_fluxcalstrat + ' -bandpass ' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal[:-3] + '_Bpass.txt ' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal)
+                            print('aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_fluxcalstrat + ' -bandpass ' + self.get_fluxcal_path()[:-3] + '_Bpass.txt ' + self.get_fluxcal_path())
+                            os.system('aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_fluxcalstrat + ' -bandpass ' + self.get_fluxcal_path()[:-3] + '_Bpass.txt ' + self.get_fluxcal_path())
                             logger.debug('Used AOFlagger to flag flux calibrator with preliminary bandpass applied')
                             preflagaoflaggerfluxcalflag = True
                         elif self.aoflagger_bandpass == True and preflagaoflaggerbandpassstatus == False:
-                            os.system('aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_fluxcalstrat + ' ' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal)
+                            os.system('aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_fluxcalstrat + ' ' + self.get_fluxcal_path())
                             logger.warning('Used AOFlagger to flag flux calibrator without preliminary bandpass applied. Better results are usually obtained with a preliminary bandpass applied.')
                             preflagaoflaggerfluxcalflag = True
                         elif self.aoflagger_bandpass == False:
-                            os.system('aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_fluxcalstrat + ' ' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal)
+                            os.system('aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_fluxcalstrat + ' ' + self.get_fluxcal_path())
                             logger.warning('Used AOFlagger to flag flux calibrator without preliminary bandpass applied. Better results are usually obtained with a preliminary bandpass applied.')
                             preflagaoflaggerfluxcalflag = True
                     else:
-                        logger.error('Flux calibrator dataset or strategy not defined properly or dataset not available. Not AOFlagging flux calibrator.')
+                        error = 'Flux calibrator dataset or strategy not defined properly or dataset' \
+                                'not available. Not AOFlagging flux calibrator.'
+                        logger.error(error)
+                        raise ApercalException(error)
                 else:
                     logger.info('Flux calibrator was already flagged with AOFlagger!')
             # Flag the polarised calibrator with AOFlagger
             if self.preflag_aoflagger_polcal:
                 if not preflagaoflaggerpolcalflag:
-                    if self.polcal != '' and os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal) and self.preflag_aoflagger_polcalstrat != '':
+                    if self.polcal != '' and os.path.isdir(self.get_polcal_path()) and self.preflag_aoflagger_polcalstrat != '':
                         logger.info('Using AOFlagger to flag polarised calibrator dataset.')
                         # Check if bandpass was applied successfully
                         preflagaoflaggerbandpassstatus = get_param_def(self, 'preflag_aoflagger_bandpass_status', False) # Check if bandpass table was derived successfully
                         if self.aoflagger_bandpass and preflagaoflaggerbandpassstatus:
-                            os.system('aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_polcalstrat + ' -bandpass ' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal[:-3] + '_Bpass.txt ' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal)
+                            os.system('aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_polcalstrat + ' -bandpass ' + self.get_fluxcal_path()[:-3] + '_Bpass.txt ' + self.get_polcal_path())
                             logger.debug('Used AOFlagger to flag polarised calibrator with preliminary bandpass applied.')
                             preflagaoflaggerpolcalflag = True
                         elif self.aoflagger_bandpass == True and preflagaoflaggerbandpassstatus == False:
-                            os.system('aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_polcalstrat + ' ' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal)
+                            os.system('aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_polcalstrat + ' ' + self.get_polcal_path())
                             logger.warning('Used AOFlagger to flag polarised calibrator without preliminary bandpass applied. Better results are usually obtained with a preliminary bandpass applied.')
                             preflagaoflaggerpolcalflag = True
                         elif self.aoflagger_bandpass == False:
-                            os.system('aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_polcalstrat + ' ' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal)
+                            os.system('aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_polcalstrat + ' ' + self.get_polcal_path())
                             logger.info('Used AOFlagger to flag polarised calibrator without preliminary bandpass applied. Better results are usually obtained with a preliminary bandpass applied.')
                             preflagaoflaggerpolcalflag = True
                     else:
-                        logger.error('Polarised calibrator dataset or strategy not defined properly or dataset not available. Not AOFlagging polarised calibrator.')
+                        error = 'Polarised calibrator dataset or strategy not defined properly or dataset not ' \
+                                'available. Not AOFlagging polarised calibrator.'
+                                'available. Not AOFlagging polarised calibrator.'
+                        logger.error(error)
+                        raise ApercalException(error)
                 else:
                     logger.info('Polarised calibrator was already flagged with AOFlagger!')
             # Flag the target beams with AOFlagger
@@ -1009,7 +1038,7 @@ class preflag:
                     # Check if parameter exists already and bandpass was applied successfully
                     preflagaoflaggerbandpassstatus = get_param_def(self, 'preflag_aoflagger_bandpass_status', False)  # Check if bandpass table was derived successfully
                     if self.preflag_aoflagger_targetbeams == 'all':  # Create a list of target beams
-                        datasets = glob.glob(self.basedir + '[0-9][0-9]' + '/' + self.rawsubdir + '/' + self.target)
+                        datasets = self.get_datasets()
                         logger.info('AOFlagging all target beams')
                     else:
                         beams = self.preflag_aoflagger_targetbeams.split(",")
@@ -1018,7 +1047,7 @@ class preflag:
                     for vis in datasets:
                         if preflagaoflaggertargetbeamsflag[int(vis.split('/')[-3])] == False:
                             if self.aoflagger_bandpass and preflagaoflaggerbandpassstatus:
-                                os.system('aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_targetstrat + ' -bandpass ' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal[:-3] + '_Bpass.txt ' + vis)
+                                os.system('aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_targetstrat + ' -bandpass ' + self.get_fluxcal_path()[:-3] + '_Bpass.txt ' + vis)
                                 logger.debug('Used AOFlagger to flag target beam ' + vis.split('/')[-3] + ' with preliminary bandpass applied')
                                 preflagaoflaggertargetbeamsflag[int(vis.split('/')[-3])] = True
                             elif self.aoflagger_bandpass == True and preflagaoflaggerbandpassstatus == False:
@@ -1032,7 +1061,10 @@ class preflag:
                         else:
                             logger.info('Target beam ' + vis.split('/')[-3] + ' was already flagged with AOFlagger!')
                 else:
-                    logger.error('Target beam dataset(s) or strategy not defined properly. Not AOFlagging target beam dataset(s).')
+                    error = 'Target beam dataset(s) or strategy not defined properly. Not AOFlagging' \
+                            'target beam dataset(s).'
+                    logger.error(error)
+                    raise ApercalException(error)
 
         # Save the derived parameters for the AOFlagger status to the parameter file
 
