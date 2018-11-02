@@ -17,6 +17,7 @@ docker:
 	docker build . -t apertif/apercal
 
 data/${FILE}:
+	mkdir -p data
 	cd data && wget ${URL}
 
 data/small: data/${FILE}
