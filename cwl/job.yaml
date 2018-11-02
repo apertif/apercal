@@ -1,0 +1,11 @@
+target:
+  class: Directory
+  path: ../data/small/00/raw/NGC807.MS
+
+fluxcal: 
+  class: Directory
+  path: ../data/small/00/raw/3C295.MS
+
+polcal: 
+  class: Directory
+  path: ../data/small/00/raw/3C138.MS
