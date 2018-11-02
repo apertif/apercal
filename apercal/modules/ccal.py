@@ -53,6 +53,7 @@ class ccal(BaseModule):
     crosscal_transfer_to_target_targetbeams = None
     crosscal_polarisation_angle = None
     crosscal_crosshand_delay = None
+    crosscal_transfer_to_target_targetbeams = None
 
     crosscal_leakage = None
     crosscal_transfer_to_cal = None
