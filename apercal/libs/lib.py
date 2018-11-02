@@ -12,6 +12,7 @@ from apercal.subs import setinit as subs_setinit
 from apercal.modules import default_cfg
 from apercal.exceptions import ApercalException
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -104,13 +105,13 @@ def setup_logger(level='info', logfile=None, quiet=False):
         ch.setFormatter(ch_formatter)
         logger.addHandler(ch)
         logger.info('Logging started!')
-        if logfile is not None:
+        if logfile:
             logger.info('To see the log in a bash window use the following command:')
             logger.info("tail -n +1 -f " + logfile)
 
-    elif logfile is not None:
-        print "Logging to file. To see the log in a bash window use the following command:"
-        print "tail -n +1 -f " + logfile
+    elif logfile:
+        print("Logging to file. To see the log in a bash window use the following command:")
+        print("tail -n +1 -f " + logfile)
     return logger
 
 
@@ -152,11 +153,11 @@ def mkdir(path):
     Checks if path exists, and creates if it doesn't exist.
     """
     if not os.path.exists(path):
-        print path
-        print os.path.exists(path)
-        print 'Making Path'
+        logger.info(path)
+        logger.info(os.path.exists(path))
+        logger.info('Making Path')
         o, e = basher('mkdir ' + path)
-        print o, e
+        logger.info(o, e)
 
 
 def masher(task=None, **kwargs):
@@ -167,7 +168,7 @@ def masher(task=None, **kwargs):
     Each argument is passed to the task through the use of the keywords.
     """
     logger = logging.getLogger('masher')
-    if task != None:
+    if task:
         argstr = " "
         for k in kwargs.keys():
             if str(kwargs[k]).upper() != 'NONE':
@@ -206,11 +207,11 @@ def basher(cmd, showasinfo=False):
         # cmdlist = list(cmd)
         # cmdlist.insert(br+1, '')
         # cmd = ''.join(cmdlist)
-        # print(cmd)
+        # logger.info(cmd)
         pass
     else:
-        cmd = cmd.replace("(", "\(")
-        cmd = cmd.replace(")", "\)")
+        cmd = cmd.replace("(", "\\(")
+        cmd = cmd.replace(")", "\\)")
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE, shell=True)
     out, err = proc.communicate()
@@ -237,7 +238,7 @@ def get_source_names(vis=None):
     Helper function that uses the MIRIAD task UVINDEX to grab the name of the
     sources from a MIRIAD visibility file.
     """
-    if vis != None:
+    if vis:
         u = masher(task='uvindex', vis=vis)
         i = [i for i in range(0, len(u)) if "pointing" in u[i]]
         N = len(u)
@@ -273,22 +274,13 @@ class maths:
         masher(task=self.task + " -k")
 
     def go(self):
-        logger = logging.getLogger(self.task)
         paths = os.path.split(self.exp)
-        path0 = os.getcwd()
         if paths[0] != '':
             os.chdir(paths[0])
             self.exp = paths[1]
             self.mask = self.mask.replace(paths[0] + '/', '')
         output = masher(**self.__dict__)
         return output
-        # Return to old path
-        if paths[0] != '':
-            os.chdir(path0)
-            # Return the exp and image parameters
-            self.exp = paths[0] + '/' + self.exp
-            self.mask = paths[0] + '/' + self.image
-        logger.debug('Completed.')
 
 
 class miriad:
@@ -387,32 +379,32 @@ class settings:
         logger = logging.getLogger('settings.show')
         parser = self.parser
         try:
-            if section != None:
-                print "[" + section + "]"
+            if section:
+                logger.info("[" + section + "]")
                 for p in parser.items(section):
-                    print p[0], " = ", p[1]
-                print "\n"
+                    logger.info(p[0], " = ", p[1])
+                logger.info("\n")
             else:
                 for s in parser.sections():
-                    print "[" + s + "]"
+                    logger.info("[" + s + "]")
                     for p in parser.items(s):
-                        print p[0], " = ", p[1]
-                    print "\n"
-        except:
+                        logger.info(p[0], " = ", p[1])
+                    logger.info("\n")
+        except Exception:
             logger.error("Settings - Section doesn't exist.")
 
     def get(self, section=None, keyword=None):
         logger = logging.getLogger('settings.get')
         parser = self.parser
         try:
-            if section is not None and keyword is not None:
+            if section and keyword:
                 if len(parser.get(section, keyword).split(';')) > 1:
                     return parser.get(section, keyword).split(';')
                 else:
                     return parser.get(section, keyword)
             else:
                 return get_params(parser, section)
-        except:
+        except Exception:
             logger.error("Settings - Either section or keyword does not exist.")
 
     def update(self):
@@ -466,7 +458,7 @@ def ms2uvfits(ms=None, uvf=None):
         try:
             os.chdir(path2ms)
             logger.info("Moved to path " + path2ms)
-        except:
+        except Exception:
             raise ApercalException("Directory or MS does not exist!")
 
     # Start the processing by setting up an output name and reporting the status.
@@ -509,7 +501,7 @@ def importuvfitsys(uvfits=None, uv=None, tsys=True):
         try:
             os.chdir(path2uvfits)
             logger.info("Moved to path " + path2uvfits)
-        except:
+        except Exception:
             raise ApercalException("Error: Directory does not exist!")
 
     # cmd = 'wsrtfits in='+uvf+' op=uvin velocity=optbary out='+uv
@@ -530,7 +522,7 @@ def importuvfitsys(uvfits=None, uv=None, tsys=True):
             basher("rm -r temp")
         masher(task='attsys', vis=uv, out='temp')
         basher('rm -r ' + uv)
-        basher('mv temp ' + uv);
+        basher('mv temp ' + uv)
     logger.info('Appears to have ended successfully...')
 
 
@@ -549,7 +541,7 @@ def uvflag(vis=None, select=None):
     try:
         os.chdir(path2vis)
         logger.info("Moved to path " + path2vis)
-    except:
+    except Exception:
         raise ApercalException("Path to vis does not exist!")
     # Flag each selection in a for-loop
     for s in select.split(';'):
@@ -581,22 +573,26 @@ def pgflag(vis=None, flagpar='6,2,2,2,5,3', settings=None, stokes='qq'):
     try:
         os.chdir(path2vis)
         logger.info("Moved to path " + path2vis)
-    except:
+    except Exception:
         raise ApercalException("Error: path to vis does not exist!")
 
+    o = None
+
     # Do pgflag with the settings parameters if provided.
-    if settings is not None and vis is not None:
+    if settings and vis:
         params = settings.get('pgflag')
         logger.info("Doing PGFLAG on " + vis + " using stokes=" + params.stokes + " with flagpar=" + params.flagpar)
         logger.info("Output written to " + vis + '.pgflag.txt')
         o = masher(task='pgflag', vis=vis, stokes=params.stokes, flagpar=params.flagpar,
                    options='nodisp', command="'<'")
     # Do PGFLAG with input settings, i.e. no settings file provided.
-    if vis is not None and settings is None:
+    if vis and settings is None:
         logger.info("Doing PGFLAG on " + vis + " using stokes " + stokes + " with flagpar=" + flagpar)
         o = masher(task='pgflag', vis=vis, stokes=stokes, flagpar=flagpar, options='nodisp', command="'<'")
-    logger.info("Writing output " + path2vis + '/' + vis + '.pgflag.txt')
-    write2file('pgflag', o, vis + '.pgflag.txt')
+
+    if o:
+        logger.info("Writing output " + path2vis + '/' + vis + '.pgflag.txt')
+        write2file('pgflag', o, vis + '.pgflag.txt')
     logger.info("PGFLAG: DONE.")
 
 
@@ -624,7 +620,7 @@ def query_yes_no(question, default="yes"):
     while True:
         sys.stdout.write(question + prompt)
         choice = raw_input().lower()
-        if default is not None and choice == '':
+        if default and choice == '':
             return valid[default]
         elif choice in valid:
             return valid[choice]
@@ -633,7 +629,7 @@ def query_yes_no(question, default="yes"):
                              "(or 'y' or 'n').\n")
 
 
-def director(self, option, dest, file=None, verbose=True):
+def director(self, option, dest, file_=None, verbose=True):
     """
     director: Function to move, remove, and copy files and directories
     option: 'mk', 'ch', 'mv', 'rm', and 'cp' are supported
@@ -645,7 +641,7 @@ def director(self, option, dest, file=None, verbose=True):
             pass
         else:
             os.mkdir(dest)
-            if verbose == True:
+            if verbose:
                 self.logger.info('Creating directory ' + str(dest) + ' #')
     elif option == 'ch':
         if os.getcwd() == dest:
@@ -654,28 +650,28 @@ def director(self, option, dest, file=None, verbose=True):
             self.lwd = os.getcwd()  # Save the former working directory in a variable
             try:
                 os.chdir(dest)
-            except:
+            except Exception:
                 os.mkdir(dest)
-                if verbose == True:
+                if verbose:
                     self.logger.info('Creating directory ' + str(dest) + ' #')
                 os.chdir(dest)
             self.cwd = os.getcwd()  # Save the current working directory in a variable
-            if verbose == True:
+            if verbose:
                 self.logger.info('Moved to directory ' + str(dest) + ' #')
     elif option == 'mv':  # Move
         if os.path.exists(dest):
-            basher("mv " + str(file) + " " + str(dest))
+            basher("mv " + str(file_) + " " + str(dest))
         else:
             os.mkdir(dest)
-            basher("mv " + str(file) + " " + str(dest))
+            basher("mv " + str(file_) + " " + str(dest))
     elif option == 'rn':  # Rename
-        basher("mv " + str(file) + " " + str(dest))
+        basher("mv " + str(file_) + " " + str(dest))
     elif option == 'cp':  # Copy
-        basher("cp -r " + str(file) + " " + str(dest))
+        basher("cp -r " + str(file_) + " " + str(dest))
     elif option == 'rm':  # Remove
         basher("rm -r " + str(dest))
     else:
-        print(' Option not supported! Only mk, ch, mv, rm, rn, and cp are supported!')
+        logger.info(' Option not supported! Only mk, ch, mv, rm, rn, and cp are supported!')
 
 
 def show(config_object, section, showall=False):
@@ -689,20 +685,20 @@ def show(config_object, section, showall=False):
     config.readfp(open(default_cfg))
     for s in config.sections():
         if showall:
-            print(s)
+            logger.info(s)
             o = config.options(s)
             for o in config.items(s):
                 try:
-                    print('\t' + str(o[0]) + ' = ' + str(config_object.__dict__.__getitem__(o[0])))
+                    logger.info('\t' + str(o[0]) + ' = ' + str(config_object.__dict__.__getitem__(o[0])))
                 except KeyError:
                     pass
         else:
             if s == section:
-                print(s)
+                logger.info(s)
                 o = config.options(s)
                 for o in config.items(s):
                     try:
-                        print('\t' + str(o[0]) + ' = ' + str(config_object.__dict__.__getitem__(o[0])))
+                        logger.info('\t' + str(o[0]) + ' = ' + str(config_object.__dict__.__getitem__(o[0])))
                     except KeyError:
                         pass
             else:
@@ -710,6 +706,7 @@ def show(config_object, section, showall=False):
 
 
 def load_config(config_object, file_=None):
+    logger = logging.getLogger('config')
     config = ConfigParser()  # Initialise the config parser
     if file_:
         config.readfp(open(file_))

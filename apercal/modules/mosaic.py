@@ -40,8 +40,8 @@ class mosaic:
     mosaic_line = None
     mosaic_polarisation = None
 
-    def __init__(self, file=None, **kwargs):
-        self.default = lib.load_config(self, file)
+    def __init__(self, file_=None, **kwargs):
+        self.default = lib.load_config(self, file_)
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
 
@@ -70,21 +70,21 @@ class mosaic:
         ##########################################################################################################
 
         # Status of the input images for the mosaicing
-        stacked_inputstatus = get_param_def(self, 'mosaic_continuum_stacked_beams_inputstatus', np.full((beams), False))
+        stacked_inputstatus = get_param_def(self, 'mosaic_continuum_stacked_beams_inputstatus', np.full(beams, False))
 
         # Status of the continuum imaging
         stacked_continuumstatus = get_param_def(self, 'mosaic_continuum_stacked_beams_continuumstatus',
-                                                np.full((beams), False))
+                                                np.full(beams, False))
 
         # Status of the copy of the images
-        stacked_copystatus = get_param_def(self, 'mosaic_continuum_stacked_beams_copystatus', np.full((beams), False))
+        stacked_copystatus = get_param_def(self, 'mosaic_continuum_stacked_beams_copystatus', np.full(beams, False))
 
         # Status of the convolved images
         stacked_convolstatus = get_param_def(self, 'mosaic_continuum_stacked_beams_convolstatus',
-                                             np.full((beams), False))
+                                             np.full(beams, False))
 
         # Was the image accepted based on the synthesised beam?
-        stacked_beamstatus = get_param_def(self, 'mosaic_continuum_stacked_beams_beamstatus', np.full((beams), False))
+        stacked_beamstatus = get_param_def(self, 'mosaic_continuum_stacked_beams_beamstatus', np.full(beams, False))
 
         # Beam sizes of the input images
         stacked_inputsynthbeamparams = get_param_def(self, 'mosaic_continuum_stacked_beams_inputsynthbeamparams',
@@ -95,25 +95,23 @@ class mosaic:
                                                 np.full((beams, 3), np.nan))
 
         # RMS of the stacked input images
-        stacked_inputrms = get_param_def(self, 'mosaic_continuum_stacked_beams_inputrms', np.full((beams), np.nan))
+        stacked_inputrms = get_param_def(self, 'mosaic_continuum_stacked_beams_inputrms', np.full(beams, np.nan))
 
         # Weights of the stacked input images (normalised to one)
         stacked_inputweights = get_param_def(self, 'mosaic_continuum_stacked_beams_inputweights',
-                                             np.full((beams), np.nan))
+                                             np.full(beams, np.nan))
 
         # Reason for rejecting an image
         stacked_rejreason = get_param_def(self, 'mosaic_continuum_stacked_beams_rejreason',
-                                          np.full((beams), '', dtype='U50'))
+                                          np.full(beams, '', dtype='U50'))
 
         # Synthesised beam parameters for the final stacked continuum mosaic
-        stackbeam = get_param_def(self, 'mosaic_continuum_stacked_beams_synthbeamparams', np.full((3), np.nan))
+        stackbeam = get_param_def(self, 'mosaic_continuum_stacked_beams_synthbeamparams', np.full(3, np.nan))
 
         # Status of the final stacked mosaic
-        stacked_imagestatus = get_param_def(self, 'mosaic_continuum_stacked_beams_imagestatus', False )
+        stacked_imagestatus = get_param_def(self, 'mosaic_continuum_stacked_beams_imagestatus', False)
 
-
-        # Start the mosaicing of the stacked continuum images #
-
+        # Start the mosaicing of the stacked continuum images
         if self.mosaic_continuum_stack:
             logger.info(' Starting mosaicing of stacked continuum images')
             subs_managefiles.director(self, 'ch', self.mosdir + '/continuum')
@@ -144,7 +142,7 @@ class mosaic:
                 # Copy the continuum images over to the mosaic directory
                 for b in np.arange(beams):
                     if stacked_inputstatus[b]:
-                        subs_managefiles.director(self, 'cp', str(b).zfill(2), file=self.basedir + '/' + str(b).zfill(
+                        subs_managefiles.director(self, 'cp', str(b).zfill(2), file_=self.basedir + '/' + str(b).zfill(
                             2) + '/' + self.contsubdir + '/' + self.target.rstrip('.mir') + '_stack')
                         if os.path.isdir(str(b).zfill(2)):
                             stacked_copystatus[b] = True
@@ -172,7 +170,7 @@ class mosaic:
                 # Calculate the common beam and make a list of accepted and rejected beams and update the parameters
                 # for the parameter file
                 avbeamlist = np.where(stacked_inputstatus)[0]
-                notavbeamlist = np.where(stacked_inputstatus == False)[0]
+                notavbeamlist = np.where(not stacked_inputstatus)[0]
                 avbeams = [str(x).zfill(2) for x in list(avbeamlist)]
                 notavbeams = [str(x).zfill(2) for x in list(notavbeamlist)]
                 beamarray = stacked_inputsynthbeamparams[avbeamlist, :]
@@ -286,16 +284,13 @@ class mosaic:
             subs_param.add_param(self, 'mosaic_continuum_stacked_beams_convolstatus', stacked_convolstatus)
             subs_param.add_param(self, 'mosaic_continuum_stacked_beams_beamstatus', stacked_beamstatus)
 
-
-    # Continuum mosaicing of the individual chunk images #
-
+    # Continuum mosaicing of the individual chunk images
     def mosaic_continuum_chunk_images(self):
         """Mosaics the continuum images from the different frequency chunks."""
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
         beams = 37  # Number of beams
         nch = len(subs_param.get_param(self, 'continuum_B00_stackstatus'))
-
 
         # Check if the parameter is already in the parameter file and load it otherwise create the needed arrays #
 
@@ -350,12 +345,9 @@ class mosaic:
 
         # Status of the final chunk mosaics
         chunks_imagestatus = get_param_def(self, 'mosaic_continuum_chunks_beams_imagestatus',
-                                           np.full((nch), False))
+                                           np.full(nch, False))
 
-        ################################################
-        # Start the mosaicing of the individual chunks #
-        ################################################
-
+        # Start the mosaicing of the individual chunks
         if self.mosaic_continuum_chunks:
             logger.info(' Starting mosaicing of continuum images of individual frequency chunks')
             subs_managefiles.director(self, 'ch', self.mosdir + '/continuum')
@@ -427,7 +419,7 @@ class mosaic:
                     # Calculate the common beam for each frequency chunk and make a list of accepted and rejected
                     # beams and update the parameters for the parameter file
                     avbeamlist = np.where(chunks_inputstatus[:, c])[0]
-                    notavbeamlist = np.where(chunks_inputstatus[:, c] == False)[0]
+                    notavbeamlist = np.where(not chunks_inputstatus[:, c])[0]
                     avbeams = [str(x).zfill(2) for x in list(avbeamlist)]
                     notavbeams = [str(x).zfill(2) for x in list(notavbeamlist)]
                     beamarray = chunks_inputsynthbeamparams[avbeamlist, c, :]
@@ -674,7 +666,7 @@ class mosaic:
         chunk_indices = range(chunks)
         chunk_indices = [str(item).zfill(2) for item in chunk_indices]
 
-        COM = np.full((chunks), 'Beam(s) ', dtype='U150')  # Comment for mosaicing
+        COM = np.full(chunks, 'Beam(s) ', dtype='U150')  # Comment for mosaicing
         for c in range(chunks):
             for b in range(beams):
                 if C[b, c]:
@@ -722,7 +714,7 @@ class mosaic:
 
         # Create the data frame
 
-        if chunk == None:
+        if chunk is None:
             chunks = len(subs_param.get_param(self, 'mosaic_continuum_chunks_beams_imagestatus'))
             chunk_indices = range(chunks)
             chunk_indices = [str(item).zfill(2) for item in chunk_indices]
@@ -734,7 +726,7 @@ class mosaic:
 
         chunk_beam_indices = pd.MultiIndex.from_product([chunk_indices, beam_indices], names=['Chunk', 'Beam'])
 
-        if chunk == None:
+        if chunk is None:
             df_cs = pd.DataFrame(np.ndarray.flatten(np.swapaxes(CS, 0, 1)), index=chunk_beam_indices,
                                  columns=['Continuum calibration?'])
             df_cp = pd.DataFrame(np.ndarray.flatten(np.swapaxes(CP, 0, 1)), index=chunk_beam_indices,

@@ -41,8 +41,8 @@ class prepare:
     prepare_target_beams = None
     prepare_bypass_alta = None
 
-    def __init__(self, file=None, **kwargs):
-        self.default = lib.load_config(self, file)
+    def __init__(self, file_=None, **kwargs):
+        self.default = lib.load_config(self, file_)
         subs_setinit.setinitdirs(self)
 
     def go(self):
@@ -78,7 +78,7 @@ class prepare:
         preparepolcalrequested = get_param_def(self, 'prepare_polcal_requested', False)
 
         # Is the target data requested? One entry per beam
-        preparetargetbeamsrequested = get_param_def(self, 'prepare_targetbeams_requested', np.full((beams), False))
+        preparetargetbeamsrequested = get_param_def(self, 'prepare_targetbeams_requested', np.full(beams, False))
 
         # Is the fluxcal data already on disk?
         preparefluxcaldiskstatus = get_param_def(self, 'prepare_fluxcal_diskstatus', False)
@@ -87,7 +87,7 @@ class prepare:
         preparepolcaldiskstatus = get_param_def(self, 'prepare_polcal_diskstatus', False)
 
         # Is the target data already on disk? One entry per beam
-        preparetargetbeamsdiskstatus = get_param_def(self, 'prepare_targetbeams_diskstatus', np.full((beams), False))
+        preparetargetbeamsdiskstatus = get_param_def(self, 'prepare_targetbeams_diskstatus', np.full(beams, False))
 
         # Is the fluxcal data on ALTA?
         preparefluxcalaltastatus = get_param_def(self, 'prepare_fluxcal_altastatus', False)
@@ -96,7 +96,7 @@ class prepare:
         preparepolcalaltastatus = get_param_def(self, 'prepare_polcal_altastatus', False)
 
         # Is the target data on disk? One entry per beam
-        preparetargetbeamsaltastatus = get_param_def(self, 'prepare_targetbeams_altastatus', np.full((beams), False))
+        preparetargetbeamsaltastatus = get_param_def(self, 'prepare_targetbeams_altastatus', np.full(beams, False))
 
         # Is the fluxcal data copied?
         preparefluxcalcopystatus = get_param_def(self, 'prepare_fluxcal_copystatus', False)
@@ -105,16 +105,16 @@ class prepare:
         preparepolcalcopystatus = get_param_def(self, 'prepare_polcal_copystatus', False)
 
         # Is the target data copied? One entry per beam
-        preparetargetbeamscopystatus = get_param_def(self, 'prepare_targetbeams_copystatus', np.full((beams), False))
+        preparetargetbeamscopystatus = get_param_def(self, 'prepare_targetbeams_copystatus', np.full(beams, False))
 
         # Reason for flux calibrator dataset not being there
-        preparefluxcalrejreason = get_param_def(self, 'prepare_fluxcal_rejreason', np.full((1), '', dtype='U50'))
+        preparefluxcalrejreason = get_param_def(self, 'prepare_fluxcal_rejreason', np.full(1, '', dtype='U50'))
 
         # Reason for polarisation calibrator dataset not being there
-        preparepolcalrejreason = get_param_def(self, 'prepare_polcal_rejreason', np.full((1), '', dtype='U50'))
+        preparepolcalrejreason = get_param_def(self, 'prepare_polcal_rejreason', np.full(1, '', dtype='U50'))
 
         # Reason for a beam dataset not being there
-        preparetargetbeamsrejreason = get_param_def(self, 'prepare_targetbeams_rejreason', np.full((beams), '', dtype='U50'))
+        preparetargetbeamsrejreason = get_param_def(self, 'prepare_targetbeams_rejreason', np.full(beams, '', dtype='U50'))
 
         ################################################
         # Start the preparation of the flux calibrator #
@@ -143,10 +143,10 @@ class prepare:
                 # Copy the flux calibrator data from ALTA if needed
                 if preparefluxcaldiskstatus and preparefluxcalaltastatus:
                     preparefluxcalcopystatus = True
-                elif preparefluxcaldiskstatus and preparefluxcalaltastatus == False:
+                elif preparefluxcaldiskstatus and not preparefluxcalaltastatus:
                     preparefluxcalcopystatus = True
                     logger.warning('Flux calibrator data available on disk, but not in ALTA!')
-                elif preparefluxcaldiskstatus == False and preparefluxcalaltastatus:
+                elif not preparefluxcaldiskstatus and preparefluxcalaltastatus:
                     subs_managefiles.director(self, 'mk', self.basedir + '00' + '/' + self.rawsubdir, verbose=False)
                     getdata_alta(int(self.prepare_date), int(self.prepare_obsnum_fluxcal), 0, targetdir=self.rawdir + '/' + self.fluxcal)
                     if os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal):
@@ -156,7 +156,7 @@ class prepare:
                         preparefluxcalcopystatus = False
                         preparefluxcalrejreason[0] = 'Copy from ALTA not successful'
                         logger.error('Flux calibrator dataset available on ALTA, but NOT successfully copied!')
-                elif preparefluxcaldiskstatus == False and preparefluxcalaltastatus == False:
+                elif not preparefluxcaldiskstatus and not preparefluxcalaltastatus:
                     preparefluxcalcopystatus = False
                     preparefluxcalrejreason[0] = 'Dataset not on ALTA or disk'
                     logger.error('Flux calibrator dataset not available on disk nor in ALTA! The next steps will not work!')
@@ -202,10 +202,10 @@ class prepare:
                 # Copy the polarisation calibrator data from ALTA if needed
                 if preparepolcaldiskstatus and preparepolcalaltastatus:
                     preparepolcalcopystatus = True
-                elif preparepolcaldiskstatus and preparepolcalaltastatus == False:
+                elif preparepolcaldiskstatus and not preparepolcalaltastatus:
                     preparepolcalcopystatus = True
                     logger.warning('Polarisation calibrator data available on disk, but not in ALTA!')
-                elif preparepolcaldiskstatus == False and preparepolcalaltastatus:
+                elif not preparepolcaldiskstatus and preparepolcalaltastatus:
                     subs_managefiles.director(self, 'mk', self.basedir + '00' + '/' + self.rawsubdir, verbose=False)
                     getdata_alta(int(self.prepare_date), int(self.prepare_obsnum_polcal), 0, targetdir=self.rawdir + '/' + self.polcal)
                     if os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal):
@@ -215,7 +215,7 @@ class prepare:
                         preparepolcalcopystatus = False
                         preparepolcalrejreason[0] = 'Copy from ALTA not successful'
                         logger.error('Polarisation calibrator dataset available on ALTA, but NOT successfully copied!')
-                elif preparepolcaldiskstatus == False and preparepolcalaltastatus == False:
+                elif not preparepolcaldiskstatus and not preparepolcalaltastatus:
                     preparepolcalcopystatus = False
                     preparepolcalrejreason[0] = 'Dataset not on ALTA or disk'
                     logger.warning('Polarisation calibrator dataset not available on disk nor in ALTA! Polarisation calibration will not work!')
@@ -274,10 +274,10 @@ class prepare:
                 for c in range(beams):  # TODO: fix this for when not all beams are requested
                     if preparetargetbeamsdiskstatus[c] and preparetargetbeamsaltastatus[c]:
                         preparetargetbeamscopystatus[c] = True
-                    elif preparetargetbeamsdiskstatus[c] and preparetargetbeamsaltastatus[c] == False:
+                    elif preparetargetbeamsdiskstatus[c] and not preparetargetbeamsaltastatus[c]:
                         preparetargetbeamscopystatus[c] = True
                         logger.warning('Target dataset for beam ' + str(c).zfill(2) + ' available on disk, but not in ALTA!')
-                    elif preparetargetbeamsdiskstatus[c] == False and preparetargetbeamsaltastatus[c] and str(c).zfill(2) in reqbeams:  # if target dataset is requested, but not on disk
+                    elif not preparetargetbeamsdiskstatus[c] and preparetargetbeamsaltastatus[c] and str(c).zfill(2) in reqbeams:  # if target dataset is requested, but not on disk
                         subs_managefiles.director(self, 'mk', self.basedir + str(c).zfill(2) + '/' + self.rawsubdir, verbose=False)
                         getdata_alta(int(self.prepare_date), int(self.prepare_obsnum_target), int(str(c).zfill(2)), targetdir=self.basedir + str(c).zfill(2) + '/' + self.rawsubdir + '/' + self.target)
                         # Check if copy was successful
@@ -287,7 +287,7 @@ class prepare:
                             preparetargetbeamscopystatus[c] = False
                             preparetargetbeamsrejreason[int(c)] = 'Copy from ALTA not successful'
                             logger.error('Target beam dataset available on ALTA, but NOT successfully copied!')
-                    elif preparetargetbeamsdiskstatus[c] == False and preparetargetbeamsaltastatus[c] == False and str(c).zfill(2) in reqbeams:
+                    elif not preparetargetbeamsdiskstatus[c] and not preparetargetbeamsaltastatus[c] and str(c).zfill(2) in reqbeams:
                         preparetargetbeamscopystatus[c] = False
                         preparetargetbeamsrejreason[int(c)] = 'Dataset not on ALTA or disk'
                         logger.error('Target beam dataset not available on disk nor in ALTA! Requested beam cannot be processed!')
@@ -308,11 +308,10 @@ class prepare:
         subs_param.add_param(self, 'prepare_targetbeams_copystatus', preparetargetbeamscopystatus)
         subs_param.add_param(self, 'prepare_targetbeams_rejreason', preparetargetbeamsrejreason)
 
-        ##### Functions to create the summaries of the PREPARE step #####
-
     def summary(self):
         """
-        Creates a general summary of the parameters in the parameter file generated during PREPARE. No detailed summary is available for PREPARE
+        Creates a general summary of the parameters in the parameter file generated during PREPARE. No detailed summary
+        is available for PREPARE
 
         returns (DataFrame): A python pandas dataframe object, which can be looked at with the style function in notebook
         """
@@ -386,8 +385,8 @@ class prepare:
         logger.warning('Deleting all raw data products and their directories.')
         subs_managefiles.director(self, 'ch', self.basedir)
         deldirs = glob.glob(self.basedir + '[0-9][0-9]' + '/' + self.rawsubdir)
-        for dir in deldirs:
-            subs_managefiles.director(self, 'rm', dir)
+        for dir_ in deldirs:
+            subs_managefiles.director(self, 'rm', dir_)
         logger.warning('Deleting all parameter file entries for PREPARE module')
         subs_param.del_param(self, 'prepare_fluxcal_requested')
         subs_param.del_param(self, 'prepare_fluxcal_diskstatus')

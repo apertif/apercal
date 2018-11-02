@@ -3,7 +3,7 @@ FROM kernsuite/casa:kern-dev
 RUN docker-apt-install \
           miriad python-pip python-numpy python-notebook \
           python-matplotlib python-astroquery python-pandas \
-          python-casacore python-ephem wget git
+          python-casacore python-ephem wget git python-astropy
 
 # if we install these here a rebuild trigger by a file change will go quicker
 # for now we need to install a special branch of drive-casa, otherwise casa 5 doesnt work

@@ -1,8 +1,10 @@
 import os
-
+import logging
 import numpy as np
 
 from apercal.subs import setinit as subs_setinit
+
+logger = logging.getLogger(__name__)
 
 
 def create_param_file(step):
@@ -21,7 +23,7 @@ def add_param(step, parameter, values):
     values(diverse): The data corresponding to the parameter
     """
     subs_setinit.setinitdirs(step)
-    if os.path.isfile(step.basedir + 'param.npy') != True:
+    if not os.path.isfile(step.basedir + 'param.npy'):
         create_param_file(step)
     d = np.load(step.basedir + 'param.npy').item()
     d[parameter] = values
@@ -35,14 +37,14 @@ def del_param(step, parameter):
     """
     subs_setinit.setinitdirs(step)
     if not os.path.isfile(step.basedir + 'param.npy'):
-        print('Parameter file not found! Cannot remove parameter ' + str(parameter))
+        logger.info('Parameter file not found! Cannot remove parameter ' + str(parameter))
     else:
         d = np.load(step.basedir + 'param.npy').item()
         try:
             del d[parameter]
             np.save(step.basedir + 'param.npy', d)
         except KeyError:
-            print('Parameter file does not have parameter ' + str(parameter))
+            logger.info('Parameter file does not have parameter ' + str(parameter))
 
 
 def get_param(step, parameter):
@@ -53,11 +55,11 @@ def get_param(step, parameter):
     """
     subs_setinit.setinitdirs(step)
     if not os.path.isfile(step.basedir + 'param.npy'):
-        print('Parameter file not found! Cannot load parameter ' + str(parameter))
+        logger('Parameter file not found! Cannot load parameter ' + str(parameter))
     else:
         d = np.load(step.basedir + 'param.npy').item()
         values = d[parameter]
-    return values
+        return values
 
 
 def get_param_def(step, parameter, default):
@@ -75,7 +77,7 @@ def get_param_def(step, parameter, default):
     else:
         d = np.load(step.basedir + 'param.npy').item()
         if parameter in d:
-#            print('Parameter ' + str(parameter) + ' found in cache (param.npy).')
+            # logger.info('Parameter ' + str(parameter) + ' found in cache (param.npy).')
             return d[parameter]
     return default
 
@@ -88,7 +90,7 @@ def check_param(step, parameter):
     """
     subs_setinit.setinitdirs(step)
     if not os.path.isfile(step.basedir + 'param.npy'):
-        print('Parameter file not found! Cannot load parameter ' + str(parameter))
+        logger.info('Parameter file not found! Cannot load parameter ' + str(parameter))
         create_param_file(step)
     else:
         d = np.load(step.basedir + 'param.npy').item()
@@ -102,9 +104,9 @@ def show_param(step):
     Shows all the entries of the parameter file in a sorted order
     """
     subs_setinit.setinitdirs(step)
-    if os.path.isfile(step.basedir + 'param.npy') != True:
-        print('Parameter file not found!')
+    if not os.path.isfile(step.basedir + 'param.npy'):
+        logger.info('Parameter file not found!')
     else:
         d = np.load(step.basedir + 'param.npy').item()
         for k, v in d.items():
-            print(k, v)
+            logger.info(k, v)

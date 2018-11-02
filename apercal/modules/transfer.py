@@ -34,8 +34,8 @@ class transfer:
     transferdir = None
     transfer_convert_lineuv2uvfits = None
 
-    def __init__(self, file=None, **kwargs):
-        self.default = lib.load_config(self, file)
+    def __init__(self, file_=None, **kwargs):
+        self.default = lib.load_config(self, file_)
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
 

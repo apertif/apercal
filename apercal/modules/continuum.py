@@ -1,11 +1,11 @@
 import logging
 
-import aipy
 import numpy as np
 import pandas as pd
 import os
-import sys
 
+from apercal.libs.calculations import calc_dr_maj, calc_theoretical_noise, calc_theoretical_noise_threshold, \
+    calc_dynamic_range_threshold, calc_clean_cutoff, calc_noise_threshold, calc_mask_threshold
 from apercal.subs import setinit as subs_setinit
 from apercal.subs import managefiles as subs_managefiles
 from apercal.subs import combim as subs_combim
@@ -56,8 +56,8 @@ class continuum:
     continuum_dr0 = None
     continuum_nsigma = None
 
-    def __init__(self, file=None, **kwargs):
-        self.default = lib.load_config(self, file)
+    def __init__(self, file_=None, **kwargs):
+        self.default = lib.load_config(self, file_)
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
 
@@ -80,38 +80,73 @@ class continuum:
         logger.info(' Starting deep continuum imaging of full dataset')
         subs_managefiles.director(self, 'ch', self.contdir)
 
-        #####################
-        # Start the imaging #
-        #####################
-
         logger.debug(' Creating individual deep images from frequency chunks')
         subs_managefiles.director(self, 'ch', self.contdir + '/stack')
-
-        ##########################################################################################################
-        # Check if the parameter is already in the parameter file and load it otherwise create the needed arrays #
-        ##########################################################################################################
 
         nchunks = len(self.list_chunks())
 
         beam = 'continuum_B' + str(self.beam).zfill(2)
 
-        continuumminiters = get_param_def(self, beam + '_minoriterations', np.full((nchunks), np.nan))  # Number of the last executed minor iterations during imaging
-        continuumimagestats = get_param_def(self, beam + '_imagestats', np.full((nchunks, self.continuum_minorcycle, 3), np.nan))  # Stats of the created continuum images (minimum, maximum, standard deviation)
-        continuumresidualstats = get_param_def(self, beam + '_residualstats', np.full((nchunks, self.continuum_minorcycle, 3), np.nan))   # Stats of the created continuum residual images (minimum, maximum, standard deviation)
-        continuumstatus = get_param_def(self, beam + '_status', np.full((nchunks), False))  # Status if imaging completed successfully
-        continuumimagestatus = get_param_def(self, beam + '_imagestatus', np.full((nchunks, self.continuum_minorcycle), False))  # Was the final image for each iteration created successfully?
-        continuummaskstatus = get_param_def(self, beam + '_maskstatus', np.full((nchunks, self.continuum_minorcycle), False) )  # Was the mask for each iteration created successfully?
-        continuummodelstatus = get_param_def(self, beam + '_modelstatus', np.full((nchunks, self.continuum_minorcycle), False))  # Was the model for each iteration created successfully?
-        continuumresidualstatus = get_param_def(self, beam + '_residualstatus', np.full((nchunks, self.continuum_minorcycle), False))  # Was the residual image for each iteration created successfully?
-        continuumthresholdtype = get_param_def(self, beam + '_thresholdtype', np.full((nchunks, self.continuum_minorcycle), ''))  # Threshold type for each individual cycle and chunk
-        continuummasklimit = get_param_def(self, beam + '_masklimit', np.full((nchunks, self.continuum_minorcycle), np.nan))  # Masking threshold for each individual cycle and chunk
-        continuumcleanlimit = get_param_def(self, beam + '_cleanlimit', np.full((nchunks, self.continuum_minorcycle), np.nan))  # Cleaning threshold for each individual cycle and chunk
-        continuumsynthbeamparams = get_param_def(self, beam + '_synthbeamparams', np.full((nchunks, 3), np.nan))  # Cleaning threshold for each individual cycle and chunk
-        continuumchunkimageacceptforstacking = get_param_def(self, beam + '_stackstatus', np.full((nchunks), False))  # Is the final image accepted for stacking
-        continuumchunkstackrejreason = get_param_def(self, beam + '_stackrejreason', np.full((nchunks), '', dtype='U50'))  # Reason for rejecting an image
-        continuumimcombrms = get_param_def(self, beam + '_imcombrms', np.full((nchunks), np.nan))  # RMS of the final chunk images
-        continuumimcombweights = get_param_def(self, beam + '_imcombweights', np.full((nchunks), np.nan))   # Weighting of the final chunk images (normalised)
-        continuumstackedimagestatus = get_param_def(self, beam + '_stackedimagestatus', False )  # Is the final image accepted for stacking
+        # Number of the last executed minor iterations during imaging
+        continuumminiters = get_param_def(self, beam + '_minoriterations', np.full(nchunks, np.nan))
+
+        # Stats of the created continuum images (minimum, maximum, standard deviation)
+        continuumimagestats = get_param_def(self, beam + '_imagestats',
+                                            np.full((nchunks, self.continuum_minorcycle, 3), np.nan))
+
+        # Stats of the created continuum residual images (minimum, maximum, standard deviation)
+        continuumresidualstats = get_param_def(self, beam + '_residualstats',
+                                               np.full((nchunks, self.continuum_minorcycle, 3), np.nan))
+
+        # Status if imaging completed successfully
+        continuumstatus = get_param_def(self, beam + '_status', np.full(nchunks, False))
+
+        # Was the final image for each iteration created successfully?
+        continuumimagestatus = get_param_def(self, beam + '_imagestatus',
+                                             np.full((nchunks, self.continuum_minorcycle), False))
+
+        # Was the mask for each iteration created successfully?
+        continuummaskstatus = get_param_def(self, beam + '_maskstatus',
+                                            np.full((nchunks, self.continuum_minorcycle), False))
+
+        # Was the model for each iteration created successfully?
+        continuummodelstatus = get_param_def(self, beam + '_modelstatus',
+                                             np.full((nchunks, self.continuum_minorcycle), False))
+
+        # Was the residual image for each iteration created successfully?
+        continuumresidualstatus = get_param_def(self, beam + '_residualstatus',
+                                                np.full((nchunks, self.continuum_minorcycle), False))
+
+        # Threshold type for each individual cycle and chunk
+        continuumthresholdtype = get_param_def(self, beam + '_thresholdtype',
+                                               np.full((nchunks, self.continuum_minorcycle), ''))
+
+        # Masking threshold for each individual cycle and chunk
+        continuummasklimit = get_param_def(self, beam + '_masklimit', np.full((nchunks,
+                                                                               self.continuum_minorcycle), np.nan))
+
+        # Cleaning threshold for each individual cycle and chunk
+        continuumcleanlimit = get_param_def(self, beam + '_cleanlimit', np.full((nchunks,
+                                                                                 self.continuum_minorcycle), np.nan))
+
+        # Cleaning threshold for each individual cycle and chunk
+        continuumsynthbeamparams = get_param_def(self, beam + '_synthbeamparams', np.full((nchunks, 3), np.nan))
+
+        # Is the final image accepted for stacking
+        continuumchunkimageacceptforstacking = get_param_def(self, beam + '_stackstatus', np.full(nchunks, False))
+
+        # Reason for rejecting an image
+        continuumchunkstackrejreason = get_param_def(self, beam + '_stackrejreason',
+                                                     np.full(nchunks, '', dtype='U50'))
+
+        # RMS of the final chunk images
+        continuumimcombrms = get_param_def(self, beam + '_imcombrms', np.full(nchunks, np.nan))
+
+        # Weighting of the final chunk images (normalised)
+        continuumimcombweights = get_param_def(self, beam + '_imcombweights', np.full(nchunks, np.nan))
+
+        # Is the final image accepted for stacking
+        continuumstackedimagestatus = get_param_def(self, beam + '_stackedimagestatus', False)
 
         ####################################
         # Imaging of each individual chunk #
@@ -135,17 +170,17 @@ class continuum:
                     # Final deep cleaning #
                     #######################
 
-                    theoretical_noise = self.calc_theoretical_noise(
+                    theoretical_noise = calc_theoretical_noise(
                         self.selfcaldir + '/' + chunk + '/' + chunk + '.mir')
                     logger.debug(
                         'Theoretical noise for chunk ' + chunk + ' is ' + str(theoretical_noise) + ' Jy/beam #')
-                    theoretical_noise_threshold = self.calc_theoretical_noise_threshold(theoretical_noise,
-                                                                                        self.continuum_nsigma)
+                    theoretical_noise_threshold = calc_theoretical_noise_threshold(theoretical_noise,
+                                                                                   self.continuum_nsigma)
                     logger.debug('Your theoretical noise threshold will be ' + str(
                         self.continuum_nsigma) + ' times the theoretical noise corresponding to ' + str(
                         theoretical_noise_threshold) + ' Jy/beam #')
-                    dr_list = self.calc_dr_maj(self.continuum_drinit, self.continuum_dr0, majc + 2,
-                                               self.continuum_majorcycle_function)
+                    dr_list = calc_dr_maj(self.continuum_drinit, self.continuum_dr0, majc + 2,
+                                          self.continuum_majorcycle_function)
                     logger.debug('Dynamic range limits for the selfcal major iterations were ' + str(dr_list) + ' #')
                     dr_minlist = self.calc_dr_min(dr_list, majc + 1, self.continuum_minorcycle,
                                                   self.continuum_minorcycle_function)
@@ -223,17 +258,11 @@ class continuum:
                                     logger.debug('Mask for chunk ' + str(
                                         chunk) + ' has already been copied from selfcal and regridded #')
                                 else:  # if not look for it
-                                    if os.path.isdir(
-                                            self.selfcaldir + '/' + chunk + '/' + str(majc).zfill(2) + '/mask_' + str(
+                                    path = self.selfcaldir + '/' + chunk + '/' + str(majc).zfill(2) + '/mask_' + str(
                                                     self.get_last_minor_iteration(chunk, self.get_last_major_iteration(
-                                                            chunk))).zfill(2)):  # Find the last created mask
-                                        subs_managefiles.director(self, 'cp', 'mask_00',
-                                                                  file=self.selfcaldir + '/' + chunk + '/' + str(
-                                                                      majc).zfill(2) + '/mask_' + str(
-                                                                      self.get_last_minor_iteration(chunk,
-                                                                                                    self.get_last_major_iteration(
-                                                                                                        chunk))).zfill(
-                                                                      2))
+                                                            chunk))).zfill(2)
+                                    if os.path.isdir(path):  # Find the last created mask
+                                        subs_managefiles.director(self, 'cp', 'mask_00', file_=path)
                                         logger.debug('Mask from last selfcal loop found! #')
                                     else:  # If it is not there leave the loop for this chunk
                                         continuummaskstatus[int(chunk), minc] = False
@@ -247,7 +276,7 @@ class continuum:
                                     regrid.axes = '1,2'
                                     regrid.go()
                                     subs_managefiles.director(self, 'rm', 'mask_00')
-                                    subs_managefiles.director(self, 'rn', 'mask_00', file='mask_regrid')
+                                    subs_managefiles.director(self, 'rn', 'mask_00', file_='mask_regrid')
                                     logger.debug('Mask from last selfcal cycle copied and regridded to common grid #')
                                     if os.path.isdir('mask_00'):
                                         maskmin, maskmax, maskstd = subs_imstats.getimagestats(self, 'mask_00')
@@ -266,17 +295,17 @@ class continuum:
                                         break
 
                                 # Now calculate the thresholds for the first minor cycles
-                                noise_threshold = self.calc_noise_threshold(mapmax, minc, majc + 1, self.continuum_c0)
-                                dynamic_range_threshold = self.calc_dynamic_range_threshold(mapmax, dr_minlist[minc],
-                                                                                            self.continuum_minorcycle0_dr)
-                                mask_threshold, mask_threshold_type = self.calc_mask_threshold(
+                                noise_threshold = calc_noise_threshold(mapmax, minc, majc + 1, self.continuum_c0)
+                                dynamic_range_threshold = calc_dynamic_range_threshold(mapmax, dr_minlist[minc],
+                                                                                       self.continuum_minorcycle0_dr)
+                                mask_threshold, mask_threshold_type = calc_mask_threshold(
                                     theoretical_noise_threshold, noise_threshold, dynamic_range_threshold)
                                 logger.debug('Mask threshold for final minor cycle ' + str(minc) + ' set to ' + str(
                                     mask_threshold) + ' Jy/beam #')
                                 logger.debug('Mask threshold set by ' + str(mask_threshold_type) + ' #')
                                 continuumthresholdtype[int(chunk), minc] = str(mask_threshold_type)
                                 continuummasklimit[int(chunk), minc] = mask_threshold
-                                clean_cutoff = self.calc_clean_cutoff(mask_threshold, self.continuum_c1)
+                                clean_cutoff = calc_clean_cutoff(mask_threshold, self.continuum_c1)
                                 continuumcleanlimit[int(chunk), minc] = clean_cutoff
                                 logger.debug('Clean threshold for minor cycle ' + str(minc) + ' was set to ' + str(
                                     clean_cutoff) + ' Jy/beam #')
@@ -411,16 +440,16 @@ class continuum:
                                     logger.error(' No dirty map for chunk ' + str(chunk) + ' available!')
                                     cont = False
                                     break
-                                noise_threshold = self.calc_noise_threshold(mapmax, minc, majc + 1, self.continuum_c0)
-                                dynamic_range_threshold = self.calc_dynamic_range_threshold(mapmax, dr_minlist[minc],
-                                                                                            self.continuum_minorcycle0_dr)
-                                mask_threshold, mask_threshold_type = self.calc_mask_threshold(
+                                noise_threshold = calc_noise_threshold(mapmax, minc, majc + 1, self.continuum_c0)
+                                dynamic_range_threshold = calc_dynamic_range_threshold(mapmax, dr_minlist[minc],
+                                                                                       self.continuum_minorcycle0_dr)
+                                mask_threshold, mask_threshold_type = calc_mask_threshold(
                                     theoretical_noise_threshold, noise_threshold, dynamic_range_threshold)
                                 logger.debug('Mask threshold for final minor cycle ' + str(minc) + ' set to ' + str(
                                     mask_threshold) + ' Jy/beam #')
                                 continuumthresholdtype[int(chunk), minc] = str(mask_threshold_type)
                                 continuummasklimit[int(chunk), minc] = mask_threshold
-                                clean_cutoff = self.calc_clean_cutoff(mask_threshold, self.continuum_c1)
+                                clean_cutoff = calc_clean_cutoff(mask_threshold, self.continuum_c1)
                                 continuumcleanlimit[int(chunk), minc] = clean_cutoff
                                 logger.debug('Clean threshold for minor cycle ' + str(minc) + ' was set to ' + str(
                                     clean_cutoff) + ' Jy/beam #')
@@ -598,16 +627,17 @@ class continuum:
 
                     # Create a list of files and check if all of them are there
                     filelist = ['map_00', 'beam_00']
-                    iterlist = [str(iter) for iter in range(self.continuum_minorcycle)]
-                    for map in ['image_', 'mask_', 'model_', 'residual_']:
+                    iterlist = [str(iter_) for iter_ in range(self.continuum_minorcycle)]
+                    for map_ in ['image_', 'mask_', 'model_', 'residual_']:
                         for n in iterlist:
-                            filelist.append(map + n.zfill(2))
+                            filelist.append(map_ + n.zfill(2))
                     for f in filelist:
                         if os.path.isdir(self.contdir + '/stack/' + chunk + '/' + f):
                             continuumstatus[int(chunk)] = True
                         else:
                             continuumstatus[int(chunk)] = False
-                            logger.warning('###  Continuum imaging for chunk ' + str(chunk) + ' not successful! ' + f +  ' was not found! ###')
+                            logger.warning('Continuum imaging for chunk ' + str(chunk) + ' not successful! ' + f +
+                                           ' was not found!')
                             continuumchunkstackrejreason[int(chunk)] = 'Chunk {} file {} missing'.format(chunk, f)
                             break
             else:
@@ -688,7 +718,7 @@ class continuum:
                     # Calculate the common beam and make a list of accepted and rejected chunks and update the
                     # parameters for the parameter file
                     avchunklist = np.where(continuumchunkimageacceptforstacking)[0]
-                    notavchunklist = np.where(continuumchunkimageacceptforstacking == False)[0]
+                    notavchunklist = np.where(not continuumchunkimageacceptforstacking)[0]
                     avchunks = [str(x).zfill(2) for x in list(avchunklist)]
                     notavchunks = [str(x).zfill(2) for x in list(notavchunklist)]
                     beamarray = continuumsynthbeamparams[avchunklist, :]
@@ -785,32 +815,13 @@ class continuum:
         subs_param.add_param(self, beam + '_stackedimagestatus', continuumstackedimagestatus)
         subs_param.add_param(self, beam + '_synthbeamparams', continuumsynthbeamparams)
 
-    #########################################
-    ### Subroutines for the final imaging ###
-    #########################################
-
-    def calc_dr_maj(self, drinit, dr0, majorcycles, function):
-        """
-        Function to calculate the dynamic range limits during major cycles
-        drinit (float): The initial dynamic range
-        dr0 (float): Coefficient for increasing the dynamic range threshold at each major cycle
-        majorcycles (int): The number of major cycles to execute
-        function (string): The function to follow for increasing the dynamic ranges. Currently 'power' is supported.
-        returns (list of floats): A list of floats for the dynamic range limits within the major cycles.
-        """
-        if function == 'square':
-            dr_maj = [drinit * np.power(dr0, m) for m in range(majorcycles)]
-        else:
-            raise ApercalException('Function for major cycles not supported')
-        return dr_maj
-
-    def calc_dr_min(self, dr_maj, majc, minorcycles, function):
+    def calc_dr_min(self, dr_maj, majc, minorcycles, func):
         """
         Function to calculate the dynamic range limits during minor cycles
         dr_maj (list of floats): List with dynamic range limits for major cycles. Usually from calc_dr_maj
         majc (int): The major cycles you want to calculate the minor cycle dynamic ranges for
         minorcycles (int): The number of minor cycles to use
-        function (string): The function to follow for increasing the dynamic ranges. Currently 'square', 'power', and
+        func (string): The function to follow for increasing the dynamic ranges. Currently 'square', 'power', and
                           'linear' is supported.
         returns (list of floats): A list of floats for the dynamic range limits within the minor cycles.
         """
@@ -819,13 +830,13 @@ class continuum:
         else:
             prevdr = dr_maj[majc - 1]
         # The different options to increase the minor cycle threshold
-        if function == 'square':
+        if func == 'square':
             dr_min = [prevdr + ((dr_maj[majc] - prevdr) * (n ** 2.0)) / ((minorcycles - 1) ** 2.0) for n in
                       range(minorcycles)]
-        elif function == 'power':
-            dr_min = [prevdr + np.power((dr_maj[majc] - prevdr), (1.0 / (n))) for n in range(minorcycles)][
+        elif func == 'power':
+            dr_min = [prevdr + np.power((dr_maj[majc] - prevdr), (1.0 / n)) for n in range(minorcycles)][
                      ::-1]  # Not exactly need to work on this, but close
-        elif function == 'linear':
+        elif func == 'linear':
             dr_min = [(prevdr + ((dr_maj[majc] - prevdr) / (minorcycles - 1)) * n) for n in range(minorcycles)]
         else:
             raise ApercalException('Function for minor cycles not supported')
@@ -834,96 +845,6 @@ class continuum:
         else:
             pass
         return dr_min
-
-    def calc_mask_threshold(self, theoretical_noise_threshold, noise_threshold, dynamic_range_threshold):
-        """
-        Function to calculate the actual mask_threshold and the type of mask threshold from the
-        theoretical noise threshold, noise threshold, and the dynamic range threshold
-        theoretical_noise_threshold (float): The theoretical noise threshold calculated by
-                                             calc_theoretical_noise_threshold
-        noise_threshold (float): The noise threshold calculated by calc_noise_threshold
-        dynamic_range_threshold (float): The dynamic range threshold calculated by calc_dynamic_range_threshold
-        returns (float, string): The maximum of the three thresholds, the type of the maximum threshold
-        """
-        # if np.isinf(dynamic_range_threshold) or np.isnan(dynamic_range_threshold):
-        #     dynamic_range_threshold = noise_threshold
-        mask_threshold = np.max([theoretical_noise_threshold, noise_threshold, dynamic_range_threshold])
-        mask_argmax = np.argmax([theoretical_noise_threshold, noise_threshold, dynamic_range_threshold])
-        if mask_argmax == 0:
-            mask_threshold_type = 'Theoretical noise threshold'
-        elif mask_argmax == 1:
-            mask_threshold_type = 'Noise threshold'
-        elif mask_argmax == 2:
-            mask_threshold_type = 'Dynamic range threshold'
-        return mask_threshold, mask_threshold_type
-
-    def calc_noise_threshold(self, imax, minor_cycle, major_cycle, c0):
-        """
-        Calculates the noise threshold
-        imax (float): the maximum in the input image
-        minor_cycle (int): the current minor cycle the self-calibration is in
-        major_cycle (int): the current major cycle the self-calibration is in
-        returns (float): the noise threshold
-        """
-        noise_threshold = imax / ((c0 + (minor_cycle) * c0) * (major_cycle + 1))
-        return noise_threshold
-
-    def calc_clean_cutoff(self, mask_threshold, c1):
-        """
-        Calculates the cutoff for the cleaning
-        mask_threshold (float): the mask threshold to calculate the clean cutoff from
-        returns (float): the clean cutoff
-        """
-        clean_cutoff = mask_threshold / c1
-        return clean_cutoff
-
-    def calc_dynamic_range_threshold(self, imax, dynamic_range, dynamic_range_minimum):
-        """
-        Calculates the dynamic range threshold
-        imax (float): the maximum in the input image
-        dynamic_range (float): the dynamic range you want to calculate the threshold for
-        returns (float): the dynamic range threshold
-        """
-        if dynamic_range == 0:
-            dynamic_range = dynamic_range_minimum
-        dynamic_range_threshold = imax / dynamic_range
-        return dynamic_range_threshold
-
-    def calc_theoretical_noise_threshold(self, theoretical_noise, nsigma):
-        """
-        Calculates the theoretical noise threshold from the theoretical noise
-        theoretical_noise (float): the theoretical noise of the observation
-        returns (float): the theoretical noise threshold
-        """
-        theoretical_noise_threshold = (nsigma * theoretical_noise)
-        return theoretical_noise_threshold
-
-    def calc_theoretical_noise(self, dataset):
-        """
-        Calculate the theoretical rms of a given dataset
-        dataset (string): The input dataset to calculate the theoretical rms from
-        returns (float): The theoretical rms of the input dataset as a float
-        """
-        uv = aipy.miriad.UV(dataset)
-        obsrms = lib.miriad('obsrms')
-        try:
-            tsys = np.median(uv['systemp'])
-            if np.isnan(tsys):
-                obsrms.tsys = 30.0
-            else:
-                obsrms.tsys = tsys
-        except KeyError:
-            obsrms.tsys = 30.0
-        obsrms.jyperk = uv['jyperk']
-        obsrms.antdiam = 25
-        obsrms.freq = uv['sfreq']
-        obsrms.theta = 15
-        obsrms.nants = uv['nants']
-        obsrms.bw = np.abs(uv['sdf'] * uv['nschan']) * 1000.0
-        obsrms.inttime = 12.0 * 60.0
-        obsrms.coreta = 0.88
-        theorms = float(obsrms.go()[-1].split()[3]) / 1000.0
-        return theorms
 
     def list_chunks(self):
         """

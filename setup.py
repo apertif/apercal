@@ -8,12 +8,14 @@ install_requires = [
     'numpy',
     'notebook',
     'matplotlib',
+    'astropy',
     'astroquery',
     'pandas',
     'drive-casa',
     'python-casacore',
     'aipy',
     'pymp-pypi',
+    'typing',
 ]
 
 

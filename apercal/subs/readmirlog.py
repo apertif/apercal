@@ -11,35 +11,35 @@ from apercal import subs
 from apercal.libs import lib
 
 
-def check_table(file, type):
+def check_table(file_, type_):
     """
     Function to change the file format of a MIRIAD ggplt table to an ascii table compatible one
-    file (str): the log file with the table
+    file_ (str): the log file with the table
     """
-    with open(file, 'rw') as gaintxt:
+    with open(file_, 'rw') as gaintxt:
         gainlines = gaintxt.readlines()
-        if type == 'bp':
+        if type_ == 'bp':
             nants = int(gainlines[2].split(' ')[-1])
-        elif type == 'gains' or type == 'delays':
+        elif type_ == 'gains' or type_ == 'delays':
             nants = int(gainlines[3].split(' ')[-1])
         gaintxt.close()
     if nants > 6:
-        os.system('sed /^#.*/d ' + file + ' > ' + file + '_tmp')
-        with open(file + '_tmp', 'r') as f:
+        os.system('sed /^#.*/d ' + file_ + ' > ' + file_ + '_tmp')
+        with open(file_ + '_tmp', 'r') as f:
             content = f.readlines()
-            with open(file + '_refor', 'w') as g:
+            with open(file_ + '_refor', 'w') as g:
                 for i in xrange(1, len(content) + 1):
                     if i % 2 == 0:
                         g.write(content[i - 2].strip() + '   ' + content[i - 1].strip() + '\n')
                 g.close()
             f.close()
-        os.system('mv ' + file + '_refor ' + file)
+        os.system('mv ' + file_ + '_refor ' + file_)
 
 
-def get_gains(file):
+def get_gains(file_):
     """
     Function to create a complex python array of amplitude and phase gains from a dataset
-    file (str): u,v file with the bandpass calibration
+    file_ (str): u,v file with the bandpass calibration
     return(array, array): an array with the amplitude and phase gains for each antenna and solution interval, a
                           datetime array with the actual solution timesteps
     """
@@ -47,7 +47,7 @@ def get_gains(file):
     tempdir = subs.managetmp.manage_tempdir('mirlog')
     gains_string = ''.join(random.sample(char_set * 8, 8))
     gpplt = lib.miriad('gpplt')
-    gpplt.vis = file
+    gpplt.vis = file_
     gpplt.log = tempdir + '/' + gains_string
     gpplt.options = 'gains'
     gpplt.yaxis = 'amp'
@@ -76,10 +76,10 @@ def get_gains(file):
     return gain_array, time_array
 
 
-def get_bp(file):
+def get_bp(file_):
     """
     Function to create a python array from a bandpass calibrated dataset to analyse
-    file (str): u,v file with the bandpass calibration
+    file_ (str): u,v file with the bandpass calibration
     return(array, array): The bandpass array in the following order (antenna, frequencies, solution intervals) and a
                           list of the frequencies
     """
@@ -88,7 +88,7 @@ def get_bp(file):
     # tempdir = os.path.expanduser('~') + '/apercal/temp/mirlog'
     bp_string = ''.join(random.sample(char_set * 8, 8))
     gpplt = lib.miriad('gpplt')
-    gpplt.vis = file
+    gpplt.vis = file_
     gpplt.log = tempdir + '/' + bp_string
     gpplt.options = 'bandpass'
     gpplt.go()
@@ -104,19 +104,19 @@ def get_bp(file):
     return bp_array, freqs
 
 
-def get_delays(file):
+def get_delays(file_):
     """
     Function to create a numpy array with the antenna delays for each solution interval
-    file (str): u,v file with the bandpass calibration
+    file_ (str): u,v file with the bandpass calibration
     return(array, array): an array with the delays for each antenna and solution interval in nsec, a datetime array
                           with the actual solution timesteps
     """
-    char_set = string.ascii_uppercase + string.digits  # Create a charset for random gain log file generation
+    char_set = string.ascii_uppercase + string.digits  # Create a charset for random gain log file_ generation
     tempdir = subs.managetmp.manage_tempdir('mirlog')
     # tempdir = os.path.expanduser('~') + '/apercal/temp/mirlog'
     gains_string = ''.join(random.sample(char_set * 8, 8))
     gpplt = lib.miriad('gpplt')
-    gpplt.vis = file
+    gpplt.vis = file_
     gpplt.log = tempdir + '/' + gains_string
     gpplt.options = 'delays'
     cmd = gpplt.go()

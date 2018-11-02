@@ -1,11 +1,12 @@
-import ConfigParser
 import logging
-import sys
 
 import aipy
 import astropy.io.fits as pyfits
 import numpy as np
 import os
+
+from apercal.libs.calculations import calc_dr_maj, calc_theoretical_noise, calc_dynamic_range_threshold, \
+    calc_mask_threshold
 
 from apercal.subs import setinit as subs_setinit
 from apercal.subs import managefiles as subs_managefiles
@@ -74,8 +75,8 @@ class scal:
     crosscaldir = None
     linedir = None
 
-    def __init__(self, file=None, **kwargs):
-        self.default = lib.load_config(self, file)
+    def __init__(self, file_=None, **kwargs):
+        self.default = lib.load_config(self, file_)
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
 
@@ -322,13 +323,13 @@ class scal:
             logger.info('Starting standard self-calibration routine on frequency chunk ' + chunk + ' #')
             subs_managefiles.director(self, 'ch', self.selfcaldir + '/' + chunk)
             if os.path.isfile(self.selfcaldir + '/' + chunk + '/' + chunk + '.mir/visdata'):
-                theoretical_noise = self.calc_theoretical_noise(self.selfcaldir + '/' + chunk + '/' + chunk + '.mir')
+                theoretical_noise = calc_theoretical_noise(self.selfcaldir + '/' + chunk + '/' + chunk + '.mir')
                 logger.info('Theoretical noise for chunk ' + chunk + ' is ' + str(theoretical_noise) + ' Jy/beam #')
                 theoretical_noise_threshold = self.calc_theoretical_noise_threshold(theoretical_noise)
                 logger.info('Your theoretical noise threshold will be ' + str(
                     self.selfcal_standard_nsigma) + ' times the theoretical noise corresponding to ' + str(
                     theoretical_noise_threshold) + ' Jy/beam #')
-                dr_list = self.calc_dr_maj(self.selfcal_standard_drinit, self.selfcal_standard_dr0,
+                dr_list = calc_dr_maj(self.selfcal_standard_drinit, self.selfcal_standard_dr0,
                                            self.selfcal_standard_majorcycle, self.selfcal_standard_majorcycle_function)
                 logger.info(
                     'Your dynamic range limits are set to ' + str(dr_list) + ' for the major self-calibration cycles #')
@@ -345,7 +346,7 @@ class scal:
                         try:
                             self.run_continuum_minoriteration(chunk, majc, minc, dr_minlist[minc],
                                                               theoretical_noise_threshold)
-                        except:
+                        except Exception:
                             logger.warning('Chunk ' + chunk + ' does not seem to contain data to image #')
                             break
                     try:
@@ -366,9 +367,9 @@ class scal:
                         else:
                             selfcal.refant = self.selfcal_refant
                         # Enable amplitude calibration if triggered
-                        if self.selfcal_standard_amp == False:  # See if we want to do amplitude calibration
+                        if not self.selfcal_standard_amp:  # See if we want to do amplitude calibration
                             selfcal.options = 'mfs,phase'
-                        elif self.selfcal_standard_amp == True:
+                        elif self.selfcal_standard_amp:
                             selfcal.options = 'mfs,amp'
                         elif self.selfcal_standard_amp == 'auto':
                             modelflux = self.calc_isum(str(majc).zfill(2) + '/model_' + str(minc).zfill(2))
@@ -383,7 +384,7 @@ class scal:
                         selfcal.go()
                         logger.info('Major self-calibration cycle ' + str(
                             majc) + ' for frequency chunk ' + chunk + ' finished #')
-                    except:
+                    except Exception:
                         logger.warning(
                             'Model for self-calibration not found. No further calibration on this chunk possible!')
                         break
@@ -391,9 +392,6 @@ class scal:
             else:
                 logger.warning('No data in chunk ' + chunk + '. Maybe all data is flagged? #')
         logger.info(' Standard self calibration routine finished')
-
-
-    ### Subroutines for the different self calibration modes ###
 
     def run_continuum_minoriteration(self, chunk, majc, minc, drmin, theoretical_noise_threshold):
         """
@@ -421,9 +419,9 @@ class scal:
             invert.go()
             imax = self.calc_imax(str(majc).zfill(2) + '/map_' + str(minc).zfill(2))
             noise_threshold = self.calc_noise_threshold(imax, minc, majc)
-            dynamic_range_threshold = self.calc_dynamic_range_threshold(imax, drmin,
+            dynamic_range_threshold = calc_dynamic_range_threshold(imax, drmin,
                                                                         self.selfcal_standard_minorcycle0_dr)
-            mask_threshold, mask_threshold_type = self.calc_mask_threshold(theoretical_noise_threshold, noise_threshold,
+            mask_threshold, mask_threshold_type = calc_mask_threshold(theoretical_noise_threshold, noise_threshold,
                                                                            dynamic_range_threshold)
             logger.info('Mask threshold for major/minor cycle ' + str(majc) + '/' + str(minc) + ' set to ' + str(
                 mask_threshold) + ' Jy/beam #')
@@ -438,7 +436,7 @@ class scal:
                 logger.info('Mask with threshold ' + str(mask_threshold) + ' Jy/beam created #')
             else:
                 subs_managefiles.director(self, 'cp', str(majc).zfill(2) + '/mask_' + str(minc).zfill(2),
-                                          file=str(majc - 1).zfill(2) + '/mask_' + str(
+                                          file_=str(majc - 1).zfill(2) + '/mask_' + str(
                                               self.selfcal_standard_minorcycle - 1).zfill(2))
                 logger.info('Mask from last minor iteration of last major cycle copied #')
             clean_cutoff = self.calc_clean_cutoff(mask_threshold)
@@ -472,9 +470,9 @@ class scal:
         else:
             imax = self.calc_imax(str(majc).zfill(2) + '/map_' + str(0).zfill(2))
             noise_threshold = self.calc_noise_threshold(imax, minc, majc)
-            dynamic_range_threshold = self.calc_dynamic_range_threshold(imax, drmin,
+            dynamic_range_threshold = calc_dynamic_range_threshold(imax, drmin,
                                                                         self.selfcal_standard_minorcycle0_dr)
-            mask_threshold, mask_threshold_type = self.calc_mask_threshold(theoretical_noise_threshold, noise_threshold,
+            mask_threshold, mask_threshold_type = calc_mask_threshold(theoretical_noise_threshold, noise_threshold,
                                                                            dynamic_range_threshold)
             logger.info('Mask threshold for major/minor cycle ' + str(majc) + '/' + str(minc) + ' set to ' + str(
                 mask_threshold) + ' Jy/beam #')
@@ -517,9 +515,6 @@ class scal:
                 self.calc_irms(str(majc).zfill(2) + '/residual_' + str(minc).zfill(2))) + ' Jy/beam #')
         logger.info('Minor self-calibration cycle ' + str(minc) + ' for frequency chunk ' + chunk + ' finished #')
 
-
-    ### Subfunctions used in the different self calibration options ###
-
     def create_parametric_mask(self, dataset, radius, cutoff, cat, outputdir):
         """
         Creates a parametric mask using a model from an input catalogue.
@@ -532,13 +527,13 @@ class scal:
         """
         lsm.write_mask(outputdir + '/mask.txt', lsm.lsm_mask(dataset, radius, cutoff, cat))
         mskfile = open(outputdir + '/mask.txt', 'r')
-        object = mskfile.readline().rstrip('\n')
+        object_ = mskfile.readline().rstrip('\n')
         spar = mskfile.readline()
         mskfile.close()
         imgen = lib.miriad('imgen')
         imgen.imsize = self.selfcal_image_imsize
         imgen.cell = self.selfcal_image_cellsize
-        imgen.object = object
+        imgen.object = object_
         imgen.spar = spar
         imgen.out = outputdir + '/imgen'
         imgen.go()
@@ -548,7 +543,6 @@ class scal:
         maths.out = outputdir + '/mask'
         maths.go()
         subs_managefiles.director(self, 'rm', outputdir + '/imgen')
-        self.single_mskcutoff = 1e-6
         subs_managefiles.director(self, 'rm', outputdir + '/mask.txt')
 
     def calc_irms(self, image):
@@ -605,28 +599,13 @@ class scal:
         subs_managefiles.director(self, 'rm', image + '.fits')
         return isum
 
-    def calc_dr_maj(self, drinit, dr0, majorcycles, function):
-        """
-        Function to calculate the dynamic range limits during major cycles
-        drinit (float): The initial dynamic range
-        dr0 (float): Coefficient for increasing the dynamic range threshold at each major cycle
-        majorcycles (int): The number of major cycles to execute
-        function (string): The function to follow for increasing the dynamic ranges. Currently 'power' is supported.
-        returns (list of floats): A list of floats for the dynamic range limits within the major cycles.
-        """
-        if function == 'square':
-            dr_maj = [drinit * np.power(dr0, m) for m in range(majorcycles)]
-        else:
-            raise ApercalException('Function for major cycles not supported')
-        return dr_maj
-
-    def calc_dr_min(self, dr_maj, majc, minorcycles, function):
+    def calc_dr_min(self, dr_maj, majc, minorcycles, function_):
         """
         Function to calculate the dynamic range limits during minor cycles
         dr_maj (list of floats): List with dynamic range limits for major cycles. Usually from calc_dr_maj
         majc (int): The major cycles you want to calculate the minor cycle dynamic ranges for
         minorcycles (int): The number of minor cycles to use
-        function (string): The function to follow for increasing the dynamic ranges. Currently 'square', 'power', and
+        function_ (string): The function to follow for increasing the dynamic ranges. Currently 'square', 'power', and
                            'linear' is supported.
         returns (list of floats): A list of floats for the dynamic range limits within the minor cycles.
         """
@@ -635,13 +614,13 @@ class scal:
         else:
             prevdr = dr_maj[majc - 1]
         # The different options to increase the minor cycle threshold
-        if function == 'square':
+        if function_ == 'square':
             dr_min = [prevdr + ((dr_maj[majc] - prevdr) * (n ** 2.0)) / ((minorcycles - 1) ** 2.0) for n in
                       range(minorcycles)]
-        elif function == 'power':
-            dr_min = [prevdr + np.power((dr_maj[majc] - prevdr), (1.0 / (n))) for n in range(minorcycles)][
+        elif function_ == 'power':
+            dr_min = [prevdr + np.power((dr_maj[majc] - prevdr), (1.0 / n)) for n in range(minorcycles)][
                      ::-1]  # Not exactly need to work on this, but close
-        elif function == 'linear':
+        elif function_ == 'linear':
             dr_min = [(prevdr + ((dr_maj[majc] - prevdr) / (minorcycles - 1)) * n) for n in range(minorcycles)]
         else:
             raise ApercalException(' Function for minor cycles not supported! Exiting!')
@@ -650,28 +629,6 @@ class scal:
         else:
             pass
         return dr_min
-
-    def calc_mask_threshold(self, theoretical_noise_threshold, noise_threshold, dynamic_range_threshold):
-        """
-        Function to calculate the actual mask_threshold and the type of mask threshold from the theoretical noise
-        threshold, noise threshold, and the dynamic range threshold
-
-        theoretical_noise_threshold (float): The theoretical noise threshold calculated by calc_theoretical_noise_threshold
-        noise_threshold (float): The noise threshold calculated by calc_noise_threshold
-        dynamic_range_threshold (float): The dynamic range threshold calculated by calc_dynamic_range_threshold
-        returns (float, string): The maximum of the three thresholds, the type of the maximum threshold
-        """
-        # if np.isinf(dynamic_range_threshold) or np.isnan(dynamic_range_threshold):
-        #     dynamic_range_threshold = noise_threshold
-        mask_threshold = np.max([theoretical_noise_threshold, noise_threshold, dynamic_range_threshold])
-        mask_argmax = np.argmax([theoretical_noise_threshold, noise_threshold, dynamic_range_threshold])
-        if mask_argmax == 0:
-            mask_threshold_type = 'Theoretical noise threshold'
-        elif mask_argmax == 1:
-            mask_threshold_type = 'Noise threshold'
-        elif mask_argmax == 2:
-            mask_threshold_type = 'Dynamic range threshold'
-        return mask_threshold, mask_threshold_type
 
     def calc_noise_threshold(self, imax, minor_cycle, major_cycle):
         """
@@ -682,7 +639,7 @@ class scal:
         returns (float): the noise threshold
         """
         noise_threshold = imax / (
-                    (self.selfcal_standard_c0 + (minor_cycle) * self.selfcal_standard_c0) * (major_cycle + 1))
+                (self.selfcal_standard_c0 + minor_cycle * self.selfcal_standard_c0) * (major_cycle + 1))
         return noise_threshold
 
     def calc_clean_cutoff(self, mask_threshold):
@@ -694,18 +651,6 @@ class scal:
         clean_cutoff = mask_threshold / self.selfcal_standard_c1
         return clean_cutoff
 
-    def calc_dynamic_range_threshold(self, imax, dynamic_range, dynamic_range_minimum):
-        """
-        Calculates the dynamic range threshold
-        imax (float): the maximum in the input image
-        dynamic_range (float): the dynamic range you want to calculate the threshold for
-        returns (float): the dynamic range threshold
-        """
-        if dynamic_range == 0:
-            dynamic_range = dynamic_range_minimum
-        dynamic_range_threshold = imax / dynamic_range
-        return dynamic_range_threshold
-
     def calc_theoretical_noise_threshold(self, theoretical_noise):
         """
         Calculates the theoretical noise threshold from the theoretical noise
@@ -714,35 +659,6 @@ class scal:
         """
         theoretical_noise_threshold = (self.selfcal_standard_nsigma * theoretical_noise)
         return theoretical_noise_threshold
-
-    def calc_theoretical_noise(self, dataset):
-        """
-        Calculate the theoretical rms of a given dataset
-        dataset (string): The input dataset to calculate the theoretical rms from
-        returns (float): The theoretical rms of the input dataset as a float
-        """
-        uv = aipy.miriad.UV(dataset)
-        obsrms = lib.miriad('obsrms')
-        try:
-            tsys = np.median(uv['systemp'])
-            if np.isnan(tsys):
-                obsrms.tsys = 30.0
-            else:
-                obsrms.tsys = tsys
-        except KeyError:
-            obsrms.tsys = 30.0
-        obsrms.jyperk = uv['jyperk']
-        obsrms.antdiam = 25
-        obsrms.freq = uv['sfreq']
-        obsrms.theta = 15
-        obsrms.nants = uv['nants']
-        obsrms.bw = np.abs(uv['sdf'] * uv['nschan']) * 1000.0
-        obsrms.inttime = 12.0 * 60.0
-        obsrms.coreta = 0.88
-        theorms = float(obsrms.go()[-1].split()[3]) / 1000.0
-        return theorms
-
-    ##### Subfunctions for managing the location and naming of files #####
 
     def list_chunks(self):
         """

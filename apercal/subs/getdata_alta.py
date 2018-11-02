@@ -75,7 +75,7 @@ def getdata_alta(date, task_ids, beams, targetdir=".", tmpdir=".", alta_exceptio
     Report status to slack
 
     Args:
-        data (str): date of the observation
+        date (str): date of the observation
         task_ids (List[int] or int): list of task_ids, or a single task_id (int)
         beams (List[int] or int): list of beam numbers, or a single beam number (int)
         targetdir (str): directory to put the downloaded files
@@ -152,8 +152,7 @@ def getdata_alta(date, task_ids, beams, targetdir=".", tmpdir=".", alta_exceptio
             failed_files = x.strip()
 
         if failed_files == '0':
-            cmd = """curl -X POST --data-urlencode 'payload={"text":"Transfer of WSRTA%s%.3d (B%.3d-B%.3d) from 
-            ALTA to %s finished."}' https://hooks.slack.com/services/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""" % (
+            cmd = """curl -X POST --data-urlencode 'payload={"text":"Transfer of WSRTA%s%.3d (B%.3d-B%.3d) from ALTA to %s finished."}' https://hooks.slack.com/services/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""" % (
             date, task_id, beams[0], beams[-1], hostname)
         else:
             cmd = """curl -X POST --data-urlencode 'payload={"text":"Transfer of WSRTA%s%.3d (B%.3d-B%.3d) from ALTA to %s finished incomplete. Check logs!"}' https://hooks.slack.com/services/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""" % (
@@ -182,19 +181,19 @@ if __name__ == "__main__":
     # Get date
     try:
         date = args[1]
-    except:
+    except Exception:
         raise ApercalException("Date required! Format: YYMMDD e.g. 180309")
 
     # Get date
     try:
         irange = args[2]
-    except:
+    except Exception:
         raise ApercalException("ID range required! Format: NNN-NNN e.g. 002-010")
 
     # Get beams
     try:
         brange = args[3]
-    except:
+    except Exception:
         raise ApercalException("Beam range required! Format: NN-NN e.g. 00-37")
 
     # Get beams
@@ -204,7 +203,7 @@ if __name__ == "__main__":
             alta_exception = True
         else:
             alta_exception = False
-    except:
+    except Exception:
         alta_exception = False
 
     # Now with all the information required, loop through beams

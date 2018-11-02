@@ -8,15 +8,13 @@ import re
 import matplotlib.mlab as mplab
 import numpy as np
 from astropy import units as u
-from astropy.coordinates import Angle, FK5, SkyCoord
+from astropy.coordinates import Angle, SkyCoord
 from astroquery.vizier import Vizier
 
 from apercal.libs import lib
 from apercal.subs.pb import wsrtBeam
 from apercal.subs.readmirhead import getradec
 
-
-##### Functions to query, generate, and modify a local sky model #####
 
 def query_catalogue(infile, catalogue, radius, minflux=0.0):
     """
@@ -129,7 +127,7 @@ def cutoff_catalogue(catalogue, cutoff):
     limflux = allflux * cutoff  # determine the cutoff
     cat = sort_catalogue(catalogue, 'appflux')
     limidx = np.delete(np.where(np.cumsum(cat.appflux) > limflux),
-                       (0))  # find the index of the sources above the cutoff to remove them from the list
+                       0)  # find the index of the sources above the cutoff to remove them from the list
     cat = np.delete(cat, limidx)  # remove the faint sources from the list
     usedflux = np.sum(cat.appflux)
     logging.info(' Found ' + str(len(cat)) + ' source(s) in the model at a cutoff of ' + str(
@@ -181,15 +179,10 @@ def calc_SI(cat1, cat2, limit):
         # Change the value to -0.7 in case of high absolute values. Maybe wrong source match or variable source
         si[si > 2] = -0.7
         cat = mplab.rec_append_fields(cat1, 'SI', si, dtypes=float)
-    except:
+    except Exception:
         # In case the queried area is not covered by WENSS give all sources a spectral index of -0.7.
         cat = mplab.rec_append_fields(cat1, 'SI', -0.7, dtypes=float)
     return cat
-
-
-
-# Functions to generate a file for the parametric self calibration and/or a first mask for the self-calibration from a
-# VIZIER query
 
 
 def lsm_model(infile, radius, cutoff, limit):
@@ -207,7 +200,7 @@ def lsm_model(infile, radius, cutoff, limit):
         cat = query_catalogue(infile, 'NVSS', radius)
     try:  # Handle the exception if the covered field is not in WENSS
         low_cat = query_catalogue(infile, 'WENSS', radius)
-    except:
+    except Exception:
         low_cat = None
     cat = calc_SI(cat, low_cat, limit)
     cat = calc_offset(infile, cat)
@@ -275,25 +268,6 @@ def write_mask(outfile, cat):
     mirmskfile.write(msktext)
     mirmskfile.close()
     logging.info(' Wrote mask textfile to ' + str(outfile) + '!')
-
-
-# Helper functions to get coordinates and central frequency of a dataset and fix the coordinate notation #####
-
-def getradec(infile):
-    """
-    getradec: module to extract the pointing centre ra and dec from a miriad image file. Uses the PRTHD task in miriad
-    inputs: infile (name of file)
-    returns: coords, an instance of the astropy.coordinates SkyCoord class which has a few convenient attributes.
-    """
-    prthd = lib.basher('prthd in=' + infile)
-    regex = re.compile(".*(J2000).*")
-    # regex = re.compile(".*(Apparent).*")
-    coordline = [m.group(0) for l in prthd for m in [regex.search(l)] if m][0].split()
-    rastr = coordline[3]
-    decstr = coordline[5]
-    rastr = fixra(rastr)
-    coords = SkyCoord(FK5, ra=rastr, dec=decstr, unit=(u.deg, u.deg))
-    return coords
 
 
 def fixra(ra0):

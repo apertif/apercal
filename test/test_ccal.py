@@ -1,14 +1,12 @@
 import unittest
 import matplotlib as mpl
-
-mpl.use('TkAgg')
 from apercal.modules.ccal import ccal
 from os import path
 import logging
 
+mpl.use('TkAgg')
 logging.basicConfig(level=logging.DEBUG)
-
-here = path.abspath(path.dirname(__file__))
+here = path.dirname(__file__)
 
 
 class TestCcal(unittest.TestCase):
