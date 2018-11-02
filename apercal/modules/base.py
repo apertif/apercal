@@ -29,17 +29,9 @@ class BaseModule:
             if beams:
                 datasets = [path.join(self.basedir, str(b).zfill(2), self.rawsubdir, self.target) for b in beams]
             else:
-                datasets = glob(path.join(self.basedir, '[0-9][0-9]', self.rawsubdir, self.target))
+                datasets = sorted(glob(path.join(self.basedir, '[0-9][0-9]', self.rawsubdir, self.target)))
             beams = [vis.split('/')[-3] for vis in datasets]
             return zip(datasets, beams)
         else:
             # TODO: (gijs) is it okay to just always set this to 0?
-            return [(self.target, '00')]
-
-    def get_datasets_beams(self, beams):
-        if self.subdirification:
-
-            beams = [vis.split('/')[-3] for vis in datasets]
-            return zip(datasets, beams)
-        else:
             return [(self.target, '00')]
