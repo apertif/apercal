@@ -15,6 +15,7 @@ install_requires = [
     'python-casacore',
     'aipy',
     'pymp-pypi',
+    'typing',
 ]
 
 

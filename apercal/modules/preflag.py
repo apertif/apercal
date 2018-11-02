@@ -8,6 +8,7 @@ import os
 
 import casacore.tables as pt
 
+from apercal.modules.base import BaseModule
 from apercal.subs import setinit as subs_setinit
 from apercal.subs import managefiles as subs_managefiles
 from apercal.subs import param as subs_param
@@ -21,7 +22,7 @@ from os import path
 logger = logging.getLogger(__name__)
 
 
-class preflag:
+class preflag(BaseModule):
     """
     Preflagging class. Used to automatically flag data and apply preknown flags.
     """
@@ -68,33 +69,6 @@ class preflag:
     def __init__(self, filename=None, **kwargs):
         self.default = lib.load_config(self, filename)
         subs_setinit.setinitdirs(self)
-
-    def get_fluxcal_path(self):
-        if self.subdirification:
-            return path.join(self.basedir, '00', self.rawsubdir, self.fluxcal)
-        else:
-            return self.fluxcal
-
-    def get_polcal_path(self):
-        if self.subdirification:
-            return path.join(self.basedir, '00', self.rawsubdir, self.polcal)
-        else:
-            return self.polcal
-
-    def get_datasets(self):
-        if self.subdirification:
-            datasets = glob.glob(path.join(self.basedir, '[0-9][0-9]', self.rawsubdir, self.target))
-            beams = [vis.split('/')[-3] for vis in datasets]
-            return zip(datasets, beams)
-        else:
-            # TODO: (gijs) is it okay to just always set this to 0?
-            return [(self.target, '00')]
-
-    def get_datasets_beams(self, beams):
-        if self.subdirification:
-            return [path.join(self.basedir, str(b).zfill(2), self.rawsubdir, self.target) for b in beams]
-        else:
-            return [self.target]
 
     def go(self):
         """
@@ -486,7 +460,7 @@ class preflag:
                     logger.debug('Flagging auto-correlations for all target beams')
                 else:
                     beams = self.preflag_manualflag_targetbeams.split(",")
-                    datasets = [self.get_datasets_beams(beams)]
+                    datasets = [self.get_datasets(beams=beams)]
                     logger.debug('Flagging auto-correlations for selected target beams')
                 for vis, beam in datasets:
                     if preflagtargetbeamsmanualflagauto[int(beam)]:
@@ -573,7 +547,7 @@ class preflag:
                     logger.debug('Flagging antenna(s) ' + self.preflag_manualflag_antenna + ' for all target beams')
                 else:
                     beams = self.preflag_manualflag_targetbeams.split(",")
-                    datasets = [self.get_datasets_beams(beams)]
+                    datasets = [self.get_datasets(beams=beams)]
                     logger.debug('Flagging antenna(s) ' + self.preflag_manualflag_antenna + ' for selected target beams')
                 for vis, beam in datasets:
                     if preflagtargetbeamsmanualflagantenna[int(beam)] == self.preflag_manualflag_antenna:
@@ -663,7 +637,7 @@ class preflag:
                     logger.debug('Flagging correlation(s) ' + self.preflag_manualflag_corr + ' for all target beams')
                 else:
                     beams = self.preflag_manualflag_targetbeams.split(",")
-                    datasets = [self.get_datasets_beams(beams)]
+                    datasets = [self.get_datasets(beams=beams)]
                     logger.debug('Flagging correlation(s) ' + self.preflag_manualflag_corr + ' for selected target beams')
                 for vis, beam in datasets:
                     if preflagtargetbeamsmanualflagcorr[int(beam)] == self.preflag_manualflag_corr:
@@ -754,7 +728,7 @@ class preflag:
                     logger.debug('Flagging baseline(s) ' + self.preflag_manualflag_baseline + ' for all target beams')
                 else:
                     beams = self.preflag_manualflag_targetbeams.split(",")
-                    datasets = [self.get_datasets_beams(beams)]
+                    datasets = [self.get_datasets(beams=beams)]
                     logger.debug('Flagging baseline(s) ' + self.preflag_manualflag_baseline + ' for selected target beams')
                 for vis, beam in datasets:
                     if preflagtargetbeamsmanualflagbaseline[int(beam)] == self.preflag_manualflag_baseline:
@@ -842,7 +816,7 @@ class preflag:
                     logger.debug('Flagging channel(s) ' + self.preflag_manualflag_channel + ' for all target beams')
                 else:
                     beams = self.preflag_manualflag_targetbeams.split(",")
-                    datasets = [self.get_datasets_beams(beams)]
+                    datasets = [self.get_datasets(beams=beams)]
                     logger.debug('Flagging channel(s) ' + self.preflag_manualflag_channel + ' for selected target beams')
                 for vis, beam in datasets:
                     if preflagtargetbeamsmanualflagchannel[int(beam)] == self.preflag_manualflag_channel:
@@ -931,7 +905,7 @@ class preflag:
                     logger.debug('Flagging time range ' + self.preflag_manualflag_time + ' for all target beams')
                 else:
                     beams = self.preflag_manualflag_targetbeams.split(",")
-                    datasets = [self.get_datasets_beams(beams)]
+                    datasets = [self.get_datasets(beams=beams)]
                     logger.debug('Flagging time range ' + self.preflag_manualflag_time + ' for selected target beams')
                 for vis, beam in datasets:
                     if preflagtargetbeamsmanualflagtime[int(beam)] == self.preflag_manualflag_time:
@@ -1095,7 +1069,7 @@ class preflag:
                         logger.info('AOFlagging all target beams')
                     else:
                         beams = self.preflag_aoflagger_targetbeams.split(",")
-                        datasets = [self.get_datasets_beams(beams)]
+                        datasets = [self.get_datasets(beams=beams)]
                         logger.info('AOFlagging all selected target beam(s)')
                     for vis, beam in datasets:
                         base_cmd = 'aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_targetstrat

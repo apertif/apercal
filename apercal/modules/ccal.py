@@ -1,13 +1,13 @@
 import logging
 import glob
 import os
-from os import path
 import drivecasa
 import numpy as np
 import pandas as pd
 
 import casacore.tables as pt
 
+from apercal.modules.base import BaseModule
 from apercal.subs import setinit as subs_setinit
 from apercal.subs import managefiles as subs_managefiles
 from apercal.subs import msutils as subs_msutils
@@ -20,7 +20,7 @@ from apercal.libs import lib
 logger = logging.getLogger(__name__)
 
 
-class ccal:
+class ccal(BaseModule):
     """
     Crosscal class to handle applying the calibrator gains and prepare the dataset for self-calibration.
     """
@@ -61,17 +61,6 @@ class ccal:
         self.default = lib.load_config(self, file_)
         subs_setinit.setinitdirs(self)
 
-    def get_fluxcal_path(self):
-        if self.subdirification:
-            return path.join(self.basedir, '00', self.rawsubdir, self.fluxcal)
-        else:
-            return self.fluxcal
-
-    def get_polcal_path(self):
-        if self.subdirification:
-            return path.join(self.basedir, '00', self.rawsubdir, self.polcal)
-        else:
-            return self.polcal
 
     def go(self):
         """
@@ -200,14 +189,13 @@ class ccal:
             # Create the TEC correction tables for the target beam datasets
 
             if self.target != '':
-                datasets = glob.glob(self.basedir + '[0-9][0-9]' + '/' + self.rawsubdir + '/' + self.target)
-                for vis in datasets:
-                    if ccaltargetbeamsTEC[int(vis.split('/')[-3])] or os.path.isdir(
+                for vis, beam in self.get_datasets():
+                    if ccaltargetbeamsTEC[int(beam)] or os.path.isdir(
                             self.basedir + '00' + '/' + self.rawsubdir + '/' + self.target.rstrip('.MS') + '_B' +
-                            vis.split('/')[-3] + '.MS.tecim'):
+                            beam + '.MS.tecim'):
                         logger.info(
-                            '# TEC correction tables for beam ' + vis.split('/')[-3] + ' were already generated')
-                        ccalpolcalTEC[int(vis.split('/')[-3])] = True
+                            '# TEC correction tables for beam ' + beam + ' were already generated')
+                        ccalpolcalTEC[int(beam)] = True
                     else:
                         cc_load_tec_maps = 'from recipes import tec_maps'
                         cc_targetbeam_TEC = 'tec_maps.create(vis = "' + vis + '", doplot = False)'
@@ -227,15 +215,15 @@ class ccal:
                             if os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.target.rstrip(
                                     '.MS') + '_B' + vis.split('/')[
                                                  -3] + '.tecim'):  # Check if the calibration table was created
-                                ccalpolcalTEC[int(vis.split('/')[-3])] = True
+                                ccalpolcalTEC[int(beam)] = True
                             else:
                                 logger.warning('TEC calibration tables for beam ' + vis.split('/')[
                                     -3] + ' could not be generated!')
-                                ccalpolcalTEC[int(vis.split('/')[-3])] = False
+                                ccalpolcalTEC[int(beam)] = False
                         else:
                             logger.warning(
-                                '# TEC images could not be generated for target beam ' + vis.split('/')[-3] + '')
-                            ccaltargetbeamsTEC[int(vis.split('/')[-3])] = False
+                                '# TEC images could not be generated for target beam ' + beam + '')
+                            ccaltargetbeamsTEC[int(beam)] = False
             else:
                 logger.warning('No target dataset specified! Not using any TEC corrections for target beam datasets')
 
@@ -694,38 +682,43 @@ class ccal:
                 else:
                     prevtables = '""'
                     interp = '""'
-                    TECstatus = subs_param.get_param(self,
-                                                     'ccal_fluxcal_TEC')  # Check for the TEC calibration table to apply on-the-fly
+                    # Check for the TEC calibration table to apply on-the-fly
+                    TECstatus = subs_param.get_param(self, 'ccal_fluxcal_TEC')
                     if TECstatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
                                                                         '"' + self.get_fluxcal_path().rstrip(
                                                                             '.MS') + '.tecim"', '"nearest"')
-                    bandpassstatus = subs_param.get_param(self,
-                                                          'ccal_fluxcal_bandpass')  # Check for the bandpass calibration table to apply on-the-fly
+
+                    # Check for the bandpass calibration table to apply on-the-fly
+                    bandpassstatus = subs_param.get_param(self, 'ccal_fluxcal_bandpass')
                     if bandpassstatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
                                                                         '"' + self.get_fluxcal_path().rstrip(
                                                                             '.MS') + '.Bscan"', '"nearest"')
-                    apgainstatus = subs_param.get_param(self,
-                                                        'ccal_fluxcal_apgains')  # Check for the gain calibration table to apply on-the-fly
+
+                    # Check for the gain calibration table to apply on-the-fly
+                    apgainstatus = subs_param.get_param(self, 'ccal_fluxcal_apgains')
                     if apgainstatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
                                                                         '"' + self.get_fluxcal_path().rstrip(
                                                                             '.MS') + '.G1ap"', '"nearest"')
-                    globaldelaystatus = subs_param.get_param(self,
-                                                             'ccal_fluxcal_globaldelay')  # Check for the global delay table to apply on-the-fly
+
+                    # Check for the global delay table to apply on-the-fly
+                    globaldelaystatus = subs_param.get_param(self, 'ccal_fluxcal_globaldelay')
                     if globaldelaystatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
                                                                         '"' + self.get_fluxcal_path().rstrip(
                                                                             '.MS') + '.K"', '"nearest"')
-                    crosshanddelaystatus = subs_param.get_param(self,
-                                                                'ccal_polcal_crosshanddelay')  # Check for the crosshand delay table to apply on-the-fly
+
+                    # Check for the crosshand delay table to apply on-the-fly
+                    crosshanddelaystatus = subs_param.get_param(self, 'ccal_polcal_crosshanddelay')
                     if crosshanddelaystatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
                                                                         '"' + self.get_polcal_path().rstrip(
                                                                             '.MS') + '.Kcross"', '"nearest"')
-                    leakagestatus = subs_param.get_param(self,
-                                                         'ccal_fluxcal_leakage')  # Check for the leakage table to apply on-the-fly
+
+                    # Check for the leakage table to apply on-the-fly
+                    leakagestatus = subs_param.get_param(self, 'ccal_fluxcal_leakage')
                     if leakagestatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
                                                                         '"' + self.get_fluxcal_path().rstrip(
@@ -740,11 +733,11 @@ class ccal:
                         ccalpolcalpolarisationangle = True
                     else:
                         ccalpolcalpolarisationangle = False
-                        logger.error(
-                            '# Polarisation angle correction table for polarised calibrator was not created successfully!')
+                        logger.error('Polarisation angle correction table for polarised calibrator '
+                                     'was not created successfully!')
             else:
-                logger.error(
-                    '# Polarised calibrator dataset not specified or dataset not available. Cross calibration will probably not work!')
+                logger.error('Polarised calibrator dataset not specified or dataset not available.'
+                             'Cross calibration will probably not work!')
 
         subs_param.add_param(self, 'ccal_polcal_polarisationangle', ccalpolcalpolarisationangle)
 
@@ -930,18 +923,15 @@ class ccal:
                 # Check which beams are requested for applying solutions
 
                 if self.crosscal_transfer_to_target_targetbeams == 'all':  # if all beams are requested
-                    datasets = glob.glob(self.basedir + '[0-9][0-9]' + '/' + self.rawsubdir + '/' + self.target)
+                    datasets = self.get_datasets()
                 else:  # if only certain beams are requested
-                    datasets = self.crosscal_transfer_to_target_targetbeams.split(",")
-                    for n, beam in enumerate(datasets):
-                        datasets[n] = self.basedir + beam + '/' + self.rawsubdir + '/' + self.target
+                    beams = self.crosscal_transfer_to_target_targetbeams.split(",")
+                    datasets = self.get_datasets(beams=beams)
 
-                # Apply the solutions to the requested beams
-
-                for vis in datasets:
-                    if ccaltargetbeamstransfer[int(vis.split('/')[-3])]:
-                        logger.info('Solutions were already applied to beam ' + vis.split('/')[-3] + '')
-                        ccaltargetbeamstransfer[int(vis.split('/')[-3])] = True
+                for vis, beam in datasets:
+                    if ccaltargetbeamstransfer[int(beam)]:
+                        logger.info('Solutions were already applied to beam ' + beam + '')
+                        ccaltargetbeamstransfer[int(beam)] = True
                     else:
                         # Check which calibration tables are available for each beam
                         prevtables = '""'
@@ -949,7 +939,7 @@ class ccal:
 
                         # Check for the TEC calibration table to apply on-the-fly
                         TECstatus = subs_param.get_param(self, 'ccal_targetbeams_TEC')
-                        if TECstatus[int(vis.split('/')[-3])]:
+                        if TECstatus[int(beam)]:
                             ###### fix this for right location of TEC table ######
                             prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
                                                                             '"' + vis.rstrip('.MS') + '.tecim"',
@@ -998,16 +988,16 @@ class ccal:
                                                                                 '.MS') + '.Xf"', '"nearest"')
 
                         # Execute the CASA command to apply the solutions
-                        logger.debug('Applying solutions to beam ' + vis.split('/')[-3] + '')
+                        logger.debug('Applying solutions to beam ' + beam + '')
                         cc_targetbeams_saveflags = 'flagmanager(vis = "' + vis + '", mode = "save", versionname = "ccal")'  # Save the flags before applying solutions
                         cc_targetbeams_apply = 'applycal(vis = "' + vis + '", gaintable = [' + prevtables + '], interp = [' + interp + '], parang = False, flagbackup = False)'
                         casacmd = [cc_targetbeams_saveflags, cc_targetbeams_apply]
                         casa = drivecasa.Casapy()
                         casa.run_script(casacmd, raise_on_severe=False, timeout=10000)
                         if subs_msutils.has_correcteddata(vis):
-                            ccaltargetbeamstransfer[int(vis.split('/')[-3])] = True
+                            ccaltargetbeamstransfer[int(beam)] = True
                         else:
-                            ccaltargetbeamstransfer[int(vis.split('/')[-3])] = False
+                            ccaltargetbeamstransfer[int(beam)] = False
                             logger.warning(
                                 '# Corrected visibilities were not written to dataset for beam ' + vis.split('/')[
                                     -3] + ' !')
@@ -1024,9 +1014,10 @@ class ccal:
             subs_managefiles.director(self, 'rm',
                                       self.get_fluxcal_path().rstrip(
                                           '.MS') + '.Bscan.png')
-        cc_plot_bandpass = 'plotcal(caltable = "' + self.get_fluxcal_path().rstrip(
-            '.MS') + '.Bscan", xaxis = "freq", yaxis="amp", subplot=431, iteration="antenna", plotsymbol=".", markersize=1.0, fontsize=5.0, showgui=False, figfile="' + self.get_fluxcal_path().rstrip(
-            '.MS') + '.Bscan.png")'
+        cc_plot_bandpass = 'plotcal(caltable = "' + self.get_fluxcal_path().rstrip('.MS') + \
+                           '.Bscan", xaxis = "freq", yaxis="amp", subplot=431, iteration="antenna", ' \
+                           'plotsymbol=".", markersize=1.0, fontsize=5.0, showgui=False, figfile="' + \
+                           self.get_fluxcal_path().rstrip('.MS') + '.Bscan.png")'
         casacmd = [cc_plot_bandpass]
         casa = drivecasa.Casapy()
         casa.run_script(casacmd, raise_on_severe=False, timeout=10000)
@@ -1041,9 +1032,10 @@ class ccal:
             subs_managefiles.director(self, 'rm',
                                       self.get_fluxcal_path().rstrip(
                                           '.MS') + '.G1ap_amp.png')
-        cc_plot_gains_amp = 'plotcal(caltable = "' + self.get_fluxcal_path().rstrip(
-            '.MS') + '.G1ap", xaxis = "time", yaxis="amp", subplot=431, iteration="antenna", plotsymbol=".", markersize=1.0, fontsize=5.0, showgui=False, figfile="' + self.get_fluxcal_path().rstrip(
-            '.MS') + '.G1ap_amp.png")'
+        cc_plot_gains_amp = 'plotcal(caltable = "' + self.get_fluxcal_path().rstrip('.MS') + \
+                            '.G1ap", xaxis = "time", yaxis="amp", subplot=431, iteration="antenna", ' \
+                            'plotsymbol=".", markersize=1.0, fontsize=5.0, showgui=False, figfile="' + \
+                            self.get_fluxcal_path().rstrip('.MS') + '.G1ap_amp.png")'
         casacmd = [cc_plot_gains_amp]
         casa = drivecasa.Casapy()
         casa.run_script(casacmd, raise_on_severe=False, timeout=10000)
