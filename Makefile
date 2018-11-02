@@ -4,7 +4,7 @@ VENV=$(CURDIR)/.venv2
 
 .PHONY: run docker
 
-all: small
+all: run
 
 $(VENV):
 	virtualenv -p python2 ../.venv2
