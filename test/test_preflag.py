@@ -1,13 +1,12 @@
 import unittest
 import matplotlib as mpl
+
 mpl.use('TkAgg')
 from apercal.modules.preflag import preflag
 from os import path
-from apercal.libs import lib
+import logging
 
-
-lib.setup_logger('debug')
-
+logging.basicConfig(level=logging.INFO)
 here = path.dirname(__file__)
 
 
@@ -22,4 +21,4 @@ class TestPreflag(unittest.TestCase):
 
 
 if __name__ == "__main__":
-        unittest.main()
+    unittest.main()

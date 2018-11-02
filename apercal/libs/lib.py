@@ -81,46 +81,6 @@ def write2file(header, text2write, file2write):
     f.close()
 
 
-def implotter(fname, i=0, ni=3, j=0, nj=3):
-    """
-    """
-    # put some code here
-
-
-def setup_logger(level='info', logfile=None, quiet=False):
-    logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
-    logger.propagate = False
-
-    fh_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s : %(message)s',
-                                     datefmt='%m/%d/%Y %I:%M:%S %p')
-    if logfile is None:
-        fh = logging.FileHandler('log_filename.txt')
-    else:
-        fh = logging.FileHandler(logfile)
-    fh.setLevel(logging.DEBUG)
-    fh.setFormatter(fh_formatter)
-    logger.addHandler(fh)
-
-    if not quiet:
-        ch_formatter = logging.Formatter('%(name)s - %(levelname)s : %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
-        ch = logging.StreamHandler()
-        if level == 'info':
-            ch.setLevel(logging.INFO)
-        if level == 'debug':
-            ch.setLevel(logging.DEBUG)
-        ch.setFormatter(ch_formatter)
-        logger.addHandler(ch)
-        logger.info('Logging started!')
-        if logfile is not None:
-            logger.info('To see the log in a bash window use the following command:')
-            logger.info("tail -n +1 -f " + logfile)
-    elif logfile is not None:
-        print "Logging to file. To see the log in a bash window use the following command:"
-        print "tail -n +1 -f " + logfile
-    return logger
-
-
 class FatalMiriadError(Exception):
     """
     Custom  Exception for Fatal MIRIAD Errors

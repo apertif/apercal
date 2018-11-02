@@ -1,12 +1,12 @@
 import unittest
 import matplotlib as mpl
+
 mpl.use('TkAgg')
 from apercal.modules.ccal import ccal
 from os import path
-from apercal.libs import lib
+import logging
 
-
-lib.setup_logger('debug')
+logging.basicConfig(level=logging.INFO)
 
 here = path.abspath(path.dirname(__file__))
 
@@ -22,4 +22,4 @@ class TestCcal(unittest.TestCase):
 
 
 if __name__ == "__main__":
-        unittest.main()
+    unittest.main()

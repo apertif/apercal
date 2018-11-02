@@ -1,8 +1,13 @@
 import unittest
 import matplotlib as mpl
+
 mpl.use('TkAgg')
 from apercal.modules.scal import scal
 from os import path
+
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 here = path.dirname(__file__)
 
@@ -18,4 +23,4 @@ class TestScal(unittest.TestCase):
 
 
 if __name__ == "__main__":
-        unittest.main()
+    unittest.main()
