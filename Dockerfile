@@ -5,10 +5,12 @@ RUN docker-apt-install \
           python-casacore python-ephem wget
 
 ADD . /code
-WORKDIR /code/data
-RUN make
 WORKDIR /code
-RUN pip install . pytest pycodestyle
+
+RUN make data/small
+
+RUN pip install .
+RUN pip install -r test/requirements.txt
 
 ## disable test run until all tests are working
 #RUN pytest
