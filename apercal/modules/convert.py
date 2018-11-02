@@ -127,8 +127,8 @@ class convert:
         subs_param.add_param(self, 'convert_targetbeams_MSavailable', converttargetbeamsmsavailable)
 
         # Convert the available MS-datasets to UVFITS #
-        raw_convert_cmd = 'exportuvfits(vis="{basedir}00{rawsubdir}/{fluxcal}", ' \
-                          'fitsfile="{basedir}00/{crosscalsubdir}/{fluxcalbase}UVFITS", datacolumn="{datacolumn}", ' \
+        raw_convert_cmd = 'exportuvfits(vis="{basedir}00/{rawsubdir}/{cal}", ' \
+                          'fitsfile="{basedir}00/{crosscalsubdir}/{calbase}UVFITS", datacolumn="{datacolumn}", ' \
                           'combinespw=True, padwithflags=True, multisource=True, writestation=True)'
 
         # Convert the flux calibrator
@@ -155,7 +155,7 @@ class convert:
 
                         casacmd = [fc_convert]
                         casa = drivecasa.Casapy()
-                        casa.run_script(casacmd, raise_on_severe=False, timeout=3600)
+                        casa.run_script(casacmd, raise_on_severe=True, timeout=3600)
                         if os.path.isfile(self.basedir + '00' + '/' + self.crosscalsubdir + '/' + self.fluxcal.rstrip(
                                 'MS') + 'UVFITS'):
                             convertfluxcalms2uvfits = True
@@ -196,7 +196,7 @@ class convert:
 
                         casacmd = [pc_convert]
                         casa = drivecasa.Casapy()
-                        casa.run_script(casacmd, raise_on_severe=False, timeout=3600)
+                        casa.run_script(casacmd, raise_on_severe=True, timeout=3600)
                         if os.path.isfile(self.basedir + '00' + '/' + self.crosscalsubdir + '/' + self.polcal.rstrip(
                                 'MS') + 'UVFITS'):
                             convertpolcalms2uvfits = True
@@ -253,8 +253,9 @@ class convert:
 
                             casacmd = [tg_convert]
                             casa = drivecasa.Casapy()
-                            casa.run_script(casacmd, raise_on_severe=False, timeout=7200)
-                            if os.path.isfile(self.basedir + vis.split('/')[-3] + '/' + self.crosscalsubdir + '/' + self.target.rstrip('MS') + 'UVFITS'):
+                            casa.run_script(casacmd, raise_on_severe=True, timeout=7200)
+                            if os.path.isfile(self.basedir + vis.split('/')[
+                                -3] + '/' + self.crosscalsubdir + '/' + self.target.rstrip('MS') + 'UVFITS'):
                                 converttargetbeamsms2uvfits[int(vis.split('/')[-3])] = True
                                 logger.debug('Converted dataset of target beam ' + vis.split('/')[
                                     -3] + ' from MS to UVFITS format!')

@@ -16,6 +16,8 @@ class TestPrepare(unittest.TestCase):
         p.fluxcal = '3C295.MS'
         p.polcal = '3C138.MS'
         p.target = 'NGC807.MS'
+        p.prepare_bypass_alta = True
+        p.prepare_target_beams = '00, 04, 17'
         p.go()
 
 
