@@ -105,13 +105,13 @@ def setup_logger(level='info', logfile=None, quiet=False):
         ch.setFormatter(ch_formatter)
         logger.addHandler(ch)
         logger.info('Logging started!')
-        if logfile is not None:
+        if logfile:
             logger.info('To see the log in a bash window use the following command:')
             logger.info("tail -n +1 -f " + logfile)
 
-    elif logfile is not None:
-        logger.info("Logging to file. To see the log in a bash window use the following command:")
-        logger.info("tail -n +1 -f " + logfile)
+    elif logfile:
+        print("Logging to file. To see the log in a bash window use the following command:")
+        print("tail -n +1 -f " + logfile)
     return logger
 
 
@@ -168,7 +168,7 @@ def masher(task=None, **kwargs):
     Each argument is passed to the task through the use of the keywords.
     """
     logger = logging.getLogger('masher')
-    if task is not None:
+    if task:
         argstr = " "
         for k in kwargs.keys():
             if str(kwargs[k]).upper() != 'NONE':
@@ -238,7 +238,7 @@ def get_source_names(vis=None):
     Helper function that uses the MIRIAD task UVINDEX to grab the name of the
     sources from a MIRIAD visibility file.
     """
-    if vis is not None:
+    if vis:
         u = masher(task='uvindex', vis=vis)
         i = [i for i in range(0, len(u)) if "pointing" in u[i]]
         N = len(u)
@@ -379,7 +379,7 @@ class settings:
         logger = logging.getLogger('settings.show')
         parser = self.parser
         try:
-            if section is not None:
+            if section:
                 logger.info("[" + section + "]")
                 for p in parser.items(section):
                     logger.info(p[0], " = ", p[1])
@@ -397,7 +397,7 @@ class settings:
         logger = logging.getLogger('settings.get')
         parser = self.parser
         try:
-            if section is not None and keyword is not None:
+            if section and keyword:
                 if len(parser.get(section, keyword).split(';')) > 1:
                     return parser.get(section, keyword).split(';')
                 else:
@@ -579,14 +579,14 @@ def pgflag(vis=None, flagpar='6,2,2,2,5,3', settings=None, stokes='qq'):
     o = None
 
     # Do pgflag with the settings parameters if provided.
-    if settings is not None and vis is not None:
+    if settings and vis:
         params = settings.get('pgflag')
         logger.info("Doing PGFLAG on " + vis + " using stokes=" + params.stokes + " with flagpar=" + params.flagpar)
         logger.info("Output written to " + vis + '.pgflag.txt')
         o = masher(task='pgflag', vis=vis, stokes=params.stokes, flagpar=params.flagpar,
                    options='nodisp', command="'<'")
     # Do PGFLAG with input settings, i.e. no settings file provided.
-    if vis is not None and settings is None:
+    if vis and settings is None:
         logger.info("Doing PGFLAG on " + vis + " using stokes " + stokes + " with flagpar=" + flagpar)
         o = masher(task='pgflag', vis=vis, stokes=stokes, flagpar=flagpar, options='nodisp', command="'<'")
 
@@ -620,7 +620,7 @@ def query_yes_no(question, default="yes"):
     while True:
         sys.stdout.write(question + prompt)
         choice = raw_input().lower()
-        if default is not None and choice == '':
+        if default and choice == '':
             return valid[default]
         elif choice in valid:
             return valid[choice]
