@@ -51,6 +51,7 @@ class ccal:
     crosscal_transfer_to_target_targetbeams = None
     crosscal_polarisation_angle = None
     crosscal_crosshand_delay = None
+    crosscal_transfer_to_target_targetbeams = None
 
 
     def __init__(self, file=None, **kwargs):
@@ -190,7 +191,7 @@ class ccal:
             # Create the TEC correction tables for the target beam datasets
 
             if self.target != '':
-                datasets = glob.glob(self.basedir + '[0-9][0-9]' + '/' + self.rawsubdir + '/' + self.target)
+                datasets = sorted(glob.glob(self.basedir + '[0-9][0-9]' + '/' + self.rawsubdir + '/' + self.target))
                 for vis in datasets:
                     if ccaltargetbeamsTEC[int(vis.split('/')[-3])] or os.path.isdir(
                             self.basedir + '00' + '/' + self.rawsubdir + '/' + self.target.rstrip('.MS') + '_B' +
