@@ -16,8 +16,8 @@ class TestTransfer(unittest.TestCase):
         p.fluxcal = '3C295.MS'
         p.polcal = '3C138.MS'
         p.target = 'NGC807.MS'
+        p.go()
 
 
 if __name__ == "__main__":
         unittest.main()
-        p.go()
