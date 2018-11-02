@@ -1,10 +1,10 @@
 # About
 
-Apercal - the apertif real time imaging pipeline.
+Apercal - the APERTIF calibration and imaging pipeline.
 
 https://www.astron.nl/astronomy-group/apertif/apertif
 
-# installation
+# Installation
 
 ```bash
 $ pip install .
