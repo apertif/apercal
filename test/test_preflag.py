@@ -23,4 +23,3 @@ class TestPreflag(unittest.TestCase):
 
 if __name__ == "__main__":
         unittest.main()
-        p.go()

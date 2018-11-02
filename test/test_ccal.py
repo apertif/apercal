@@ -20,5 +20,6 @@ class TestCcal(unittest.TestCase):
         p.target = 'NGC807.MS'
         p.go()
 
+
 if __name__ == "__main__":
         unittest.main()
