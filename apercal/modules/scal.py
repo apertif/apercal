@@ -5,6 +5,9 @@ import astropy.io.fits as pyfits
 import numpy as np
 import os
 
+from apercal.libs.calculations import calc_dr_maj, calc_theoretical_noise, calc_dynamic_range_threshold, \
+    calc_mask_threshold
+
 from apercal.subs import setinit as subs_setinit
 from apercal.subs import managefiles as subs_managefiles
 
@@ -14,86 +17,6 @@ from apercal.subs import lsm
 from apercal.exceptions import ApercalException
 
 logger = logging.getLogger(__name__)
-
-
-def calc_theoretical_noise(dataset):
-    """
-    Calculate the theoretical rms of a given dataset
-    dataset (string): The input dataset to calculate the theoretical rms from
-    returns (float): The theoretical rms of the input dataset as a float
-    """
-    uv = aipy.miriad.UV(dataset)
-    obsrms = lib.miriad('obsrms')
-    try:
-        tsys = np.median(uv['systemp'])
-        if np.isnan(tsys):
-            obsrms.tsys = 30.0
-        else:
-            obsrms.tsys = tsys
-    except KeyError:
-        obsrms.tsys = 30.0
-    obsrms.jyperk = uv['jyperk']
-    obsrms.antdiam = 25
-    obsrms.freq = uv['sfreq']
-    obsrms.theta = 15
-    obsrms.nants = uv['nants']
-    obsrms.bw = np.abs(uv['sdf'] * uv['nschan']) * 1000.0
-    obsrms.inttime = 12.0 * 60.0
-    obsrms.coreta = 0.88
-    theorms = float(obsrms.go()[-1].split()[3]) / 1000.0
-    return theorms
-
-
-def calc_dynamic_range_threshold(imax, dynamic_range, dynamic_range_minimum):
-    """
-    Calculates the dynamic range threshold
-    imax (float): the maximum in the input image
-    dynamic_range (float): the dynamic range you want to calculate the threshold for
-    returns (float): the dynamic range threshold
-    """
-    if dynamic_range == 0:
-        dynamic_range = dynamic_range_minimum
-    dynamic_range_threshold = imax / dynamic_range
-    return dynamic_range_threshold
-
-
-def calc_mask_threshold(theoretical_noise_threshold, noise_threshold, dynamic_range_threshold):
-    """
-    Function to calculate the actual mask_threshold and the type of mask threshold from the theoretical noise
-    threshold, noise threshold, and the dynamic range threshold
-
-    theoretical_noise_threshold (float): The theoretical noise threshold calculated by calc_theoretical_noise_threshold
-    noise_threshold (float): The noise threshold calculated by calc_noise_threshold
-    dynamic_range_threshold (float): The dynamic range threshold calculated by calc_dynamic_range_threshold
-    returns (float, string): The maximum of the three thresholds, the type of the maximum threshold
-    """
-    # if np.isinf(dynamic_range_threshold) or np.isnan(dynamic_range_threshold):
-    #     dynamic_range_threshold = noise_threshold
-    mask_threshold = np.max([theoretical_noise_threshold, noise_threshold, dynamic_range_threshold])
-    mask_argmax = np.argmax([theoretical_noise_threshold, noise_threshold, dynamic_range_threshold])
-    if mask_argmax == 0:
-        mask_threshold_type = 'Theoretical noise threshold'
-    elif mask_argmax == 1:
-        mask_threshold_type = 'Noise threshold'
-    elif mask_argmax == 2:
-        mask_threshold_type = 'Dynamic range threshold'
-    return mask_threshold, mask_threshold_type
-
-
-def calc_dr_maj(drinit, dr0, majorcycles, function_):
-    """
-    Function to calculate the dynamic range limits during major cycles
-    drinit (float): The initial dynamic range
-    dr0 (float): Coefficient for increasing the dynamic range threshold at each major cycle
-    majorcycles (int): The number of major cycles to execute
-    function_ (string): The function to follow for increasing the dynamic ranges. Currently 'power' is supported.
-    returns (list of floats): A list of floats for the dynamic range limits within the major cycles.
-    """
-    if function_ == 'square':
-        dr_maj = [drinit * np.power(dr0, m) for m in range(majorcycles)]
-    else:
-        raise ApercalException('Function for major cycles not supported')
-    return dr_maj
 
 
 class scal:
@@ -513,7 +436,7 @@ class scal:
                 logger.info('Mask with threshold ' + str(mask_threshold) + ' Jy/beam created #')
             else:
                 subs_managefiles.director(self, 'cp', str(majc).zfill(2) + '/mask_' + str(minc).zfill(2),
-                                          file=str(majc - 1).zfill(2) + '/mask_' + str(
+                                          file_=str(majc - 1).zfill(2) + '/mask_' + str(
                                               self.selfcal_standard_minorcycle - 1).zfill(2))
                 logger.info('Mask from last minor iteration of last major cycle copied #')
             clean_cutoff = self.calc_clean_cutoff(mask_threshold)

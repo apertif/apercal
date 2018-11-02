@@ -2,6 +2,7 @@ from glob import glob
 from os import path
 from typing import List, Tuple, Any
 
+
 class BaseModule:
     subdirification = None
     basedir = None

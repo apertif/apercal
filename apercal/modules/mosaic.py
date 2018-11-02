@@ -142,7 +142,7 @@ class mosaic:
                 # Copy the continuum images over to the mosaic directory
                 for b in np.arange(beams):
                     if stacked_inputstatus[b]:
-                        subs_managefiles.director(self, 'cp', str(b).zfill(2), file=self.basedir + '/' + str(b).zfill(
+                        subs_managefiles.director(self, 'cp', str(b).zfill(2), file_=self.basedir + '/' + str(b).zfill(
                             2) + '/' + self.contsubdir + '/' + self.target.rstrip('.mir') + '_stack')
                         if os.path.isdir(str(b).zfill(2)):
                             stacked_copystatus[b] = True

@@ -1,10 +1,11 @@
 import logging
 
-import aipy
 import numpy as np
 import pandas as pd
 import os
 
+from apercal.libs.calculations import calc_dr_maj, calc_theoretical_noise, calc_theoretical_noise_threshold, \
+    calc_dynamic_range_threshold, calc_clean_cutoff, calc_noise_threshold, calc_mask_threshold
 from apercal.subs import setinit as subs_setinit
 from apercal.subs import managefiles as subs_managefiles
 from apercal.subs import combim as subs_combim
@@ -16,118 +17,6 @@ from apercal.libs import lib
 from apercal.exceptions import ApercalException
 
 logger = logging.getLogger(__name__)
-
-
-def calc_dr_maj(drinit, dr0, majorcycles, func):
-    """
-    Function to calculate the dynamic range limits during major cycles
-    drinit (float): The initial dynamic range
-    dr0 (float): Coefficient for increasing the dynamic range threshold at each major cycle
-    majorcycles (int): The number of major cycles to execute
-    func (string): The function to follow for increasing the dynamic ranges. Currently 'power' is supported.
-    returns (list of floats): A list of floats for the dynamic range limits within the major cycles.
-    """
-    if func == 'square':
-        dr_maj = [drinit * np.power(dr0, m) for m in range(majorcycles)]
-    else:
-        raise ApercalException('Function for major cycles not supported')
-    return dr_maj
-
-
-def calc_theoretical_noise(dataset):
-    """
-    Calculate the theoretical rms of a given dataset
-    dataset (string): The input dataset to calculate the theoretical rms from
-    returns (float): The theoretical rms of the input dataset as a float
-    """
-    uv = aipy.miriad.UV(dataset)
-    obsrms = lib.miriad('obsrms')
-    try:
-        tsys = np.median(uv['systemp'])
-        if np.isnan(tsys):
-            obsrms.tsys = 30.0
-        else:
-            obsrms.tsys = tsys
-    except KeyError:
-        obsrms.tsys = 30.0
-    obsrms.jyperk = uv['jyperk']
-    obsrms.antdiam = 25
-    obsrms.freq = uv['sfreq']
-    obsrms.theta = 15
-    obsrms.nants = uv['nants']
-    obsrms.bw = np.abs(uv['sdf'] * uv['nschan']) * 1000.0
-    obsrms.inttime = 12.0 * 60.0
-    obsrms.coreta = 0.88
-    theorms = float(obsrms.go()[-1].split()[3]) / 1000.0
-    return theorms
-
-
-def calc_theoretical_noise_threshold(theoretical_noise, nsigma):
-    """
-    Calculates the theoretical noise threshold from the theoretical noise
-    theoretical_noise (float): the theoretical noise of the observation
-    returns (float): the theoretical noise threshold
-    """
-    theoretical_noise_threshold = (nsigma * theoretical_noise)
-    return theoretical_noise_threshold
-
-
-def calc_dynamic_range_threshold(imax, dynamic_range, dynamic_range_minimum):
-    """
-    Calculates the dynamic range threshold
-    imax (float): the maximum in the input image
-    dynamic_range (float): the dynamic range you want to calculate the threshold for
-    returns (float): the dynamic range threshold
-    """
-    if dynamic_range == 0:
-        dynamic_range = dynamic_range_minimum
-    dynamic_range_threshold = imax / dynamic_range
-    return dynamic_range_threshold
-
-
-def calc_clean_cutoff(mask_threshold, c1):
-    """
-    Calculates the cutoff for the cleaning
-    mask_threshold (float): the mask threshold to calculate the clean cutoff from
-    returns (float): the clean cutoff
-    """
-    clean_cutoff = mask_threshold / c1
-    return clean_cutoff
-
-
-def calc_noise_threshold(imax, minor_cycle, major_cycle, c0):
-    """
-    Calculates the noise threshold
-    imax (float): the maximum in the input image
-    minor_cycle (int): the current minor cycle the self-calibration is in
-    major_cycle (int): the current major cycle the self-calibration is in
-    returns (float): the noise threshold
-    """
-    noise_threshold = imax / ((c0 + minor_cycle * c0) * (major_cycle + 1))
-    return noise_threshold
-
-
-def calc_mask_threshold(theoretical_noise_threshold, noise_threshold, dynamic_range_threshold):
-    """
-    Function to calculate the actual mask_threshold and the type of mask threshold from the
-    theoretical noise threshold, noise threshold, and the dynamic range threshold
-    theoretical_noise_threshold (float): The theoretical noise threshold calculated by
-                                         calc_theoretical_noise_threshold
-    noise_threshold (float): The noise threshold calculated by calc_noise_threshold
-    dynamic_range_threshold (float): The dynamic range threshold calculated by calc_dynamic_range_threshold
-    returns (float, string): The maximum of the three thresholds, the type of the maximum threshold
-    """
-    # if np.isinf(dynamic_range_threshold) or np.isnan(dynamic_range_threshold):
-    #     dynamic_range_threshold = noise_threshold
-    mask_threshold = np.max([theoretical_noise_threshold, noise_threshold, dynamic_range_threshold])
-    mask_argmax = np.argmax([theoretical_noise_threshold, noise_threshold, dynamic_range_threshold])
-    if mask_argmax == 0:
-        mask_threshold_type = 'Theoretical noise threshold'
-    elif mask_argmax == 1:
-        mask_threshold_type = 'Noise threshold'
-    elif mask_argmax == 2:
-        mask_threshold_type = 'Dynamic range threshold'
-    return mask_threshold, mask_threshold_type
 
 
 class continuum:
@@ -286,12 +175,12 @@ class continuum:
                     logger.debug(
                         'Theoretical noise for chunk ' + chunk + ' is ' + str(theoretical_noise) + ' Jy/beam #')
                     theoretical_noise_threshold = calc_theoretical_noise_threshold(theoretical_noise,
-                                                                                        self.continuum_nsigma)
+                                                                                   self.continuum_nsigma)
                     logger.debug('Your theoretical noise threshold will be ' + str(
                         self.continuum_nsigma) + ' times the theoretical noise corresponding to ' + str(
                         theoretical_noise_threshold) + ' Jy/beam #')
                     dr_list = calc_dr_maj(self.continuum_drinit, self.continuum_dr0, majc + 2,
-                                               self.continuum_majorcycle_function)
+                                          self.continuum_majorcycle_function)
                     logger.debug('Dynamic range limits for the selfcal major iterations were ' + str(dr_list) + ' #')
                     dr_minlist = self.calc_dr_min(dr_list, majc + 1, self.continuum_minorcycle,
                                                   self.continuum_minorcycle_function)
@@ -369,17 +258,11 @@ class continuum:
                                     logger.debug('Mask for chunk ' + str(
                                         chunk) + ' has already been copied from selfcal and regridded #')
                                 else:  # if not look for it
-                                    if os.path.isdir(
-                                            self.selfcaldir + '/' + chunk + '/' + str(majc).zfill(2) + '/mask_' + str(
+                                    path = self.selfcaldir + '/' + chunk + '/' + str(majc).zfill(2) + '/mask_' + str(
                                                     self.get_last_minor_iteration(chunk, self.get_last_major_iteration(
-                                                            chunk))).zfill(2)):  # Find the last created mask
-                                        subs_managefiles.director(self, 'cp', 'mask_00',
-                                                                  file=self.selfcaldir + '/' + chunk + '/' + str(
-                                                                      majc).zfill(2) + '/mask_' + str(
-                                                                      self.get_last_minor_iteration(chunk,
-                                                                                                    self.get_last_major_iteration(
-                                                                                                        chunk))).zfill(
-                                                                      2))
+                                                            chunk))).zfill(2)
+                                    if os.path.isdir(path):  # Find the last created mask
+                                        subs_managefiles.director(self, 'cp', 'mask_00', file_=path)
                                         logger.debug('Mask from last selfcal loop found! #')
                                     else:  # If it is not there leave the loop for this chunk
                                         continuummaskstatus[int(chunk), minc] = False
@@ -393,7 +276,7 @@ class continuum:
                                     regrid.axes = '1,2'
                                     regrid.go()
                                     subs_managefiles.director(self, 'rm', 'mask_00')
-                                    subs_managefiles.director(self, 'rn', 'mask_00', file='mask_regrid')
+                                    subs_managefiles.director(self, 'rn', 'mask_00', file_='mask_regrid')
                                     logger.debug('Mask from last selfcal cycle copied and regridded to common grid #')
                                     if os.path.isdir('mask_00'):
                                         maskmin, maskmax, maskstd = subs_imstats.getimagestats(self, 'mask_00')
@@ -414,7 +297,7 @@ class continuum:
                                 # Now calculate the thresholds for the first minor cycles
                                 noise_threshold = calc_noise_threshold(mapmax, minc, majc + 1, self.continuum_c0)
                                 dynamic_range_threshold = calc_dynamic_range_threshold(mapmax, dr_minlist[minc],
-                                                                                            self.continuum_minorcycle0_dr)
+                                                                                       self.continuum_minorcycle0_dr)
                                 mask_threshold, mask_threshold_type = calc_mask_threshold(
                                     theoretical_noise_threshold, noise_threshold, dynamic_range_threshold)
                                 logger.debug('Mask threshold for final minor cycle ' + str(minc) + ' set to ' + str(
@@ -559,7 +442,7 @@ class continuum:
                                     break
                                 noise_threshold = calc_noise_threshold(mapmax, minc, majc + 1, self.continuum_c0)
                                 dynamic_range_threshold = calc_dynamic_range_threshold(mapmax, dr_minlist[minc],
-                                                                                            self.continuum_minorcycle0_dr)
+                                                                                       self.continuum_minorcycle0_dr)
                                 mask_threshold, mask_threshold_type = calc_mask_threshold(
                                     theoretical_noise_threshold, noise_threshold, dynamic_range_threshold)
                                 logger.debug('Mask threshold for final minor cycle ' + str(minc) + ' set to ' + str(

@@ -17,7 +17,7 @@ from apercal.subs.bandpass import create_bandpass
 from apercal.ao_strategies import ao_strategies
 from apercal.libs import lib
 from apercal.exceptions import ApercalException
-from os import path
+
 
 logger = logging.getLogger(__name__)
 

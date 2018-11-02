@@ -61,7 +61,6 @@ class ccal(BaseModule):
         self.default = lib.load_config(self, file_)
         subs_setinit.setinitdirs(self)
 
-
     def go(self):
         """
         Executes the full cross calibration process in the following order.
