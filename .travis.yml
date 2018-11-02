@@ -4,5 +4,7 @@ install:
   - docker build . -t apertif/apercal
 script:
   - docker run apertif/apercal pycodestyle apercal --ignore=E501
-  - docker run apertif/apercal pytest test
+  - docker run apertif/apercal pytest test/test_prepare.py
+  - docker run apertif/apercal pytest test/test_preflag.py
+  - docker run apertif/apercal pytest test/test_ccal.py
 
