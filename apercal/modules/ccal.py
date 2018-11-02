@@ -145,8 +145,9 @@ class ccal(BaseModule):
                         logger.warning('TEC images could not be generated for flux calibrator')
                         ccalfluxcalTEC = False
             else:
-                logger.error('Flux calibrator dataset not specified or dataset not available. TEC corrections will '
-                             'not be used for flux calibrator')
+                error = 'Flux calibrator dataset not specified or dataset not available. TEC corrections will not be used for flux calibrator'
+                logger.error(error)
+                raise RuntimeError(error)
                 ccalfluxcalTEC = False
 
             # Create the TEC-correction tables for the polarised calibrator
@@ -282,8 +283,9 @@ class ccal(BaseModule):
                         ccalfluxcalphgains = True
                     else:
                         ccalfluxcalphgains = False
-                        logger.error(
-                            '# Initial phase calibration table for flux calibrator was not created successfully!')
+                        error = 'Initial phase calibration table for flux calibrator was not created successfully!'
+                        logger.error(error)
+                        raise RuntimeError(error)
 
                     # Calculate the bandpass for the flux calibrator
 
@@ -315,8 +317,9 @@ class ccal(BaseModule):
                         ccalfluxcalbandpass = True
                     else:
                         ccalfluxcalbandpass = False
-                        logger.error(
-                            '# Initial bandpass calibration table for flux calibrator was not created successfully!')
+                        error = 'Initial bandpass calibration table for flux calibrator was not created successfully!'
+                        logger.error(error)
+                        raise RuntimeError(error)
 
                 # Ingest the model of the flux calibrator into the MODEL column
 
@@ -405,7 +408,9 @@ class ccal(BaseModule):
                         ccalfluxcalapgains = True
                     else:
                         ccalfluxcalapgains = False
-                        logger.error('Gain calibration table for flux calibrator was not created successfully!')
+                        error = 'Gain calibration table for flux calibrator was not created successfully!'
+                        logger.error(error)
+                        raise RuntimeError(error)
             else:
                 logger.error('Flux calibrator dataset not specified or dataset not available. Cross calibration '
                              'will probably not work!')
