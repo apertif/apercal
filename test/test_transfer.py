@@ -1,19 +1,15 @@
 import unittest
 from os import path
 import matplotlib as mpl
-
-mpl.use('TkAgg')
-
 from apercal.modules.transfer import transfer
 import logging
 
+mpl.use('TkAgg')
 logging.basicConfig(level=logging.DEBUG)
-
 here = path.dirname(__file__)
 
 
 class TestTransfer(unittest.TestCase):
-
     def test_transfer(self):
         p = transfer()
         p.basedir = path.join(here, '../data/small/')

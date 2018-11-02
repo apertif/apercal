@@ -69,7 +69,7 @@ def getbeamimage(infile):
     infile (string): input image file in MIRIAD format
     returns (numpyarray): The bmaj, bmin, bpa of the image
     """
-    beamarray = np.full((3), np.nan)
+    beamarray = np.full(3, np.nan)
     beamarray[0] = getbmajimage(infile)
     beamarray[1] = getbminimage(infile)
     beamarray[2] = getbpaimage(infile)

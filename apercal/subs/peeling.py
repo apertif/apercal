@@ -19,7 +19,7 @@ def check_lsm(infile, cutoff, r1, r2):
     cat = lsm.query_catalogue(infile, 'NVSS', r2, minflux=cutoff)
     if len(cat) > 0:
         cat = lsm.calc_appflux(infile, cat, 'WSRT')
-        limidx = np.delete(np.where(cat.dist) < r1), (0)  # Find the index of the sources inside the primary beam (r1)
+        limidx = np.delete(np.where(cat.dist) < r1), 0  # Find the index of the sources inside the primary beam (r1)
         cat = np.delete(cat, limidx)  # remove the sources inside the primary beam from the list
         if len(cat) > 0:
             logging.info(str(len(cat)) + 'source(s) for peeling found outside the primary beam area!')

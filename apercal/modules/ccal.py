@@ -1,6 +1,7 @@
 import logging
 import glob
 import os
+from os import path
 import drivecasa
 import numpy as np
 import pandas as pd
@@ -37,6 +38,7 @@ class ccal:
     polsubdir = None
     mossubdir = None
     transfersubdir = None
+    subdirification = True
 
     crosscaldir = None
     crosscal_bandpass = None
@@ -52,10 +54,24 @@ class ccal:
     crosscal_polarisation_angle = None
     crosscal_crosshand_delay = None
 
+    crosscal_leakage = None
+    crosscal_transfer_to_cal = None
 
-    def __init__(self, file=None, **kwargs):
-        self.default = lib.load_config(self, file)
+    def __init__(self, file_=None, **kwargs):
+        self.default = lib.load_config(self, file_)
         subs_setinit.setinitdirs(self)
+
+    def get_fluxcal_path(self):
+        if self.subdirification:
+            return path.join(self.basedir, '00', self.rawsubdir, self.fluxcal)
+        else:
+            return self.fluxcal
+
+    def get_polcal_path(self):
+        if self.subdirification:
+            return path.join(self.basedir, '00', self.rawsubdir, self.polcal)
+        else:
+            return self.polcal
 
     def go(self):
         """
@@ -103,37 +119,33 @@ class ccal:
         ccalpolcalTEC = get_param_def(self, 'ccal_polcal_TEC', False)
 
         # Status of TEC correction table for the target beams
-        ccaltargetbeamsTEC = get_param_def(self, 'ccal_targetbeams_TEC', np.full((nbeams), False))
+        ccaltargetbeamsTEC = get_param_def(self, 'ccal_targetbeams_TEC', np.full(nbeams, False))
 
         if self.crosscal_tec:
             logger.info('Calculating TEC corrections')
 
             # Create the TEC correction tables for the flux calibrator
 
-            if self.fluxcal != '' and os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal):
+            if self.fluxcal != '' and os.path.isdir(self.get_fluxcal_path()):
                 if ccalfluxcalTEC or os.path.isdir(
-                        self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip('.MS') + '.tecim'):
+                        self.get_fluxcal_path().rstrip('.MS') + '.tecim'):
                     logger.warning('TEC correction tables for flux calibrator were already generated')
                     ccalfluxcalTEC = True
                 else:
                     cc_load_tec_maps = 'from recipes import tec_maps'
-                    cc_fluxcal_TEC = 'tec_maps.create(vis = "' + self.basedir + '00' + '/' + self.rawsubdir + '/' + \
-                                     self.fluxcal + '", doplot = False)'
+                    cc_fluxcal_TEC = 'tec_maps.create(vis = "' + self.get_fluxcal_path() + '", doplot = False)'
                     casacmd = [cc_load_tec_maps, cc_fluxcal_TEC]
                     casa = drivecasa.Casapy()
                     casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
                     # Check if the TEC corrections could be downloaded
-                    if os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal + '.IGS_TEC.im'):
+                    if os.path.isdir(self.get_fluxcal_path() + '.IGS_TEC.im'):
                         cc_load_tec_maps = 'from recipes import tec_maps'
-                        cc_fluxcal_genTEC = 'gencal(vis = "' + self.basedir + '00' + '/' + self.rawsubdir + '/' + \
-                                            self.fluxcal + '", caltable = "' + self.basedir + '00' + '/' + \
-                                            self.rawsubdir + '/' + self.fluxcal.rstrip(
-                            '.MS') + '.tecim", caltype="tecim", infile = "' + self.basedir + '00' + '/' + \
-                                            self.rawsubdir + '/' + self.fluxcal + '.IGS_TEC.im")'
+                        cc_fluxcal_genTEC = 'gencal(vis = "' + self.get_fluxcal_path() + '", caltable = "' + self.get_fluxcal_path().rstrip(
+                            '.MS') + '.tecim", caltype="tecim", infile = "' + self.get_fluxcal_path() + '.IGS_TEC.im")'
                         casacmd = [cc_load_tec_maps, cc_fluxcal_genTEC]
                         casa = drivecasa.Casapy()
                         casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
-                        if os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                        if os.path.isdir(self.get_fluxcal_path().rstrip(
                                 '.MS') + '.tecim'):  # Check if the calibration table was created
                             ccalfluxcalTEC = True
                         else:
@@ -150,30 +162,28 @@ class ccal:
 
             # Create the TEC-correction tables for the polarised calibrator
 
-            if self.polcal != '' and os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal):
+            if self.polcal != '' and os.path.isdir(self.get_polcal_path()):
                 if ccalpolcalTEC or os.path.isdir(
-                        self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal.rstrip('.MS') + '.tecim'):
+                        self.get_polcal_path().rstrip('.MS') + '.tecim'):
                     logger.warning('TEC correction tables for polarised calibrator were already generated')
                     ccalpolcalTEC = True
                 else:
                     cc_load_tec_maps = 'from recipes import tec_maps'
-                    cc_polcal_TEC = 'tec_maps.create(vis = "' + self.basedir + '00' + '/' + self.rawsubdir + '/' + \
-                                    self.polcal + '", doplot = False)'
+                    cc_polcal_TEC = 'tec_maps.create(vis = "' + self.get_polcal_path() + '", doplot = False)'
                     casacmd = [cc_load_tec_maps, cc_polcal_TEC]
                     casa = drivecasa.Casapy()
                     casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
                     # Check if the TEC corrections could be downloaded
-                    if os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal + '.IGS_TEC.im'):
+                    if os.path.isdir(self.get_polcal_path() + '.IGS_TEC.im'):
                         cc_load_tec_maps = 'from recipes import tec_maps'
-                        cc_polcal_genTEC = 'gencal(vis = "' + self.basedir + '00' + '/' + self.rawsubdir + '/' + \
-                                           self.polcal + '", caltable = "' + self.basedir + '00' + '/' + \
-                                           self.rawsubdir + '/' + self.polcal.rstrip(
+                        cc_polcal_genTEC = 'gencal(vis = "' + self.get_polcal_path() + '", caltable = "' + \
+                                           self.get_polcal_path().rstrip(
                             '.MS') + '.tecim", caltype="tecim", infile = "' + self.basedir + '00' + '/' + \
                                            self.rawsubdir + '/' + self.polcal + '.IGS_TEC.im")'
                         casacmd = [cc_load_tec_maps, cc_polcal_genTEC]
                         casa = drivecasa.Casapy()
                         casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
-                        if os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal.rstrip(
+                        if os.path.isdir(self.get_polcal_path().rstrip(
                                 '.MS') + '.tecim'):  # Check if the calibration table was created
                             ccalpolcalTEC = True
                         else:
@@ -255,12 +265,12 @@ class ccal:
         if self.crosscal_bandpass:
             logger.info('Calculating bandpass corrections for flux calibrator')
 
-            if self.fluxcal != '' and os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal):
+            if self.fluxcal != '' and os.path.isdir(self.get_fluxcal_path()):
 
                 # Create the initial phase correction tables for the flux calibrator
 
                 if ccalfluxcalphgains or os.path.isdir(
-                        self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip('.MS') + '.G0ph'):
+                        self.get_fluxcal_path().rstrip('.MS') + '.G0ph'):
                     logger.info('Initial phase gain table for flux calibrator was already generated')
                     ccalfluxcalphgains = True
                 else:
@@ -270,14 +280,14 @@ class ccal:
                                                      'ccal_fluxcal_TEC')  # Check for the TEC calibration table to apply on-the-fly
                     if TECstatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                        self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                                                        self.get_fluxcal_path().rstrip(
                                                                             '.MS') + '.tecim', 'nearest')
-                    cc_fluxcal_ph = 'gaincal(vis = "' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal + '", caltable = "' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                    cc_fluxcal_ph = 'gaincal(vis = "' + self.get_fluxcal_path() + '", caltable = "' + self.get_fluxcal_path().rstrip(
                         '.MS') + '.G0ph", gaintype = "G", solint = "int", calmode = "p", refant = "' + self.crosscal_refant + '", smodel = [1,0,0,0], gaintable = [' + prevtables + '], interp = [' + interp + '])'
                     casacmd = [cc_fluxcal_ph]
                     casa = drivecasa.Casapy()
                     casa.run_script(casacmd, raise_on_severe=False, timeout=3600)
-                    if os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                    if os.path.isdir(self.get_fluxcal_path().rstrip(
                             '.MS') + '.G0ph'):  # Check if calibration table was created successfully
                         ccalfluxcalphgains = True
                     else:
@@ -288,7 +298,7 @@ class ccal:
                     # Calculate the bandpass for the flux calibrator
 
                 if ccalfluxcalbandpass or os.path.isdir(
-                        self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip('.MS') + '.Bscan'):
+                        self.get_fluxcal_path().rstrip('.MS') + '.Bscan'):
                     logger.info('Bandpass for flux calibrator was already derived successfully!')
                     ccalfluxcalbandpass = True
                 else:
@@ -298,19 +308,19 @@ class ccal:
                     TECstatus = subs_param.get_param(self, 'ccal_fluxcal_TEC')
                     if TECstatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                        '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                                                        '"' + self.get_fluxcal_path().rstrip(
                                                                             '.MS') + '.tecim"', '"nearest"')
                     phgainstatus = ccalfluxcalphgains
                     if phgainstatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                        '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                                                        '"' + self.get_fluxcal_path().rstrip(
                                                                             '.MS') + '.G0ph"', '"nearest"')
-                    cc_fluxcal_bp = 'bandpass(vis = "' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal + '", caltable = "' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                    cc_fluxcal_bp = 'bandpass(vis = "' + self.get_fluxcal_path() + '", caltable = "' + self.get_fluxcal_path().rstrip(
                         '.MS') + '.Bscan", solint = "inf", combine = "scan, obs", refant = "' + self.crosscal_refant + '", solnorm = True, gaintable = [' + prevtables + '], interp = [' + interp + '])'
                     casacmd = [cc_fluxcal_bp]
                     casa = drivecasa.Casapy()
                     casa.run_script(casacmd, raise_on_severe=False, timeout=3600)
-                    if os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                    if os.path.isdir(self.get_fluxcal_path().rstrip(
                             '.MS') + '.Bscan'):  # Check if bandpass table was created successfully
                         ccalfluxcalbandpass = True
                     else:
@@ -323,12 +333,11 @@ class ccal:
                 if ccalfluxcalmodel:
                     logger.info('Model was already ingested into the flux calibrator dataset!')
                 else:
-                    ms = self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal  # Get the name of the calibrator
+                    ms = self.get_fluxcal_path()  # Get the name of the calibrator
                     t = pt.table("%s::FIELD" % ms)
                     srcname = t.getcol('NAME')[0]
                     av, fluxdensity, spix, reffreq, rotmeas = subs_calmodels.get_calparameters(srcname)
-                    cc_fluxcal_model = 'setjy(vis = "' + self.basedir + '00' + '/' + self.rawsubdir + '/' + \
-                                       self.fluxcal + '", scalebychan = True, standard = "manual", fluxdensity = [' + \
+                    cc_fluxcal_model = 'setjy(vis = "' + self.get_fluxcal_path() + '", scalebychan = True, standard = "manual", fluxdensity = [' + \
                                        fluxdensity + '], spix = [' + spix + '], reffreq = "' + reffreq + \
                                        '", rotmeas = ' + rotmeas + ', usescratch = True)'
                     if av:
@@ -341,7 +350,7 @@ class ccal:
                     casa.run_script(casacmd, raise_on_severe=False, timeout=3600)
 
                     # Check if model was ingested successfully
-                    if subs_msutils.has_good_modeldata(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal):
+                    if subs_msutils.has_good_modeldata(self.get_fluxcal_path()):
                         ccalfluxcalmodel = True
                     else:
                         ccalfluxcalmodel = False
@@ -372,12 +381,12 @@ class ccal:
         if self.crosscal_gains:
             logger.info('Calculating gain corrections for flux calibrator')
 
-            if self.fluxcal != '' and os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal):
+            if self.fluxcal != '' and os.path.isdir(self.get_fluxcal_path()):
 
                 # Create the amplitude and phase correction table for the flux calibrator
 
                 if ccalfluxcalapgains or os.path.isdir(
-                        self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip('.MS') + '.G1ap'):
+                        self.get_fluxcal_path().rstrip('.MS') + '.G1ap'):
                     logger.info('Initial phase gain table for flux calibrator was already generated')
                     ccalfluxcalapgains = True
                 else:
@@ -394,14 +403,14 @@ class ccal:
                     bandpassstatus = subs_param.get_param(self, 'ccal_fluxcal_bandpass')
                     if bandpassstatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                        '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                                                        '"' + self.get_fluxcal_path().rstrip(
                                                                             '.MS') + '.Bscan"', '"nearest"')
-                    cc_fluxcal_apgain = 'gaincal(vis = "' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal + '", caltable = "' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                    cc_fluxcal_apgain = 'gaincal(vis = "' + self.get_fluxcal_path() + '", caltable = "' + self.get_fluxcal_path().rstrip(
                         '.MS') + '.G1ap", gaintype = "G", solint = "int", refant = "' + self.crosscal_refant + '", calmode = "ap", gaintable = [' + prevtables + '], interp = [' + interp + '])'
                     casacmd = [cc_fluxcal_apgain]
                     casa = drivecasa.Casapy()
                     casa.run_script(casacmd, raise_on_severe=False, timeout=3600)
-                    if os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                    if os.path.isdir(self.get_fluxcal_path().rstrip(
                             '.MS') + '.G1ap'):  # Check if gain table was created successfully
                         ccalfluxcalapgains = True
                     else:
@@ -429,11 +438,11 @@ class ccal:
         if self.crosscal_global_delay:
             logger.info('Calculating global delay corrections for flux calibrator')
 
-            if self.fluxcal != '' and os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal):
+            if self.fluxcal != '' and os.path.isdir(self.get_fluxcal_path()):
                 # Create the global delay correction table for the flux calibrator
 
                 if ccalfluxcalglobaldelay or os.path.isdir(
-                        self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip('.MS') + '.K'):
+                        self.get_fluxcal_path().rstrip('.MS') + '.K'):
                     logger.info('Global delay correction table for flux calibrator was already generated')
                     ccalfluxcalglobaldelay = True
                 else:
@@ -443,26 +452,26 @@ class ccal:
                                                      'ccal_fluxcal_TEC')  # Check for the TEC calibration table to apply on-the-fly
                     if TECstatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                        '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                                                        '"' + self.get_fluxcal_path().rstrip(
                                                                             '.MS') + '.tecim"', '"nearest"')
                     bandpassstatus = subs_param.get_param(self,
                                                           'ccal_fluxcal_bandpass')  # Check for the bandpass calibration table to apply on-the-fly
                     if bandpassstatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                        '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                                                        '"' + self.get_fluxcal_path().rstrip(
                                                                             '.MS') + '.Bscan"', '"nearest"')
                     apgainstatus = subs_param.get_param(self,
                                                         'ccal_fluxcal_apgains')  # Check for the gain calibration table to apply on-the-fly
                     if apgainstatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                        '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                                                        '"' + self.get_fluxcal_path().rstrip(
                                                                             '.MS') + '.G1ap"', '"nearest"')
-                    cc_fluxcal_globaldelay = 'gaincal(vis = "' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal + '", caltable = "' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                    cc_fluxcal_globaldelay = 'gaincal(vis = "' + self.get_fluxcal_path() + '", caltable = "' + self.get_fluxcal_path().rstrip(
                         '.MS') + '.K", combine = "scan", gaintype = "K", solint = "inf", refant = "' + self.crosscal_refant + '", gaintable = [' + prevtables + '], interp = [' + interp + '])'
                     casacmd = [cc_fluxcal_globaldelay]
                     casa = drivecasa.Casapy()
                     casa.run_script(casacmd, raise_on_severe=False, timeout=3600)
-                    if os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                    if os.path.isdir(self.get_fluxcal_path().rstrip(
                             '.MS') + '.K'):  # Check if gain table was created successfully
                         ccalfluxcalglobaldelay = True
                     else:
@@ -493,7 +502,7 @@ class ccal:
         if self.crosscal_crosshand_delay:
             logger.info('Calculating cross-hand delay corrections for polarised calibrator')
 
-            if self.polcal != '' and os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal):
+            if self.polcal != '' and os.path.isdir(self.get_polcal_path()):
 
                 # Ingest the model of the polarised calibrator into the MODEL column
 
@@ -501,12 +510,11 @@ class ccal:
                     logger.info('Model was already ingested into the polarised calibrator dataset!')
                 else:
                     # Get the name of the calibrator
-                    ms = self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal
+                    ms = self.get_polcal_path()
                     t = pt.table("%s::FIELD" % ms)
                     srcname = t.getcol('NAME')[0]
                     av, fluxdensity, spix, reffreq, rotmeas = subs_calmodels.get_calparameters(srcname)
-                    cc_polcal_model = 'setjy(vis = "' + self.basedir + '00' + '/' + self.rawsubdir + '/' + \
-                                      self.polcal + '", scalebychan = True, standard = "manual", fluxdensity = [' + \
+                    cc_polcal_model = 'setjy(vis = "' + self.get_polcal_path() + '", scalebychan = True, standard = "manual", fluxdensity = [' + \
                                       fluxdensity + '], spix = [' + spix + '], reffreq = "' + reffreq + \
                                       '", rotmeas = ' + rotmeas + ', usescratch = True)'
                     if av:
@@ -519,7 +527,7 @@ class ccal:
                     casa.run_script(casacmd, raise_on_severe=False, timeout=3600)
 
                     # Check if model was ingested successfully
-                    if subs_msutils.has_good_modeldata(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal):
+                    if subs_msutils.has_good_modeldata(self.get_polcal_path()):
                         ccalpolcalmodel = True
                     else:
                         ccalpolcalmodel = False
@@ -529,7 +537,7 @@ class ccal:
                 # Create the cross hand delay correction table for the polarised calibrator
 
                 if ccalpolcalcrosshanddelay or os.path.isdir(
-                        self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal.rstrip('.MS') + '.Kcross'):
+                        self.get_polcal_path().rstrip('.MS') + '.Kcross'):
                     logger.info(
                         '# Cross hand delay correction table for polarised calibrator was already generated')
                     ccalpolcalcrosshanddelay = True
@@ -541,35 +549,35 @@ class ccal:
                     TECstatus = subs_param.get_param(self, 'ccal_polcal_TEC')
                     if TECstatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                        '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal.rstrip(
+                                                                        '"' + self.get_polcal_path().rstrip(
                                                                             '.MS') + '.tecim"', '"nearest"')
 
                     # Check for the bandpass calibration table to apply on-the-fly
-                    bandpassstatus = subs_param.get_param(self,'ccal_fluxcal_bandpass')
+                    bandpassstatus = subs_param.get_param(self, 'ccal_fluxcal_bandpass')
                     if bandpassstatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                        '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                                                        '"' + self.get_fluxcal_path().rstrip(
                                                                             '.MS') + '.Bscan"', '"nearest"')
 
                     # Check for the gain calibration table to apply on-the-fly
-                    apgainstatus = subs_param.get_param(self,'ccal_fluxcal_apgains')
+                    apgainstatus = subs_param.get_param(self, 'ccal_fluxcal_apgains')
                     if apgainstatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                        '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                                                        '"' + self.get_fluxcal_path().rstrip(
                                                                             '.MS') + '.G1ap"', '"nearest"')
 
                     # Check for the global delay table to apply on-the-fly
                     globaldelaystatus = subs_param.get_param(self, 'ccal_fluxcal_globaldelay')
                     if globaldelaystatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                        '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                                                        '"' + self.get_fluxcal_path().rstrip(
                                                                             '.MS') + '.K"', '"nearest"')
-                    cc_polcal_crosshanddelay = 'gaincal(vis = "' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal + '", caltable = "' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal.rstrip(
+                    cc_polcal_crosshanddelay = 'gaincal(vis = "' + self.get_polcal_path() + '", caltable = "' + self.get_polcal_path().rstrip(
                         '.MS') + '.Kcross", combine = "scan", gaintype = "KCROSS", solint = "inf", refant = "' + self.crosscal_refant + '", gaintable = [' + prevtables + '], interp = [' + interp + '])'
                     casacmd = [cc_polcal_crosshanddelay]
                     casa = drivecasa.Casapy()
                     casa.run_script(casacmd, raise_on_severe=False, timeout=3600)
-                    if os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal.rstrip(
+                    if os.path.isdir(self.get_polcal_path().rstrip(
                             '.MS') + '.Kcross'):  # Check if the cross hand delay table was created successfully
                         ccalpolcalcrosshanddelay = True
                     else:
@@ -599,12 +607,12 @@ class ccal:
         if self.crosscal_leakage:
             logger.info('Calculating leakage corrections for flux calibrator')
 
-            if self.fluxcal != '' and os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal):
+            if self.fluxcal != '' and os.path.isdir(self.get_fluxcal_path()):
 
                 # Create the leakage correction table for the flux calibrator
 
                 if ccalfluxcalleakage or os.path.isdir(
-                        self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip('.MS') + '.Df'):
+                        self.get_fluxcal_path().rstrip('.MS') + '.Df'):
                     logger.info('Leakage correction table for flux calibrator was already generated')
                     ccalfluxcalleakage = True
                 else:
@@ -614,38 +622,38 @@ class ccal:
                                                      'ccal_fluxcal_TEC')  # Check for the TEC calibration table to apply on-the-fly
                     if TECstatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                        '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                                                        '"' + self.get_fluxcal_path().rstrip(
                                                                             '.MS') + '.tecim"', '"nearest"')
                     bandpassstatus = subs_param.get_param(self,
                                                           'ccal_fluxcal_bandpass')  # Check for the bandpass calibration table to apply on-the-fly
                     if bandpassstatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                        '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                                                        '"' + self.get_fluxcal_path().rstrip(
                                                                             '.MS') + '.Bscan"', '"nearest"')
                     apgainstatus = subs_param.get_param(self,
                                                         'ccal_fluxcal_apgains')  # Check for the gain calibration table to apply on-the-fly
                     if apgainstatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                        '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                                                        '"' + self.get_fluxcal_path().rstrip(
                                                                             '.MS') + '.G1ap"', '"nearest"')
                     globaldelaystatus = subs_param.get_param(self,
                                                              'ccal_fluxcal_globaldelay')  # Check for the global delay table to apply on-the-fly
                     if globaldelaystatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                        '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                                                        '"' + self.get_fluxcal_path().rstrip(
                                                                             '.MS') + '.K"', '"nearest"')
                     crosshanddelaystatus = subs_param.get_param(self,
                                                                 'ccal_polcal_crosshanddelay')  # Check for the crosshand delay table to apply on-the-fly
                     if crosshanddelaystatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                        '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal.rstrip(
+                                                                        '"' + self.get_polcal_path().rstrip(
                                                                             '.MS') + '.Kcross"', '"nearest"')
-                    cc_fluxcal_leakage = 'polcal(vis = "' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal + '", caltable = "' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                    cc_fluxcal_leakage = 'polcal(vis = "' + self.get_fluxcal_path() + '", caltable = "' + self.get_fluxcal_path().rstrip(
                         '.MS') + '.Df", combine = "scan", poltype = "Df", solint = "inf", refant = "' + self.crosscal_refant + '", gaintable = [' + prevtables + '], interp = [' + interp + '])'
                     casacmd = [cc_fluxcal_leakage]
                     casa = drivecasa.Casapy()
                     casa.run_script(casacmd, raise_on_severe=False, timeout=3600)
-                    if os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                    if os.path.isdir(self.get_fluxcal_path().rstrip(
                             '.MS') + '.Df'):  # Check if gain table was created successfully
                         ccalfluxcalleakage = True
                     else:
@@ -674,12 +682,12 @@ class ccal:
         if self.crosscal_polarisation_angle:
             logger.info('Calculating polarisation angle corrections for polarised calibrator')
 
-            if self.polcal != '' and os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal):
+            if self.polcal != '' and os.path.isdir(self.get_polcal_path()):
 
                 # Create the polarisation angle correction table for the polarised calibrator
 
                 if ccalpolcalpolarisationangle or os.path.isdir(
-                        self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal.rstrip('.MS') + '.Xf'):
+                        self.get_polcal_path().rstrip('.MS') + '.Xf'):
                     logger.info(
                         '# Polarisation angle correction table for polarised calibrator was already generated')
                     ccalpolcalpolarisationangle = True
@@ -690,44 +698,44 @@ class ccal:
                                                      'ccal_fluxcal_TEC')  # Check for the TEC calibration table to apply on-the-fly
                     if TECstatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                        '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                                                        '"' + self.get_fluxcal_path().rstrip(
                                                                             '.MS') + '.tecim"', '"nearest"')
                     bandpassstatus = subs_param.get_param(self,
                                                           'ccal_fluxcal_bandpass')  # Check for the bandpass calibration table to apply on-the-fly
                     if bandpassstatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                        '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                                                        '"' + self.get_fluxcal_path().rstrip(
                                                                             '.MS') + '.Bscan"', '"nearest"')
                     apgainstatus = subs_param.get_param(self,
                                                         'ccal_fluxcal_apgains')  # Check for the gain calibration table to apply on-the-fly
                     if apgainstatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                        '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                                                        '"' + self.get_fluxcal_path().rstrip(
                                                                             '.MS') + '.G1ap"', '"nearest"')
                     globaldelaystatus = subs_param.get_param(self,
                                                              'ccal_fluxcal_globaldelay')  # Check for the global delay table to apply on-the-fly
                     if globaldelaystatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                        '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                                                        '"' + self.get_fluxcal_path().rstrip(
                                                                             '.MS') + '.K"', '"nearest"')
                     crosshanddelaystatus = subs_param.get_param(self,
                                                                 'ccal_polcal_crosshanddelay')  # Check for the crosshand delay table to apply on-the-fly
                     if crosshanddelaystatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                        '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal.rstrip(
+                                                                        '"' + self.get_polcal_path().rstrip(
                                                                             '.MS') + '.Kcross"', '"nearest"')
                     leakagestatus = subs_param.get_param(self,
                                                          'ccal_fluxcal_leakage')  # Check for the leakage table to apply on-the-fly
                     if leakagestatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                        '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                                                        '"' + self.get_fluxcal_path().rstrip(
                                                                             '.MS') + '.Df"', '"nearest"')
-                    cc_polcal_polarisationangle = 'polcal(vis = "' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal + '", caltable = "' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal.rstrip(
+                    cc_polcal_polarisationangle = 'polcal(vis = "' + self.get_polcal_path() + '", caltable = "' + self.get_polcal_path().rstrip(
                         '.MS') + '.Xf", combine = "scan", poltype = "Xf", solint = "inf", refant = "' + self.crosscal_refant + '", gaintable = [' + prevtables + '], interp = [' + interp + '])'
                     casacmd = [cc_polcal_polarisationangle]
                     casa = drivecasa.Casapy()
                     casa.run_script(casacmd, raise_on_severe=False, timeout=3600)
-                    if os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal.rstrip(
+                    if os.path.isdir(self.get_polcal_path().rstrip(
                             '.MS') + '.Xf'):  # Check if gain table was created successfully
                         ccalpolcalpolarisationangle = True
                     else:
@@ -760,7 +768,7 @@ class ccal:
 
             # Apply solutions to the flux calibrator
 
-            if self.fluxcal != '' and os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal):
+            if self.fluxcal != '' and os.path.isdir(self.get_fluxcal_path()):
 
                 if ccalfluxcaltransfer:
                     logger.info('Solution tables were already applied to flux calibrator')
@@ -773,50 +781,50 @@ class ccal:
                                                      'ccal_fluxcal_TEC')  # Check for the TEC calibration table to apply on-the-fly
                     if TECstatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                        '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                                                        '"' + self.get_fluxcal_path().rstrip(
                                                                             '.MS') + '.tecim"', '"nearest"')
                     bandpassstatus = subs_param.get_param(self,
                                                           'ccal_fluxcal_bandpass')  # Check for the bandpass calibration table to apply
                     if bandpassstatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                        '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                                                        '"' + self.get_fluxcal_path().rstrip(
                                                                             '.MS') + '.Bscan"', '"nearest"')
                     apgainstatus = subs_param.get_param(self,
                                                         'ccal_fluxcal_apgains')  # Check for the gain calibration table to apply
                     if apgainstatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                        '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                                                        '"' + self.get_fluxcal_path().rstrip(
                                                                             '.MS') + '.G1ap"', '"nearest"')
                     globaldelaystatus = subs_param.get_param(self,
                                                              'ccal_fluxcal_globaldelay')  # Check for the global delay table to apply
                     if globaldelaystatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                        '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                                                        '"' + self.get_fluxcal_path().rstrip(
                                                                             '.MS') + '.K"', '"nearest"')
                     crosshanddelaystatus = subs_param.get_param(self,
                                                                 'ccal_polcal_crosshanddelay')  # Check for the crosshand delay table to apply
                     if crosshanddelaystatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                        '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal.rstrip(
+                                                                        '"' + self.get_polcal_path().rstrip(
                                                                             '.MS') + '.Kcross"', '"nearest"')
                     leakagestatus = subs_param.get_param(self,
                                                          'ccal_fluxcal_leakage')  # Check for the leakage table to apply
                     if leakagestatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                        '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                                                        '"' + self.get_fluxcal_path().rstrip(
                                                                             '.MS') + '.Df"', '"nearest"')
                     polarisationanglestatus = subs_param.get_param(self,
                                                                    'ccal_polcal_polarisationangle')  # Check for the polarisation angle corrections to apply
                     if polarisationanglestatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                        '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal.rstrip(
+                                                                        '"' + self.get_polcal_path().rstrip(
                                                                             '.MS') + '.Xf"', '"nearest"')
-                    cc_fluxcal_saveflags = 'flagmanager(vis = "' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal + '", mode = "save", versionname = "ccal")'
-                    cc_fluxcal_apply = 'applycal(vis = "' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal + '", gaintable = [' + prevtables + '], interp = [' + interp + '], parang = False, flagbackup = False)'
+                    cc_fluxcal_saveflags = 'flagmanager(vis = "' + self.get_fluxcal_path() + '", mode = "save", versionname = "ccal")'
+                    cc_fluxcal_apply = 'applycal(vis = "' + self.get_fluxcal_path() + '", gaintable = [' + prevtables + '], interp = [' + interp + '], parang = False, flagbackup = False)'
                     casacmd = [cc_fluxcal_saveflags, cc_fluxcal_apply]
                     casa = drivecasa.Casapy()
                     casa.run_script(casacmd, raise_on_severe=False, timeout=3600)
-                    if subs_msutils.has_correcteddata(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal):
+                    if subs_msutils.has_correcteddata(self.get_fluxcal_path()):
                         ccalfluxcaltransfer = True
                     else:
                         ccalfluxcaltransfer = False
@@ -828,7 +836,7 @@ class ccal:
 
             # Apply solutions to the polarised calibrator
 
-            if self.polcal != '' and os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal):
+            if self.polcal != '' and os.path.isdir(self.get_polcal_path()):
 
                 if ccalpolcaltransfer:
                     logger.info('Solution tables were already applied to the polarised calibrator')
@@ -841,50 +849,50 @@ class ccal:
                                                      'ccal_polcal_TEC')  # Check for the TEC calibration table to apply on-the-fly
                     if TECstatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                        '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal.rstrip(
+                                                                        '"' + self.get_polcal_path().rstrip(
                                                                             '.MS') + '.tecim"', '"nearest"')
                     bandpassstatus = subs_param.get_param(self,
                                                           'ccal_fluxcal_bandpass')  # Check for the bandpass calibration table to apply
                     if bandpassstatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                        '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                                                        '"' + self.get_fluxcal_path().rstrip(
                                                                             '.MS') + '.Bscan"', '"nearest"')
                     apgainstatus = subs_param.get_param(self,
                                                         'ccal_fluxcal_apgains')  # Check for the gain calibration table to apply
                     if apgainstatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                        '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                                                        '"' + self.get_fluxcal_path().rstrip(
                                                                             '.MS') + '.G1ap"', '"nearest"')
                     globaldelaystatus = subs_param.get_param(self,
                                                              'ccal_fluxcal_globaldelay')  # Check for the global delay table to apply
                     if globaldelaystatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                        '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                                                        '"' + self.get_fluxcal_path().rstrip(
                                                                             '.MS') + '.K"', '"nearest"')
                     crosshanddelaystatus = subs_param.get_param(self,
                                                                 'ccal_polcal_crosshanddelay')  # Check for the crosshand delay table to apply
                     if crosshanddelaystatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                        '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal.rstrip(
+                                                                        '"' + self.get_polcal_path().rstrip(
                                                                             '.MS') + '.Kcross"', '"nearest"')
                     leakagestatus = subs_param.get_param(self,
                                                          'ccal_fluxcal_leakage')  # Check for the leakage table to apply
                     if leakagestatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                        '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                                                        '"' + self.get_fluxcal_path().rstrip(
                                                                             '.MS') + '.Df"', '"nearest"')
                     polarisationanglestatus = subs_param.get_param(self,
                                                                    'ccal_polcal_polarisationangle')  # Check for the polarisation angle corrections to apply
                     if polarisationanglestatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                        '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal.rstrip(
+                                                                        '"' + self.get_polcal_path().rstrip(
                                                                             '.MS') + '.Xf"', '"nearest"')
-                    cc_polcal_saveflags = 'flagmanager(vis = "' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal + '", mode = "save", versionname = "ccal")'
-                    cc_polcal_apply = 'applycal(vis = "' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal + '", gaintable = [' + prevtables + '], interp = [' + interp + '], parang = False, flagbackup = False)'
+                    cc_polcal_saveflags = 'flagmanager(vis = "' + self.get_polcal_path() + '", mode = "save", versionname = "ccal")'
+                    cc_polcal_apply = 'applycal(vis = "' + self.get_polcal_path() + '", gaintable = [' + prevtables + '], interp = [' + interp + '], parang = False, flagbackup = False)'
                     casacmd = [cc_polcal_saveflags, cc_polcal_apply]
                     casa = drivecasa.Casapy()
                     casa.run_script(casacmd, raise_on_severe=False, timeout=3600)
-                    if subs_msutils.has_correcteddata(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal):
+                    if subs_msutils.has_correcteddata(self.get_polcal_path()):
                         ccalpolcaltransfer = True
                     else:
                         ccalpolcaltransfer = False
@@ -910,7 +918,7 @@ class ccal:
         # Create the parameters for the parameter file for the transfer step
 
         # Status of the solution transfer for the target beams
-        ccaltargetbeamstransfer = get_param_def(self, 'ccal_targetbeams_transfer', np.full((nbeams), False))
+        ccaltargetbeamstransfer = get_param_def(self, 'ccal_targetbeams_transfer', np.full(nbeams, False))
 
         if self.crosscal_transfer_to_target:
             logger.info('Applying solutions to target beams')
@@ -951,42 +959,42 @@ class ccal:
                                                               'ccal_fluxcal_bandpass')  # Check for the bandpass calibration table to apply
                         if bandpassstatus:
                             prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                            '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                                                            '"' + self.get_fluxcal_path().rstrip(
                                                                                 '.MS') + '.Bscan"', '"nearest"')
 
                         apgainstatus = subs_param.get_param(self,
                                                             'ccal_fluxcal_apgains')  # Check for the gain calibration table to apply
                         if apgainstatus:
                             prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                            '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                                                            '"' + self.get_fluxcal_path().rstrip(
                                                                                 '.MS') + '.G1ap"', '"nearest"')
 
                         # Check for the global delay table to apply
                         globaldelaystatus = subs_param.get_param(self, 'ccal_fluxcal_globaldelay')
                         if globaldelaystatus:
                             prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                            '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                                                            '"' + self.get_fluxcal_path().rstrip(
                                                                                 '.MS') + '.K"', '"nearest"')
 
                         # Check for the crosshand delay table to apply
                         crosshanddelaystatus = subs_param.get_param(self, 'ccal_polcal_crosshanddelay')
                         if crosshanddelaystatus:
                             prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                            '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal.rstrip(
+                                                                            '"' + self.get_polcal_path().rstrip(
                                                                                 '.MS') + '.Kcross"', '"nearest"')
 
                         # Check for the leakage table to apply
                         leakagestatus = subs_param.get_param(self, 'ccal_fluxcal_leakage')
                         if leakagestatus:
                             prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                            '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                                                            '"' + self.get_fluxcal_path().rstrip(
                                                                                 '.MS') + '.Df"', '"nearest"')
 
                         # Check for the polarisation angle corrections to apply
                         polarisationanglestatus = subs_param.get_param(self, 'ccal_polcal_polarisationangle')
                         if polarisationanglestatus:
                             prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                            '"' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal.rstrip(
+                                                                            '"' + self.get_polcal_path().rstrip(
                                                                                 '.MS') + '.Xf"', '"nearest"')
 
                         # Execute the CASA command to apply the solutions
@@ -1012,130 +1020,130 @@ class ccal:
         """
         Creates a plot of the bandpass calibration for each antenna. The two different feeds are plotted in the same plots
         """
-        if os.path.isfile(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip('.MS') + '.Bscan.png'):
+        if os.path.isfile(self.get_fluxcal_path().rstrip('.MS') + '.Bscan.png'):
             subs_managefiles.director(self, 'rm',
-                                      self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                      self.get_fluxcal_path().rstrip(
                                           '.MS') + '.Bscan.png')
-        cc_plot_bandpass = 'plotcal(caltable = "' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
-            '.MS') + '.Bscan", xaxis = "freq", yaxis="amp", subplot=431, iteration="antenna", plotsymbol=".", markersize=1.0, fontsize=5.0, showgui=False, figfile="' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+        cc_plot_bandpass = 'plotcal(caltable = "' + self.get_fluxcal_path().rstrip(
+            '.MS') + '.Bscan", xaxis = "freq", yaxis="amp", subplot=431, iteration="antenna", plotsymbol=".", markersize=1.0, fontsize=5.0, showgui=False, figfile="' + self.get_fluxcal_path().rstrip(
             '.MS') + '.Bscan.png")'
         casacmd = [cc_plot_bandpass]
         casa = drivecasa.Casapy()
         casa.run_script(casacmd, raise_on_severe=False, timeout=10000)
-        return self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip('.MS') + '.Bscan.png'
+        return self.get_fluxcal_path().rstrip('.MS') + '.Bscan.png'
 
     def plot_gains_amp(self):
         """
         Creates a plot of the amplitude calibrator gains
         """
         if os.path.isfile(
-                self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip('.MS') + '.G1ap_amp.png'):
+                self.get_fluxcal_path().rstrip('.MS') + '.G1ap_amp.png'):
             subs_managefiles.director(self, 'rm',
-                                      self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                      self.get_fluxcal_path().rstrip(
                                           '.MS') + '.G1ap_amp.png')
-        cc_plot_gains_amp = 'plotcal(caltable = "' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
-            '.MS') + '.G1ap", xaxis = "time", yaxis="amp", subplot=431, iteration="antenna", plotsymbol=".", markersize=1.0, fontsize=5.0, showgui=False, figfile="' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+        cc_plot_gains_amp = 'plotcal(caltable = "' + self.get_fluxcal_path().rstrip(
+            '.MS') + '.G1ap", xaxis = "time", yaxis="amp", subplot=431, iteration="antenna", plotsymbol=".", markersize=1.0, fontsize=5.0, showgui=False, figfile="' + self.get_fluxcal_path().rstrip(
             '.MS') + '.G1ap_amp.png")'
         casacmd = [cc_plot_gains_amp]
         casa = drivecasa.Casapy()
         casa.run_script(casacmd, raise_on_severe=False, timeout=10000)
-        return self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip('.MS') + '.G1ap_amp.png'
+        return self.get_fluxcal_path().rstrip('.MS') + '.G1ap_amp.png'
 
     def plot_gains_ph(self):
         """
         Creates a plot of the amplitude calibrator gains
         """
         if os.path.isfile(
-                self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip('.MS') + '.G1ap_ph.png'):
+                self.get_fluxcal_path().rstrip('.MS') + '.G1ap_ph.png'):
             subs_managefiles.director(self, 'rm',
-                                      self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                      self.get_fluxcal_path().rstrip(
                                           '.MS') + '.G1ap_ph.png')
-        cc_plot_gains_ph = 'plotcal(caltable = "' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
-            '.MS') + '.G1ap", xaxis = "time", yaxis="amp", subplot=431, iteration="antenna", plotrange=[-1,-1,-180,180], plotsymbol=".", markersize=1.0, fontsize=5.0, showgui=False, figfile="' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+        cc_plot_gains_ph = 'plotcal(caltable = "' + self.get_fluxcal_path().rstrip(
+            '.MS') + '.G1ap", xaxis = "time", yaxis="amp", subplot=431, iteration="antenna", plotrange=[-1,-1,-180,180], plotsymbol=".", markersize=1.0, fontsize=5.0, showgui=False, figfile="' + self.get_fluxcal_path().rstrip(
             '.MS') + '.G1ap_ph.png")'
         casacmd = [cc_plot_gains_ph]
         casa = drivecasa.Casapy()
         casa.run_script(casacmd, raise_on_severe=False, timeout=10000)
-        return self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip('.MS') + '.G1ap_ph.png'
+        return self.get_fluxcal_path().rstrip('.MS') + '.G1ap_ph.png'
 
     def plot_globaldelay(self):
         """
         Creates a plot of the global delay corrections
         """
-        if os.path.isfile(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip('.MS') + '.K.png'):
+        if os.path.isfile(self.get_fluxcal_path().rstrip('.MS') + '.K.png'):
             subs_managefiles.director(self, 'rm',
-                                      self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                      self.get_fluxcal_path().rstrip(
                                           '.MS') + '.K.png')
-        cc_plot_globaldelay = 'plotcal(caltable = "' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
-            '.MS') + '.K", xaxis = "antenna", yaxis="delay", plotsymbol="o", markersize=4.0, fontsize=10.0, showgui=False, figfile="' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+        cc_plot_globaldelay = 'plotcal(caltable = "' + self.get_fluxcal_path().rstrip(
+            '.MS') + '.K", xaxis = "antenna", yaxis="delay", plotsymbol="o", markersize=4.0, fontsize=10.0, showgui=False, figfile="' + self.get_fluxcal_path().rstrip(
             '.MS') + '.K.png")'
         casacmd = [cc_plot_globaldelay]
         casa = drivecasa.Casapy()
         casa.run_script(casacmd, raise_on_severe=False, timeout=10000)
-        return self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip('.MS') + '.K.png'
+        return self.get_fluxcal_path().rstrip('.MS') + '.K.png'
 
     def plot_crosshanddelay(self):
         """
         Creates a plot of the crosshand delay corrections
         """
-        if os.path.isfile(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal.rstrip('.MS') + '.Kcross.png'):
-            subs_managefiles.director(self, 'rm', self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal.rstrip(
+        if os.path.isfile(self.get_polcal_path().rstrip('.MS') + '.Kcross.png'):
+            subs_managefiles.director(self, 'rm', self.get_polcal_path().rstrip(
                 '.MS') + '.Kcross.png')
-        cc_plot_crosshanddelay = 'plotcal(caltable = "' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal.rstrip(
-            '.MS') + '.Kcross", xaxis = "antenna", yaxis="delay", plotsymbol="o", markersize=4.0, fontsize=10.0, showgui=False, figfile="' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal.rstrip(
+        cc_plot_crosshanddelay = 'plotcal(caltable = "' + self.get_polcal_path().rstrip(
+            '.MS') + '.Kcross", xaxis = "antenna", yaxis="delay", plotsymbol="o", markersize=4.0, fontsize=10.0, showgui=False, figfile="' + self.get_polcal_path().rstrip(
             '.MS') + '.Kcross.png")'
         casacmd = [cc_plot_crosshanddelay]
         casa = drivecasa.Casapy()
         casa.run_script(casacmd, raise_on_severe=False, timeout=10000)
-        return self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal.rstrip('.MS') + '.Kcross.png'
+        return self.get_polcal_path().rstrip('.MS') + '.Kcross.png'
 
     def plot_leakage_amp(self):
         """
         Creates a plot of the amplitude leakage corrections for each antenna
         """
         if os.path.isfile(
-                self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip('.MS') + '.Df_amp.png'):
+                self.get_fluxcal_path().rstrip('.MS') + '.Df_amp.png'):
             subs_managefiles.director(self, 'rm',
-                                      self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                      self.get_fluxcal_path().rstrip(
                                           '.MS') + '.Df_amp.png')
-        cc_plot_leakage_amp = 'plotcal(caltable = "' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
-            '.MS') + '.Df", xaxis = "freq", yaxis="amp", subplot=431, iteration="antenna", plotsymbol=".", markersize=1.0, fontsize=5.0, showgui=False, figfile="' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+        cc_plot_leakage_amp = 'plotcal(caltable = "' + self.get_fluxcal_path().rstrip(
+            '.MS') + '.Df", xaxis = "freq", yaxis="amp", subplot=431, iteration="antenna", plotsymbol=".", markersize=1.0, fontsize=5.0, showgui=False, figfile="' + self.get_fluxcal_path().rstrip(
             '.MS') + '.Df_amp.png")'
         casacmd = [cc_plot_leakage_amp]
         casa = drivecasa.Casapy()
         casa.run_script(casacmd, raise_on_severe=False, timeout=10000)
-        return self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip('.MS') + '.Df_amp.png'
+        return self.get_fluxcal_path().rstrip('.MS') + '.Df_amp.png'
 
     def plot_leakage_ph(self):
         """
         Creates a plot of the phase leakage corrections for each antenna
         """
-        if os.path.isfile(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip('.MS') + '.Df_ph.png'):
+        if os.path.isfile(self.get_fluxcal_path().rstrip('.MS') + '.Df_ph.png'):
             subs_managefiles.director(self, 'rm',
-                                      self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                      self.get_fluxcal_path().rstrip(
                                           '.MS') + '.Df_ph.png')
-        cc_plot_leakage_ph = 'plotcal(caltable = "' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
-            '.MS') + '.Df", xaxis = "freq", yaxis="phase", subplot=431, iteration="antenna", plotrange=[-1,-1,-180,180], plotsymbol=".", markersize=1.0, fontsize=5.0, showgui=False, figfile="' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+        cc_plot_leakage_ph = 'plotcal(caltable = "' + self.get_fluxcal_path().rstrip(
+            '.MS') + '.Df", xaxis = "freq", yaxis="phase", subplot=431, iteration="antenna", plotrange=[-1,-1,-180,180], plotsymbol=".", markersize=1.0, fontsize=5.0, showgui=False, figfile="' + self.get_fluxcal_path().rstrip(
             '.MS') + '.Df_ph.png")'
         casacmd = [cc_plot_leakage_ph]
         casa = drivecasa.Casapy()
         casa.run_script(casacmd, raise_on_severe=False, timeout=10000)
-        return self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip('.MS') + '.Df_ph.png'
+        return self.get_fluxcal_path().rstrip('.MS') + '.Df_ph.png'
 
     def plot_polarisationangle(self):
         """
         Creates a plot of the polarisation angle corrections
         """
-        if os.path.isfile(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal.rstrip('.MS') + '.Xf.png'):
-            subs_managefiles.director(self, 'rm', self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal.rstrip(
+        if os.path.isfile(self.get_polcal_path().rstrip('.MS') + '.Xf.png'):
+            subs_managefiles.director(self, 'rm', self.get_polcal_path().rstrip(
                 '.MS') + '.Xf.png')
-        cc_plot_polarisationangle = 'plotcal(caltable = "' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal.rstrip(
-            '.MS') + '.Xf", xaxis = "freq", yaxis="phase", subplot=431, iteration="antenna", plotrange=[-1,-1,-180,180], plotsymbol=".", markersize=1.0, fontsize=5.0, showgui=False, figfile="' + self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal.rstrip(
+        cc_plot_polarisationangle = 'plotcal(caltable = "' + self.get_polcal_path().rstrip(
+            '.MS') + '.Xf", xaxis = "freq", yaxis="phase", subplot=431, iteration="antenna", plotrange=[-1,-1,-180,180], plotsymbol=".", markersize=1.0, fontsize=5.0, showgui=False, figfile="' + self.get_polcal_path().rstrip(
             '.MS') + '.Xf.png")'
         casacmd = [cc_plot_polarisationangle]
         casa = drivecasa.Casapy()
         casa.run_script(casacmd, raise_on_severe=False, timeout=10000)
-        return self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal.rstrip('.MS') + '.Xf.png'
+        return self.get_polcal_path().rstrip('.MS') + '.Xf.png'
 
     def summary(self):
         """
@@ -1227,24 +1235,24 @@ class ccal:
         # Remove the calibration tables
         # for all beams and calibrators
         subs_managefiles.director(self, 'rm', self.basedir + '00' + '/' + self.rawsubdir + '/*.tecim')
-        subs_managefiles.director(self, 'rm', self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+        subs_managefiles.director(self, 'rm', self.get_fluxcal_path().rstrip(
             '.MS') + '.G0ph')
-        subs_managefiles.director(self, 'rm', self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+        subs_managefiles.director(self, 'rm', self.get_fluxcal_path().rstrip(
             '.MS') + '.Bscan')
-        subs_managefiles.director(self, 'rm', self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip(
+        subs_managefiles.director(self, 'rm', self.get_fluxcal_path().rstrip(
             '.MS') + '.G1ap')
         subs_managefiles.director(self, 'rm',
-                                  self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip('.MS') + '.K')
+                                  self.get_fluxcal_path().rstrip('.MS') + '.K')
         subs_managefiles.director(self, 'rm',
-                                  self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal.rstrip('.MS') + '.Df')
-        subs_managefiles.director(self, 'rm', self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal.rstrip(
+                                  self.get_fluxcal_path().rstrip('.MS') + '.Df')
+        subs_managefiles.director(self, 'rm', self.get_polcal_path().rstrip(
             '.MS') + '.Kcross')
         subs_managefiles.director(self, 'rm',
-                                  self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal.rstrip('.MS') + '.Xf')
+                                  self.get_polcal_path().rstrip('.MS') + '.Xf')
         # Run a clearcal on all datasets and revert to the last flagversion
         targetdatasets = glob.glob(self.basedir + '[0-9][0-9]' + '/' + self.rawsubdir + '/' + self.target)
-        targetdatasets.append(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal)
-        targetdatasets.append(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal)
+        targetdatasets.append(self.get_fluxcal_path())
+        targetdatasets.append(self.get_polcal_path())
         datasets_toclear = sorted(targetdatasets)
         for dataset in datasets_toclear:
             try:

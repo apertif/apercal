@@ -5,13 +5,192 @@ import aipy
 import astropy.io.fits as pyfits
 import numpy as np
 import os
-import sys
 
 from apercal.subs import setinit as subs_setinit
 from apercal.libs import lib
 from apercal.exceptions import ApercalException
 
 logger = logging.getLogger(__name__)
+
+
+def get_freqstart(dataset, startchan):
+    """
+    dataset: The dataset to get the first frequency from
+    returns: The starting frequency of the observation
+    """
+    uv = aipy.miriad.UV(dataset)
+    startfreq = (uv['freqs'][2] + int(startchan) * uv['freqs'][3]) * 1E9
+    return startfreq
+
+
+def calc_theoretical_noise(dataset):
+    """
+    Calculate the theoretical rms of a given dataset
+    dataset (string): The input dataset to calculate the theoretical rms from
+    returns (float): The theoretical rms of the input dataset as a float
+    """
+    uv = aipy.miriad.UV(dataset)
+    obsrms = lib.miriad('obsrms')
+    try:
+        tsys = np.median(uv['systemp'])
+        if np.isnan(tsys):
+            obsrms.tsys = 30.0
+        else:
+            obsrms.tsys = tsys
+    except KeyError:
+        obsrms.tsys = 30.0
+    obsrms.jyperk = uv['jyperk']
+    obsrms.antdiam = 25
+    obsrms.freq = uv['sfreq']
+    obsrms.theta = 15
+    obsrms.nants = uv['nants']
+    obsrms.bw = np.abs(uv['sdf'] * uv['nschan']) * 1000.0
+    obsrms.inttime = 12.0 * 60.0
+    obsrms.coreta = 0.88
+    theorms = float(obsrms.go()[-1].split()[3]) / 1000.0
+    return theorms
+
+
+def calc_theoretical_noise_threshold(theoretical_noise, nsigma):
+    """
+    Calculates the theoretical noise threshold from the theoretical noise
+    theoretical_noise (float): the theoretical noise of the observation
+    returns (float): the theoretical noise threshold
+    """
+    theoretical_noise_threshold = (nsigma * theoretical_noise)
+    return theoretical_noise_threshold
+
+
+def calc_dynamic_range_threshold(imax, dynamic_range, minorcycle0_dr):
+    """
+    Calculates the dynamic range threshold
+    imax (float): the maximum in the input image
+    dynamic_range (float): the dynamic range you want to calculate the threshold for
+    returns (float): the dynamic range threshold
+    """
+    if dynamic_range == 0:
+        dynamic_range = minorcycle0_dr
+    dynamic_range_threshold = imax / dynamic_range
+    return dynamic_range_threshold
+
+
+def calc_clean_cutoff(mask_threshold, c1):
+    """
+    Calculates the cutoff for the cleaning
+    mask_threshold (float): the mask threshold to calculate the clean cutoff from
+    returns (float): the clean cutoff
+    """
+    clean_cutoff = mask_threshold / c1
+    return clean_cutoff
+
+
+def calc_noise_threshold(imax, minor_cycle, major_cycle, c0):
+    """
+    Calculates the noise threshold
+    imax (float): the maximum in the input image
+    minor_cycle (int): the current minor cycle the self-calibration is in
+    major_cycle (int): the current major cycle the self-calibration is in
+    returns (float): the noise threshold
+    """
+    noise_threshold = imax / ((c0 + minor_cycle * c0) * (major_cycle + 1))
+    return noise_threshold
+
+
+def calc_mask_threshold(theoretical_noise_threshold, noise_threshold, dynamic_range_threshold):
+    """
+    Function to calculate the actual mask_threshold and the type of mask threshold from the
+    theoretical noise threshold, noise threshold, and the dynamic range threshold
+
+    args:
+        theoretical_noise_threshold (float): The theoretical noise threshold calculated by
+            calc_theoretical_noise_threshold
+        noise_threshold (float): The noise threshold calculated by calc_noise_threshold
+        dynamic_range_threshold (float): The dynamic range threshold calculated by calc_dynamic_range_threshold
+        returns (float, string): The maximum of the three thresholds, the type of the maximum threshold
+    """
+    # if np.isinf(dynamic_range_threshold) or np.isnan(dynamic_range_threshold):
+    #     dynamic_range_threshold = noise_threshold
+    mask_threshold = np.max([theoretical_noise_threshold, noise_threshold, dynamic_range_threshold])
+    mask_argmax = np.argmax([theoretical_noise_threshold, noise_threshold, dynamic_range_threshold])
+    if mask_argmax == 0:
+        mask_threshold_type = 'Theoretical noise threshold'
+    elif mask_argmax == 1:
+        mask_threshold_type = 'Noise threshold'
+    elif mask_argmax == 2:
+        mask_threshold_type = 'Dynamic range threshold'
+    return mask_threshold, mask_threshold_type
+
+
+def calc_dr_min(dr_maj, majc, minorcycles, function):
+    """
+    Function to calculate the dynamic range limits during minor cycles
+    dr_maj (list of floats): List with dynamic range limits for major cycles. Usually from calc_dr_maj
+    majc (int): The major cycles you want to calculate the minor cycle dynamic ranges for
+    minorcycles (int): The number of minor cycles to use
+    function (string): The function to follow for increasing the dynamic ranges. Currently 'square', 'power', and
+                       'linear' is supported.
+    returns (list of floats): A list of floats for the dynamic range limits within the minor cycles.
+    """
+    if majc == 0:  # Take care about the first major cycle
+        prevdr = 0
+    else:
+        prevdr = dr_maj[majc - 1]
+    # The different options to increase the minor cycle threshold
+    if function == 'square':
+        dr_min = [prevdr + ((dr_maj[majc] - prevdr) * (n ** 2.0)) / ((minorcycles - 1) ** 2.0) for n in
+                  range(minorcycles)]
+    elif function == 'power':
+        # Not exactly need to work on this, but close
+        dr_min = [prevdr + np.power((dr_maj[majc] - prevdr), (1.0 / n)) for n in range(minorcycles)][::-1]
+    elif function == 'linear':
+        dr_min = [(prevdr + ((dr_maj[majc] - prevdr) / (minorcycles - 1)) * n) for n in range(minorcycles)]
+    else:
+        raise ApercalException(' Function for minor cycles not supported!')
+    return dr_min
+
+
+def calc_dr_maj(drinit, dr0, majorcycles, function):
+    """
+    Function to calculate the dynamic range limits during major cycles
+    drinit (float): The initial dynamic range
+    dr0 (float): Coefficient for increasing the dynamic range threshold at each major cycle
+    majorcycles (int): The number of major cycles to execute
+    function (string): The function to follow for increasing the dynamic ranges. Currently 'power' is supported.
+    returns (list of floats): A list of floats for the dynamic range limits within the major cycles.
+    """
+    if function == 'square':
+        dr_maj = [drinit * np.power(dr0, m) for m in range(majorcycles)]
+    else:
+        raise ApercalException(' Function for major cycles not supported!')
+    return dr_maj
+
+
+def calc_line_masklevel(miniter, dr0, maxdr, minorcycle0_dr, imax):
+    if miniter == 0:
+        really = False
+        masklevels = 1
+    else:
+        really = True
+        drlevels = [np.power(dr0, n + 1) for n in range(miniter)]
+        drlevels[-1] = maxdr
+        if drlevels[0] >= minorcycle0_dr:
+            drlevels[0] = minorcycle0_dr
+        else:
+            pass
+        masklevels = imax / drlevels
+    return really, masklevels
+
+
+def calc_miniter(maxdr, dr0):
+    """
+    Calculate the number of minor cycles needed for cleaning a line channel
+    maxdr (float): The maximum dynamic range reachable calculated by the theoretical noise and maximum pixel value
+                   in the image
+    dr0 (float): The increase for each cycle to clean deeper
+    returns (int): Number of minor cycle iterations for cleaning
+    """
+    nminiter = int(np.ceil(np.log(maxdr) / np.log(dr0)))
+    return nminiter
 
 
 class line:
@@ -70,8 +249,10 @@ class line:
     linedir = None
     contdir = None
 
-    def __init__(self, file=None, **kwargs):
-        self.default = lib.load_config(self, file)
+    lwd = None
+
+    def __init__(self, file_=None, **kwargs):
+        self.default = lib.load_config(self, file_)
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
 
@@ -241,7 +422,7 @@ class line:
                         uvmodel.go()
                         self.director('rm', chunk + '_uvcat.mir')
                         logger.info(' Continuum subtraction using uvmodel method for chunk ' + chunk + ' successful!')
-                    except:
+                    except Exception:
                         logger.warning('Continuum subtraction using uvmodel method for chunk ' +
                                        chunk + ' NOT successful! No continuum subtraction done!')
                 logger.info(' Continuum subtraction using uvmodel done!')
@@ -293,14 +474,14 @@ class line:
                                 channel_counter = channel_counter + 1
                             else:
                                 theoretical_noise = invertcmd[11].split(' ')[3]
-                                theoretical_noise_threshold = self.calc_theoretical_noise_threshold(
+                                theoretical_noise_threshold = calc_theoretical_noise_threshold(
                                     float(theoretical_noise), self.line_image_nsigma)
                                 ratio = self.calc_max_min_ratio('map_00_' + str(channel_counter).zfill(5))
                                 if ratio >= self.line_image_ratio_limit:
                                     imax = self.calc_imax('map_00_' + str(channel_counter).zfill(5))
                                     maxdr = np.divide(imax, float(theoretical_noise_threshold))
-                                    nminiter = self.calc_miniter(maxdr, self.line_image_dr0)
-                                    imclean, masklevels = self.calc_line_masklevel(nminiter, self.line_image_dr0, maxdr,
+                                    nminiter = calc_miniter(maxdr, self.line_image_dr0)
+                                    imclean, masklevels = calc_line_masklevel(nminiter, self.line_image_dr0, maxdr,
                                                                                    self.line_image_minorcycle0_dr, imax)
                                     if imclean:
                                         logger.info('Emission found in channel ' + str(channel_counter).zfill(
@@ -315,7 +496,7 @@ class line:
                                                 maths.mask = '"<' + 'map_00_' + str(channel_counter).zfill(
                                                     5) + '>.gt.' + str(mask_threshold) + '"'
                                                 maths.go()
-                                                clean_cutoff = self.calc_clean_cutoff(mask_threshold,
+                                                clean_cutoff = calc_clean_cutoff(mask_threshold,
                                                                                       self.line_image_c1)
                                                 clean = lib.miriad(
                                                     'clean')  # Clean the image down to the calculated threshold
@@ -336,7 +517,7 @@ class line:
                                                 maths.mask = '"<' + 'image_' + str(minc - 1).zfill(2) + '_' + str(
                                                     channel_counter).zfill(5) + '>.gt.' + str(mask_threshold) + '"'
                                                 maths.go()
-                                                clean_cutoff = self.calc_clean_cutoff(mask_threshold,
+                                                clean_cutoff = calc_clean_cutoff(mask_threshold,
                                                                                       self.line_image_c1)
                                                 clean = lib.miriad(
                                                     'clean')  # Clean the image down to the calculated threshold
@@ -471,7 +652,7 @@ class line:
                     str(self.line_image_channels).split(',')[0])
             else:
                 nchans = nchunks * nchannel
-            startfreq = self.get_freqstart(self.crosscaldir + '/' + self.target,
+            startfreq = get_freqstart(self.crosscaldir + '/' + self.target,
                                            int(str(self.line_image_channels).split(',')[0]))
             self.create_linecube(self.linedir + '/cubes/cube_image_*.fits', 'HI_image_cube.fits', nchans,
                                  int(str(self.line_image_channels).split(',')[0]), startfreq)
@@ -481,10 +662,6 @@ class line:
             logger.info('Created HI-beam cube #')
             logger.info('Removing obsolete files #')
             self.director('rm', self.linedir + '/cubes/' + 'cube_*')
-
-    ####################################
-    ##### Subfunctions for imaging #####
-    ####################################
 
     def create_uvmodel(self, chunk):
         """
@@ -496,15 +673,15 @@ class line:
         logger.info('Last major self-calibration cycle seems to have been ' + str(majc - 1) + ' #')
         # Check if a chunk could be calibrated and has data left
         if os.path.isfile(self.linedir + '/' + chunk + '/' + chunk + '.mir/gains'):
-            theoretical_noise = self.calc_theoretical_noise(self.linedir + '/' + chunk + '/' + chunk + '.mir')
+            theoretical_noise = calc_theoretical_noise(self.linedir + '/' + chunk + '/' + chunk + '.mir')
 
             logger.info('# Theoretical noise for chunk ' + chunk + ' is ' + str(theoretical_noise / 1000) + ' Jy/beam #')
-            theoretical_noise_threshold = self.calc_theoretical_noise_threshold(float(theoretical_noise), self.line_subtract_mode_uvmodel_nsigma)
+            theoretical_noise_threshold = calc_theoretical_noise_threshold(float(theoretical_noise), self.line_subtract_mode_uvmodel_nsigma)
             logger.info('# Your theoretical noise threshold will be ' + str(self.line_subtract_mode_uvmodel_nsigma) + 
                 ' times the theoretical noise corresponding to ' + str(theoretical_noise_threshold) + ' Jy/beam #')
-            dr_list = self.calc_dr_maj(self.line_subtract_mode_uvmodel_drinit, self.line_subtract_mode_uvmodel_dr0,
+            dr_list = calc_dr_maj(self.line_subtract_mode_uvmodel_drinit, self.line_subtract_mode_uvmodel_dr0,
                                        majc, self.line_subtract_mode_uvmodel_majorcycle_function)
-            dr_minlist = self.calc_dr_min(dr_list, majc - 1, self.line_subtract_mode_uvmodel_minorcycle,
+            dr_minlist = calc_dr_min(dr_list, majc - 1, self.line_subtract_mode_uvmodel_minorcycle,
                                           self.line_subtract_mode_uvmodel_minorcycle_function)
             logger.info('# Dynamic range limits for the final minor iterations to clean are ' + str(dr_minlist) + ' #')
 
@@ -514,7 +691,7 @@ class line:
                     self.run_continuum_minoriteration(chunk, majc, minc, dr_minlist[minc], theoretical_noise_threshold,
                                                       self.line_subtract_mode_uvmodel_c0)
                 logger.info(' Continuum imaging for subtraction for chunk ' + chunk + ' successful!')
-            except:
+            except Exception:
                 logger.warning('Continuum imaging for subtraction for chunk ' +
                                chunk + ' NOT successful! Continuum subtraction will provide bad or no results!')
 
@@ -541,16 +718,16 @@ class line:
             invert.options = 'mfs,double'
             invert.go()
             imax = self.calc_imax('map_' + str(minc).zfill(2))
-            noise_threshold = self.calc_noise_threshold(imax, minc, majc, c0)
-            dynamic_range_threshold = self.calc_dynamic_range_threshold(imax, drmin,
+            noise_threshold = calc_noise_threshold(imax, minc, majc, c0)
+            dynamic_range_threshold = calc_dynamic_range_threshold(imax, drmin,
                                                                         self.line_subtract_mode_uvmodel_minorcycle0_dr)
-            mask_threshold, mask_threshold_type = self.calc_mask_threshold(theoretical_noise_threshold, noise_threshold,
+            mask_threshold, mask_threshold_type = calc_mask_threshold(theoretical_noise_threshold, noise_threshold,
                                                                            dynamic_range_threshold)
             self.director('cp', 'mask_' + str(minc).zfill(2),
                           file=self.selfcaldir + '/' + chunk + '/' + str(majc - 2).zfill(2) + '/mask_' + str(
                               self.line_subtract_mode_uvmodel_minorcycle - 1).zfill(2))
             logger.info('Last mask from self-calibration copied #')
-            clean_cutoff = self.calc_clean_cutoff(mask_threshold, self.line_image_c1)
+            clean_cutoff = calc_clean_cutoff(mask_threshold, self.line_image_c1)
             logger.info(
                 'Clean threshold for minor cycle ' + str(minc) + ' was set to ' + str(clean_cutoff) + ' Jy/beam #')
             clean = lib.miriad('clean')  # Clean the image down to the calculated threshold
@@ -580,10 +757,10 @@ class line:
                 'RMS of the residual image is ' + str(self.calc_irms('residual_' + str(minc).zfill(2))) + ' Jy/beam #')
         else:
             imax = self.calc_imax('map_' + str(0).zfill(2))
-            noise_threshold = self.calc_noise_threshold(imax, minc, majc, c0)
-            dynamic_range_threshold = self.calc_dynamic_range_threshold(imax, drmin,
+            noise_threshold = calc_noise_threshold(imax, minc, majc, c0)
+            dynamic_range_threshold = calc_dynamic_range_threshold(imax, drmin,
                                                                         self.line_subtract_mode_uvmodel_minorcycle0_dr)
-            mask_threshold, mask_threshold_type = self.calc_mask_threshold(theoretical_noise_threshold, noise_threshold,
+            mask_threshold, mask_threshold_type = calc_mask_threshold(theoretical_noise_threshold, noise_threshold,
                                                                            dynamic_range_threshold)
             logger.info('Mask threshold for final imaging minor cycle ' + str(minc) + ' set to ' + str(
                 mask_threshold) + ' Jy/beam #')
@@ -594,7 +771,7 @@ class line:
             maths.mask = '"<' + 'image_' + str(minc - 1).zfill(2) + '>.gt.' + str(mask_threshold) + '"'
             maths.go()
             logger.info('Mask with threshold ' + str(mask_threshold) + ' Jy/beam created #')
-            clean_cutoff = self.calc_clean_cutoff(mask_threshold, self.line_image_c1)
+            clean_cutoff = calc_clean_cutoff(mask_threshold, self.line_image_c1)
             logger.info(
                 'Clean threshold for minor cycle ' + str(minc) + ' was set to ' + str(clean_cutoff) + ' Jy/beam #')
             clean = lib.miriad('clean')  # Clean the image down to the calculated threshold
@@ -624,16 +801,7 @@ class line:
             logger.info(
                 'RMS of the residual image is ' + str(self.calc_irms('residual_' + str(minc).zfill(2))) + ' Jy/beam #')
 
-    ##### Subfunctions for creating the line images/cubes #####
-
-    def get_freqstart(self, dataset, startchan):
-        """
-        dataset: The dataset to get the first frequency from
-        returns: The starting frequency of the observation
-        """
-        uv = aipy.miriad.UV(dataset)
-        startfreq = (uv['freqs'][2] + int(startchan) * uv['freqs'][3]) * 1E9
-        return startfreq
+    # Subfunctions for creating the line images/cubes
 
     def create_linecube(self, searchpattern, outcube, nchannel, startchan, startfreq):
         """
@@ -670,32 +838,6 @@ class line:
         del firstheader['NAXIS4']
         pyfits.writeto(outcube, nancube, firstheader)
         firstfile.close()
-
-    def calc_miniter(self, maxdr, dr0):
-        """
-        Calculate the number of minor cycles needed for cleaning a line channel
-        maxdr (float): The maximum dynamic range reachable calculated by the theoretical noise and maximum pixel value
-                       in the image
-        dr0 (float): The increase for each cycle to clean deeper
-        returns (int): Number of minor cycle iterations for cleaning
-        """
-        nminiter = int(np.ceil(np.log(maxdr) / np.log(dr0)))
-        return nminiter
-
-    def calc_line_masklevel(self, miniter, dr0, maxdr, minorcycle0_dr, imax):
-        if miniter == 0:
-            really = False
-            masklevels = 1
-        else:
-            really = True
-            drlevels = [np.power(dr0, n + 1) for n in range(miniter)]
-            drlevels[-1] = maxdr
-            if drlevels[0] >= minorcycle0_dr:
-                drlevels[0] = minorcycle0_dr
-            else:
-                pass
-            masklevels = imax / drlevels
-        return really, masklevels
 
     def calc_irms(self, image):
         """
@@ -773,140 +915,6 @@ class line:
         self.director('rm', image + '.fits')
         return isum
 
-    def calc_dr_maj(self, drinit, dr0, majorcycles, function):
-        """
-        Function to calculate the dynamic range limits during major cycles
-        drinit (float): The initial dynamic range
-        dr0 (float): Coefficient for increasing the dynamic range threshold at each major cycle
-        majorcycles (int): The number of major cycles to execute
-        function (string): The function to follow for increasing the dynamic ranges. Currently 'power' is supported.
-        returns (list of floats): A list of floats for the dynamic range limits within the major cycles.
-        """
-        if function == 'square':
-            dr_maj = [drinit * np.power(dr0, m) for m in range(majorcycles)]
-        else:
-            raise ApercalException(' Function for major cycles not supported!')
-        return dr_maj
-
-    def calc_dr_min(self, dr_maj, majc, minorcycles, function):
-        """
-        Function to calculate the dynamic range limits during minor cycles
-        dr_maj (list of floats): List with dynamic range limits for major cycles. Usually from calc_dr_maj
-        majc (int): The major cycles you want to calculate the minor cycle dynamic ranges for
-        minorcycles (int): The number of minor cycles to use
-        function (string): The function to follow for increasing the dynamic ranges. Currently 'square', 'power', and
-                           'linear' is supported.
-        returns (list of floats): A list of floats for the dynamic range limits within the minor cycles.
-        """
-        if majc == 0:  # Take care about the first major cycle
-            prevdr = 0
-        else:
-            prevdr = dr_maj[majc - 1]
-        # The different options to increase the minor cycle threshold
-        if function == 'square':
-            dr_min = [prevdr + ((dr_maj[majc] - prevdr) * (n ** 2.0)) / ((minorcycles - 1) ** 2.0) for n in
-                      range(minorcycles)]
-        elif function == 'power':
-            # Not exactly need to work on this, but close
-            dr_min = [prevdr + np.power((dr_maj[majc] - prevdr), (1.0 / (n))) for n in range(minorcycles)][::-1]
-        elif function == 'linear':
-            dr_min = [(prevdr + ((dr_maj[majc] - prevdr) / (minorcycles - 1)) * n) for n in range(minorcycles)]
-        else:
-            raise ApercalException(' Function for minor cycles not supported!')
-        return dr_min
-
-    def calc_mask_threshold(self, theoretical_noise_threshold, noise_threshold, dynamic_range_threshold):
-        """
-        Function to calculate the actual mask_threshold and the type of mask threshold from the
-        theoretical noise threshold, noise threshold, and the dynamic range threshold
-
-        args:
-            theoretical_noise_threshold (float): The theoretical noise threshold calculated by
-                calc_theoretical_noise_threshold
-            noise_threshold (float): The noise threshold calculated by calc_noise_threshold
-            dynamic_range_threshold (float): The dynamic range threshold calculated by calc_dynamic_range_threshold
-            returns (float, string): The maximum of the three thresholds, the type of the maximum threshold
-        """
-        # if np.isinf(dynamic_range_threshold) or np.isnan(dynamic_range_threshold):
-        #     dynamic_range_threshold = noise_threshold
-        mask_threshold = np.max([theoretical_noise_threshold, noise_threshold, dynamic_range_threshold])
-        mask_argmax = np.argmax([theoretical_noise_threshold, noise_threshold, dynamic_range_threshold])
-        if mask_argmax == 0:
-            mask_threshold_type = 'Theoretical noise threshold'
-        elif mask_argmax == 1:
-            mask_threshold_type = 'Noise threshold'
-        elif mask_argmax == 2:
-            mask_threshold_type = 'Dynamic range threshold'
-        return mask_threshold, mask_threshold_type
-
-    def calc_noise_threshold(self, imax, minor_cycle, major_cycle, c0):
-        """
-        Calculates the noise threshold
-        imax (float): the maximum in the input image
-        minor_cycle (int): the current minor cycle the self-calibration is in
-        major_cycle (int): the current major cycle the self-calibration is in
-        returns (float): the noise threshold
-        """
-        noise_threshold = imax / ((c0 + (minor_cycle) * c0) * (major_cycle + 1))
-        return noise_threshold
-
-    def calc_clean_cutoff(self, mask_threshold, c1):
-        """
-        Calculates the cutoff for the cleaning
-        mask_threshold (float): the mask threshold to calculate the clean cutoff from
-        returns (float): the clean cutoff
-        """
-        clean_cutoff = mask_threshold / c1
-        return clean_cutoff
-
-    def calc_dynamic_range_threshold(self, imax, dynamic_range, minorcycle0_dr):
-        """
-        Calculates the dynamic range threshold
-        imax (float): the maximum in the input image
-        dynamic_range (float): the dynamic range you want to calculate the threshold for
-        returns (float): the dynamic range threshold
-        """
-        if dynamic_range == 0:
-            dynamic_range = minorcycle0_dr
-        dynamic_range_threshold = imax / dynamic_range
-        return dynamic_range_threshold
-
-    def calc_theoretical_noise_threshold(self, theoretical_noise, nsigma):
-        """
-        Calculates the theoretical noise threshold from the theoretical noise
-        theoretical_noise (float): the theoretical noise of the observation
-        returns (float): the theoretical noise threshold
-        """
-        theoretical_noise_threshold = (nsigma * theoretical_noise)
-        return theoretical_noise_threshold
-
-    def calc_theoretical_noise(self, dataset):
-        """
-        Calculate the theoretical rms of a given dataset
-        dataset (string): The input dataset to calculate the theoretical rms from
-        returns (float): The theoretical rms of the input dataset as a float
-        """
-        uv = aipy.miriad.UV(dataset)
-        obsrms = lib.miriad('obsrms')
-        try:
-            tsys = np.median(uv['systemp'])
-            if np.isnan(tsys):
-                obsrms.tsys = 30.0
-            else:
-                obsrms.tsys = tsys
-        except KeyError:
-            obsrms.tsys = 30.0
-        obsrms.jyperk = uv['jyperk']
-        obsrms.antdiam = 25
-        obsrms.freq = uv['sfreq']
-        obsrms.theta = 15
-        obsrms.nants = uv['nants']
-        obsrms.bw = np.abs(uv['sdf'] * uv['nschan']) * 1000.0
-        obsrms.inttime = 12.0 * 60.0
-        obsrms.coreta = 0.88
-        theorms = float(obsrms.go()[-1].split()[3]) / 1000.0
-        return theorms
-
     def list_chunks(self):
         """
         Checks how many chunk directories exist and returns a list of them
@@ -948,12 +956,12 @@ class line:
         self.director('ch', self.linedir)
         self.director('rm', self.linedir + '/*')
 
-    def director(self, option, dest, file=None, verbose=True):
+    def director(self, option, dest, file_=None, verbose=True):
         """
-        director: Function to move, remove, and copy files and directories
+        director: Function to move, remove, and copy file_s and directories
         option: 'mk', 'ch', 'mv', 'rm', 'rn', and 'cp' are supported
         dest: Destination of a file or directory to move to
-        file: Which file to move or copy, otherwise None
+        file_: Which file to move or copy, otherwise None
         """
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
@@ -962,33 +970,33 @@ class line:
                 pass
             else:
                 os.mkdir(dest)
-                if verbose == True:
+                if verbose:
                     logger.info('Creating directory ' + str(dest) + ' #')
         elif option == 'ch':
             if os.getcwd() == dest:
                 pass
             else:
-                self.lwd = os.getcwd()  # Save the former working directory in a variable
+                lwd = os.getcwd()  # Save the former working directory in a variable
                 try:
                     os.chdir(dest)
-                except:
+                except Exception:
                     os.mkdir(dest)
-                    if verbose == True:
+                    if verbose:
                         logger.info('Creating directory ' + str(dest) + ' #')
                     os.chdir(dest)
-                self.cwd = os.getcwd()  # Save the current working directory in a variable
-                if verbose == True:
+                cwd = os.getcwd()  # Save the current working directory in a variable
+                if verbose:
                     logger.info('Moved to directory ' + str(dest) + ' #')
         elif option == 'mv':  # Move
             if os.path.exists(dest):
-                lib.basher("mv " + str(file) + " " + str(dest))
+                lib.basher("mv " + str(file_) + " " + str(dest))
             else:
                 os.mkdir(dest)
-                lib.basher("mv " + str(file) + " " + str(dest))
+                lib.basher("mv " + str(file_) + " " + str(dest))
         elif option == 'rn':  # Rename
-            lib.basher("mv " + str(file) + " " + str(dest))
+            lib.basher("mv " + str(file_) + " " + str(dest))
         elif option == 'cp':  # Copy
-            lib.basher("cp -r " + str(file) + " " + str(dest))
+            lib.basher("cp -r " + str(file_) + " " + str(dest))
         elif option == 'rm':  # Remove
             lib.basher("rm -r " + str(dest))
         else:
