@@ -6,7 +6,7 @@ from apercal.modules.ccal import ccal
 from os import path
 import logging
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 here = path.abspath(path.dirname(__file__))
 

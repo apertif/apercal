@@ -7,7 +7,7 @@ mpl.use('TkAgg')
 from apercal.modules.transfer import transfer
 import logging
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 here = path.dirname(__file__)
 

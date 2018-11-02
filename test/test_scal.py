@@ -7,7 +7,7 @@ from os import path
 
 import logging
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 here = path.dirname(__file__)
 

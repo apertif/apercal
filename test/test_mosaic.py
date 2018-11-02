@@ -6,7 +6,7 @@ from os import path
 from apercal.modules.mosaic import mosaic
 import logging
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 here = path.dirname(__file__)
 
