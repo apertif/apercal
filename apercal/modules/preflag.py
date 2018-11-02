@@ -63,21 +63,38 @@ class preflag:
     preflag_aoflagger_polcalstrat = None
     preflag_aoflagger_targetstrat = None
 
+    subdirification = None
+
     def __init__(self, filename=None, **kwargs):
         self.default = lib.load_config(self, filename)
         subs_setinit.setinitdirs(self)
 
     def get_fluxcal_path(self):
-        return path.join(self.basedir, '00', self.rawsubdir, self.fluxcal)
+        if self.subdirification:
+            return path.join(self.basedir, '00', self.rawsubdir, self.fluxcal)
+        else:
+            return self.fluxcal
 
     def get_polcal_path(self):
-        return path.join(self.basedir, '00', self.rawsubdir, self.polcal)
+        if self.subdirification:
+            return path.join(self.basedir, '00', self.rawsubdir, self.polcal)
+        else:
+            return self.polcal
 
     def get_datasets(self):
-        return glob.glob(path.join(self.basedir, '[0-9][0-9]', self.rawsubdir, self.target))
+        if self.subdirification:
+            datasets = glob.glob(path.join(self.basedir, '[0-9][0-9]', self.rawsubdir, self.target))
+            beams = [vis.split('/')[-3] for vis in datasets]
+            return zip(datasets, beams)
+        else:
+            # TODO: (gijs) is it okay to just always set this to 0?
+            return [(self.target, '00')]
 
     def get_datasets_beams(self, beams):
-        return [path.join(self.basedir, str(b).zfill(2), self.rawsubdir, self.target) for b in beams]
+        if self.subdirification:
+            return [path.join(self.basedir, str(b).zfill(2), self.rawsubdir, self.target) for b in beams]
+        else:
+            return [self.target]
 
     def go(self):
         """
@@ -139,8 +156,8 @@ class preflag:
                     casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
                     preflagfluxcalshadow = True
                 else:
-                    logger.warning('Flux calibrator dataset not specified or dataset not available. Not flagging '
-                                   'shadowed antennas for flux calibrator')
+                    logger.warning('Flux calibrator dataset {} not available. Not flagging '
+                                   'shadowed antennas for flux calibrator'.format(self.get_fluxcal_path()))
                     preflagfluxcalshadow = False
             # Flag the polarised calibrator
             if preflagpolcalshadow:
@@ -159,18 +176,16 @@ class preflag:
                     preflagpolcalshadow = False
             # Flag the target beams
             if self.target != '':
-                datasets = self.get_datasets()
-                for vis in datasets:
-                    band = vis.split('/')[-3]
-                    if preflagtargetbeamsshadow[int(band)]:
-                        logger.info('Shadowed antenna(s) for beam ' + band + ' were already flagged')
+                for vis, beam in self.get_datasets():
+                    if preflagtargetbeamsshadow[int(beam)]:
+                        logger.info('Shadowed antenna(s) for beam ' + beam + ' were already flagged')
                     else:
-                        logger.debug('Flagging shadowed antennas for beam ' + band)
+                        logger.debug('Flagging shadowed antennas for beam ' + beam)
                         tg_shadow = 'flagdata(vis="' + str(vis) + '", autocorr=True, flagbackup=False)'
                         casacmd = [tg_shadow]
                         casa = drivecasa.Casapy()
                         casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
-                        preflagtargetbeamsshadow[int(band)] = True
+                        preflagtargetbeamsshadow[int(beam)] = True
             else:
                 logger.warning('No target dataset specified! Not flagging shadowed antennas for target datasets')
         else:
@@ -257,13 +272,11 @@ class preflag:
             if self.target != '':
                 # Flag the subband edges of the the target beam datasets
                 # Collect all the available target beam datasets
-                datasets = self.get_datasets()
-                for vis in datasets:
-                    band = vis.split('/')[-3]
-                    if preflagtargetbeamsedges[int(band)]:
-                        logger.info('Subband edges for target beam ' + band + ' were already flagged')
+                for vis, beam in  self.get_datasets():
+                    if preflagtargetbeamsedges[int(beam)]:
+                        logger.info('Subband edges for target beam ' + beam + ' were already flagged')
                     else:
-                        logger.debug('Flagging subband edges for target beam ' + band)
+                        logger.debug('Flagging subband edges for target beam ' + beam)
                         nchannel = self._getnchan(vis)
                         # Calculate the subband edges for each target beam data set
                         a = range(0, nchannel, 64)
@@ -275,7 +288,7 @@ class preflag:
                         casacmd_tgflag = [tg_edges_flagcmd]
                         casa = drivecasa.Casapy()
                         casa.run_script(casacmd_tgflag, raise_on_severe=True, timeout=1800)
-                        preflagtargetbeamsedges[int(band)] = True
+                        preflagtargetbeamsedges[int(beam)] = True
             else:
                 logger.warning('No target dataset specified. Subband edges of target dataset(s) will not be flagged!')
         else:
@@ -359,13 +372,11 @@ class preflag:
             if self.target != '':
                 # Flag the ghosts in the target beam datasets
                 # Collect all the available target beam datasets
-                datasets = self.get_datasets()
-                for vis in datasets:
-                    band = vis.split('/')[-3]
-                    if preflagtargetbeamsghosts[int(band)]:
-                        logger.info('Ghost channels for target beam ' + band + ' were already flagged')
+                for vis, beam in self.get_datasets():
+                    if preflagtargetbeamsghosts[int(beam)]:
+                        logger.info('Ghost channels for target beam ' + beam + ' were already flagged')
                     else:
-                        logger.debug('Flagging ghost channels for target beam ' + band)
+                        logger.debug('Flagging ghost channels for target beam ' + beam)
                         nchannel = self._getnchan(vis)
                         # Calculate the ghost channels for each target beam data set
                         a = range(0, nchannel, 64)
@@ -376,7 +387,7 @@ class preflag:
                         casacmd_tgflag = [tg_ghosts_flagcmd]
                         casa = drivecasa.Casapy()
                         casa.run_script(casacmd_tgflag, raise_on_severe=True, timeout=1800)
-                        preflagtargetbeamsghosts[int(band)] = True
+                        preflagtargetbeamsghosts[int(beam)] = True
             else:
                 logger.warning('No target dataset specified. Ghosts in target dataset(s) will not be flagged!')
         else:
@@ -478,17 +489,16 @@ class preflag:
                     beams = self.preflag_manualflag_targetbeams.split(",")
                     datasets = [self.get_datasets_beams(beams)]
                     logger.debug('Flagging auto-correlations for selected target beams')
-                for vis in datasets:
-                    band = vis.split('/')[-3]
-                    if preflagtargetbeamsmanualflagauto[int(band)]:
-                        logger.info('Auto-correlations for target beam ' + band + ' were already flagged')
+                for vis, beam in datasets:
+                    if preflagtargetbeamsmanualflagauto[int(beam)]:
+                        logger.info('Auto-correlations for target beam ' + beam + ' were already flagged')
                     else:
-                        logger.debug('Flagging auto-correlations for target beam ' + band)
+                        logger.debug('Flagging auto-correlations for target beam ' + beam)
                         tg_auto = 'flagdata(vis="' + str(vis) + '", autocorr=True, flagbackup=False)'
                         casacmd = [tg_auto]
                         casa = drivecasa.Casapy()
                         casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
-                        preflagtargetbeamsmanualflagauto[int(band)] = True
+                        preflagtargetbeamsmanualflagauto[int(beam)] = True
             else:
                 logger.warning('Target dataset not specified. Auto-correlations for target beam dataset(s) will '
                                'not be flagged!')
@@ -565,23 +575,22 @@ class preflag:
                     beams = self.preflag_manualflag_targetbeams.split(",")
                     datasets = [self.get_datasets_beams(beams)]
                     logger.debug('Flagging antenna(s) ' + self.preflag_manualflag_antenna + ' for selected target beams')
-                for vis in datasets:
-                    band = vis.split('/')[-3]
-                    if preflagtargetbeamsmanualflagantenna[int(band)] == self.preflag_manualflag_antenna:
-                        logger.info('Antenna(s) ' + self.preflag_manualflag_antenna + ' for target beam ' + band + ' were already flagged')
+                for vis, beam in datasets:
+                    if preflagtargetbeamsmanualflagantenna[int(beam)] == self.preflag_manualflag_antenna:
+                        logger.info('Antenna(s) ' + self.preflag_manualflag_antenna + ' for target beam ' + beam + ' were already flagged')
                     else:
-                        logger.debug('Flagging antenna(s) ' + self.preflag_manualflag_antenna + ' for target beam ' + band)
+                        logger.debug('Flagging antenna(s) ' + self.preflag_manualflag_antenna + ' for target beam ' + beam)
                         tg_ant = 'flagdata(vis="' + str(vis) + '", antenna="' + self.preflag_manualflag_antenna + '", flagbackup=False)'
                         casacmd = [tg_ant]
                         casa = drivecasa.Casapy()
                         casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
                         spltant = self.preflag_manualflag_antenna.split(',')
                         for ant in spltant:
-                            if preflagtargetbeamsmanualflagantenna[int(band)].find(ant) == -1:
-                                if preflagtargetbeamsmanualflagantenna[int(band)] == '':
-                                    preflagtargetbeamsmanualflagantenna[int(band)] = ant
+                            if preflagtargetbeamsmanualflagantenna[int(beam)].find(ant) == -1:
+                                if preflagtargetbeamsmanualflagantenna[int(beam)] == '':
+                                    preflagtargetbeamsmanualflagantenna[int(beam)] = ant
                                 else:
-                                    preflagtargetbeamsmanualflagantenna[int(band)] = preflagtargetbeamsmanualflagantenna[int(band)] + ',' + ant
+                                    preflagtargetbeamsmanualflagantenna[int(beam)] = preflagtargetbeamsmanualflagantenna[int(beam)] + ',' + ant
             else:
                 logger.warning('Target dataset not specified. Specified antenna(s) for target beam dataset(s) will not be flagged!')
 
@@ -656,23 +665,22 @@ class preflag:
                     beams = self.preflag_manualflag_targetbeams.split(",")
                     datasets = [self.get_datasets_beams(beams)]
                     logger.debug('Flagging correlation(s) ' + self.preflag_manualflag_corr + ' for selected target beams')
-                for vis in datasets:
-                    band = vis.split('/')[-3]
-                    if preflagtargetbeamsmanualflagcorr[int(band)] == self.preflag_manualflag_corr:
-                        logger.info('Correlation(s) ' + self.preflag_manualflag_corr + ' for target beam ' + band + ' were already flagged')
+                for vis, beam in datasets:
+                    if preflagtargetbeamsmanualflagcorr[int(beam)] == self.preflag_manualflag_corr:
+                        logger.info('Correlation(s) ' + self.preflag_manualflag_corr + ' for target beam ' + beam + ' were already flagged')
                     else:
-                        logger.debug('Flagging correlations(s) ' + self.preflag_manualflag_corr + ' for target beam ' + band)
+                        logger.debug('Flagging correlations(s) ' + self.preflag_manualflag_corr + ' for target beam ' + beam)
                         tg_corr = 'flagdata(vis="' + str(vis) + '", correlation="' + self.preflag_manualflag_corr + '", flagbackup=False)'
                         casacmd = [tg_corr]
                         casa = drivecasa.Casapy()
                         casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
                         spltcorr = self.preflag_manualflag_corr.split(',')
                         for corr in spltcorr:
-                            if preflagtargetbeamsmanualflagcorr[int(band)].find(corr) == -1:
-                                if preflagtargetbeamsmanualflagcorr[int(band)] == '':
-                                    preflagtargetbeamsmanualflagcorr[int(band)] = corr
+                            if preflagtargetbeamsmanualflagcorr[int(beam)].find(corr) == -1:
+                                if preflagtargetbeamsmanualflagcorr[int(beam)] == '':
+                                    preflagtargetbeamsmanualflagcorr[int(beam)] = corr
                                 else:
-                                    preflagtargetbeamsmanualflagcorr[int(band)] = preflagtargetbeamsmanualflagcorr[int(band)] + ',' + corr
+                                    preflagtargetbeamsmanualflagcorr[int(beam)] = preflagtargetbeamsmanualflagcorr[int(beam)] + ',' + corr
             else:
                 logger.warning('Target dataset not specified. Specified correlation(s) for target beam dataset(s) will not be flagged!')
 
@@ -747,22 +755,21 @@ class preflag:
                     beams = self.preflag_manualflag_targetbeams.split(",")
                     datasets = [self.get_datasets_beams(beams)]
                     logger.debug('Flagging baseline(s) ' + self.preflag_manualflag_baseline + ' for selected target beams')
-                for vis in datasets:
-                    band = vis.split('/')[-3]
-                    if preflagtargetbeamsmanualflagbaseline[ int(band)] == self.preflag_manualflag_baseline:
-                        logger.info('Correlation(s) ' + self.preflag_manualflag_baseline + ' for target beam ' + band + ' were already flagged')
+                for vis, beam in datasets:
+                    if preflagtargetbeamsmanualflagbaseline[ int(beam)] == self.preflag_manualflag_baseline:
+                        logger.info('Correlation(s) ' + self.preflag_manualflag_baseline + ' for target beam ' + beam + ' were already flagged')
                     else:
-                        logger.debug('Flagging baseline(s) ' + self.preflag_manualflag_baseline + ' for target beam ' + band)
+                        logger.debug('Flagging baseline(s) ' + self.preflag_manualflag_baseline + ' for target beam ' + beam)
                         tg_baseline = 'flagdata(vis="' + str(vis) + '", antenna="' + self.preflag_manualflag_baseline + '", flagbackup=False)'
                         casacmd = [tg_baseline]
                         casa = drivecasa.Casapy()
                         casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
                         for baseline in spltbaseline:
-                            if preflagtargetbeamsmanualflagbaseline[int(band)].find(baseline) == -1:
-                                if preflagtargetbeamsmanualflagbaseline[int(band)] == '':
-                                    preflagtargetbeamsmanualflagbaseline[int(band)] = baseline
+                            if preflagtargetbeamsmanualflagbaseline[int(beam)].find(baseline) == -1:
+                                if preflagtargetbeamsmanualflagbaseline[int(beam)] == '':
+                                    preflagtargetbeamsmanualflagbaseline[int(beam)] = baseline
                                 else:
-                                    preflagtargetbeamsmanualflagbaseline[int(band)] = preflagtargetbeamsmanualflagbaseline[int(band)] + ',' + baseline
+                                    preflagtargetbeamsmanualflagbaseline[int(beam)] = preflagtargetbeamsmanualflagbaseline[int(beam)] + ',' + baseline
             else:
                 logger.warning('Target dataset not specified. Specified baseline(s) for target beam dataset(s) will not be flagged!')
 
@@ -835,22 +842,21 @@ class preflag:
                     beams = self.preflag_manualflag_targetbeams.split(",")
                     datasets = [self.get_datasets_beams(beams)]
                     logger.debug('Flagging channel(s) ' + self.preflag_manualflag_channel + ' for selected target beams')
-                for vis in datasets:
-                    band = vis.split('/')[-3]
-                    if preflagtargetbeamsmanualflagchannel[int(band)] == self.preflag_manualflag_channel:
-                        logger.info('Correlation(s) ' + self.preflag_manualflag_channel + ' for target beam ' + band + ' were already flagged')
+                for vis, beam in datasets:
+                    if preflagtargetbeamsmanualflagchannel[int(beam)] == self.preflag_manualflag_channel:
+                        logger.info('Correlation(s) ' + self.preflag_manualflag_channel + ' for target beam ' + beam + ' were already flagged')
                     else:
-                        logger.debug('Flagging channel(s) ' + self.preflag_manualflag_channel + ' for target beam ' + band)
+                        logger.debug('Flagging channel(s) ' + self.preflag_manualflag_channel + ' for target beam ' + beam)
                         tg_channel = 'flagdata(vis="' + str(vis) + '", spw="0:' + self.preflag_manualflag_channel + '", flagbackup=False)'
                         casacmd = [tg_channel]
                         casa = drivecasa.Casapy()
                         casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
                         for channel in spltchannel:
-                            if preflagtargetbeamsmanualflagchannel[int(band)].find(channel) == -1:
-                                if preflagtargetbeamsmanualflagchannel[int(band)] == '':
-                                    preflagtargetbeamsmanualflagchannel[int(band)] = channel
+                            if preflagtargetbeamsmanualflagchannel[int(beam)].find(channel) == -1:
+                                if preflagtargetbeamsmanualflagchannel[int(beam)] == '':
+                                    preflagtargetbeamsmanualflagchannel[int(beam)] = channel
                                 else:
-                                    preflagtargetbeamsmanualflagchannel[int(band)] = preflagtargetbeamsmanualflagchannel[int(band)] + ',' + channel
+                                    preflagtargetbeamsmanualflagchannel[int(beam)] = preflagtargetbeamsmanualflagchannel[int(beam)] + ',' + channel
             else:
                 logger.warning('Target dataset not specified. Specified channel range(s) for target beam dataset(s) will not be flagged!')
 
@@ -925,22 +931,21 @@ class preflag:
                     beams = self.preflag_manualflag_targetbeams.split(",")
                     datasets = [self.get_datasets_beams(beams)]
                     logger.debug('Flagging time range ' + self.preflag_manualflag_time + ' for selected target beams')
-                for vis in datasets:
-                    band = vis.split('/')[-3]
-                    if preflagtargetbeamsmanualflagtime[int(band)] == self.preflag_manualflag_time:
-                        logger.info('Time range ' + self.preflag_manualflag_time + ' for target beam ' + band + ' was already flagged')
+                for vis, beam in datasets:
+                    if preflagtargetbeamsmanualflagtime[int(beam)] == self.preflag_manualflag_time:
+                        logger.info('Time range ' + self.preflag_manualflag_time + ' for target beam ' + beam + ' was already flagged')
                     else:
-                        logger.debug('Flagging time range(s) ' + self.preflag_manualflag_time + ' for target beam ' + band)
+                        logger.debug('Flagging time range(s) ' + self.preflag_manualflag_time + ' for target beam ' + beam)
                         tg_time = 'flagdata(vis="' + str(vis) + '", timerange="' + self.preflag_manualflag_channel + '", flagbackup=False)'
                         casacmd = [tg_time]
                         casa = drivecasa.Casapy()
                         casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
                         for time in splttime:
-                            if preflagtargetbeamsmanualflagtime[int(band)].find(time) == -1:
-                                if preflagtargetbeamsmanualflagtime[int(band)] == '':
-                                    preflagtargetbeamsmanualflagtime[int(band)] = time
+                            if preflagtargetbeamsmanualflagtime[int(beam)].find(time) == -1:
+                                if preflagtargetbeamsmanualflagtime[int(beam)] == '':
+                                    preflagtargetbeamsmanualflagtime[int(beam)] = time
                                 else:
-                                    preflagtargetbeamsmanualflagtime[int(band)] = preflagtargetbeamsmanualflagtime[int(band)] + ',' + time
+                                    preflagtargetbeamsmanualflagtime[int(beam)] = preflagtargetbeamsmanualflagtime[int(beam)] + ',' + time
             else:
                 logger.warning('Target dataset not specified. Specified time range(s) for target beam dataset(s) will not be flagged!')
 
@@ -1011,25 +1016,28 @@ class preflag:
         preflagaoflaggertargetbeamsflag = get_param_def(self, 'preflag_aoflagger_targetbeams_flag_status',
                                                         np.full((beams), False))
 
+        base_cmd = 'aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_fluxcalstrat
         if self.preflag_aoflagger:
             # Flag the flux calibrator with AOFLagger
             if self.preflag_aoflagger_fluxcal:
                 if not preflagaoflaggerfluxcalflag:
                     if self.fluxcal != '' and os.path.isdir(self.get_fluxcal_path()) and self.preflag_aoflagger_fluxcalstrat != '':
                         logger.info('Using AOFlagger to flag flux calibrator dataset')
-                        preflagaoflaggerbandpassstatus = get_param_def(self, 'preflag_aoflagger_bandpass_status', False) # Check if bandpass table was derived successfully
+                        # Check if bandpass table was derived successfully
+                        preflagaoflaggerbandpassstatus = get_param_def(self, 'preflag_aoflagger_bandpass_status', False)
                         if self.aoflagger_bandpass and preflagaoflaggerbandpassstatus:
-                            print('aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_fluxcalstrat + ' -bandpass ' + self.get_fluxcal_path()[:-3] + '_Bpass.txt ' + self.get_fluxcal_path())
-                            os.system('aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_fluxcalstrat + ' -bandpass ' + self.get_fluxcal_path()[:-3] + '_Bpass.txt ' + self.get_fluxcal_path())
+                            os.system(base_cmd + ' -bandpass ' + self.get_fluxcal_path()[:-3] + '_Bpass.txt ' + self.get_fluxcal_path())
                             logger.debug('Used AOFlagger to flag flux calibrator with preliminary bandpass applied')
                             preflagaoflaggerfluxcalflag = True
-                        elif self.aoflagger_bandpass == True and preflagaoflaggerbandpassstatus == False:
-                            os.system('aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_fluxcalstrat + ' ' + self.get_fluxcal_path())
-                            logger.warning('Used AOFlagger to flag flux calibrator without preliminary bandpass applied. Better results are usually obtained with a preliminary bandpass applied.')
+                        elif self.aoflagger_bandpass  and not preflagaoflaggerbandpassstatus:
+                            os.system(base_cmd + ' ' + self.get_fluxcal_path())
+                            logger.warning('Used AOFlagger to flag flux calibrator without preliminary bandpass '
+                                           'applied. Better results are usually obtained with a preliminary bandpass applied.')
                             preflagaoflaggerfluxcalflag = True
-                        elif self.aoflagger_bandpass == False:
-                            os.system('aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_fluxcalstrat + ' ' + self.get_fluxcal_path())
-                            logger.warning('Used AOFlagger to flag flux calibrator without preliminary bandpass applied. Better results are usually obtained with a preliminary bandpass applied.')
+                        elif not self.aoflagger_bandpass:
+                            os.system(base_cmd + ' ' + self.get_fluxcal_path())
+                            logger.warning('Used AOFlagger to flag flux calibrator without preliminary bandpass '
+                                           'applied. Better results are usually obtained with a preliminary bandpass applied.')
                             preflagaoflaggerfluxcalflag = True
                     else:
                         error = 'Flux calibrator dataset or strategy not defined properly or dataset' \
@@ -1088,29 +1096,28 @@ class preflag:
                         beams = self.preflag_aoflagger_targetbeams.split(",")
                         datasets = [self.get_datasets_beams(beams)]
                         logger.info('AOFlagging all selected target beam(s)')
-                    for vis in datasets:
-                        band = vis.split('/')[-3]
+                    for vis, beam in datasets:
                         base_cmd = 'aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_targetstrat
-                        if not preflagaoflaggertargetbeamsflag[int(band)]:
+                        if not preflagaoflaggertargetbeamsflag[int(beam)]:
                             if self.aoflagger_bandpass and preflagaoflaggerbandpassstatus:
                                 os.system(base_cmd + ' -bandpass ' + self.get_fluxcal_path()[:-3] + '_Bpass.txt ' + vis)
                                 logger.debug('Used AOFlagger to flag target beam %s with preliminary '
-                                             'bandpass applied'.format(band))
-                                preflagaoflaggertargetbeamsflag[int(band)] = True
+                                             'bandpass applied'.format(beam))
+                                preflagaoflaggertargetbeamsflag[int(beam)] = True
                             elif self.aoflagger_bandpass == True and preflagaoflaggerbandpassstatus == False:
                                 os.system(base_cmd + ' ' + vis)
                                 logger.warning('Used AOFlagger to flag target beam %s without preliminary bandpass '
                                                'applied. Better results are usually obtained with a preliminary '
-                                               'bandpass applied.'.format(band))
-                                preflagaoflaggertargetbeamsflag[int(band)] = True
+                                               'bandpass applied.'.format(beam))
+                                preflagaoflaggertargetbeamsflag[int(beam)] = True
                             elif self.aoflagger_bandpass == False:
                                 os.system(base_cmd + ' ' + vis)
                                 logger.warning('Used AOFlagger to flag target beam %s without preliminary bandpass '
                                                'applied. Better results are usually obtained with a preliminary '
-                                               'bandpass applied.'.format(band))
-                                preflagaoflaggertargetbeamsflag[int(band)] = True
+                                               'bandpass applied.'.format(beam))
+                                preflagaoflaggertargetbeamsflag[int(beam)] = True
                         else:
-                            logger.info('Target beam ' + band + ' was already flagged with AOFlagger!')
+                            logger.info('Target beam ' + beam + ' was already flagged with AOFlagger!')
                 else:
                     error = 'Target beam dataset(s) or strategy not defined properly. Not AOFlagging' \
                             'target beam dataset(s).'
