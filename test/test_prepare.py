@@ -4,6 +4,10 @@ mpl.use('TkAgg')
 from apercal.modules.prepare import prepare
 
 from os import path
+from apercal.libs import lib
+
+
+lib.setup_logger('debug')
 
 here = path.dirname(__file__)
 
@@ -19,4 +23,7 @@ class TestPrepare(unittest.TestCase):
         p.target = 'NGC807.MS'
         #p.show(showall=False)
         p.go()
+
+if __name__ == "__main__":
+        unittest.main()
 
