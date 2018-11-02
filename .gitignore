@@ -9,3 +9,4 @@ casa.log
 .eggs/
 data/small.tgz
 data/small/
+cwl/outdir/
