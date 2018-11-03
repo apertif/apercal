@@ -6,6 +6,7 @@ import pandas as pd
 import drivecasa
 import os
 
+from apercal.modules.base import BaseModule
 from apercal.subs import setinit as subs_setinit
 from apercal.subs import managefiles as subs_managefiles
 from apercal.subs.param import get_param_def
@@ -16,24 +17,12 @@ from apercal.libs import lib
 logger = logging.getLogger(__name__)
 
 
-class convert:
+class convert(BaseModule):
     """
     Class to convert data from MS-format into UVFITS, and from UVFITS into MIRIAD format. Resulting datasets will
     have the endings .MS, .UVFITS, and .mir.
     """
-    fluxcal = None
-    polcal = None
-    target = None
-    basedir = None
-    beam = None
-    rawsubdir = None
-    crosscalsubdir = None
-    selfcalsubdir = None
-    linesubdir = None
-    contsubdir = None
-    polsubdir = None
-    mossubdir = None
-    transfersubdir = None
+    module_name = 'CONVERT'
 
     convert_fluxcal = True  # Convert the flux calibrator dataset
     convert_polcal = True  # Convert the polarised calibrator dataset
@@ -488,9 +477,6 @@ class convert:
         df = pd.concat([df_msav, df_ms2uv, df_uv2mir], axis=1)
 
         return df
-
-    def show(self, showall=False):
-        lib.show(self, 'CONVERT', showall)
 
     def reset(self):
         """

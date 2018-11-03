@@ -26,6 +26,8 @@ class preflag(BaseModule):
     """
     Preflagging class. Used to automatically flag data and apply preknown flags.
     """
+    module_name = 'PREFLAG'
+
     fluxcal = None
     polcal = None
     target = None
@@ -1213,9 +1215,6 @@ class preflag(BaseModule):
             [df_shadow, df_ghosts, df_edges, df_auto, df_ant, df_corr, df_baseline, df_channel, df_time, df_AO], axis=1)
 
         return df
-
-    def show(self, showall=False):
-        lib.show(self, 'PREFLAG', showall)
 
     def reset(self):
         """

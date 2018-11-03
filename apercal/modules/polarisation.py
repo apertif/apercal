@@ -1,16 +1,17 @@
 import logging
 from apercal.subs import setinit as subs_setinit
 from apercal.libs import lib
-
+from apercal.modules.base import BaseModule
 
 logger = logging.getLogger(__name__)
 
 
-class polarisation:
+class polarisation(BaseModule):
     """
     Final class to produce final data products (Deep continuum images, line cubes, and polairsation images and
     Faraday-cubes).
     """
+    module_name = 'POLARISATION'
 
     def __init__(self, file_=None, **kwargs):
         self.default = lib.load_config(self, file_)

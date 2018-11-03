@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import os
 
+from apercal.modules.base import BaseModule
 from apercal.libs.calculations import calc_dr_maj, calc_theoretical_noise, calc_theoretical_noise_threshold, \
     calc_dynamic_range_threshold, calc_clean_cutoff, calc_noise_threshold, calc_mask_threshold
 from apercal.subs import setinit as subs_setinit
@@ -19,24 +20,12 @@ from apercal.exceptions import ApercalException
 logger = logging.getLogger(__name__)
 
 
-class continuum:
+class continuum(BaseModule):
     """
     Continuum class to produce continuum data products (Deep continuum images of individual frequency chunks and
     stacked continuum image).
     """
-    fluxcal = None
-    polcal = None
-    target = None
-    basedir = None
-    beam = None
-    rawsubdir = None
-    crosscalsubdir = None
-    selfcalsubdir = None
-    linesubdir = None
-    contsubdir = None
-    polsubdir = None
-    mossubdir = None
-    transfersubdir = None
+    module_name = 'CONTINUUM'
 
     contdir = None
     selfcaldir = None
@@ -994,9 +983,6 @@ class continuum:
              df_rdmin, df_rdmax, df_rdstd], axis=1)
 
         return df
-
-    def show(self, showall=False):
-        lib.show(self, 'CONTINUUM', showall)
 
     def reset(self):
         """
