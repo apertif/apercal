@@ -126,48 +126,47 @@ def getdata_alta(date, task_ids, beams, targetdir=".", tmpdir=".", alta_exceptio
     os.system('rm -rf {tmpdir}*irods-status'.format(**locals()))
 
     # Add verification at the end of the transfer
-    for beam_nr in beams:
+    if check_with_rsync:
+        for beam_nr in beams:
+            logger.info('Verifying beam %.3d... ######' % beam_nr)
 
-        logger.info('Verifying beam %.3d... ######' % beam_nr)
+            for task_id in task_ids:
+                logger.info('Verifying task ID %.3d...' % task_id)
 
+                # Toggle for when we started using more digits:
+                alta_dir = get_alta_dir(date, task_id, beam_nr, alta_exception)
+                if targetdir == '.':
+                    local_dir = "{targetdir}WSRTA{date}{task_id:03d}_B{beam_nr:03d}.MS"
+                else:
+                    local_dir = targetdir
+                cmd = "irsync -srl i:{alta_dir} {local_dir} >> " \
+                      "{tmpdir}transfer_WSRTA{date}{task_id:03d}_to_alta_verify.log".format(
+                      **locals())
+
+                subprocess.check_call(cmd, shell=True, stdout=FNULL, stderr=FNULL)
+
+        # Identify server details
+        hostname = os.popen('hostname').read().strip()
+
+        # Check for failed files
         for task_id in task_ids:
-            logger.info('Verifying task ID %.3d...' % task_id)
+            logger.debug('Checking failed files for task ID %.3d' % task_id)
 
-            # Toggle for when we started using more digits:
-            alta_dir = get_alta_dir(date, task_id, beam_nr, alta_exception)
-            if targetdir == '.':
-                local_dir = "{targetdir}WSRTA{date}{task_id:03d}_B{beam_nr:03d}.MS"
+            cmd = 'wc -l {tmpdir}transfer_WSRTA{date}{task_id:03d}_to_alta_verify.log'.format(**locals())
+            n_failed_files = subprocess.check_output(cmd.split()).split()[0]
+            logger.warning('Number of failed files: %s', n_failed_files)
+
+            if n_failed_files == '0':
+                cmd = """curl -X POST --data-urlencode 'payload={"text":"Transfer of WSRTA%s%.3d (B%.3d-B%.3d) from ALTA to %s finished."}' https://hooks.slack.com/services/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""" % (
+                date, task_id, beams[0], beams[-1], hostname)
+                if post_to_slack:
+                    os.system(cmd)
             else:
-                local_dir = targetdir
-            cmd = "irsync -srl i:{alta_dir} {local_dir} >> " \
-                  "{tmpdir}transfer_WSRTA{date}{task_id:03d}_to_alta_verify.log".format(
-                **locals())
-
-            subprocess.check_call(cmd, shell=True, stdout=FNULL, stderr=FNULL)
-
-    # Identify server details
-    hostname = os.popen('hostname').read().strip()
-    path = os.popen('pwd').read().strip()  # not using this for now but maybe in future
-
-    # Check for failed files
-    for task_id in task_ids:
-        logger.debug('Checking failed files for task ID %.3d' % task_id)
-
-        cmd = 'wc -l {tmpdir}transfer_WSRTA{date}{task_id:03d}_to_alta_verify.log'.format(**locals())
-        n_failed_files = subprocess.check_output(cmd.split()).split()[0]
-        logger.warning('Number of failed files: %s', n_failed_files)
-
-        if n_failed_files == '0':
-            cmd = """curl -X POST --data-urlencode 'payload={"text":"Transfer of WSRTA%s%.3d (B%.3d-B%.3d) from ALTA to %s finished."}' https://hooks.slack.com/services/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""" % (
-            date, task_id, beams[0], beams[-1], hostname)
-            if post_to_slack:
-                os.system(cmd)
-        else:
-            cmd = """curl -X POST --data-urlencode 'payload={"text":"Transfer of WSRTA%s%.3d (B%.3d-B%.3d) from ALTA to %s finished incomplete. Check logs!"}' https://hooks.slack.com/services/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""" % (
-            date, task_id, beams[0], beams[-1], hostname)
-            if post_to_slack:
-                os.system(cmd)
-            raise RuntimeError("Download from ALTA failed")
+                cmd = """curl -X POST --data-urlencode 'payload={"text":"Transfer of WSRTA%s%.3d (B%.3d-B%.3d) from ALTA to %s finished incomplete. Check logs!"}' https://hooks.slack.com/services/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""" % (
+                date, task_id, beams[0], beams[-1], hostname)
+                if post_to_slack:
+                    os.system(cmd)
+                raise RuntimeError("Download from ALTA failed")
 
     # Time the transfer
     end = time.time()
