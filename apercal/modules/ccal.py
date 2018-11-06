@@ -88,7 +88,7 @@ class ccal(BaseModule):
         logger.info("CROSS CALIBRATION done ")
 
     def show(self, showall=False):
-        lib.show(self, 'CROSSCALL', showall)
+        lib.show(self, 'CROSSCAL', showall)
 
     def TEC(self):
         """
