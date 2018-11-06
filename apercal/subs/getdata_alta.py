@@ -8,9 +8,11 @@ import os
 import sys
 import time
 import logging
+import subprocess
 
 from apercal.exceptions import ApercalException
 
+FNULL = open(os.devnull, 'w')
 
 def parse_list(spec):
     """Convert a string specification like 00-04,07,09-12 into a list [0,1,2,3,4,7,9,10,11,12]
@@ -70,7 +72,7 @@ def get_alta_dir(date, task_id, beam_nr, alta_exception):
         return "/altaZone/archive/apertif_main/visibilities_default/{date}{task_id:03d}/WSRTA{date}{task_id:03d}_B{beam_nr:03d}.MS".format(**locals())
 
 
-def getdata_alta(date, task_ids, beams, targetdir=".", tmpdir=".", alta_exception=False):
+def getdata_alta(date, task_ids, beams, targetdir=".", tmpdir=".", alta_exception=False, post_to_slack=False, check_with_rsync=True):
     """Download data from ALTA using low-level IRODS commands.
     Report status to slack
 
@@ -81,6 +83,8 @@ def getdata_alta(date, task_ids, beams, targetdir=".", tmpdir=".", alta_exceptio
         targetdir (str): directory to put the downloaded files
         tmpdir (str): directory for temporary files
         alta_exception (bool): force 3 digits task id, old directory
+        post_to_slack (bool): post the output of checking to slack
+        check_with_rsync (bool): run rsync on the result of iget to verify the data got in
     """
     # Time the transfer
     start = time.time()
@@ -117,7 +121,7 @@ def getdata_alta(date, task_ids, beams, targetdir=".", tmpdir=".", alta_exceptio
                   "{tmpdir}WSRTA{date}{task_id:03d}_B{beam_nr:03d}-icat.lf-irods-status --retries 5 {alta_dir} " \
                   "{targetdir}".format(**locals())
             logger.debug(cmd)
-            os.system(cmd)
+            subprocess.check_call(cmd, shell=True, stdout=FNULL, stderr=FNULL)
 
     os.system('rm -rf {tmpdir}*irods-status'.format(**locals()))
 
@@ -131,11 +135,15 @@ def getdata_alta(date, task_ids, beams, targetdir=".", tmpdir=".", alta_exceptio
 
             # Toggle for when we started using more digits:
             alta_dir = get_alta_dir(date, task_id, beam_nr, alta_exception)
-            cmd = "irsync -srl i:{alta_dir} {targetdir}WSRTA{date}{task_id:03d}_B{beam_nr:03d}.MS >> " \
-                  "{tmpdir}transfer_WSRTA{date}{task_id:03d}_to_alta_verify.log 2>&1".format(
+            if targetdir == '.':
+                local_dir = "{targetdir}WSRTA{date}{task_id:03d}_B{beam_nr:03d}.MS"
+            else:
+                local_dir = targetdir
+            cmd = "irsync -srl i:{alta_dir} {local_dir} >> " \
+                  "{tmpdir}transfer_WSRTA{date}{task_id:03d}_to_alta_verify.log".format(
                 **locals())
 
-            os.system(cmd)
+            subprocess.check_call(cmd, shell=True, stdout=FNULL, stderr=FNULL)
 
     # Identify server details
     hostname = os.popen('hostname').read().strip()
@@ -143,23 +151,23 @@ def getdata_alta(date, task_ids, beams, targetdir=".", tmpdir=".", alta_exceptio
 
     # Check for failed files
     for task_id in task_ids:
-        break  # Hack TJD: disable checking failed files
         logger.debug('Checking failed files for task ID %.3d' % task_id)
 
-        cmd = os.popen('cat {tmpdir}transfer_WSRTA{date}{task_id:03d}_to_alta_verify.log | wc -l'.format(**locals()))
-        for x in cmd:
-            logger.warning('Failed files: %s', x.strip())
-            failed_files = x.strip()
+        cmd = 'wc -l {tmpdir}transfer_WSRTA{date}{task_id:03d}_to_alta_verify.log'.format(**locals())
+        n_failed_files = subprocess.check_output(cmd.split()).split()[0]
+        logger.warning('Number of failed files: %s', n_failed_files)
 
-        if failed_files == '0':
+        if n_failed_files == '0':
             cmd = """curl -X POST --data-urlencode 'payload={"text":"Transfer of WSRTA%s%.3d (B%.3d-B%.3d) from ALTA to %s finished."}' https://hooks.slack.com/services/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""" % (
             date, task_id, beams[0], beams[-1], hostname)
+            if post_to_slack:
+                os.system(cmd)
         else:
             cmd = """curl -X POST --data-urlencode 'payload={"text":"Transfer of WSRTA%s%.3d (B%.3d-B%.3d) from ALTA to %s finished incomplete. Check logs!"}' https://hooks.slack.com/services/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""" % (
             date, task_id, beams[0], beams[-1], hostname)
-
-        # Execute the command
-        os.system(cmd)
+            if post_to_slack:
+                os.system(cmd)
+            raise RuntimeError("Download from ALTA failed")
 
     # Time the transfer
     end = time.time()
