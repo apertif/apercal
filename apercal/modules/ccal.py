@@ -500,14 +500,14 @@ class ccal(BaseModule):
                     else:
                         ccalpolcalmodel = False
                         logger.warning(
-                            '# Model not ingested properly. Polarisation calibration corrections will not be right!')
+                            'Model not ingested properly. Polarisation calibration corrections will not be right!')
 
                 # Create the cross hand delay correction table for the polarised calibrator
 
                 if ccalpolcalcrosshanddelay or os.path.isdir(
                         self.get_polcal_path().rstrip('.MS') + '.Kcross'):
                     logger.info(
-                        '# Cross hand delay correction table for polarised calibrator was already generated')
+                        'Cross hand delay correction table for polarised calibrator was already generated')
                     ccalpolcalcrosshanddelay = True
                 else:
                     prevtables = '""'
@@ -548,10 +548,10 @@ class ccal(BaseModule):
                         ccalpolcalcrosshanddelay = True
                     else:
                         ccalpolcalcrosshanddelay = False
-                        logger.error('Cross hand delay correction table for polarised calibrator was'
+                        logger.error('Cross hand delay correction table for polarised calibrator was '
                                      'not created successfully!')
             else:
-                logger.error('Polarised calibrator dataset not specified or dataset not available. Polarisation'
+                logger.error('Polarised calibrator dataset not specified or dataset not available. Polarisation '
                              'calibration will probably not work!')
 
         subs_param.add_param(self, 'ccal_polcal_model', ccalpolcalmodel)
