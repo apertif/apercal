@@ -14,6 +14,7 @@ from apercal.exceptions import ApercalException
 
 FNULL = open(os.devnull, 'w')
 
+
 def parse_list(spec):
     """Convert a string specification like 00-04,07,09-12 into a list [0,1,2,3,4,7,9,10,11,12]
 
