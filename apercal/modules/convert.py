@@ -3,7 +3,6 @@ import logging
 
 import numpy as np
 import pandas as pd
-import drivecasa
 import os
 
 from apercal.subs import setinit as subs_setinit
@@ -153,9 +152,7 @@ class convert:
                             logger.warning('Flux calibrator does not have a corrected_data column! Using uncorrected'
                                            'data for conversion!')
 
-                        casacmd = [fc_convert]
-                        casa = drivecasa.Casapy()
-                        casa.run_script(casacmd, raise_on_severe=True, timeout=3600)
+                        lib.run_casa([fc_convert], timeout=3600)
                         if os.path.isfile(self.basedir + '00' + '/' + self.crosscalsubdir + '/' + self.fluxcal.rstrip(
                                 'MS') + 'UVFITS'):
                             convertfluxcalms2uvfits = True
@@ -194,9 +191,7 @@ class convert:
                             logger.warning('Polarised calibrator does not have a corrected_data column! Using'
                                            'uncorrected data for conversion!')
 
-                        casacmd = [pc_convert]
-                        casa = drivecasa.Casapy()
-                        casa.run_script(casacmd, raise_on_severe=True, timeout=3600)
+                        lib.run_casa([pc_convert], timeout=3600)
                         if os.path.isfile(self.basedir + '00' + '/' + self.crosscalsubdir + '/' + self.polcal.rstrip(
                                 'MS') + 'UVFITS'):
                             convertpolcalms2uvfits = True

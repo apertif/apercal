@@ -1,7 +1,6 @@
 import logging
 import glob
 import os
-import drivecasa
 import numpy as np
 import pandas as pd
 
@@ -123,17 +122,13 @@ class ccal(BaseModule):
                 else:
                     cc_load_tec_maps = 'from recipes import tec_maps'
                     cc_fluxcal_TEC = 'tec_maps.create(vis = "' + self.get_fluxcal_path() + '", doplot = False)'
-                    casacmd = [cc_load_tec_maps, cc_fluxcal_TEC]
-                    casa = drivecasa.Casapy()
-                    casa.run_script(casacmd, raise_on_severe=True, timeout=1800)
+                    lib.run_casa([cc_load_tec_maps, cc_fluxcal_TEC])
                     # Check if the TEC corrections could be downloaded
                     if os.path.isdir(self.get_fluxcal_path() + '.IGS_TEC.im'):
                         cc_load_tec_maps = 'from recipes import tec_maps'
                         cc_fluxcal_genTEC = 'gencal(vis = "' + self.get_fluxcal_path() + '", caltable = "' + self.get_fluxcal_path().rstrip(
                             '.MS') + '.tecim", caltype="tecim", infile = "' + self.get_fluxcal_path() + '.IGS_TEC.im")'
-                        casacmd = [cc_load_tec_maps, cc_fluxcal_genTEC]
-                        casa = drivecasa.Casapy()
-                        casa.run_script(casacmd, raise_on_severe=True, timeout=1800)
+                        lib.run_casa([cc_load_tec_maps, cc_fluxcal_genTEC])
                         if os.path.isdir(self.get_fluxcal_path().rstrip(
                                 '.MS') + '.tecim'):  # Check if the calibration table was created
                             ccalfluxcalTEC = True
@@ -160,9 +155,7 @@ class ccal(BaseModule):
                 else:
                     cc_load_tec_maps = 'from recipes import tec_maps'
                     cc_polcal_TEC = 'tec_maps.create(vis = "' + self.get_polcal_path() + '", doplot = False)'
-                    casacmd = [cc_load_tec_maps, cc_polcal_TEC]
-                    casa = drivecasa.Casapy()
-                    casa.run_script(casacmd, raise_on_severe=True, timeout=1800)
+                    lib.run_casa([cc_load_tec_maps, cc_polcal_TEC])
                     # Check if the TEC corrections could be downloaded
                     if os.path.isdir(self.get_polcal_path() + '.IGS_TEC.im'):
                         cc_load_tec_maps = 'from recipes import tec_maps'
@@ -170,9 +163,7 @@ class ccal(BaseModule):
                                            self.get_polcal_path().rstrip(
                             '.MS') + '.tecim", caltype="tecim", infile = "' + self.basedir + '00' + '/' + \
                                            self.rawsubdir + '/' + self.polcal + '.IGS_TEC.im")'
-                        casacmd = [cc_load_tec_maps, cc_polcal_genTEC]
-                        casa = drivecasa.Casapy()
-                        casa.run_script(casacmd, raise_on_severe=True, timeout=1800)
+                        lib.run_casa([cc_load_tec_maps, cc_polcal_genTEC])
                         if os.path.isdir(self.get_polcal_path().rstrip(
                                 '.MS') + '.tecim'):  # Check if the calibration table was created
                             ccalpolcalTEC = True
@@ -200,9 +191,7 @@ class ccal(BaseModule):
                     else:
                         cc_load_tec_maps = 'from recipes import tec_maps'
                         cc_targetbeam_TEC = 'tec_maps.create(vis = "' + vis + '", doplot = False)'
-                        casacmd = [cc_load_tec_maps, cc_targetbeam_TEC]
-                        casa = drivecasa.Casapy()
-                        casa.run_script(casacmd, raise_on_severe=True, timeout=1800)
+                        lib.run_casa([cc_load_tec_maps, cc_targetbeam_TEC])
                         if os.path.isdir(vis + '.IGS_TEC.im'):  # Check if the TEC corrections could be downloaded
                             cc_load_tec_maps = 'from recipes import tec_maps'
                             cc_targetbeams_genTEC = 'gencal(vis = "' + vis + '", caltable = "' + self.basedir + \
@@ -210,9 +199,7 @@ class ccal(BaseModule):
                                 '.MS') + '_B' + vis.split('/')[
                                                         -3] + '.tecim", caltype="tecim", infile = "' + vis.rstrip(
                                 '.MS') + '.IGS_TEC.im")'
-                            casacmd = [cc_load_tec_maps, cc_targetbeams_genTEC]
-                            casa = drivecasa.Casapy()
-                            casa.run_script(casacmd, raise_on_severe=True, timeout=1800)
+                            lib.run_casa([cc_load_tec_maps, cc_targetbeams_genTEC])
                             if os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.target.rstrip(
                                     '.MS') + '_B' + vis.split('/')[
                                                  -3] + '.tecim'):  # Check if the calibration table was created
@@ -273,11 +260,7 @@ class ccal(BaseModule):
                                                                             '.MS') + '.tecim', 'nearest')
                     cc_fluxcal_ph = 'gaincal(vis = "' + self.get_fluxcal_path() + '", caltable = "' + self.get_fluxcal_path().rstrip(
                         '.MS') + '.G0ph", gaintype = "G", solint = "int", calmode = "p", refant = "' + self.crosscal_refant + '", smodel = [1,0,0,0], gaintable = [' + prevtables + '], interp = [' + interp + '])'
-                    casacmd = [cc_fluxcal_ph]
-                    casa = drivecasa.Casapy()
-                    casa_output, casa_error = casa.run_script(casacmd, raise_on_severe=True, timeout=3600)
-                    for line in casa_output:
-                        logger.debug('CASA: ' + line)
+                    lib.run_casa([cc_fluxcal_ph], timeout=3600)
                     if os.path.isdir(self.get_fluxcal_path().rstrip(
                             '.MS') + '.G0ph'):  # Check if calibration table was created successfully
                         ccalfluxcalphgains = True
@@ -309,9 +292,7 @@ class ccal(BaseModule):
                                                                             '.MS') + '.G0ph"', '"nearest"')
                     cc_fluxcal_bp = 'bandpass(vis = "' + self.get_fluxcal_path() + '", caltable = "' + self.get_fluxcal_path().rstrip(
                         '.MS') + '.Bscan", solint = "inf", combine = "scan, obs", refant = "' + self.crosscal_refant + '", solnorm = True, gaintable = [' + prevtables + '], interp = [' + interp + '])'
-                    casacmd = [cc_fluxcal_bp]
-                    casa = drivecasa.Casapy()
-                    casa.run_script(casacmd, raise_on_severe=True, timeout=3600)
+                    lib.run_casa([cc_fluxcal_bp], timeout=3600)
                     if os.path.isdir(self.get_fluxcal_path().rstrip(
                             '.MS') + '.Bscan'):  # Check if bandpass table was created successfully
                         ccalfluxcalbandpass = True
@@ -338,9 +319,7 @@ class ccal(BaseModule):
                     else:
                         logger.warning('Calibrator model not in database. Using unpolarised calibrator model with a '
                                        'constant flux density of 1.0Jy!')
-                    casacmd = [cc_fluxcal_model]
-                    casa = drivecasa.Casapy()
-                    casa.run_script(casacmd, raise_on_severe=True, timeout=3600)
+                    lib.run_casa([cc_fluxcal_model], timeout=3600)
 
                     # Check if model was ingested successfully
                     if subs_msutils.has_good_modeldata(self.get_fluxcal_path()):
@@ -400,9 +379,7 @@ class ccal(BaseModule):
                                                                             '.MS') + '.Bscan"', '"nearest"')
                     cc_fluxcal_apgain = 'gaincal(vis = "' + self.get_fluxcal_path() + '", caltable = "' + self.get_fluxcal_path().rstrip(
                         '.MS') + '.G1ap", gaintype = "G", solint = "int", refant = "' + self.crosscal_refant + '", calmode = "ap", gaintable = [' + prevtables + '], interp = [' + interp + '])'
-                    casacmd = [cc_fluxcal_apgain]
-                    casa = drivecasa.Casapy()
-                    casa.run_script(casacmd, raise_on_severe=True, timeout=3600)
+                    lib.run_casa([cc_fluxcal_apgain], timeout=3600)
                     if os.path.isdir(self.get_fluxcal_path().rstrip(
                             '.MS') + '.G1ap'):  # Check if gain table was created successfully
                         ccalfluxcalapgains = True
@@ -463,9 +440,7 @@ class ccal(BaseModule):
                                                                             '.MS') + '.G1ap"', '"nearest"')
                     cc_fluxcal_globaldelay = 'gaincal(vis = "' + self.get_fluxcal_path() + '", caltable = "' + self.get_fluxcal_path().rstrip(
                         '.MS') + '.K", combine = "scan", gaintype = "K", solint = "inf", refant = "' + self.crosscal_refant + '", gaintable = [' + prevtables + '], interp = [' + interp + '])'
-                    casacmd = [cc_fluxcal_globaldelay]
-                    casa = drivecasa.Casapy()
-                    casa.run_script(casacmd, raise_on_severe=True, timeout=3600)
+                    lib.run_casa([cc_fluxcal_globaldelay], timeout=3600)
                     if os.path.isdir(self.get_fluxcal_path().rstrip(
                             '.MS') + '.K'):  # Check if gain table was created successfully
                         ccalfluxcalglobaldelay = True
@@ -517,9 +492,7 @@ class ccal(BaseModule):
                     else:
                         logger.warning(
                             '# Calibrator model not in database. Using unpolarised calibrator model with a constant flux density of 1.0Jy!')
-                    casacmd = [cc_polcal_model]
-                    casa = drivecasa.Casapy()
-                    casa.run_script(casacmd, raise_on_severe=True, timeout=3600)
+                    lib.run_casa([cc_polcal_model], timeout=3600)
 
                     # Check if model was ingested successfully
                     if subs_msutils.has_good_modeldata(self.get_polcal_path()):
@@ -569,9 +542,7 @@ class ccal(BaseModule):
                                                                             '.MS') + '.K"', '"nearest"')
                     cc_polcal_crosshanddelay = 'gaincal(vis = "' + self.get_polcal_path() + '", caltable = "' + self.get_polcal_path().rstrip(
                         '.MS') + '.Kcross", combine = "scan", gaintype = "KCROSS", solint = "inf", refant = "' + self.crosscal_refant + '", gaintable = [' + prevtables + '], interp = [' + interp + '])'
-                    casacmd = [cc_polcal_crosshanddelay]
-                    casa = drivecasa.Casapy()
-                    casa.run_script(casacmd, raise_on_severe=True, timeout=3600)
+                    lib.run_casa([cc_polcal_crosshanddelay], timeout=3600)
                     if os.path.isdir(self.get_polcal_path().rstrip(
                             '.MS') + '.Kcross'):  # Check if the cross hand delay table was created successfully
                         ccalpolcalcrosshanddelay = True
@@ -645,9 +616,7 @@ class ccal(BaseModule):
                                                                             '.MS') + '.Kcross"', '"nearest"')
                     cc_fluxcal_leakage = 'polcal(vis = "' + self.get_fluxcal_path() + '", caltable = "' + self.get_fluxcal_path().rstrip(
                         '.MS') + '.Df", combine = "scan", poltype = "Df", solint = "inf", refant = "' + self.crosscal_refant + '", gaintable = [' + prevtables + '], interp = [' + interp + '])'
-                    casacmd = [cc_fluxcal_leakage]
-                    casa = drivecasa.Casapy()
-                    casa.run_script(casacmd, raise_on_severe=True, timeout=3600)
+                    lib.run_casa([cc_fluxcal_leakage], timeout=3600)
                     if os.path.isdir(self.get_fluxcal_path().rstrip(
                             '.MS') + '.Df'):  # Check if gain table was created successfully
                         ccalfluxcalleakage = True
@@ -732,9 +701,7 @@ class ccal(BaseModule):
                                                                             '.MS') + '.Df"', '"nearest"')
                     cc_polcal_polarisationangle = 'polcal(vis = "' + self.get_polcal_path() + '", caltable = "' + self.get_polcal_path().rstrip(
                         '.MS') + '.Xf", combine = "scan", poltype = "Xf", solint = "inf", refant = "' + self.crosscal_refant + '", gaintable = [' + prevtables + '], interp = [' + interp + '])'
-                    casacmd = [cc_polcal_polarisationangle]
-                    casa = drivecasa.Casapy()
-                    casa.run_script(casacmd, raise_on_severe=True, timeout=3600)
+                    lib.run_casa([cc_polcal_polarisationangle], timeout=3600)
                     if os.path.isdir(self.get_polcal_path().rstrip(
                             '.MS') + '.Xf'):  # Check if gain table was created successfully
                         ccalpolcalpolarisationangle = True
@@ -821,9 +788,7 @@ class ccal(BaseModule):
                                                                             '.MS') + '.Xf"', '"nearest"')
                     cc_fluxcal_saveflags = 'flagmanager(vis = "' + self.get_fluxcal_path() + '", mode = "save", versionname = "ccal")'
                     cc_fluxcal_apply = 'applycal(vis = "' + self.get_fluxcal_path() + '", gaintable = [' + prevtables + '], interp = [' + interp + '], parang = False, flagbackup = False)'
-                    casacmd = [cc_fluxcal_saveflags, cc_fluxcal_apply]
-                    casa = drivecasa.Casapy()
-                    casa.run_script(casacmd, raise_on_severe=True, timeout=3600)
+                    lib.run_casa([cc_fluxcal_saveflags, cc_fluxcal_apply], timeout=3600)
                     if subs_msutils.has_correcteddata(self.get_fluxcal_path()):
                         ccalfluxcaltransfer = True
                     else:
@@ -889,9 +854,7 @@ class ccal(BaseModule):
                                                                             '.MS') + '.Xf"', '"nearest"')
                     cc_polcal_saveflags = 'flagmanager(vis = "' + self.get_polcal_path() + '", mode = "save", versionname = "ccal")'
                     cc_polcal_apply = 'applycal(vis = "' + self.get_polcal_path() + '", gaintable = [' + prevtables + '], interp = [' + interp + '], parang = False, flagbackup = False)'
-                    casacmd = [cc_polcal_saveflags, cc_polcal_apply]
-                    casa = drivecasa.Casapy()
-                    casa.run_script(casacmd, raise_on_severe=True, timeout=3600)
+                    lib.run_casa([cc_polcal_saveflags, cc_polcal_apply], timeout=3600)
                     if subs_msutils.has_correcteddata(self.get_polcal_path()):
                         ccalpolcaltransfer = True
                     else:
@@ -998,9 +961,7 @@ class ccal(BaseModule):
                         logger.debug('Applying solutions to beam ' + beam + '')
                         cc_targetbeams_saveflags = 'flagmanager(vis = "' + vis + '", mode = "save", versionname = "ccal")'  # Save the flags before applying solutions
                         cc_targetbeams_apply = 'applycal(vis = "' + vis + '", gaintable = [' + prevtables + '], interp = [' + interp + '], parang = False, flagbackup = False)'
-                        casacmd = [cc_targetbeams_saveflags, cc_targetbeams_apply]
-                        casa = drivecasa.Casapy()
-                        casa.run_script(casacmd, raise_on_severe=True, timeout=10000)
+                        lib.run_casa([cc_targetbeams_saveflags, cc_targetbeams_apply], timeout=10000)
                         if subs_msutils.has_correcteddata(vis):
                             ccaltargetbeamstransfer[int(beam)] = True
                         else:
@@ -1025,9 +986,7 @@ class ccal(BaseModule):
                            '.Bscan", xaxis = "freq", yaxis="amp", subplot=431, iteration="antenna", ' \
                            'plotsymbol=".", markersize=1.0, fontsize=5.0, showgui=False, figfile="' + \
                            self.get_fluxcal_path().rstrip('.MS') + '.Bscan.png")'
-        casacmd = [cc_plot_bandpass]
-        casa = drivecasa.Casapy()
-        casa.run_script(casacmd, raise_on_severe=True, timeout=10000)
+        lib.run_casa([cc_plot_bandpass], timeout=10000)
         return self.get_fluxcal_path().rstrip('.MS') + '.Bscan.png'
 
     def plot_gains_amp(self):
@@ -1043,9 +1002,7 @@ class ccal(BaseModule):
                             '.G1ap", xaxis = "time", yaxis="amp", subplot=431, iteration="antenna", ' \
                             'plotsymbol=".", markersize=1.0, fontsize=5.0, showgui=False, figfile="' + \
                             self.get_fluxcal_path().rstrip('.MS') + '.G1ap_amp.png")'
-        casacmd = [cc_plot_gains_amp]
-        casa = drivecasa.Casapy()
-        casa.run_script(casacmd, raise_on_severe=True, timeout=10000)
+        lib.run_casa([cc_plot_gains_amp], timeout=10000)
         return self.get_fluxcal_path().rstrip('.MS') + '.G1ap_amp.png'
 
     def plot_gains_ph(self):
@@ -1060,9 +1017,7 @@ class ccal(BaseModule):
         cc_plot_gains_ph = 'plotcal(caltable = "' + self.get_fluxcal_path().rstrip(
             '.MS') + '.G1ap", xaxis = "time", yaxis="amp", subplot=431, iteration="antenna", plotrange=[-1,-1,-180,180], plotsymbol=".", markersize=1.0, fontsize=5.0, showgui=False, figfile="' + self.get_fluxcal_path().rstrip(
             '.MS') + '.G1ap_ph.png")'
-        casacmd = [cc_plot_gains_ph]
-        casa = drivecasa.Casapy()
-        casa.run_script(casacmd, raise_on_severe=True, timeout=10000)
+        lib.run_casa([cc_plot_gains_ph], timeout=10000)
         return self.get_fluxcal_path().rstrip('.MS') + '.G1ap_ph.png'
 
     def plot_globaldelay(self):
@@ -1076,9 +1031,7 @@ class ccal(BaseModule):
         cc_plot_globaldelay = 'plotcal(caltable = "' + self.get_fluxcal_path().rstrip(
             '.MS') + '.K", xaxis = "antenna", yaxis="delay", plotsymbol="o", markersize=4.0, fontsize=10.0, showgui=False, figfile="' + self.get_fluxcal_path().rstrip(
             '.MS') + '.K.png")'
-        casacmd = [cc_plot_globaldelay]
-        casa = drivecasa.Casapy()
-        casa.run_script(casacmd, raise_on_severe=True, timeout=10000)
+        lib.run_casa([cc_plot_globaldelay], timeout=10000)
         return self.get_fluxcal_path().rstrip('.MS') + '.K.png'
 
     def plot_crosshanddelay(self):
@@ -1091,9 +1044,7 @@ class ccal(BaseModule):
         cc_plot_crosshanddelay = 'plotcal(caltable = "' + self.get_polcal_path().rstrip(
             '.MS') + '.Kcross", xaxis = "antenna", yaxis="delay", plotsymbol="o", markersize=4.0, fontsize=10.0, showgui=False, figfile="' + self.get_polcal_path().rstrip(
             '.MS') + '.Kcross.png")'
-        casacmd = [cc_plot_crosshanddelay]
-        casa = drivecasa.Casapy()
-        casa.run_script(casacmd, raise_on_severe=True, timeout=10000)
+        lib.run_casa([cc_plot_crosshanddelay], timeout=10000)
         return self.get_polcal_path().rstrip('.MS') + '.Kcross.png'
 
     def plot_leakage_amp(self):
@@ -1108,9 +1059,7 @@ class ccal(BaseModule):
         cc_plot_leakage_amp = 'plotcal(caltable = "' + self.get_fluxcal_path().rstrip(
             '.MS') + '.Df", xaxis = "freq", yaxis="amp", subplot=431, iteration="antenna", plotsymbol=".", markersize=1.0, fontsize=5.0, showgui=False, figfile="' + self.get_fluxcal_path().rstrip(
             '.MS') + '.Df_amp.png")'
-        casacmd = [cc_plot_leakage_amp]
-        casa = drivecasa.Casapy()
-        casa.run_script(casacmd, raise_on_severe=True, timeout=10000)
+        lib.run_casa([cc_plot_leakage_amp], timeout=10000)
         return self.get_fluxcal_path().rstrip('.MS') + '.Df_amp.png'
 
     def plot_leakage_ph(self):
@@ -1124,9 +1073,7 @@ class ccal(BaseModule):
         cc_plot_leakage_ph = 'plotcal(caltable = "' + self.get_fluxcal_path().rstrip(
             '.MS') + '.Df", xaxis = "freq", yaxis="phase", subplot=431, iteration="antenna", plotrange=[-1,-1,-180,180], plotsymbol=".", markersize=1.0, fontsize=5.0, showgui=False, figfile="' + self.get_fluxcal_path().rstrip(
             '.MS') + '.Df_ph.png")'
-        casacmd = [cc_plot_leakage_ph]
-        casa = drivecasa.Casapy()
-        casa.run_script(casacmd, raise_on_severe=True, timeout=10000)
+        lib.run_casa([cc_plot_leakage_ph], timeout=10000)
         return self.get_fluxcal_path().rstrip('.MS') + '.Df_ph.png'
 
     def plot_polarisationangle(self):
@@ -1139,9 +1086,7 @@ class ccal(BaseModule):
         cc_plot_polarisationangle = 'plotcal(caltable = "' + self.get_polcal_path().rstrip(
             '.MS') + '.Xf", xaxis = "freq", yaxis="phase", subplot=431, iteration="antenna", plotrange=[-1,-1,-180,180], plotsymbol=".", markersize=1.0, fontsize=5.0, showgui=False, figfile="' + self.get_polcal_path().rstrip(
             '.MS') + '.Xf.png")'
-        casacmd = [cc_plot_polarisationangle]
-        casa = drivecasa.Casapy()
-        casa.run_script(casacmd, raise_on_severe=True, timeout=10000)
+        lib.run_casa([cc_plot_polarisationangle], timeout=10000)
         return self.get_polcal_path().rstrip('.MS') + '.Xf.png'
 
     def summary(self):
@@ -1258,9 +1203,7 @@ class ccal(BaseModule):
                 cc_dataset_clear = 'clearcal(vis = "' + dataset + '")'
                 cc_dataset_resetflags = 'flagmanager(vis = "' + dataset + '", mode = "restore", versionname = "ccal")'
                 cc_dataset_removeflagtable = 'flagmanager(vis = "' + dataset + '", mode = "delete", versionname = "ccal")'
-                casacmd = [cc_dataset_clear, cc_dataset_resetflags, cc_dataset_removeflagtable]
-                casa = drivecasa.Casapy()
-                casa.run_script(casacmd, raise_on_severe=True, timeout=10000)
+                lib.run_casa([cc_dataset_clear, cc_dataset_resetflags, cc_dataset_removeflagtable], timeout=10000)
             except Exception:
                 logger.error('Calibration could not completely be removed from ' + dataset + '. Flags might also not have be properly reset!')
         # Remove the keywords in the parameter file

@@ -7,6 +7,7 @@ from ConfigParser import SafeConfigParser, ConfigParser
 import astropy.io.fits as pyfits
 import matplotlib.pyplot as plt
 import numpy as np
+import drivecasa
 
 from apercal.subs import setinit as subs_setinit
 from apercal.modules import default_cfg
@@ -136,6 +137,18 @@ def exceptioner(O, E):
     for e in E:
         if "FATAL" in e.upper() > 0:
             raise FatalMiriadError(E)
+
+
+def run_casa(cmd, raise_on_severe=False, timeout=1800):
+    """Run a list of casa commands"""
+    casa = drivecasa.Casapy()
+    try:
+        casa_output, casa_error = casa.run_script(cmd, raise_on_severe=True, timeout=timeout)
+        logger.debug('\n'.join(casa_output))
+    except RuntimeError:
+        logger.error("Casa command failed")
+        if raise_on_severe:
+            raise
 
 
 def str2bool(s):

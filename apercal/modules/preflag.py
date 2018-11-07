@@ -3,7 +3,6 @@ import logging
 
 import numpy as np
 import pandas as pd
-import drivecasa
 import os
 
 import casacore.tables as pt
@@ -125,9 +124,7 @@ class preflag(BaseModule):
                 if self.fluxcal != '' and os.path.isdir(self.get_fluxcal_path()):
                     logger.debug('Flagging shadowed antennas for flux calibrator')
                     fc_shadow = 'flagdata(vis="' + self.get_fluxcal_path() + '", mode="shadow", flagbackup=False)'
-                    casacmd = [fc_shadow]
-                    casa = drivecasa.Casapy()
-                    casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
+                    lib.run_casa([fc_shadow])
                     preflagfluxcalshadow = True
                 else:
                     logger.warning('Flux calibrator dataset {} not available. Not flagging '
@@ -140,9 +137,7 @@ class preflag(BaseModule):
                 if self.polcal != '' and os.path.isdir(self.get_polcal_path()):
                     logger.debug('Flagging shadowed antennas for polarised calibrator')
                     pc_shadow = 'flagdata(vis="' + self.get_polcal_path() + '", mode="shadow", flagbackup=False)'
-                    casacmd = [pc_shadow]
-                    casa = drivecasa.Casapy()
-                    casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
+                    lib.run_casa([pc_shadow])
                     preflagpolcalshadow = True
                 else:
                     logger.warning('Polarised calibrator dataset not specified or dataset not available. Not '
@@ -156,9 +151,7 @@ class preflag(BaseModule):
                     else:
                         logger.debug('Flagging shadowed antennas for beam ' + beam)
                         tg_shadow = 'flagdata(vis="' + str(vis) + '", autocorr=True, flagbackup=False)'
-                        casacmd = [tg_shadow]
-                        casa = drivecasa.Casapy()
-                        casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
+                        lib.run_casa([tg_shadow])
                         preflagtargetbeamsshadow[int(beam)] = True
             else:
                 logger.warning('No target dataset specified! Not flagging shadowed antennas for target datasets')
@@ -211,9 +204,7 @@ class preflag(BaseModule):
                     l = a + b + c
                     m = ';'.join(str(ch) for ch in l)
                     fc_edges_flagcmd = 'flagdata(vis="' + self.get_fluxcal_path() + '", spw="0:' + m + '", flagbackup=False)'
-                    casacmd_fcflag = [fc_edges_flagcmd]
-                    casa = drivecasa.Casapy()
-                    casa.run_script(casacmd_fcflag, raise_on_severe=True, timeout=1800)
+                    lib.run_casa([fc_edges_flagcmd])
                     preflagfluxcaledges = True
                 else:
                     logger.warning('No flux calibrator dataset specified. Subband edges of flux calibrator '
@@ -235,9 +226,7 @@ class preflag(BaseModule):
                     l = a + b + c
                     m = ';'.join(str(ch) for ch in l)
                     pc_edges_flagcmd = 'flagdata(vis="' + self.get_polcal_path() + '", spw="0:' + m + '", flagbackup=False)'
-                    casacmd_pcflag = [pc_edges_flagcmd]
-                    casa = drivecasa.Casapy()
-                    casa.run_script(casacmd_pcflag, raise_on_severe=True, timeout=1800)
+                    lib.run_casa([pc_edges_flagcmd])
                     preflagpolcaledges = True
                 else:
                     logger.warning('No polarised calibrator dataset specified. Subband edges of polarised '
@@ -259,9 +248,7 @@ class preflag(BaseModule):
                         l = a + b + c
                         m = ';'.join(str(ch) for ch in l)
                         tg_edges_flagcmd = 'flagdata(vis="' + vis + '", spw="0:' + m + '", flagbackup=False)'
-                        casacmd_tgflag = [tg_edges_flagcmd]
-                        casa = drivecasa.Casapy()
-                        casa.run_script(casacmd_tgflag, raise_on_severe=True, timeout=1800)
+                        lib.run_casa([tg_edges_flagcmd])
                         preflagtargetbeamsedges[int(beam)] = True
             else:
                 logger.warning('No target dataset specified. Subband edges of target dataset(s) will not be flagged!')
@@ -312,9 +299,7 @@ class preflag(BaseModule):
                     l = a + b
                     m = ';'.join(str(ch) for ch in l)
                     fc_ghosts_flagcmd = 'flagdata(vis="' + self.get_fluxcal_path() + '", spw="0:' + m + '", flagbackup=False)'
-                    casacmd_fcflag = [fc_ghosts_flagcmd]
-                    casa = drivecasa.Casapy()
-                    casa.run_script(casacmd_fcflag, raise_on_severe=True, timeout=1800)
+                    lib.run_casa([fc_ghosts_flagcmd])
                     preflagfluxcalghosts = True
                 else:
                     logger.warning('No flux calibrator dataset specified. Ghosts in flux calibrator dataset '
@@ -335,9 +320,7 @@ class preflag(BaseModule):
                     l = a + b
                     m = ';'.join(str(ch) for ch in l)
                     pc_ghosts_flagcmd = 'flagdata(vis="' + self.get_polcal_path() + '", spw="0:' + m + '", flagbackup=False)'
-                    casacmd_pcflag = [pc_ghosts_flagcmd]
-                    casa = drivecasa.Casapy()
-                    casa.run_script(casacmd_pcflag, raise_on_severe=True, timeout=1800)
+                    lib.run_casa([pc_ghosts_flagcmd])
                     preflagpolcalghosts = True
                 else:
                     logger.warning('No polarised calibrator dataset specified. Ghosts in polarised calibrator '
@@ -358,9 +341,7 @@ class preflag(BaseModule):
                         l = a + b
                         m = ';'.join(str(ch) for ch in l)
                         tg_ghosts_flagcmd = 'flagdata(vis="' + vis + '", spw="0:' + m + '", flagbackup=False)'
-                        casacmd_tgflag = [tg_ghosts_flagcmd]
-                        casa = drivecasa.Casapy()
-                        casa.run_script(casacmd_tgflag, raise_on_severe=True, timeout=1800)
+                        lib.run_casa([tg_ghosts_flagcmd])
                         preflagtargetbeamsghosts[int(beam)] = True
             else:
                 logger.warning('No target dataset specified. Ghosts in target dataset(s) will not be flagged!')
@@ -429,9 +410,7 @@ class preflag(BaseModule):
             else:
                 if self.preflag_manualflag_fluxcal and os.path.isdir(self.get_fluxcal_path()):
                     fc_auto = 'flagdata(vis="' + self.get_fluxcal_path() + '", autocorr=True, flagbackup=False)'
-                    casacmd = [fc_auto]
-                    casa = drivecasa.Casapy()
-                    casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
+                    lib.run_casa([fc_auto])
                     logger.debug('Flagged auto-correlations for flux calibrator')
                     preflagfluxcalmanualflagauto = True
                 else:
@@ -444,9 +423,7 @@ class preflag(BaseModule):
             else:
                 if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()):
                     pc_auto = 'flagdata(vis="' + self.get_polcal_path() + '", autocorr=True, flagbackup=False)'
-                    casacmd = [pc_auto]
-                    casa = drivecasa.Casapy()
-                    casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
+                    lib.run_casa([pc_auto])
                     logger.debug('Flagged auto-correlations for polarised calibrator')
                     preflagpolcalmanualflagauto = True
                 else:
@@ -468,9 +445,7 @@ class preflag(BaseModule):
                     else:
                         logger.debug('Flagging auto-correlations for target beam ' + beam)
                         tg_auto = 'flagdata(vis="' + str(vis) + '", autocorr=True, flagbackup=False)'
-                        casacmd = [tg_auto]
-                        casa = drivecasa.Casapy()
-                        casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
+                        lib.run_casa([tg_auto])
                         preflagtargetbeamsmanualflagauto[int(beam)] = True
             else:
                 logger.warning('Target dataset not specified. Auto-correlations for target beam dataset(s) will '
@@ -508,9 +483,7 @@ class preflag(BaseModule):
             else:
                 if self.preflag_manualflag_fluxcal and os.path.isdir(self.get_fluxcal_path()):
                     fc_ant = 'flagdata(vis="' + self.get_fluxcal_path() + '", antenna="' + self.preflag_manualflag_antenna + '", flagbackup=False)'
-                    casacmd = [fc_ant]
-                    casa = drivecasa.Casapy()
-                    casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
+                    lib.run_casa([fc_ant])
                     logger.debug('Flagged antenna(s) ' + self.preflag_manualflag_antenna + ' for flux calibrator')
                     spltant = self.preflag_manualflag_antenna.split(',')
                     for ant in spltant:
@@ -527,9 +500,7 @@ class preflag(BaseModule):
             else:
                 if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()):
                     pc_ant = 'flagdata(vis="' + self.get_polcal_path() + '", antenna="' + self.preflag_manualflag_antenna + '", flagbackup=False)'
-                    casacmd = [pc_ant]
-                    casa = drivecasa.Casapy()
-                    casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
+                    lib.run_casa([pc_ant])
                     logger.debug('Flagged antenna(s) ' + self.preflag_manualflag_antenna + ' for polarised calibrator')
                     spltant = self.preflag_manualflag_antenna.split(',')
                     for ant in spltant:
@@ -555,9 +526,7 @@ class preflag(BaseModule):
                     else:
                         logger.debug('Flagging antenna(s) ' + self.preflag_manualflag_antenna + ' for target beam ' + beam)
                         tg_ant = 'flagdata(vis="' + str(vis) + '", antenna="' + self.preflag_manualflag_antenna + '", flagbackup=False)'
-                        casacmd = [tg_ant]
-                        casa = drivecasa.Casapy()
-                        casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
+                        lib.run_casa([tg_ant])
                         spltant = self.preflag_manualflag_antenna.split(',')
                         for ant in spltant:
                             if preflagtargetbeamsmanualflagantenna[int(beam)].find(ant) == -1:
@@ -597,9 +566,7 @@ class preflag(BaseModule):
                 if self.preflag_manualflag_fluxcal and os.path.isdir(self.get_fluxcal_path()):
                     subs_setinit.setinitdirs(self)
                     fc_corr = 'flagdata(vis="' + self.get_fluxcal_path() + '", correlation="' + self.preflag_manualflag_corr + '", flagbackup=False)'
-                    casacmd = [fc_corr]
-                    casa = drivecasa.Casapy()
-                    casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
+                    lib.run_casa([fc_corr])
                     logger.debug('Flagged correlation(s) ' + self.preflag_manualflag_corr + ' for flux calibrator')
                     spltcorr = self.preflag_manualflag_corr.split(',')
                     for corr in spltcorr:
@@ -617,9 +584,7 @@ class preflag(BaseModule):
                 if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()):
                     subs_setinit.setinitdirs(self)
                     pc_corr = 'flagdata(vis="' + self.get_polcal_path() + '", correlation="' + self.preflag_manualflag_corr + '", flagbackup=False)'
-                    casacmd = [pc_corr]
-                    casa = drivecasa.Casapy()
-                    casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
+                    lib.run_casa([pc_corr])
                     logger.debug('Flagged correlation(s) ' + self.preflag_manualflag_corr + ' for polarised calibrator')
                     spltcorr = self.preflag_manualflag_corr.split(',')
                     for corr in spltcorr:
@@ -645,9 +610,7 @@ class preflag(BaseModule):
                     else:
                         logger.debug('Flagging correlations(s) ' + self.preflag_manualflag_corr + ' for target beam ' + beam)
                         tg_corr = 'flagdata(vis="' + str(vis) + '", correlation="' + self.preflag_manualflag_corr + '", flagbackup=False)'
-                        casacmd = [tg_corr]
-                        casa = drivecasa.Casapy()
-                        casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
+                        lib.run_casa([tg_corr])
                         spltcorr = self.preflag_manualflag_corr.split(',')
                         for corr in spltcorr:
                             if preflagtargetbeamsmanualflagcorr[int(beam)].find(corr) == -1:
@@ -688,9 +651,7 @@ class preflag(BaseModule):
                 if self.preflag_manualflag_fluxcal and os.path.isdir(
                         self.get_fluxcal_path()):
                     fc_baseline = 'flagdata(vis="' + self.get_fluxcal_path() + '", antenna="' + self.preflag_manualflag_baseline + '", flagbackup=False)'
-                    casacmd = [fc_baseline]
-                    casa = drivecasa.Casapy()
-                    casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
+                    lib.run_casa([fc_baseline])
                     logger.debug('Flagged baseline(s) ' + self.preflag_manualflag_baseline + ' for flux calibrator')
                     spltbaseline = self.preflag_manualflag_baseline.split(',')
                     for baseline in spltbaseline:
@@ -708,9 +669,7 @@ class preflag(BaseModule):
             else:
                 if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()):
                     pc_baseline = 'flagdata(vis="' + self.get_polcal_path() + '", antenna="' + self.preflag_manualflag_baseline + '", flagbackup=False)'
-                    casacmd = [pc_baseline]
-                    casa = drivecasa.Casapy()
-                    casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
+                    lib.run_casa([pc_baseline])
                     logger.debug('Flagged baseline(s) ' + self.preflag_manualflag_baseline + ' for polarised calibrator')
                     spltbaseline = self.preflag_manualflag_baseline.split(',')
                     for baseline in spltbaseline:
@@ -736,9 +695,7 @@ class preflag(BaseModule):
                     else:
                         logger.debug('Flagging baseline(s) ' + self.preflag_manualflag_baseline + ' for target beam ' + beam)
                         tg_baseline = 'flagdata(vis="' + str(vis) + '", antenna="' + self.preflag_manualflag_baseline + '", flagbackup=False)'
-                        casacmd = [tg_baseline]
-                        casa = drivecasa.Casapy()
-                        casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
+                        lib.run_casa([tg_baseline])
                         for baseline in spltbaseline:
                             if preflagtargetbeamsmanualflagbaseline[int(beam)].find(baseline) == -1:
                                 if preflagtargetbeamsmanualflagbaseline[int(beam)] == '':
@@ -777,9 +734,7 @@ class preflag(BaseModule):
             else:
                 if self.preflag_manualflag_fluxcal and os.path.isdir(self.get_fluxcal_path()):
                     fc_channel = 'flagdata(vis="' + self.get_fluxcal_path() + '", spw="0:' + self.preflag_manualflag_channel + '", flagbackup=False)'
-                    casacmd = [fc_channel]
-                    casa = drivecasa.Casapy()
-                    casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
+                    lib.run_casa([fc_channel])
                     logger.debug('Flagged channel(s) ' + self.preflag_manualflag_channel + ' for flux calibrator')
                     spltchannel = self.preflag_manualflag_channel.split(',')
                     for channel in spltchannel:
@@ -796,9 +751,7 @@ class preflag(BaseModule):
             else:
                 if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()):
                     pc_channel = 'flagdata(vis="' + self.get_polcal_path() + '", spw="0:' + self.preflag_manualflag_channel + '", flagbackup=False)'
-                    casacmd = [pc_channel]
-                    casa = drivecasa.Casapy()
-                    casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
+                    lib.run_casa([pc_channel])
                     logger.debug('Flagged channel(s) ' + self.preflag_manualflag_channel + ' for polarised calibrator')
                     spltchannel = self.preflag_manualflag_channel.split(',')
                     for channel in spltchannel:
@@ -824,9 +777,7 @@ class preflag(BaseModule):
                     else:
                         logger.debug('Flagging channel(s) ' + self.preflag_manualflag_channel + ' for target beam ' + beam)
                         tg_channel = 'flagdata(vis="' + str(vis) + '", spw="0:' + self.preflag_manualflag_channel + '", flagbackup=False)'
-                        casacmd = [tg_channel]
-                        casa = drivecasa.Casapy()
-                        casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
+                        lib.run_casa([tg_channel])
                         for channel in spltchannel:
                             if preflagtargetbeamsmanualflagchannel[int(beam)].find(channel) == -1:
                                 if preflagtargetbeamsmanualflagchannel[int(beam)] == '':
@@ -864,9 +815,7 @@ class preflag(BaseModule):
             else:
                 if self.preflag_manualflag_fluxcal and os.path.isdir(self.get_fluxcal_path()):
                     fc_time = 'flagdata(vis="' + self.get_fluxcal_path() + '", timerange="' + self.preflag_manualflag_time + '", flagbackup=False)'
-                    casacmd = [fc_time]
-                    casa = drivecasa.Casapy()
-                    casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
+                    lib.run_casa([fc_time])
                     logger.debug('Flagged time range ' + self.preflag_manualflag_time + ' for flux calibrator')
                     splttime = self.preflag_manualflag_time.split(',')
                     for time in splttime:
@@ -884,9 +833,7 @@ class preflag(BaseModule):
             else:
                 if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()):
                     pc_time = 'flagdata(vis="' + self.get_polcal_path() + '", timerange="' + self.preflag_manualflag_time + '", flagbackup=False)'
-                    casacmd = [pc_time]
-                    casa = drivecasa.Casapy()
-                    casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
+                    lib.run_casa([pc_time])
                     logger.debug('Flagged time range ' + self.preflag_manualflag_time + ' for polarised calibrator')
                     splttime = self.preflag_manualflag_time.split(',')
                     for time in splttime:
@@ -913,9 +860,7 @@ class preflag(BaseModule):
                     else:
                         logger.debug('Flagging time range(s) ' + self.preflag_manualflag_time + ' for target beam ' + beam)
                         tg_time = 'flagdata(vis="' + str(vis) + '", timerange="' + self.preflag_manualflag_channel + '", flagbackup=False)'
-                        casacmd = [tg_time]
-                        casa = drivecasa.Casapy()
-                        casa.run_script(casacmd, raise_on_severe=False, timeout=1800)
+                        lib.run_casa([tg_time])
                         for time in splttime:
                             if preflagtargetbeamsmanualflagtime[int(beam)].find(time) == -1:
                                 if preflagtargetbeamsmanualflagtime[int(beam)] == '':
