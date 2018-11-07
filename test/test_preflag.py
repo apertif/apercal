@@ -19,7 +19,7 @@ class TestPreflag(unittest.TestCase):
         p.polcal = '3C138.MS'
         p.target = 'NGC807.MS'
         p.prepare_bypass_alta = True
-        p.prepare_target_beams = '00, 04, 17'
+        p.prepare_target_beams = '00,04'
         p.go()
 
     def test_preflag_nosubdirs(self):
@@ -29,7 +29,7 @@ class TestPreflag(unittest.TestCase):
         p.polcal = path.join(data_prefix, '3C138.MS')
         p.target = path.join(data_prefix, 'NGC807.MS')
         p.prepare_bypass_alta = True
-        p.prepare_target_beams = '00, 04, 17'
+        p.prepare_target_beams = '00,04'
         p.go()
 
 
