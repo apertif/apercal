@@ -5,6 +5,7 @@ from getdata_alta import get_alta_dir
 
 FNULL = open(os.devnull, 'w')
 
+
 def getstatus_alta(date, task_id, beam):
     """
     Funtion to check if the data is on ALTA.
