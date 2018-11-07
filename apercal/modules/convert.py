@@ -246,9 +246,7 @@ class convert:
                                                            targetbase=self.target.rstrip('MS'), datacolumn=datacolumn,
                                                            beam_dataset=beam_dataset)
 
-                            casacmd = [tg_convert]
-                            casa = drivecasa.Casapy()
-                            casa.run_script(casacmd, raise_on_severe=True, timeout=7200)
+                            lib.run_casa([tg_convert], timeout=7200)
                             if os.path.isfile(self.basedir + vis.split('/')[-3] + '/' + self.crosscalsubdir + '/' +
                                               self.target.rstrip('MS') + 'UVFITS'):
                                 converttargetbeamsms2uvfits[int(vis.split('/')[-3])] = True
