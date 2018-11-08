@@ -17,7 +17,10 @@ requirements:
       listing:
       - entry: $(inputs.target)
         writable: true
-
+      - entry: $(inputs.fluxcal)
+        writable: true
+      - entry: $(inputs.polcal)
+        writable: true
 
 baseCommand: [python]
 

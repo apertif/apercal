@@ -3,7 +3,6 @@ import logging
 
 import numpy as np
 import pandas as pd
-import drivecasa
 import os
 
 from apercal.modules.base import BaseModule
@@ -142,9 +141,7 @@ class convert(BaseModule):
                             logger.warning('Flux calibrator does not have a corrected_data column! Using uncorrected'
                                            'data for conversion!')
 
-                        casacmd = [fc_convert]
-                        casa = drivecasa.Casapy()
-                        casa.run_script(casacmd, raise_on_severe=True, timeout=3600)
+                        lib.run_casa([fc_convert], timeout=3600)
                         if os.path.isfile(self.basedir + '00' + '/' + self.crosscalsubdir + '/' + self.fluxcal.rstrip(
                                 'MS') + 'UVFITS'):
                             convertfluxcalms2uvfits = True
@@ -183,9 +180,7 @@ class convert(BaseModule):
                             logger.warning('Polarised calibrator does not have a corrected_data column! Using'
                                            'uncorrected data for conversion!')
 
-                        casacmd = [pc_convert]
-                        casa = drivecasa.Casapy()
-                        casa.run_script(casacmd, raise_on_severe=True, timeout=3600)
+                        lib.run_casa([pc_convert], timeout=3600)
                         if os.path.isfile(self.basedir + '00' + '/' + self.crosscalsubdir + '/' + self.polcal.rstrip(
                                 'MS') + 'UVFITS'):
                             convertpolcalms2uvfits = True
@@ -240,9 +235,7 @@ class convert(BaseModule):
                                                            targetbase=self.target.rstrip('MS'), datacolumn=datacolumn,
                                                            beam_dataset=beam_dataset)
 
-                            casacmd = [tg_convert]
-                            casa = drivecasa.Casapy()
-                            casa.run_script(casacmd, raise_on_severe=True, timeout=7200)
+                            lib.run_casa([tg_convert], timeout=7200)
                             if os.path.isfile(self.basedir + vis.split('/')[-3] + '/' + self.crosscalsubdir + '/' +
                                               self.target.rstrip('MS') + 'UVFITS'):
                                 converttargetbeamsms2uvfits[int(vis.split('/')[-3])] = True

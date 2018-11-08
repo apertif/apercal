@@ -18,7 +18,7 @@ docker:
 
 data/${FILE}:
 	mkdir -p data
-	cd data && wget ${URL}
+	cd data && wget -q ${URL}
 
 data/small: data/${FILE}
 	cd data && tar zmxvf ${FILE}

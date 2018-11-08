@@ -1,8 +1,7 @@
 from glob import glob
 from os import path
 from apercal.libs.lib import show
-from typing import List, Tuple, Any
-
+# from typing import List, Tuple, Any # Leave disabled until we install typing on happili
 from abc import abstractproperty, ABCMeta
 
 
