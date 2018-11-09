@@ -7,7 +7,7 @@ import os
 
 from apercal.libs.calculations import calc_dr_maj, calc_theoretical_noise, calc_dynamic_range_threshold, \
     calc_mask_threshold
-
+from apercal.modules.base import BaseModule
 from apercal.subs import setinit as subs_setinit
 from apercal.subs import managefiles as subs_managefiles
 
@@ -19,23 +19,11 @@ from apercal.exceptions import ApercalException
 logger = logging.getLogger(__name__)
 
 
-class scal:
+class scal(BaseModule):
     """
     Selfcal class to do the self-calibration on a dataset. Can be done with several different algorithms.
     """
-    fluxcal = None
-    polcal = None
-    target = None
-    basedir = None
-    beam = None
-    rawsubdir = None
-    crosscalsubdir = None
-    selfcalsubdir = None
-    linesubdir = None
-    contsubdir = None
-    polsubdir = None
-    mossubdir = None
-    transfersubdir = None
+    module_name = 'SELFCAL'
 
     selfcal_image_imsize = None
     selfcal_image_cellsize = None
@@ -674,9 +662,6 @@ class scal:
         chunks = range(n)
         chunkstr = [str(i).zfill(2) for i in chunks]
         return chunkstr
-
-    def show(self, showall=False):
-        lib.show(self, 'SELFCAL', showall)
 
     def reset(self):
         """

@@ -7,6 +7,5 @@ casa.log
 .virtualenv*/
 *.egg-info/
 .eggs/
-data/small.tgz
-data/small/
+data/
 cwl/outdir/

@@ -4,6 +4,7 @@ import logging
 import numpy as np
 import os
 
+from apercal.modules.base import BaseModule
 from apercal.subs import setinit as subs_setinit
 from apercal.subs import managefiles as subs_managefiles
 from apercal.subs import param as subs_param
@@ -12,24 +13,12 @@ from apercal.libs import lib
 logger = logging.getLogger(__name__)
 
 
-class transfer:
+class transfer(BaseModule):
     """
     Transfer class to combine the calibrated data chunks with full spectral resolution into one file and export to UVFITS.
     Gain tables and flags are already applied. Data is then ready to get ingested into ALTA.
     """
-    fluxcal = None
-    polcal = None
-    target = None
-    basedir = None
-    beam = None
-    rawsubdir = None
-    crosscalsubdir = None
-    selfcalsubdir = None
-    linesubdir = None
-    contsubdir = None
-    polsubdir = None
-    mossubdir = None
-    transfersubdir = None
+    module_name = 'TRANSFER'
 
     transferdir = None
     transfer_convert_lineuv2uvfits = None
@@ -116,9 +105,6 @@ class transfer:
                     uvfitsstatusarray[b] = False
             subs_param.add_param(self, 'transfer_input_beams_uvglue', uvgluestatusarray)
             subs_param.add_param(self, 'transfer_input_beams_uvfits', uvfitsstatusarray)
-
-    def show(self, showall=False):
-        lib.show(self, 'TRANSFER', showall)
 
     def reset(self):
         """

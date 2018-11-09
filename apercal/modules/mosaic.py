@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import os
 
+from apercal.modules.base import BaseModule
 from apercal.subs import setinit as subs_setinit
 from apercal.subs import managefiles as subs_managefiles
 from apercal.subs import readmirhead as subs_readmirhead
@@ -16,23 +17,11 @@ from apercal.libs import lib
 logger = logging.getLogger(__name__)
 
 
-class mosaic:
+class mosaic(BaseModule):
     """
     Mosaic class to produce mosaics of continuum, line and polarisation images.
     """
-    fluxcal = None
-    polcal = None
-    target = None
-    basedir = None
-    beam = None
-    rawsubdir = None
-    crosscalsubdir = None
-    selfcalsubdir = None
-    linesubdir = None
-    contsubdir = None
-    polsubdir = None
-    mossubdir = None
-    transfersubdir = None
+    module_name = 'MOSAIC'
 
     mosdir = None
     mosaic_continuum_stack = None
@@ -773,9 +762,6 @@ class mosaic:
         df = pd.concat([df_cs, df_cp, df_bmaj, df_bmin, df_bpa, df_bs, df_cv, df_wg, df_rms, df_is, df_rr], axis=1)
 
         return df
-
-    def show(self, showall=False):
-        lib.show(self, 'MOSAIC', showall)
 
     def reset(self):
         """

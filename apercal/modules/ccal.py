@@ -24,6 +24,8 @@ class ccal(BaseModule):
     Crosscal class to handle applying the calibrator gains and prepare the dataset for self-calibration.
     """
 
+    module_name = 'CROSSCALL'
+
     fluxcal = None
     polcal = None
     target = None
@@ -85,9 +87,6 @@ class ccal(BaseModule):
         self.transfer_to_cal()
         self.transfer_to_target()
         logger.info("CROSS CALIBRATION done ")
-
-    def show(self, showall=False):
-        lib.show(self, 'CROSSCAL', showall)
 
     def TEC(self):
         """

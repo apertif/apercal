@@ -1,15 +1,32 @@
 from glob import glob
 from os import path
+from apercal.libs.lib import show
 # from typing import List, Tuple, Any # Leave disabled until we install typing on happili
+from abc import abstractproperty, ABCMeta
 
 
 class BaseModule:
-    subdirification = None
-    basedir = None
-    rawsubdir = None
+
+    __metaclass__ = ABCMeta
+
+    @abstractproperty
+    def module_name(self):
+        pass
+
     fluxcal = None
     polcal = None
     target = None
+    basedir = None
+    beam = None
+    rawsubdir = None
+    crosscalsubdir = None
+    selfcalsubdir = None
+    linesubdir = None
+    contsubdir = None
+    polsubdir = None
+    mossubdir = None
+    transfersubdir = None
+    subdirification = True
 
     def get_fluxcal_path(self):
         if self.subdirification:
@@ -35,3 +52,6 @@ class BaseModule:
         else:
             # TODO: (gijs) is it okay to just always set this to 0?
             return [(self.target, '00')]
+
+    def show(self, showall=False):
+        show(self, self.module_name, showall)

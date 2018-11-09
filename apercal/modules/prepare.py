@@ -1,10 +1,10 @@
-import ConfigParser
 import glob
 import logging
 import pandas as pd
 import os
 import numpy as np
 
+from apercal.modules.base import BaseModule
 from apercal.subs import irods as subs_irods
 from apercal.subs import setinit as subs_setinit
 from apercal.subs import managefiles as subs_managefiles
@@ -16,23 +16,11 @@ from apercal.libs import lib
 logger = logging.getLogger(__name__)
 
 
-class prepare:
+class prepare(BaseModule):
     """
     Prepare class. Automatically copies the datasets into the directories and selects valid data (in case of multi-element observations)
     """
-    fluxcal = None
-    polcal = None
-    target = None
-    basedir = None
-    beam = None
-    rawsubdir = None
-    crosscalsubdir = None
-    selfcalsubdir = None
-    linesubdir = None
-    contsubdir = None
-    polsubdir = None
-    mossubdir = None
-    transfersubdir = None
+    module_name = 'PREPARE'
 
     prepare_date = None
     prepare_obsnum_fluxcal = None
@@ -376,9 +364,6 @@ class prepare:
         df = pd.concat([df_req, df_disk, df_alta, df_copy, df_rej], axis=1)
 
         return df
-
-    def show(self, showall=False):
-        lib.show(self, 'PREPARE', showall)
 
     def reset(self):
         """

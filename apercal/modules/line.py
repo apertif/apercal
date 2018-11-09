@@ -6,6 +6,7 @@ import astropy.io.fits as pyfits
 import numpy as np
 import os
 
+from apercal.modules.base import BaseModule
 from apercal.libs.calculations import calc_dr_maj, calc_theoretical_noise, calc_theoretical_noise_threshold, \
     calc_dynamic_range_threshold, calc_clean_cutoff, calc_noise_threshold, calc_mask_threshold, get_freqstart, \
     calc_dr_min, calc_line_masklevel, calc_miniter
@@ -16,23 +17,11 @@ from apercal.exceptions import ApercalException
 logger = logging.getLogger(__name__)
 
 
-class line:
+class line(BaseModule):
     """
     Line class to do continuum subtraction and prepare data for line imaging.
     """
-    fluxcal = None
-    polcal = None
-    target = None
-    basedir = None
-    beam = None
-    rawsubdir = None
-    crosscalsubdir = None
-    selfcalsubdir = None
-    linesubdir = None
-    contsubdir = None
-    polsubdir = None
-    mossubdir = None
-    transfersubdir = None
+    module_name = 'LINE'
 
     line_splitdata = None
     line_splitdata_chunkbandwidth = None
@@ -764,9 +753,6 @@ class line:
                 break  # Stop the counting loop at the file you cannot find anymore
         lastmajor = n
         return lastmajor
-
-    def show(self, showall=False):
-        lib.show(self, 'LINE', showall)
 
     def reset(self):
         """
