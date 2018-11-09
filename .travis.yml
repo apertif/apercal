@@ -1,12 +1,18 @@
 services:                             
   - docker                            
+addons:
+  apt:
+    packages:
+    - make
+    - wget
 install:
+  - make data/small
   - docker build . -t apertif/apercal
 script:
-  - docker run apertif/apercal pycodestyle apercal --ignore=E501,E127,E741,E122,W504,E126
-  - docker run apertif/apercal pytest -s test/test_prepare.py
-  - docker run apertif/apercal pytest -s test/test_preflag.py
-  - docker run apertif/apercal pytest -s test/test_ccal.py
+  - docker run -v `pwd`/data:/code/data:rw apertif/apercal pycodestyle apercal --ignore=E501,E127,E741,E122,W504,E126
+  - docker run -v `pwd`/data:/code/data:rw apertif/apercal pytest -s test/test_prepare.py
+  - docker run -v `pwd`/data:/code/data:rw apertif/apercal pytest -s test/test_preflag.py
+  - docker run -v `pwd`/data:/code/data:rw apertif/apercal pytest -s test/test_ccal.py
 #  - docker run apertif/apercal pytest -s test/test_convert.py
 #  - docker run apertif/apercal pytest -s test/test_scal.py
 #  - docker run apertif/apercal pytest -s test/test_continuum.py
