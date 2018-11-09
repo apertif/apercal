@@ -7,11 +7,12 @@ VENV=$(CURDIR)/.venv2
 all: run
 
 $(VENV):
-	virtualenv -p python2 ../.venv2
+	virtualenv -p python2 $(VENV)
 
 $(VENV)/bin/cwltool: $(VENV)
-	$(VENV)/bin/pip install ..
-	$(VENV)/bin/pip install -r requirements.txt
+	$(VENV)/bin/pip install .
+	$(VENV)/bin/pip install -r cwl/requirements.txt
+	$(VENV)/bin/pip install -r test/requirements.txt
 
 docker:
 	docker build . -t apertif/apercal
@@ -24,5 +25,5 @@ data/small: data/${FILE}
 	cd data && tar zmxvf ${FILE}
 
 run: $(VENV)/bin/cwltool data/small
-	$(VENV)/bin/cwltool --enable-ext --outdir=cwl/outdir cwl/apercal.cwl cwl/job.yaml
+	$(VENV)/bin/cwltool --enable-ext  --no-compute-checksum --outdir=cwl/outdir cwl/apercal.cwl cwl/job.yaml
 
