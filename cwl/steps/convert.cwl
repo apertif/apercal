@@ -55,7 +55,7 @@ arguments:
   - prefix: '-c'
     valueFrom: |
         import logging
-        logging.basicConfig(level=logging.INFO)
+        logging.basicConfig(level=logging.DEBUG)
         from apercal.modules.convert import convert
         from os import getcwd
 
@@ -64,4 +64,5 @@ arguments:
         p.fluxcal = "$(inputs.fluxcal.path)"
         p.polcal = "$(inputs.polcal.path)"
         p.subdirification = False
+        p.crosscalsubdir = "/tmp"
         p.go()

@@ -18,6 +18,8 @@ from apercal.libs import lib
 
 logger = logging.getLogger(__name__)
 
+gencal_cmd = 'gencal(vis="{vis}", caltable="{caltable}", caltype="{caltype}", infile="{infile}")'
+
 
 class ccal(BaseModule):
     """
@@ -25,21 +27,6 @@ class ccal(BaseModule):
     """
 
     module_name = 'CROSSCALL'
-
-    fluxcal = None
-    polcal = None
-    target = None
-    basedir = None
-    beam = None
-    rawsubdir = None
-    crosscalsubdir = None
-    selfcalsubdir = None
-    linesubdir = None
-    contsubdir = None
-    polsubdir = None
-    mossubdir = None
-    transfersubdir = None
-    subdirification = True
 
     crosscaldir = None
     crosscal_bandpass = None
@@ -54,7 +41,6 @@ class ccal(BaseModule):
     crosscal_transfer_to_target_targetbeams = None
     crosscal_polarisation_angle = None
     crosscal_crosshand_delay = None
-    crosscal_transfer_to_target_targetbeams = None
 
     crosscal_leakage = None
     crosscal_transfer_to_cal = None
@@ -94,7 +80,7 @@ class ccal(BaseModule):
         """
 
         subs_setinit.setinitdirs(self)
-        subs_managefiles.director(self, 'ch', self.basedir + '00' + '/' + self.rawsubdir)
+        subs_managefiles.director(self, 'ch', self.get_rawsubdir_path())
         nbeams = 37
 
         # Create the parameters for the parameter file for the TEC correction step
@@ -114,22 +100,26 @@ class ccal(BaseModule):
             # Create the TEC correction tables for the flux calibrator
 
             if self.fluxcal != '' and os.path.isdir(self.get_fluxcal_path()):
-                if ccalfluxcalTEC or os.path.isdir(
-                        self.get_fluxcal_path().rstrip('.MS') + '.tecim'):
+                fluxcal_tecim = self.get_fluxcal_path().rstrip('.MS') + '.tecim'
+                if ccalfluxcalTEC or os.path.isdir(fluxcal_tecim):
                     logger.warning('TEC correction tables for flux calibrator were already generated')
                     ccalfluxcalTEC = True
                 else:
                     cc_load_tec_maps = 'from recipes import tec_maps'
-                    cc_fluxcal_TEC = 'tec_maps.create(vis = "' + self.get_fluxcal_path() + '", doplot = False)'
+                    cc_fluxcal_TEC = 'tec_maps.create(vis="{}", doplot=False)'.format(self.get_fluxcal_path())
                     lib.run_casa([cc_load_tec_maps, cc_fluxcal_TEC])
+                    fluxcal_infile = self.get_fluxcal_path().rstrip('.MS') + ".IGS_TEC.im"
                     # Check if the TEC corrections could be downloaded
-                    if os.path.isdir(self.get_fluxcal_path() + '.IGS_TEC.im'):
+                    if os.path.isdir(fluxcal_infile):
                         cc_load_tec_maps = 'from recipes import tec_maps'
-                        cc_fluxcal_genTEC = 'gencal(vis = "' + self.get_fluxcal_path() + '", caltable = "' + self.get_fluxcal_path().rstrip(
-                            '.MS') + '.tecim", caltype="tecim", infile = "' + self.get_fluxcal_path() + '.IGS_TEC.im")'
+                        cc_fluxcal_genTEC = gencal_cmd.format(vis=self.get_fluxcal_path(),
+                                                              caltable=fluxcal_tecim,
+                                                              caltype="tecim",
+                                                              infile=fluxcal_infile)
+
                         lib.run_casa([cc_load_tec_maps, cc_fluxcal_genTEC])
-                        if os.path.isdir(self.get_fluxcal_path().rstrip(
-                                '.MS') + '.tecim'):  # Check if the calibration table was created
+                        # Check if the calibration table was created
+                        if os.path.isdir(fluxcal_infile):
                             ccalfluxcalTEC = True
                         else:
                             logger.warning(
@@ -139,7 +129,8 @@ class ccal(BaseModule):
                         logger.warning('TEC images could not be generated for flux calibrator')
                         ccalfluxcalTEC = False
             else:
-                error = 'Flux calibrator dataset not specified or dataset not available. TEC corrections will not be used for flux calibrator'
+                error = 'Flux calibrator dataset not specified or dataset not available. ' \
+                        'TEC corrections will not be used for flux calibrator'
                 logger.error(error)
                 raise RuntimeError(error)
                 ccalfluxcalTEC = False
@@ -155,16 +146,19 @@ class ccal(BaseModule):
                     cc_load_tec_maps = 'from recipes import tec_maps'
                     cc_polcal_TEC = 'tec_maps.create(vis = "' + self.get_polcal_path() + '", doplot = False)'
                     lib.run_casa([cc_load_tec_maps, cc_polcal_TEC])
+
+                    polcal_infile = self.get_polcal_path().rstrip('.MS') + '.IGS_TEC.im'
                     # Check if the TEC corrections could be downloaded
-                    if os.path.isdir(self.get_polcal_path() + '.IGS_TEC.im'):
+                    if os.path.isdir(polcal_infile):
                         cc_load_tec_maps = 'from recipes import tec_maps'
-                        cc_polcal_genTEC = 'gencal(vis = "' + self.get_polcal_path() + '", caltable = "' + \
-                                           self.get_polcal_path().rstrip(
-                            '.MS') + '.tecim", caltype="tecim", infile = "' + self.basedir + '00' + '/' + \
-                                           self.rawsubdir + '/' + self.polcal + '.IGS_TEC.im")'
+
+                        cc_polcal_genTEC = gencal_cmd.format(vis=self.get_polcal_path(),
+                                                             caltable=self.get_polcal_path().rstrip('.MS') + ".tecim",
+                                                             caltype="tecim",
+                                                             infile=polcal_infile)
+
                         lib.run_casa([cc_load_tec_maps, cc_polcal_genTEC])
-                        if os.path.isdir(self.get_polcal_path().rstrip(
-                                '.MS') + '.tecim'):  # Check if the calibration table was created
+                        if os.path.isdir(polcal_infile):  # Check if the calibration table was created
                             ccalpolcalTEC = True
                         else:
                             logger.warning('TEC calibration tables for polarised calibrator could not be generated!')
@@ -181,9 +175,8 @@ class ccal(BaseModule):
 
             if self.target != '':
                 for vis, beam in self.get_datasets():
-                    if ccaltargetbeamsTEC[int(beam)] or os.path.isdir(
-                            self.basedir + '00' + '/' + self.rawsubdir + '/' + self.target.rstrip('.MS') + '_B' +
-                            beam + '.MS.tecim'):
+                    if ccaltargetbeamsTEC[int(beam)] or os.path.isdir(self.get_target_path().rstrip('.MS') + '_B' +
+                                                                      beam + '.MS.tecim'):
                         logger.info(
                             '# TEC correction tables for beam ' + beam + ' were already generated')
                         ccalpolcalTEC[int(beam)] = True
@@ -191,31 +184,32 @@ class ccal(BaseModule):
                         cc_load_tec_maps = 'from recipes import tec_maps'
                         cc_targetbeam_TEC = 'tec_maps.create(vis = "' + vis + '", doplot = False)'
                         lib.run_casa([cc_load_tec_maps, cc_targetbeam_TEC])
-                        if os.path.isdir(vis + '.IGS_TEC.im'):  # Check if the TEC corrections could be downloaded
+                        # Check if the TEC corrections could be downloaded
+                        target_infile = vis.rstrip('.MS') + '.IGS_TEC.im'
+                        if os.path.isdir(target_infile):
                             cc_load_tec_maps = 'from recipes import tec_maps'
-                            cc_targetbeams_genTEC = 'gencal(vis = "' + vis + '", caltable = "' + self.basedir + \
-                                                    '00' + '/' + self.rawsubdir + '/' + self.target.rstrip(
-                                '.MS') + '_B' + vis.split('/')[
-                                                        -3] + '.tecim", caltype="tecim", infile = "' + vis.rstrip(
-                                '.MS') + '.IGS_TEC.im")'
+
+                            target_caltable = self.get_target_path().rstrip('.MS') + '_B' + beam + '.tecim'
+
+                            cc_targetbeams_genTEC = gencal_cmd.format(vis=vis,
+                                                                      calltable=target_caltable,
+                                                                      caltype="tecim",
+                                                                      infile=target_infile)
+
                             lib.run_casa([cc_load_tec_maps, cc_targetbeams_genTEC])
-                            if os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.target.rstrip(
-                                    '.MS') + '_B' + vis.split('/')[
-                                                 -3] + '.tecim'):  # Check if the calibration table was created
+                            # Check if the calibration table was created
+                            if os.path.isdir(target_caltable):
                                 ccalpolcalTEC[int(beam)] = True
                             else:
-                                logger.warning('TEC calibration tables for beam ' + vis.split('/')[
-                                    -3] + ' could not be generated!')
+                                logger.warning('TEC calibration tables for beam ' + beam + ' could not be generated!')
                                 ccalpolcalTEC[int(beam)] = False
                         else:
-                            logger.warning(
-                                '# TEC images could not be generated for target beam ' + beam + '')
+                            logger.warning('TEC images could not be generated for target beam ' + beam)
                             ccaltargetbeamsTEC[int(beam)] = False
             else:
                 logger.warning('No target dataset specified! Not using any TEC corrections for target beam datasets')
 
         # Save the derived parameters for the TEC corrections to the parameter file
-
         subs_param.add_param(self, 'ccal_fluxcal_TEC', ccalfluxcalTEC)
         subs_param.add_param(self, 'ccal_polcal_TEC', ccalpolcalTEC)
         subs_param.add_param(self, 'ccal_targetbeams_TEC', ccaltargetbeamsTEC)
@@ -227,15 +221,16 @@ class ccal(BaseModule):
         """
 
         subs_setinit.setinitdirs(self)
-        subs_managefiles.director(self, 'ch', self.basedir + '00' + '/' + self.rawsubdir)
+        subs_managefiles.director(self, 'ch', self.get_rawsubdir_path())
 
         # Create the parameters for the parameter file for the bandpass correction step
 
-        ccalfluxcalphgains = get_param_def(self, 'ccal_fluxcal_phgains',
-                                           False)  # Status of the initial phase gains for the flux calibrator
-        ccalfluxcalbandpass = get_param_def(self, 'ccal_fluxcal_bandpass',
-                                            False)  # Status of the bandpass table of the flux calibrator
-        ccalfluxcalmodel = get_param_def(self, 'ccal_fluxcal_model', False)  # Status of model of the flux calibrator
+        # Status of the initial phase gains for the flux calibrator
+        ccalfluxcalphgains = get_param_def(self, 'ccal_fluxcal_phgains', False)
+        # Status of the bandpass table of the flux calibrator
+        ccalfluxcalbandpass = get_param_def(self, 'ccal_fluxcal_bandpass', False)
+        # Status of model of the flux calibrator
+        ccalfluxcalmodel = get_param_def(self, 'ccal_fluxcal_model', False)
 
         if self.crosscal_bandpass:
             logger.info('Calculating bandpass corrections for flux calibrator')
@@ -243,25 +238,33 @@ class ccal(BaseModule):
             if self.fluxcal != '' and os.path.isdir(self.get_fluxcal_path()):
 
                 # Create the initial phase correction tables for the flux calibrator
-
-                if ccalfluxcalphgains or os.path.isdir(
-                        self.get_fluxcal_path().rstrip('.MS') + '.G0ph'):
+                fluxcal_G0ph = self.get_fluxcal_path().rstrip('.MS') + '.G0ph'
+                if ccalfluxcalphgains or os.path.isdir(fluxcal_G0ph):
                     logger.info('Initial phase gain table for flux calibrator was already generated')
                     ccalfluxcalphgains = True
                 else:
                     prevtables = '""'
                     interp = '""'
-                    TECstatus = subs_param.get_param(self,
-                                                     'ccal_fluxcal_TEC')  # Check for the TEC calibration table to apply on-the-fly
+                    # Check for the TEC calibration table to apply on-the-fly
+                    TECstatus = subs_param.get_param(self, 'ccal_fluxcal_TEC')
                     if TECstatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
                                                                         self.get_fluxcal_path().rstrip(
                                                                             '.MS') + '.tecim', 'nearest')
-                    cc_fluxcal_ph = 'gaincal(vis = "' + self.get_fluxcal_path() + '", caltable = "' + self.get_fluxcal_path().rstrip(
-                        '.MS') + '.G0ph", gaintype = "G", solint = "int", calmode = "p", refant = "' + self.crosscal_refant + '", smodel = [1,0,0,0], gaintable = [' + prevtables + '], interp = [' + interp + '])'
+
+                    gaincal_cmd = 'gaincal(vis="{vis}", caltable="{caltable}", gaintype="G", solint="int", ' \
+                                  'refant="{refant}", calmode = "{calmode}", gaintable=[{gaintable}],' \
+                                  'interp=[{interp}], smodel = [1,0,0,0])'
+
+                    cc_fluxcal_ph = gaincal_cmd.format(vis=self.get_fluxcal_path(),
+                                                       caltable=fluxcal_G0ph,
+                                                       calmode="p",
+                                                       refant=self.crosscal_refant,
+                                                       gaintable=prevtables,
+                                                       interp=interp)
+
                     lib.run_casa([cc_fluxcal_ph], timeout=3600)
-                    if os.path.isdir(self.get_fluxcal_path().rstrip(
-                            '.MS') + '.G0ph'):  # Check if calibration table was created successfully
+                    if os.path.isdir(fluxcal_G0ph):  # Check if calibration table was created successfully
                         ccalfluxcalphgains = True
                     else:
                         ccalfluxcalphgains = False
@@ -271,8 +274,8 @@ class ccal(BaseModule):
 
                     # Calculate the bandpass for the flux calibrator
 
-                if ccalfluxcalbandpass or os.path.isdir(
-                        self.get_fluxcal_path().rstrip('.MS') + '.Bscan'):
+                fluxcal_bscan = self.get_fluxcal_path().rstrip('.MS') + '.Bscan'
+                if ccalfluxcalbandpass or os.path.isdir(fluxcal_bscan):
                     logger.info('Bandpass for flux calibrator was already derived successfully!')
                     ccalfluxcalbandpass = True
                 else:
@@ -287,13 +290,20 @@ class ccal(BaseModule):
                     phgainstatus = ccalfluxcalphgains
                     if phgainstatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                        '"' + self.get_fluxcal_path().rstrip(
-                                                                            '.MS') + '.G0ph"', '"nearest"')
-                    cc_fluxcal_bp = 'bandpass(vis = "' + self.get_fluxcal_path() + '", caltable = "' + self.get_fluxcal_path().rstrip(
-                        '.MS') + '.Bscan", solint = "inf", combine = "scan, obs", refant = "' + self.crosscal_refant + '", solnorm = True, gaintable = [' + prevtables + '], interp = [' + interp + '])'
+                                                                        '"' + fluxcal_G0ph + '"', '"nearest"')
+
+                    bandpass_cmd = 'bandpass(vis="{vis}", caltable="{caltable}", solint="inf", combine="scan, obs", ' \
+                                   'refant="{refant}", solnorm=True, gaintable=[{gaintable}], interp=[{interp}])'
+
+                    cc_fluxcal_bp = bandpass_cmd.format(vis=self.get_fluxcal_path(),
+                                                        caltable=fluxcal_bscan,
+                                                        refant=self.crosscal_refant,
+                                                        gaintable=prevtables,
+                                                        interp=interp)
+
                     lib.run_casa([cc_fluxcal_bp], timeout=3600)
-                    if os.path.isdir(self.get_fluxcal_path().rstrip(
-                            '.MS') + '.Bscan'):  # Check if bandpass table was created successfully
+                    # Check if bandpass table was created successfully
+                    if os.path.isdir(fluxcal_bscan):
                         ccalfluxcalbandpass = True
                     else:
                         ccalfluxcalbandpass = False
@@ -342,22 +352,22 @@ class ccal(BaseModule):
         """
 
         subs_setinit.setinitdirs(self)
-        subs_managefiles.director(self, 'ch', self.basedir + '00' + '/' + self.rawsubdir)
+        subs_managefiles.director(self, 'ch', self.get_rawsubdir_path())
 
         # Create the parameters for the parameter file for the gain correction step
 
-        ccalfluxcalapgains = get_param_def(self, 'ccal_fluxcal_apgains',
-                                           False)  # Status of the amplitude and phase gains for the flux calibrator
+        # Status of the amplitude and phase gains for the flux calibrator
+        ccalfluxcalapgains = get_param_def(self, 'ccal_fluxcal_apgains', False)
 
         if self.crosscal_gains:
             logger.info('Calculating gain corrections for flux calibrator')
 
             if self.fluxcal != '' and os.path.isdir(self.get_fluxcal_path()):
 
-                # Create the amplitude and phase correction table for the flux calibrator
+                fluxcal_g1ap = self.get_fluxcal_path().rstrip('.MS') + '.G1ap'
 
-                if ccalfluxcalapgains or os.path.isdir(
-                        self.get_fluxcal_path().rstrip('.MS') + '.G1ap'):
+                # Create the amplitude and phase correction table for the flux calibrator
+                if ccalfluxcalapgains or os.path.isdir(fluxcal_g1ap):
                     logger.info('Initial phase gain table for flux calibrator was already generated')
                     ccalfluxcalapgains = True
                 else:
@@ -367,8 +377,7 @@ class ccal(BaseModule):
                     TECstatus = subs_param.get_param(self, 'ccal_fluxcal_TEC')
                     if TECstatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
-                                                                        '"' + self.basedir + '00' + '/' +
-                                                                        self.rawsubdir + '/' + self.fluxcal.rstrip(
+                                                                        '"' + self.get_fluxcal_path().rstrip(
                                                                             '.MS') + '.tecim"', '"nearest"')
                     # Check for the bandpass calibration table to apply on-the-fly
                     bandpassstatus = subs_param.get_param(self, 'ccal_fluxcal_bandpass')
@@ -376,11 +385,10 @@ class ccal(BaseModule):
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
                                                                         '"' + self.get_fluxcal_path().rstrip(
                                                                             '.MS') + '.Bscan"', '"nearest"')
-                    cc_fluxcal_apgain = 'gaincal(vis = "' + self.get_fluxcal_path() + '", caltable = "' + self.get_fluxcal_path().rstrip(
-                        '.MS') + '.G1ap", gaintype = "G", solint = "int", refant = "' + self.crosscal_refant + '", calmode = "ap", gaintable = [' + prevtables + '], interp = [' + interp + '])'
+                    cc_fluxcal_apgain = 'gaincal(vis = "' + self.get_fluxcal_path() + '", caltable = "' + fluxcal_g1ap + '", gaintype = "G", solint = "int", refant = "' + self.crosscal_refant + '", calmode = "ap", gaintable = [' + prevtables + '], interp = [' + interp + '])'
                     lib.run_casa([cc_fluxcal_apgain], timeout=3600)
-                    if os.path.isdir(self.get_fluxcal_path().rstrip(
-                            '.MS') + '.G1ap'):  # Check if gain table was created successfully
+                    # Check if gain table was created successfully
+                    if os.path.isdir(fluxcal_g1ap):
                         ccalfluxcalapgains = True
                     else:
                         ccalfluxcalapgains = False
@@ -399,7 +407,7 @@ class ccal(BaseModule):
         """
 
         subs_setinit.setinitdirs(self)
-        subs_managefiles.director(self, 'ch', self.basedir + '00' + '/' + self.rawsubdir)
+        subs_managefiles.director(self, 'ch', self.get_rawsubdir_path())
 
         # Create the parameters for the parameter file for the global delay correction step
 
@@ -419,14 +427,15 @@ class ccal(BaseModule):
                 else:
                     prevtables = '""'
                     interp = '""'
-                    TECstatus = subs_param.get_param(self,
-                                                     'ccal_fluxcal_TEC')  # Check for the TEC calibration table to apply on-the-fly
+                    # Check for the TEC calibration table to apply on-the-fly
+                    TECstatus = subs_param.get_param(self, 'ccal_fluxcal_TEC')
                     if TECstatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
                                                                         '"' + self.get_fluxcal_path().rstrip(
                                                                             '.MS') + '.tecim"', '"nearest"')
-                    bandpassstatus = subs_param.get_param(self,
-                                                          'ccal_fluxcal_bandpass')  # Check for the bandpass calibration table to apply on-the-fly
+
+                    # Check for the bandpass calibration table to apply on-the-fly
+                    bandpassstatus = subs_param.get_param(self, 'ccal_fluxcal_bandpass')
                     if bandpassstatus:
                         prevtables, interp = subs_msutils.add_caltables(prevtables, interp,
                                                                         '"' + self.get_fluxcal_path().rstrip(
@@ -459,7 +468,7 @@ class ccal(BaseModule):
         """
 
         subs_setinit.setinitdirs(self)
-        subs_managefiles.director(self, 'ch', self.basedir + '00' + '/' + self.rawsubdir)
+        subs_managefiles.director(self, 'ch', self.get_rawsubdir_path())
 
         # Create the parameters for the parameter file for the cross hand delay correction step
 
@@ -562,7 +571,7 @@ class ccal(BaseModule):
         """
 
         subs_setinit.setinitdirs(self)
-        subs_managefiles.director(self, 'ch', self.basedir + '00' + '/' + self.rawsubdir)
+        subs_managefiles.director(self, 'ch', self.get_rawsubdir_path())
 
         # Create the parameters for the parameter file for the leakage correction step
 
@@ -635,7 +644,7 @@ class ccal(BaseModule):
         """
 
         subs_setinit.setinitdirs(self)
-        subs_managefiles.director(self, 'ch', self.basedir + '00' + '/' + self.rawsubdir)
+        subs_managefiles.director(self, 'ch', self.get_rawsubdir_path())
 
         # Create the parameters for the parameter file for the polarisation angle correction step
 
@@ -720,7 +729,7 @@ class ccal(BaseModule):
         """
 
         subs_setinit.setinitdirs(self)
-        subs_managefiles.director(self, 'ch', self.basedir + '00' + '/' + self.rawsubdir)
+        subs_managefiles.director(self, 'ch', self.get_rawsubdir_path())
 
         # Create the parameters for the parameter file for the transfer step
 
@@ -874,7 +883,7 @@ class ccal(BaseModule):
         """
 
         subs_setinit.setinitdirs(self)
-        subs_managefiles.director(self, 'ch', self.basedir + '00' + '/' + self.rawsubdir)
+        subs_managefiles.director(self, 'ch', self.get_rawsubdir_path())
         nbeams = 37
 
         # Create the parameters for the parameter file for the transfer step
@@ -1177,7 +1186,7 @@ class ccal(BaseModule):
         logger.warning('Resetting flags and data values to before cross-calibration step')
         # Remove the calibration tables
         # for all beams and calibrators
-        subs_managefiles.director(self, 'rm', self.basedir + '00' + '/' + self.rawsubdir + '/*.tecim')
+        subs_managefiles.director(self, 'rm', self.get_rawsubdir_path() + '/*.tecim')
         subs_managefiles.director(self, 'rm', self.get_fluxcal_path().rstrip(
             '.MS') + '.G0ph')
         subs_managefiles.director(self, 'rm', self.get_fluxcal_path().rstrip(
@@ -1193,7 +1202,7 @@ class ccal(BaseModule):
         subs_managefiles.director(self, 'rm',
                                   self.get_polcal_path().rstrip('.MS') + '.Xf')
         # Run a clearcal on all datasets and revert to the last flagversion
-        targetdatasets = glob.glob(self.basedir + '[0-9][0-9]' + '/' + self.rawsubdir + '/' + self.target)
+        targetdatasets = glob.glob(self.get_target_path('[0-9][0-9]'))
         targetdatasets.append(self.get_fluxcal_path())
         targetdatasets.append(self.get_polcal_path())
         datasets_toclear = sorted(targetdatasets)
