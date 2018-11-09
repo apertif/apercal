@@ -23,7 +23,6 @@ class line(BaseModule):
     """
     module_name = 'LINE'
 
-
     line_splitdata = None
     line_splitdata_chunkbandwidth = None
     line_splitdata_channelbandwidth = None
