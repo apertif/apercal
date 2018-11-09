@@ -10,3 +10,4 @@ casa.log
 notebooks/
 __pycache__
 .eggs/
+data/
