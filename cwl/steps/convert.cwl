@@ -35,17 +35,17 @@ inputs:
     type: Directory
 
 outputs:
-  target_preflagged:
+  target_converted:
     type: Directory
     outputBinding:
       glob: $(inputs.target.basename)
 
-  polcal_preflagged:
+  polcal_converted:
     type: Directory
     outputBinding:
       glob: $(inputs.polcal.basename)
 
-  fluxcal_preflagged:
+  fluxcal_converted:
     type: Directory
     outputBinding:
       glob: $(inputs.fluxcal.basename)
@@ -56,10 +56,10 @@ arguments:
     valueFrom: |
         import logging
         logging.basicConfig(level=logging.INFO)
-        from apercal.modules.preflag import preflag
+        from apercal.modules.convert import convert
         from os import getcwd
 
-        p = preflag()
+        p = convert()
         p.target = "$(inputs.target.path)"
         p.fluxcal = "$(inputs.fluxcal.path)"
         p.polcal = "$(inputs.polcal.path)"
