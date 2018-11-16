@@ -205,9 +205,37 @@ def masher(task=None, **kwargs):
         raise ApercalException
 
 
-def basher(cmd, showasinfo=False):
+def strip_prefixes(lines, prefixes):
+    """
+    Remove lines starting that start with a given string
+
+    Args:
+        lines (str): output to be filtered
+        prefixes (List[str]): lines to be stripped
+
+    Returns:
+        str: Output with filtered lines
+    """
+    ret = ''
+    for line in lines.split('\n'):
+        matches = False
+        for start in prefixes:
+            if line.startswith(start):
+                matches = True
+                break
+        if not matches:
+            ret += '\n' + line
+    return ret
+
+
+def basher(cmd, showasinfo=False, prefixes_to_strip=[]):
     """
     basher: shell run - helper function to run commands on the shell.
+
+    Args:
+        cmd (str): command to be run
+        showasinfo (bool): Log the output to info (default: log to debug)
+        remove_ouput (List[str]): do not log lines that start with any of these strings
     """
     logger = logging.getLogger('basher')
     logger.debug(cmd)
@@ -234,10 +262,10 @@ def basher(cmd, showasinfo=False):
     if len(out) > 0:
         if showasinfo:
             logger.debug("Command = " + cmd)
-            logger.debug("\n" + out)
+            logger.debug(strip_prefixes(out, prefixes_to_strip))
         else:
             logger.debug("Command = " + cmd)
-            logger.debug("\n" + out)
+            logger.debug(strip_prefixes(out, prefixes_to_strip))
     if len(err) > 0:
         logger.debug(err)
     # NOTE: Returns the STD output.
