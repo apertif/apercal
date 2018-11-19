@@ -707,7 +707,7 @@ class continuum(BaseModule):
                     # Calculate the common beam and make a list of accepted and rejected chunks and update the
                     # parameters for the parameter file
                     avchunklist = np.where(continuumchunkimageacceptforstacking)[0]
-                    notavchunklist = np.where(not continuumchunkimageacceptforstacking)[0]
+                    notavchunklist = np.where(np.logical_not(continuumchunkimageacceptforstacking))[0]
                     avchunks = [str(x).zfill(2) for x in list(avchunklist)]
                     notavchunks = [str(x).zfill(2) for x in list(notavchunklist)]
                     beamarray = continuumsynthbeamparams[avchunklist, :]
