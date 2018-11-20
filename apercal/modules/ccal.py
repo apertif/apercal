@@ -318,7 +318,7 @@ class ccal(BaseModule):
                     else:
                         logger.warning('Calibrator model not in database. Using unpolarised calibrator model with a '
                                        'constant flux density of 1.0Jy!')
-                    lib.run_casa([cc_fluxcal_model], timeout=3600)
+                    lib.run_casa([cc_fluxcal_model], log_output=True, timeout=3600)
 
                     # Check if model was ingested successfully
                     if subs_msutils.has_good_modeldata(self.get_fluxcal_path()):
@@ -491,7 +491,7 @@ class ccal(BaseModule):
                     else:
                         logger.warning(
                             '# Calibrator model not in database. Using unpolarised calibrator model with a constant flux density of 1.0Jy!')
-                    lib.run_casa([cc_polcal_model], timeout=3600)
+                    lib.run_casa([cc_polcal_model], log_output=True, timeout=3600)
 
                     # Check if model was ingested successfully
                     if subs_msutils.has_good_modeldata(self.get_polcal_path()):

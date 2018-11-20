@@ -139,11 +139,13 @@ def exceptioner(O, E):
             raise FatalMiriadError(E)
 
 
-def run_casa(cmd, raise_on_severe=False, timeout=1800):
+def run_casa(cmd, raise_on_severe=False, log_output=False, timeout=1800):
     """Run a list of casa commands"""
     casa = drivecasa.Casapy()
     try:
         casa_output, casa_error = casa.run_script(cmd, raise_on_severe=True, timeout=timeout)
+        if log_output:
+            logger.info('\n'.join(casa_output))
         logger.debug('\n'.join(casa_error))
     except RuntimeError:
         logger.error("Casa command failed")
