@@ -9,7 +9,7 @@ inputs:
 outputs:
   calibrated:
     type: Directory
-    outputSource: preflag/preflagged
+    outputSource: convert/target_converted
 
 steps:
   preflag:
@@ -19,4 +19,26 @@ steps:
       fluxcal: fluxcal
       polcal: polcal
     out:
-        [preflagged]
+      - target_preflagged
+      - fluxcal_preflagged
+      - polcal_preflagged
+
+  convert:
+    run: steps/convert.cwl
+    in:
+      target: preflag/target_preflagged
+      fluxcal: preflag/fluxcal_preflagged
+      polcal: preflag/polcal_preflagged
+    out:
+      - target_converted
+      - fluxcal_converted
+      - polcal_converted
+
+
+# convert
+# ccal
+# scal
+# line
+# transfer
+# continuum
+# mosaic

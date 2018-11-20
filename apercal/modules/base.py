@@ -1,5 +1,5 @@
 from glob import glob
-from os import path
+from os import path, curdir
 from apercal.libs.lib import show
 # from typing import List, Tuple, Any # Leave disabled until we install typing on happili
 from abc import abstractproperty, ABCMeta
@@ -28,25 +28,37 @@ class BaseModule:
     transfersubdir = None
     subdirification = True
 
-    def get_fluxcal_path(self):
+    def get_rawsubdir_path(self, beam='00'):
         if self.subdirification:
-            return path.join(self.basedir, '00', self.rawsubdir, self.fluxcal)
+            return path.join(self.basedir, beam, self.rawsubdir)
+        else:
+            return curdir
+
+    def get_fluxcal_path(self, beam='00'):
+        if self.subdirification:
+            return path.join(self.basedir, beam, self.rawsubdir, self.fluxcal)
         else:
             return self.fluxcal
 
-    def get_polcal_path(self):
+    def get_polcal_path(self, beam='00'):
         if self.subdirification:
-            return path.join(self.basedir, '00', self.rawsubdir, self.polcal)
+            return path.join(self.basedir, beam, self.rawsubdir, self.polcal)
         else:
             return self.polcal
+
+    def get_target_path(self, beam='00'):
+        if self.subdirification:
+            return path.join(self.basedir, beam, self.rawsubdir, self.target)
+        else:
+            return self.target
 
     def get_datasets(self, beams=None):
         # type: (List[int]) -> List[Tuple[Any, Any]]
         if self.subdirification:
             if beams:
-                datasets = [path.join(self.basedir, str(b).zfill(2), self.rawsubdir, self.target) for b in beams]
+                datasets = [self.get_target_path(str(b).zfill(2)) for b in beams]
             else:
-                datasets = sorted(glob(path.join(self.basedir, '[0-9][0-9]', self.rawsubdir, self.target)))
+                datasets = sorted(glob(self.get_target_path('[0-9][0-9]')))
             beams = [vis.split('/')[-3] for vis in datasets]
             return zip(datasets, beams)
         else:

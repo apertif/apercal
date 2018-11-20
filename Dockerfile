@@ -7,13 +7,15 @@ RUN docker-apt-install \
 
 # if we install these here a rebuild trigger by a file change will go quicker
 # for now we need to install a special branch of drive-casa, otherwise casa 5 doesnt work
-RUN pip install aipy pymp-pypi pyephem \
+RUN pip install aipy pymp-pypi pyephem pycodestyle \
         git+https://github.com/timstaley/drive-casa.git@casa-release-5#egg=drive-casa
 
 ADD . /code
 WORKDIR /code
 
-RUN make data/small
+ENV MIR=/usr/bin MIRCAT=/usr/share/miriad MIRDEF=.
+RUN export MIRARCH=$(mirarch)
+#RUN make data/small
 
 RUN pip install .
 RUN pip install -r test/requirements.txt

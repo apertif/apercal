@@ -1,8 +1,9 @@
 FILE=small.tgz
 URL=http://astron.nl/citt/apercal-testdata/small.tgz
 VENV=$(CURDIR)/.venv2
+CWLTOOL=$(VENV)/bin/cwltool --enable-ext  --no-compute-checksum --outdir=cwl/outdir
 
-.PHONY: run docker
+.PHONY: run docker test
 
 all: run
 
@@ -25,5 +26,10 @@ data/small: data/${FILE}
 	cd data && tar zmxvf ${FILE}
 
 run: $(VENV)/bin/cwltool data/small
-	$(VENV)/bin/cwltool --enable-ext  --no-compute-checksum --outdir=cwl/outdir cwl/apercal.cwl cwl/job.yaml
+	 $(CWLTOOL) cwl/apercal.cwl cwl/job.yaml
 
+convert: $(VENV)/bin/cwltool data/small
+	$(CWLTOOL) cwl/steps/convert.cwl cwl/job.yaml
+
+test: data/small
+	docker run -v `pwd`/data:/code/data:rw apertif/apercal pytest -s test/test_preflag.py
