@@ -317,7 +317,7 @@ class ccal(BaseModule):
                     logger.info('Model was already ingested into the flux calibrator dataset!')
                 else:
                     ms = self.get_fluxcal_path()  # Get the name of the calibrator
-                    t = pt.table("%s::FIELD" % ms)
+                    t = pt.table("%s::FIELD" % ms, ack=False)
                     srcname = t.getcol('NAME')[0]
                     av, fluxdensity, spix, reffreq, rotmeas = subs_calmodels.get_calparameters(srcname)
                     cc_fluxcal_model = 'setjy(vis = "' + self.get_fluxcal_path() + '", scalebychan = True, standard = "manual", fluxdensity = [' + \
@@ -489,7 +489,7 @@ class ccal(BaseModule):
                 else:
                     # Get the name of the calibrator
                     ms = self.get_polcal_path()
-                    t = pt.table("%s::FIELD" % ms)
+                    t = pt.table("%s::FIELD" % ms, ack=False)
                     srcname = t.getcol('NAME')[0]
                     av, fluxdensity, spix, reffreq, rotmeas = subs_calmodels.get_calparameters(srcname)
                     cc_polcal_model = 'setjy(vis = "' + self.get_polcal_path() + '", scalebychan = True, standard = "manual", fluxdensity = [' + \
