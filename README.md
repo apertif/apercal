@@ -4,6 +4,8 @@ Apercal - the APERTIF calibration and imaging pipeline.
 
 https://www.astron.nl/astronomy-group/apertif/apertif
 
+https://github.com/apertif/apercal/wiki/pipeline-overview
+
 # Installation
 
 ```bash
