@@ -1014,7 +1014,7 @@ class ccal(BaseModule):
                                       self.get_fluxcal_path().rstrip(
                                           '.MS') + '.G1ap_ph.png')
         cc_plot_gains_ph = 'plotcal(caltable = "' + self.get_fluxcal_path().rstrip(
-            '.MS') + '.G1ap", xaxis = "time", yaxis="amp", subplot=431, iteration="antenna", plotrange=[-1,-1,-180,180], plotsymbol=".", markersize=1.0, fontsize=5.0, showgui=False, figfile="' + self.get_fluxcal_path().rstrip(
+            '.MS') + '.G1ap", xaxis = "time", yaxis="phase", subplot=431, iteration="antenna", plotrange=[-1,-1,-180,180], plotsymbol=".", markersize=1.0, fontsize=5.0, showgui=False, figfile="' + self.get_fluxcal_path().rstrip(
             '.MS') + '.G1ap_ph.png")'
         lib.run_casa([cc_plot_gains_ph], timeout=10000)
         return self.get_fluxcal_path().rstrip('.MS') + '.G1ap_ph.png'
