@@ -13,6 +13,8 @@ RUN pip install aipy pymp-pypi pyephem pycodestyle \
 ADD . /code
 WORKDIR /code
 
+ENV MIR=/usr/bin MIRCAT=/usr/share/miriad MIRDEF=.
+RUN export MIRARCH=$(mirarch)
 #RUN make data/small
 
 RUN pip install .
