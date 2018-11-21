@@ -88,12 +88,12 @@ class scal(BaseModule):
         Applies calibrator corrections to data, splits the data into chunks in frequency and bins it to the given
         frequency resolution for the self-calibration
         """
-        if self.splitdata:
+        if self.selfcal_splitdata:
             subs_setinit.setinitdirs(self)
             subs_setinit.setdatasetnamestomiriad(self)
             subs_managefiles.director(self, 'ch', self.selfcaldir)
             logger.info(' Splitting of target data into individual frequency chunks started')
-            if os.path.isfile(self.selfcaldir + '/' + self.target):
+            if os.path.exists(self.selfcaldir + '/' + self.target):
                 logger.info('Calibrator corrections already seem to have been applied #')
             else:
                 logger.info('Applying calibrator solutions to target data before averaging #')
@@ -113,7 +113,7 @@ class scal(BaseModule):
             try:
                 uv = aipy.miriad.UV(self.selfcaldir + '/' + self.target)
             except RuntimeError:
-                raise ApercalException(' No data in your crosscal directory!')
+                raise ApercalException(' No data in your selfcal directory!')
 
             try:
                 nsubband = len(uv['nschan'])  # Number of subbands in data
