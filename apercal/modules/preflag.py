@@ -939,6 +939,8 @@ class preflag(BaseModule):
                                                         np.full(beams, False))
 
         base_cmd = 'aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_fluxcalstrat
+        # Suppress logging of lines that start with this (to prevent 1000s of lines of logging)
+        strip_prefixes = ['Channel ']
         if self.preflag_aoflagger:
             # Flag the flux calibrator with AOFLagger
             if self.preflag_aoflagger_fluxcal:
@@ -948,16 +950,18 @@ class preflag(BaseModule):
                         # Check if bandpass table was derived successfully
                         preflagaoflaggerbandpassstatus = get_param_def(self, 'preflag_aoflagger_bandpass_status', False)
                         if self.aoflagger_bandpass and preflagaoflaggerbandpassstatus:
-                            lib.basher(base_cmd + ' -bandpass ' + self.get_fluxcal_path()[:-3] + '_Bpass.txt ' + self.get_fluxcal_path())
+                            lib.basher(base_cmd + ' -bandpass ' + self.get_fluxcal_path()[:-3] + '_Bpass.txt ' + self.get_fluxcal_path(),
+                                       prefixes_to_strip=strip_prefixes)
                             logger.debug('Used AOFlagger to flag flux calibrator with preliminary bandpass applied')
                             preflagaoflaggerfluxcalflag = True
                         elif self.aoflagger_bandpass and not preflagaoflaggerbandpassstatus:
-                            lib.basher(base_cmd + ' ' + self.get_fluxcal_path())
+                            lib.basher(base_cmd + ' ' + self.get_fluxcal_path(),
+                                       prefixes_to_strip=strip_prefixes)
                             logger.warning('Used AOFlagger to flag flux calibrator without preliminary bandpass '
                                            'applied. Better results are usually obtained with a preliminary bandpass applied.')
                             preflagaoflaggerfluxcalflag = True
                         elif not self.aoflagger_bandpass:
-                            lib.basher(base_cmd + ' ' + self.get_fluxcal_path())
+                            lib.basher(base_cmd + ' ' + self.get_fluxcal_path(), prefixes_to_strip=strip_prefixes)
                             logger.warning('Used AOFlagger to flag flux calibrator without preliminary bandpass '
                                            'applied. Better results are usually obtained with a preliminary bandpass applied.')
                             preflagaoflaggerfluxcalflag = True
@@ -987,16 +991,17 @@ class preflag(BaseModule):
                     preflagaoflaggerbandpassstatus = get_param_def(self, 'preflag_aoflagger_bandpass_status', False)
                     ao_base_cmd = 'aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_polcalstrat
                     if self.aoflagger_bandpass and preflagaoflaggerbandpassstatus:
-                        lib.basher(ao_base_cmd + ' -bandpass ' + self.get_fluxcal_path()[:-3] + '_Bpass.txt ' + self.get_polcal_path())
+                        lib.basher(ao_base_cmd + ' -bandpass ' + self.get_fluxcal_path()[:-3] + '_Bpass.txt ' + self.get_polcal_path(),
+                                   prefixes_to_strip=strip_prefixes)
                         logger.debug('Used AOFlagger to flag polarised calibrator with preliminary bandpass applied.')
                         preflagaoflaggerpolcalflag = True
                     elif self.aoflagger_bandpass and not preflagaoflaggerbandpassstatus:
-                        lib.basher(ao_base_cmd + ' ' + self.get_polcal_path())
+                        lib.basher(ao_base_cmd + ' ' + self.get_polcal_path(), prefixes_to_strip=strip_prefixes)
                         logger.warning('Used AOFlagger to flag polarised calibrator without preliminary bandpass '
                                        'applied. Better results are usually obtained with a preliminary bandpass applied.')
                         preflagaoflaggerpolcalflag = True
                     elif not self.aoflagger_bandpass:
-                        lib.basher(ao_base_cmd + ' ' + self.get_polcal_path())
+                        lib.basher(ao_base_cmd + ' ' + self.get_polcal_path(), prefixes_to_strip=strip_prefixes)
                         logger.info('Used AOFlagger to flag polarised calibrator without preliminary bandpass '
                                     'applied. Better results are usually obtained with a preliminary bandpass applied.')
                         preflagaoflaggerpolcalflag = True
@@ -1022,18 +1027,19 @@ class preflag(BaseModule):
                         base_cmd = 'aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_targetstrat
                         if not preflagaoflaggertargetbeamsflag[int(beam)]:
                             if self.aoflagger_bandpass and preflagaoflaggerbandpassstatus:
-                                lib.basher(base_cmd + ' -bandpass ' + self.get_fluxcal_path()[:-3] + '_Bpass.txt ' + vis)
+                                lib.basher(base_cmd + ' -bandpass ' + self.get_fluxcal_path()[:-3] + '_Bpass.txt ' + vis,
+                                           prefixes_to_strip=strip_prefixes)
                                 logger.debug('Used AOFlagger to flag target beam %s with preliminary '
                                              'bandpass applied'.format(beam))
                                 preflagaoflaggertargetbeamsflag[int(beam)] = True
                             elif self.aoflagger_bandpass and not preflagaoflaggerbandpassstatus:
-                                lib.basher(base_cmd + ' ' + vis)
+                                lib.basher(base_cmd + ' ' + vis, prefixes_to_strip=strip_prefixes)
                                 logger.warning('Used AOFlagger to flag target beam %s without preliminary bandpass '
                                                'applied. Better results are usually obtained with a preliminary '
                                                'bandpass applied.'.format(beam))
                                 preflagaoflaggertargetbeamsflag[int(beam)] = True
                             elif not self.aoflagger_bandpass:
-                                lib.basher(base_cmd + ' ' + vis)
+                                lib.basher(base_cmd + ' ' + vis, prefixes_to_strip=strip_prefixes)
                                 logger.warning('Used AOFlagger to flag target beam %s without preliminary bandpass '
                                                'applied. Better results are usually obtained with a preliminary '
                                                'bandpass applied.'.format(beam))
