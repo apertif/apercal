@@ -1,6 +1,8 @@
 def get_calparameters(calibrator):
     """
     calibrator(string): Calibrator name to get the values for
+    Values are taken from Perley Butler 2017: http://iopscience.iop.org/article/10.3847/1538-4365/aa6df9/pdf
+    Values for CTD93 from Bjorn Adebahr's fits
 
     return(bool, string, string, string, string): Calibrator model available, I,Q,U,V fluxes, parametric model
     coefficients, reference frequency, Rotation Measure
