@@ -23,12 +23,14 @@ def imagetofits(self, mirimage, fitsimage):
         director(self, 'rm', mirimage)
 
 
-def director(self, option, dest, file_=None, verbose=True):
+def director(self, option, dest, file_=None, verbose=True,
+             ignore_nonexistent=False):
     """
     director: Function to move, remove, and copy file_s and directories
     option: 'mk', 'ch', 'mv', 'rm', and 'cp' are supported
     dest: Destination of a file or directory to move to
     file_: Which file to move or copy, otherwise None
+    ignore_nonexistent: ignore rm on existing files
     """
     subs_setinit.setinitdirs(self)
     if option == 'mk':
@@ -64,6 +66,8 @@ def director(self, option, dest, file_=None, verbose=True):
     elif option == 'cp':  # Copy
         lib.basher("cp -r " + str(file_) + " " + str(dest))
     elif option == 'rm':  # Remove
+        if ignore_nonexistent and not os.path.exists(str(dest)):
+            return
         lib.basher("rm -r " + str(dest))
     else:
         logger.warning(' Option not supported! Only mk, ch, mv, rm, rn, and cp are supported!')
