@@ -1186,45 +1186,26 @@ class ccal(BaseModule):
         logger.warning('Resetting flags and data values to before cross-calibration step')
         # Remove the calibration tables
         # for all beams and calibrators
-        try:
-            subs_managefiles.director(self, 'rm', self.get_rawsubdir_path() + '/*.tecim')
-        except:
-            pass
-        try:
-            subs_managefiles.director(self, 'rm', self.get_fluxcal_path().rstrip(
-            '.MS') + '.G0ph')
-        except:
-            pass
-        try:
-            subs_managefiles.director(self, 'rm', self.get_fluxcal_path().rstrip(
-            '.MS') + '.Bscan')
-        except:
-            pass
-        try:
-            subs_managefiles.director(self, 'rm', self.get_fluxcal_path().rstrip(
-            '.MS') + '.G1ap')
-        except:
-            pass
-        try:
-            subs_managefiles.director(self, 'rm',
-                                  self.get_fluxcal_path().rstrip('.MS') + '.K')
-        except:
-            pass
-        try:
-            subs_managefiles.director(self, 'rm',
-                                  self.get_fluxcal_path().rstrip('.MS') + '.Df')
-        except:
-            pass
-        try:
-            subs_managefiles.director(self, 'rm', self.get_polcal_path().rstrip(
-            '.MS') + '.Kcross')
-        except:
-            pass
-        try:
-            subs_managefiles.director(self, 'rm',
-                                  self.get_polcal_path().rstrip('.MS') + '.Xf')
-        except:
-            pass
+        subs_managefiles.director(self, 'rm', self.get_rawsubdir_path() + '/*.tecim',
+                                  ignore_nonexistent=True)
+        subs_managefiles.director(self, 'rm', self.get_fluxcal_path().rstrip(
+                                  '.MS') + '.G0ph', ignore_nonexistent=True)
+        subs_managefiles.director(self, 'rm', self.get_fluxcal_path().rstrip(
+                                  '.MS') + '.Bscan', ignore_nonexistent=True)
+        subs_managefiles.director(self, 'rm', self.get_fluxcal_path().rstrip(
+                                 '.MS') + '.G1ap', ignore_nonexistent=True)
+        subs_managefiles.director(self, 'rm',
+                                  self.get_fluxcal_path().rstrip('.MS') + '.K',
+                                  ignore_nonexistent=True)
+        subs_managefiles.director(self, 'rm',
+                                  self.get_fluxcal_path().rstrip('.MS') + '.Df',
+                                  ignore_nonexistent=True)
+        subs_managefiles.director(self, 'rm', self.get_polcal_path().rstrip(
+                                  '.MS') + '.Kcross',
+                                  ignore_nonexistent=True)
+        subs_managefiles.director(self, 'rm',
+                                  self.get_polcal_path().rstrip('.MS') + '.Xf',
+                                  ignore_nonexistent=True)
         # Run a clearcal on all datasets and revert to the last flagversion
         targetdatasets = glob.glob(self.get_target_path('[0-9][0-9]'))
         targetdatasets.append(self.get_fluxcal_path())
