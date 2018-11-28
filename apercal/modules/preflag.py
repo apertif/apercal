@@ -944,9 +944,9 @@ class preflag(BaseModule):
         strip_prefixes = ['Channel ']
         if self.preflag_aoflagger:
             # Flag the flux calibrator with AOFLagger
-            if self.preflag_aoflagger_fluxcal:
+            if self.preflag_aoflagger_fluxcal and self.fluxcal != '':
                 if not preflagaoflaggerfluxcalflag:
-                    if self.fluxcal != '' and os.path.isdir(self.get_fluxcal_path()) and self.preflag_aoflagger_fluxcalstrat != '':
+                    if os.path.isdir(self.get_fluxcal_path()) and self.preflag_aoflagger_fluxcalstrat != '':
                         logger.info('Using AOFlagger to flag flux calibrator dataset')
                         # Check if bandpass table was derived successfully
                         preflagaoflaggerbandpassstatus = get_param_def(self, 'preflag_aoflagger_bandpass_status', True)
@@ -974,9 +974,9 @@ class preflag(BaseModule):
                 else:
                     logger.info('Flux calibrator was already flagged with AOFlagger!')
             # Flag the polarised calibrator with AOFlagger
-            if self.preflag_aoflagger_polcal:
+            if self.preflag_aoflagger_polcal and self.polcal != '':
                 if not preflagaoflaggerpolcalflag:
-                    if self.polcal == '' or not os.path.isdir(self.get_polcal_path()):
+                    if not os.path.isdir(self.get_polcal_path()):
                         error = "can't find polarisation calibrator dataset: %s".format(self.get_polcal_path())
                         logger.error(error)
                         raise ApercalException(error)
@@ -1011,8 +1011,8 @@ class preflag(BaseModule):
                     logger.info('Polarised calibrator was already flagged with AOFlagger!')
 
             # Flag the target beams with AOFlagger
-            if self.preflag_aoflagger_target:
-                if self.target != '' and self.preflag_aoflagger_targetstrat != '':
+            if self.preflag_aoflagger_target and self.target != '':
+                if self.preflag_aoflagger_targetstrat != '':
                     logger.info('Using AOFlagger to flag selected target beam dataset(s)')
                     # Check if parameter exists already and bandpass was applied successfully
                     # Check if bandpass table was derived successfully
@@ -1048,7 +1048,7 @@ class preflag(BaseModule):
                         else:
                             logger.info('Target beam ' + beam + ' was already flagged with AOFlagger!')
                 else:
-                    error = 'Target beam dataset(s) or strategy not defined properly. Not AOFlagging' \
+                    error = 'Target beam dataset(s) or strategy not defined properly. Not AOFlagging ' \
                             'target beam dataset(s).'
                     logger.error(error)
                     raise ApercalException(error)
