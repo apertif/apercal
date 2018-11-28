@@ -236,13 +236,44 @@ class ccal(BaseModule):
             logger.info('Calculating bandpass corrections for flux calibrator')
 
             if self.fluxcal != '' and os.path.isdir(self.get_fluxcal_path()):
+                # Ingest the model of the flux calibrator into the MODEL column
+                if ccalfluxcalmodel:
+                    logger.info('Model was already ingested into the flux calibrator dataset!')
+                else:
+                    ms = self.get_fluxcal_path()  # Get the name of the calibrator
+                    t = pt.table("%s::FIELD" % ms, ack=False)
+                    srcname = t.getcol('NAME')[0]
+                    av, fluxdensity, spix, reffreq, rotmeas = subs_calmodels.get_calparameters(srcname)
+                    cc_fluxcal_model = 'setjy(vis = "' + self.get_fluxcal_path() + '", scalebychan = True, standard = "manual", fluxdensity = [' + \
+                                       fluxdensity + '], spix = [' + spix + '], reffreq = "' + reffreq + \
+                                       '", rotmeas = ' + rotmeas + ', usescratch = True)'
+                    if av:
+                        pass
+                    else:
+                        logger.warning('Calibrator model not in database. Using unpolarised calibrator model with a '
+                                       'constant flux density of 1.0Jy!')
+                    lib.run_casa([cc_fluxcal_model], log_output=True, timeout=3600)
 
-                # Create the initial phase correction tables for the flux calibrator
-                fluxcal_G0ph = self.get_fluxcal_path().rstrip('.MS') + '.G0ph'
-                if ccalfluxcalphgains or os.path.isdir(fluxcal_G0ph):
+                    # Check if model was ingested successfully
+                    if subs_msutils.has_good_modeldata(self.get_fluxcal_path()):
+                        ccalfluxcalmodel = True
+                    else:
+                        ccalfluxcalmodel = False
+                        logger.warning(
+                            '# Model not ingested properly. Flux scale and bandpass corrections will not be right!')
+
+            else:
+                logger.error('Flux calibrator dataset not specified or dataset not available. Bandpass corrections '
+                             'are not available!')
+
+            subs_param.add_param(self, 'ccal_fluxcal_model', ccalfluxcalmodel)
+
+            # Create the initial phase correction tables for the flux calibrator
+            fluxcal_G0ph = self.get_fluxcal_path().rstrip('.MS') + '.G0ph'
+            if ccalfluxcalphgains or os.path.isdir(fluxcal_G0ph):
                     logger.info('Initial phase gain table for flux calibrator was already generated')
                     ccalfluxcalphgains = True
-                else:
+            else:
                     prevtables = '""'
                     interp = '""'
                     # Check for the TEC calibration table to apply on-the-fly
@@ -272,13 +303,12 @@ class ccal(BaseModule):
                         logger.error(error)
                         raise RuntimeError(error)
 
-                    # Calculate the bandpass for the flux calibrator
-
-                fluxcal_bscan = self.get_fluxcal_path().rstrip('.MS') + '.Bscan'
-                if ccalfluxcalbandpass or os.path.isdir(fluxcal_bscan):
+            # Calculate the bandpass for the flux calibrator
+            fluxcal_bscan = self.get_fluxcal_path().rstrip('.MS') + '.Bscan'
+            if ccalfluxcalbandpass or os.path.isdir(fluxcal_bscan):
                     logger.info('Bandpass for flux calibrator was already derived successfully!')
                     ccalfluxcalbandpass = True
-                else:
+            else:
                     prevtables = '""'
                     interp = '""'
                     # Check for the TEC calibration table to apply on-the-fly
@@ -311,40 +341,8 @@ class ccal(BaseModule):
                         logger.error(error)
                         raise RuntimeError(error)
 
-                # Ingest the model of the flux calibrator into the MODEL column
-
-                if ccalfluxcalmodel:
-                    logger.info('Model was already ingested into the flux calibrator dataset!')
-                else:
-                    ms = self.get_fluxcal_path()  # Get the name of the calibrator
-                    t = pt.table("%s::FIELD" % ms, ack=False)
-                    srcname = t.getcol('NAME')[0]
-                    av, fluxdensity, spix, reffreq, rotmeas = subs_calmodels.get_calparameters(srcname)
-                    cc_fluxcal_model = 'setjy(vis = "' + self.get_fluxcal_path() + '", scalebychan = True, standard = "manual", fluxdensity = [' + \
-                                       fluxdensity + '], spix = [' + spix + '], reffreq = "' + reffreq + \
-                                       '", rotmeas = ' + rotmeas + ', usescratch = True)'
-                    if av:
-                        pass
-                    else:
-                        logger.warning('Calibrator model not in database. Using unpolarised calibrator model with a '
-                                       'constant flux density of 1.0Jy!')
-                    lib.run_casa([cc_fluxcal_model], log_output=True, timeout=3600)
-
-                    # Check if model was ingested successfully
-                    if subs_msutils.has_good_modeldata(self.get_fluxcal_path()):
-                        ccalfluxcalmodel = True
-                    else:
-                        ccalfluxcalmodel = False
-                        logger.warning(
-                            '# Model not ingested properly. Flux scale and bandpass corrections will not be right!')
-
-            else:
-                logger.error('Flux calibrator dataset not specified or dataset not available. Bandpass corrections '
-                             'are not available!')
-
         subs_param.add_param(self, 'ccal_fluxcal_phgains', ccalfluxcalphgains)
         subs_param.add_param(self, 'ccal_fluxcal_bandpass', ccalfluxcalbandpass)
-        subs_param.add_param(self, 'ccal_fluxcal_model', ccalfluxcalmodel)
 
     def gains(self):
         """
