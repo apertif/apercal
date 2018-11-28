@@ -894,6 +894,7 @@ class preflag(BaseModule):
             # Check if bandpass was already derived and bandpass table is available
             if os.path.isfile(self.get_fluxcal_path()[:-3] + '_Bpass.txt'):
                 logger.info('Preliminary bandpass table was already derived')
+                preflagaoflaggerbandpassstatus = True
             # If not, calculate the bandpass for the setup of the observation using the flux calibrator
             elif not preflagaoflaggerbandpassstatus:
                 if self.fluxcal != '' and os.path.isdir(self.get_fluxcal_path()):
@@ -948,7 +949,7 @@ class preflag(BaseModule):
                     if self.fluxcal != '' and os.path.isdir(self.get_fluxcal_path()) and self.preflag_aoflagger_fluxcalstrat != '':
                         logger.info('Using AOFlagger to flag flux calibrator dataset')
                         # Check if bandpass table was derived successfully
-                        preflagaoflaggerbandpassstatus = True #get_param_def(self, 'preflag_aoflagger_bandpass_status', True)
+                        preflagaoflaggerbandpassstatus = get_param_def(self, 'preflag_aoflagger_bandpass_status', True)
                         if self.preflag_aoflagger_bandpass and preflagaoflaggerbandpassstatus:
                             lib.basher(base_cmd + ' -bandpass ' + self.get_fluxcal_path()[:-3] + '_Bpass.txt ' + self.get_fluxcal_path(),
                                        prefixes_to_strip=strip_prefixes)
