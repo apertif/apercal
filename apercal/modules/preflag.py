@@ -55,6 +55,7 @@ class preflag(BaseModule):
     preflag_manualflag_baseline = None
     preflag_manualflag_channel = None
     preflag_manualflag_time = None
+    preflag_manualflag_clipzeros = None
     preflag_aoflagger = None
     preflag_aoflagger_bandpass = None
     preflag_aoflagger_fluxcal = None
@@ -370,6 +371,7 @@ class preflag(BaseModule):
             self.manualflag_baseline()
             self.manualflag_channel()
             self.manualflag_time()
+            self.manualflag_clipzeros()
             logger.debug('Manual flagging step done')
 
     def aoflagger(self):
@@ -878,6 +880,79 @@ class preflag(BaseModule):
         subs_param.add_param(self, 'preflag_polcal_manualflag_time', preflagpolcalmanualflagtime)
         subs_param.add_param(self, 'preflag_targetbeams_manualflag_time', preflagtargetbeamsmanualflagtime)
 
+    def manualflag_clipzeros(self):
+        """
+        Function to flag any zero-valued data
+        """
+        subs_setinit.setinitdirs(self)
+        beams = 37
+
+        # Create the parameters for the parameter file for the manualflag step to flag the zero-valued data.
+
+        # Zero valued data of fluxcal flagged?
+        preflagfluxcalmanualflagclipzeros = get_param_def(self, 'preflag_fluxcal_manualflag_clipzeros', False)
+
+        # Zero valued data of polcal flagged?
+        preflagpolcalmanualflagclipzeros = get_param_def(self, 'preflag_polcal_manualflag_clipzeros', False)
+        # Zero valued data of target beams flagged?
+        preflagtargetbeamsmanualflagclipzeros = get_param_def(self, 'preflag_targetbeams_manualflag_clipzeros',
+                                                              np.full(beams, False))
+
+        if self.preflag_manualflag_clipzeros:
+            logger.info('Flagging Zero-valued data')
+            # Flag the Zero-valued data for the flux calibrator
+            if preflagfluxcalmanualflagclipzeros and self.preflag_manualflag_fluxcal:
+                logger.info('Zero-valued data for flux calibrator were already flagged')
+            else:
+                if self.preflag_manualflag_fluxcal and os.path.isdir(self.get_fluxcal_path()):
+                    fc_clipzeros = 'flagdata(vis="' + self.get_fluxcal_path() + '", mode="clip", clipzeros=True, flagbackup=False)'
+                    lib.run_casa([fc_clipzeros])
+                    logger.debug('Flagged Zero-valued data for flux calibrator')
+                    preflagfluxcalmanualflagclipzeros = True
+                else:
+                    preflagfluxcalmanualflagclipzeros = False
+                    logger.warning('No flux calibrator dataset specified. Zero-valued data for flux calibrator '
+                                   'dataset will not be flagged!')
+            # Flag the Zero-valued data for the polarised calibrator
+            if preflagpolcalmanualflagclipzeros and self.preflag_manualflag_polcal:
+                logger.info('Zero-values data for polarised calibrator were already flagged')
+            else:
+                if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()):
+                    pc_clipzeros = 'flagdata(vis="' + self.get_polcal_path() + '", mode="clip", clipzeros=True, flagbackup=False)'
+                    lib.run_casa([pc_clipzeros])
+                    logger.debug('Flagged Zero-valued data for polarised calibrator')
+                    preflagpolcalmanualflagclipzeros = True
+                else:
+                    preflagpolcalmanualflagclipzeros = False
+                    logger.warning('No polarised calibrator dataset specified. Zero-valued data for polariased '
+                                   'calibrator dataset will not be flagged!')
+            # Flag the Zero-valued for the target beams
+            if self.preflag_manualflag_target:
+                if self.preflag_manualflag_targetbeams == 'all':
+                    datasets = self.get_datasets()
+                    logger.debug('Flagging Zero-valued data for all target beams')
+                else:
+                    beams = self.preflag_manualflag_targetbeams.split(",")
+                    datasets = [self.get_datasets(beams=beams)]
+                    logger.debug('Flagging Zero-valued data for selected target beams')
+                for vis, beam in datasets:
+                    if preflagtargetbeamsmanualflagclipzeros[int(beam)]:
+                        logger.info('Zero-valued data for target beam ' + beam + ' were already flagged')
+                    else:
+                        logger.debug('Zero-valued data for target beam ' + beam)
+                        tg_clipzeros = 'flagdata(vis="' + str(vis) + '", mode="clip", clipzeros=True, flagbackup=False)'
+                        lib.run_casa([tg_clipzeros])
+                        preflagtargetbeamsmanualflagclipzeros[int(beam)] = True
+            else:
+                logger.warning('Target dataset not specified. Zero-values data for target beam dataset(s) will '
+                               'not be flagged!')
+
+        # Save the derived parameters for the auto-correlation flagging to the parameter file
+
+        subs_param.add_param(self, 'preflag_fluxcal_manualflag_clipzeros', preflagfluxcalmanualflagclipzeros)
+        subs_param.add_param(self, 'preflag_polcal_manualflag_clipzeros', preflagpolcalmanualflagclipzeros)
+        subs_param.add_param(self, 'preflag_targetbeams_manualflag_clipzeros', preflagtargetbeamsmanualflagclipzeros)
+
     def aoflagger_bandpass(self):
         """
         Creates a bandpass from a known frequency behaviour of the telescope. This is usually applied on the fly
@@ -1069,6 +1144,8 @@ class preflag(BaseModule):
         subs_param.del_param(self, 'preflag_polcal_manualflag_channel')
         subs_param.del_param(self, 'preflag_fluxcal_manualflag_time')
         subs_param.del_param(self, 'preflag_polcal_manualflag_time')
+        subs_param.del_param(self, 'preflag_fluxcal_manualflag_clipzeros')
+        subs_param.del_param(self, 'preflag_polcal_manualflag_clipzeros')
 
     def summary(self):
         """
@@ -1091,6 +1168,7 @@ class preflag(BaseModule):
         FMB = subs_param.get_param(self, 'preflag_fluxcal_manualflag_baseline')
         FMCh = subs_param.get_param(self, 'preflag_fluxcal_manualflag_channel')
         FMt = subs_param.get_param(self, 'preflag_fluxcal_manualflag_time')
+        FCz = subs_param.get_param(self, 'preflag_fluxcal_manualflag_clipzeros')
         FAO = subs_param.get_param(self, 'preflag_aoflagger_fluxcal_flag_status')
 
         PS = subs_param.get_param(self, 'preflag_polcal_shadow')
@@ -1102,6 +1180,7 @@ class preflag(BaseModule):
         PMB = subs_param.get_param(self, 'preflag_polcal_manualflag_baseline')
         PMCh = subs_param.get_param(self, 'preflag_polcal_manualflag_channel')
         PMt = subs_param.get_param(self, 'preflag_polcal_manualflag_time')
+        PCz = subs_param.get_param(self, 'preflag_polcal_manualflag_clipzeros')
         PAO = subs_param.get_param(self, 'preflag_aoflagger_polcal_flag_status')
 
         TS = subs_param.get_param(self, 'preflag_targetbeams_shadow')
@@ -1113,6 +1192,7 @@ class preflag(BaseModule):
         TMB = subs_param.get_param(self, 'preflag_targetbeams_manualflag_baseline')
         TMCh = subs_param.get_param(self, 'preflag_targetbeams_manualflag_channel')
         TMt = subs_param.get_param(self, 'preflag_targetbeams_manualflag_time')
+        TCz = subs_param.get_param(self, 'preflag_targetbeams_manualflag_clipzeros')
         TAO = subs_param.get_param(self, 'preflag_aoflagger_targetbeams_flag_status')
 
         # Create the data frame
@@ -1147,6 +1227,11 @@ class preflag(BaseModule):
         all_MCh = np.concatenate((FMCh, PMCh, TMCh), axis=0)
         all_Mt = np.concatenate((FMt, PMt, TMt), axis=0)
 
+        all_Cz = np.full(39, False)
+        all_Cz[0] = FCz
+        all_Cz[1] = PCz
+        all_Cz[3] = TCz
+
         all_AO = np.full(39, False)
         all_AO[0] = FAO
         all_AO[1] = PAO
@@ -1161,6 +1246,7 @@ class preflag(BaseModule):
         df_baseline = pd.DataFrame(all_MB, index=dataset_indices, columns=['Baseline'])
         df_channel = pd.DataFrame(all_MCh, index=dataset_indices, columns=['Channel'])
         df_time = pd.DataFrame(all_Mt, index=dataset_indices, columns=['Time'])
+        df_clipzeros = pd.DataFrame(np.ndarray.flatten(all_Cz), index=dataset_indices, columns=['clipzeros'])
         df_AO = pd.DataFrame(np.ndarray.flatten(all_AO), index=dataset_indices, columns=['AOFlagger'])
 
         df = pd.concat(
@@ -1224,6 +1310,9 @@ class preflag(BaseModule):
         subs_param.del_param(self, 'preflag_fluxcal_manualflag_time')
         subs_param.del_param(self, 'preflag_polcal_manualflag_time')
         subs_param.del_param(self, 'preflag_targetbeams_manualflag_time')
+        subs_param.del_param(self, 'preflag_fluxcal_manualflag_clipzeros')
+        subs_param.del_param(self, 'preflag_polcal__manualflag_clipzeros')
+        subs_param.del_param(self, 'preflag_targetbeams_manualflag_clipzeros')
         subs_param.del_param(self, 'preflag_aoflagger_bandpass_status')
         subs_param.del_param(self, 'preflag_aoflagger_fluxcal_flag_status')
         subs_param.del_param(self, 'preflag_aoflagger_polcal_flag_status')
