@@ -1,13 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- This is a strategy configuration file for the AOFlagger RFI
 detector by André Offringa (offringa@gmail.com).
-Created by AOFlagger 2.12.3 (2018-09-19)
+Created by AOFlagger 2.13.0 (2018-11-07)
 -->
 <rfi-strategy format-version="3.91" reader-version-required="3.91">
   <action type="Strategy">
     <children>
       <action type="SetFlaggingAction">
         <new-flagging>6</new-flagging>
+      </action>
+      <action type="ApplyBandpassAction">
+        <filename></filename>
+      </action>
+      <action type="SetImageAction">
+        <new-image>6</new-image>
       </action>
       <action type="ForEachPolarisationBlock">
         <on-xx>0</on-xx>
@@ -19,9 +25,6 @@ Created by AOFlagger 2.12.3 (2018-09-19)
         <on-stokes-u>0</on-stokes-u>
         <on-stokes-v>0</on-stokes-v>
         <children>
-          <action type="ApplyBandpassAction">
-            <filename></filename>
-          </action>
           <action type="ForEachComplexComponentAction">
             <on-amplitude>1</on-amplitude>
             <on-phase>0</on-phase>
