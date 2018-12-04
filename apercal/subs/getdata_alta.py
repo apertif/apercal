@@ -73,7 +73,7 @@ def get_alta_dir(date, task_id, beam_nr, alta_exception):
         return "/altaZone/archive/apertif_main/visibilities_default/{date}{task_id:03d}/WSRTA{date}{task_id:03d}_B{beam_nr:03d}.MS".format(**locals())
 
 
-def getdata_alta(date, task_ids, beams, targetdir=".", tmpdir=".", alta_exception=False, post_to_slack=False, check_with_rsync=True):
+def getdata_alta(date, task_ids, beams, targetdir=".", tmpdir=".", alta_exception=False, post_to_slack=True, check_with_rsync=True):
     """Download data from ALTA using low-level IRODS commands.
     Report status to slack
 
@@ -190,19 +190,19 @@ if __name__ == "__main__":
     try:
         date = args[1]
     except Exception:
-        raise ApercalException("Date required! Format: YYMMDD e.g. 180309")
+        raise Exception("Date required! Format: YYMMDD e.g. 180309")
 
     # Get date
     try:
         irange = args[2]
     except Exception:
-        raise ApercalException("ID range required! Format: NNN-NNN e.g. 002-010")
+        raise Exception("ID range required! Format: NNN-NNN e.g. 002-010")
 
     # Get beams
     try:
         brange = args[3]
     except Exception:
-        raise ApercalException("Beam range required! Format: NN-NN e.g. 00-37")
+        raise Exception("Beam range required! Format: NN-NN e.g. 00-37")
 
     # Get beams
     try:
