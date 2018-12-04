@@ -126,7 +126,7 @@ def get_freqstart(dataset, startchan):
     returns: The starting frequency of the observation
     """
     uv = aipy.miriad.UV(dataset)
-    startfreq = (uv['freqs'][2] + int(startchan) * uv['freqs'][3]) * 1E9
+    startfreq = (uv['freq'] + int(startchan) * uv['sdf']) * 1E9
     return startfreq
 
 
