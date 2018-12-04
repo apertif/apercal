@@ -1,14 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- This is a strategy configuration file for the AOFlagger RFI
 detector by André Offringa (offringa@gmail.com).
-Created by AOFlagger 2.13.0 (2018-11-07)
+Created by AOFlagger 2.13.1 (2018-11-27)
 -->
 <rfi-strategy format-version="3.91" reader-version-required="3.91">
   <action type="Strategy">
     <children>
-      <action type="SetFlaggingAction">
-        <new-flagging>6</new-flagging>
-      </action>
       <action type="ApplyBandpassAction">
         <filename></filename>
       </action>
@@ -16,10 +13,10 @@ Created by AOFlagger 2.13.0 (2018-11-07)
         <new-image>6</new-image>
       </action>
       <action type="ForEachPolarisationBlock">
-        <on-xx>0</on-xx>
+        <on-xx>1</on-xx>
         <on-xy>1</on-xy>
         <on-yx>1</on-yx>
-        <on-yy>0</on-yy>
+        <on-yy>1</on-yy>
         <on-stokes-i>0</on-stokes-i>
         <on-stokes-q>0</on-stokes-q>
         <on-stokes-u>0</on-stokes-u>
@@ -37,11 +34,11 @@ Created by AOFlagger 2.13.0 (2018-11-07)
                 <sensitivity-start>4</sensitivity-start>
                 <children>
                   <action type="SumThresholdAction">
-                    <time-direction-sensitivity>1.5</time-direction-sensitivity>
-                    <frequency-direction-sensitivity>1.5</frequency-direction-sensitivity>
+                    <time-direction-sensitivity>1.2</time-direction-sensitivity>
+                    <frequency-direction-sensitivity>1.2</frequency-direction-sensitivity>
                     <time-direction-flagging>1</time-direction-flagging>
                     <frequency-direction-flagging>1</frequency-direction-flagging>
-                    <exclude-original-flags>0</exclude-original-flags>
+                    <exclude-original-flags>1</exclude-original-flags>
                   </action>
                   <action type="CombineFlagResults">
                     <children>
@@ -55,6 +52,12 @@ Created by AOFlagger 2.13.0 (2018-11-07)
                   </action>
                   <action type="SetImageAction">
                     <new-image>1</new-image>
+                  </action>
+                  <action type="SetFlaggingAction">
+                    <new-flagging>6</new-flagging>
+                  </action>
+                  <action type="SetFlaggingAction">
+                    <new-flagging>5</new-flagging>
                   </action>
                   <action type="ChangeResolutionAction">
                     <time-decrease-factor>1</time-decrease-factor>
@@ -84,11 +87,11 @@ Created by AOFlagger 2.13.0 (2018-11-07)
                 </children>
               </action>
               <action type="SumThresholdAction">
-                <time-direction-sensitivity>1.5</time-direction-sensitivity>
-                <frequency-direction-sensitivity>1.5</frequency-direction-sensitivity>
+                <time-direction-sensitivity>1.2</time-direction-sensitivity>
+                <frequency-direction-sensitivity>1.2</frequency-direction-sensitivity>
                 <time-direction-flagging>1</time-direction-flagging>
                 <frequency-direction-flagging>1</frequency-direction-flagging>
-                <exclude-original-flags>0</exclude-original-flags>
+                <exclude-original-flags>1</exclude-original-flags>
               </action>
               <action type="VisualizeAction">
                 <label>Iteration residual</label>
@@ -97,28 +100,28 @@ Created by AOFlagger 2.13.0 (2018-11-07)
               </action>
             </children>
           </action>
+          <action type="StatisticalFlagAction">
+            <enlarge-frequency-size>0</enlarge-frequency-size>
+            <enlarge-time-size>0</enlarge-time-size>
+            <min-available-frequencies-ratio>0</min-available-frequencies-ratio>
+            <min-available-times-ratio>0</min-available-times-ratio>
+            <min-available-tf-ratio>0</min-available-tf-ratio>
+            <minimum-good-frequency-ratio>0.2</minimum-good-frequency-ratio>
+            <minimum-good-time-ratio>0.2</minimum-good-time-ratio>
+            <exclude-original-flags>1</exclude-original-flags>
+          </action>
+          <action type="SetFlaggingAction">
+            <new-flagging>6</new-flagging>
+          </action>
+          <action type="SetFlaggingAction">
+            <new-flagging>5</new-flagging>
+          </action>
+          <action type="TimeSelectionAction">
+            <threshold>4</threshold>
+          </action>
         </children>
-      </action>
-      <action type="PlotAction">
-        <plot-kind>5</plot-kind>
-        <logarithmic-y-axis>0</logarithmic-y-axis>
-      </action>
-      <action type="SetFlaggingAction">
-        <new-flagging>4</new-flagging>
-      </action>
-      <action type="StatisticalFlagAction">
-        <enlarge-frequency-size>0</enlarge-frequency-size>
-        <enlarge-time-size>0</enlarge-time-size>
-        <min-available-frequencies-ratio>0</min-available-frequencies-ratio>
-        <min-available-times-ratio>0</min-available-times-ratio>
-        <min-available-tf-ratio>0</min-available-tf-ratio>
-        <minimum-good-frequency-ratio>0.2</minimum-good-frequency-ratio>
-        <minimum-good-time-ratio>0.2</minimum-good-time-ratio>
-        <exclude-original-flags>0</exclude-original-flags>
-      </action>
-      <action type="TimeSelectionAction">
-        <threshold>4</threshold>
       </action>
     </children>
   </action>
 </rfi-strategy>
+
