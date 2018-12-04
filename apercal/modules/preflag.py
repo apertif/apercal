@@ -83,10 +83,10 @@ class preflag(BaseModule):
         """
         logger.info('Starting Pre-flagging step')
         self.shadow()
+        self.aoflagger()
         self.edges()
         self.ghosts()
         self.manualflag()
-        self.aoflagger()
         logger.info('Pre-flagging step done')
 
     @staticmethod
