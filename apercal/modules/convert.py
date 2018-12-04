@@ -389,7 +389,7 @@ class convert(BaseModule):
             for beam in range(nbeams):
                 basedir = self.get_crosscalsubdir_path(str(beam).zfill(2))
                 if path.isdir(basedir):
-                    subs_managefiles.director(self, 'rm', basedir, self.target)
+                    subs_managefiles.director(self, 'rm', mspath_to_fitspath(basedir, self.target))
 
     def summary(self):
         """
