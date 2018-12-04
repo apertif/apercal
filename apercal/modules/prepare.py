@@ -136,8 +136,7 @@ class prepare(BaseModule):
                     logger.warning('Flux calibrator data available on disk, but not in ALTA!')
                 elif not preparefluxcaldiskstatus and preparefluxcalaltastatus:
                     subs_managefiles.director(self, 'mk', self.basedir + '00' + '/' + self.rawsubdir, verbose=False)
-                    getdata_alta(int(self.prepare_date), int(self.prepare_obsnum_fluxcal), 0, targetdir=self.rawdir + '/' + self.fluxcal,
-                                 check_with_rsync=False)
+                    getdata_alta(int(self.prepare_date), int(self.prepare_obsnum_fluxcal), 0, targetdir=self.rawdir + '/' + self.fluxcal)
                     if os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal):
                         preparefluxcalcopystatus = True
                         logger.debug('Flux calibrator dataset successfully copied from ALTA')
@@ -196,8 +195,7 @@ class prepare(BaseModule):
                     logger.warning('Polarisation calibrator data available on disk, but not in ALTA!')
                 elif not preparepolcaldiskstatus and preparepolcalaltastatus:
                     subs_managefiles.director(self, 'mk', self.basedir + '00' + '/' + self.rawsubdir, verbose=False)
-                    getdata_alta(int(self.prepare_date), int(self.prepare_obsnum_polcal), 0, targetdir=self.rawdir + '/' + self.polcal,
-                                 check_with_rsync=False)
+                    getdata_alta(int(self.prepare_date), int(self.prepare_obsnum_polcal), 0, targetdir=self.rawdir + '/' + self.polcal)
                     if os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal):
                         preparepolcalcopystatus = True
                         logger.debug('Polarisation calibrator dataset successfully copied from ALTA')
@@ -269,8 +267,7 @@ class prepare(BaseModule):
                         logger.warning('Target dataset for beam ' + str(c).zfill(2) + ' available on disk, but not in ALTA!')
                     elif not preparetargetbeamsdiskstatus[c] and preparetargetbeamsaltastatus[c] and str(c).zfill(2) in reqbeams:  # if target dataset is requested, but not on disk
                         subs_managefiles.director(self, 'mk', self.basedir + str(c).zfill(2) + '/' + self.rawsubdir, verbose=False)
-                        getdata_alta(int(self.prepare_date), int(self.prepare_obsnum_target), int(str(c).zfill(2)), targetdir=self.basedir + str(c).zfill(2) + '/' + self.rawsubdir + '/' + self.target,
-                                     check_with_rsync=False)
+                        getdata_alta(int(self.prepare_date), int(self.prepare_obsnum_target), int(str(c).zfill(2)), targetdir=self.basedir + str(c).zfill(2) + '/' + self.rawsubdir + '/' + self.target)
                         # Check if copy was successful
                         if os.path.isdir(self.basedir + str(c).zfill(2) + '/' + self.rawsubdir + '/' + self.target):
                             preparetargetbeamscopystatus[c] = True
