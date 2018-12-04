@@ -1,6 +1,7 @@
 import unittest
 import matplotlib as mpl
 from apercal.modules.preflag import preflag
+import casacore.tables as pt
 from os import path
 import logging
 
@@ -31,6 +32,12 @@ class TestPreflag(unittest.TestCase):
         p.prepare_bypass_alta = True
         p.prepare_target_beams = '00,04'
         p.go()
+        for ms in [p.fluxcal, p.polcal, p.target]:
+            query = "SELECT GNFALSE(FLAG) == 0 AS all_flagged, " + \
+                    "GNTRUE(FLAG) == 0 AS all_unflagged FROM " + path.join(p.basedir, ms)
+            query_result = pt.taql(query)
+            assert(not(query_result[0]['all_flagged']))
+            assert(not(query_result[0]['all_unflagged']))
 
 
 if __name__ == "__main__":
