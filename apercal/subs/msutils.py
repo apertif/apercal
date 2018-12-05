@@ -61,3 +61,18 @@ def add_caltables(ct, interp, addct, addinterp):
         newct = ct + ',' + addct
         newinterp = interp + ',' + addinterp
     return newct, newinterp
+
+
+def get_source_name(msname):
+    """
+    Get the source name from a Measurement Set
+
+    Args:
+        msname (str): full path to a Measurement Set
+
+    Returns:
+        str: Source name (e.g. 3C295)
+    """
+    query = "SELECT NAME FROM {}/FIELD".format(msname)
+    res_table = pt.taql(query)
+    return res_table[0]["NAME"]
