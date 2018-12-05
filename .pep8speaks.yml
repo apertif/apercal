@@ -1,7 +1,6 @@
 pycodestyle:
     max-line-length: 120  # Default is 79 in PEP8
     ignore:  # Errors and warnings to ignore
-        - E501 # Line too long
         - E122 # Continuation line missing indentation or outdented
         - E126 # Continuation line over-indented for hanging indent
         - E127 # Continuation line over-indented for visual indent
