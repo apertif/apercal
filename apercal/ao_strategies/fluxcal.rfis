@@ -121,7 +121,10 @@ Created by AOFlagger 2.13.1 (2018-11-27)
           </action>
         </children>
       </action>
+      <action type="PlotAction">
+        <plot-kind>5</plot-kind>
+        <logarithmic-y-axis>0</logarithmic-y-axis>
+      </action>
     </children>
   </action>
 </rfi-strategy>
-
