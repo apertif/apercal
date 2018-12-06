@@ -56,6 +56,7 @@ def start_apercal_pipeline((taskid_fluxcal, name_fluxcal, beamlist_fluxcal),
     p0.go()
 
     p1 = preflag()
+    p1.basedir = basedir
     p1.fluxcal = p0.fluxcal
     p1.polcal = p0.polcal
     p1.target = p0.target
