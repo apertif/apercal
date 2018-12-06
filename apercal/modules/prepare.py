@@ -43,8 +43,8 @@ class prepare_parallel(BaseModule):
         logger.info('Preparing data for calibration')
         self.copyobs()
         logger.info('Data prepared for calibration')
-        #should be equivalent to:
-        #self.go_parallel(1,1)
+        # should be equivalent to:
+        # self.go_parallel(1,1)
 
     def go(self, preferred_beams):
         """
@@ -54,19 +54,19 @@ class prepare_parallel(BaseModule):
         logger.info('Preparing data for calibration')
         self.copyobs_parallel(1, preferred_beams)
         logger.info('Data prepared for calibration')
-        #should be equivalent to:
-        #self.go_parallel(1,1)
+        # should be equivalent to:
+        # self.go_parallel(1,1)
 
-    def go_parallel(self, first_level_threads = 8, preferred_beams = "None"):
+    def go_parallel(self, first_level_threads=8, preferred_beams="None"):
         """
         Executes the complete prepare step with the parameters indicated in the config-file in the following order:
         copyobs
         """
-        #default preferred_beams is "None" to allow hierarchy of preferred beams:
+        # default preferred_beams is "None" to allow hierarchy of preferred beams:
         # - (highest): passed as parameter to this function
         # - (medium): selection set in notebook
         # - (lowest): selection set in configuration file
-        #"None" means no parameter passed => selection from notebook, or from configuration file
+        # "None" means no parameter passed => selection from notebook, or from configuration file
         logger.info('Preparing data for calibration')
         original_nested = pymp.config.nested
         start = time.time()
@@ -331,26 +331,25 @@ class prepare_parallel(BaseModule):
         subs_param.add_param(self, 'prepare_targetbeams_copystatus', preparetargetbeamscopystatus)
         subs_param.add_param(self, 'prepare_targetbeams_rejreason', preparetargetbeamsrejreason)
 
-    def copyobs_parallel(self, first_level_threads = 8, preferred_beams = "None"):
+    def copyobs_parallel(self, first_level_threads=8, preferred_beams="None"):
         """
         Prepares the directory structure and copies over the needed data from ALTA.
         Checks for data in the current working directories and copies only missing data.
         """
-        #default preferred_beams is "None" to allow hierarchy of preferred beams:
+        # default preferred_beams is "None" to allow hierarchy of preferred beams:
         # - (highest): passed as parameter to this function
         # - (medium): selection set in notebook (with self.prepare_target_beams)
         # - (lowest): selection set in configuration file (id.)
-        #"None" means no parameter passed => selection from notebook, or from configuration file
+        # "None" means no parameter passed => selection from notebook, or from configuration file
         subs_setinit.setinitdirs(self)
-        beams = 37  # Number of beams
+        beams = 37 # Number of beams
         if preferred_beams == "None": # no preferred_beams specified: fall back to predefined value
             preferred_beams = self.prepare_target_beams
         if preferred_beams == "all":
-            preferred_beams = "0-" + str(beams-1)
+            preferred_beams = "0-" + str(beams - 1)
         #else:
         #    preferred_beams is considered to be in the correct format
         #    (no checks performed on this so far)
-        
 
         # Check if the parameter is already in the parameter file and load it otherwise create the needed arrays #
 
@@ -414,7 +413,7 @@ class prepare_parallel(BaseModule):
         # this seems a bit counterintuitive, but that's the way Python does it; you'd have to add a newline PLUS an indent before
         # the second "for" to have the same functionality with simple for-loops (and then appending list_element), but
         # this list comprehension is much faster
-        beams_list = [y for x in [(lambda l: xrange(l[0], l[-1]+1))(map(int, r.split('-'))) for r in "".join(preferred_beams.split(' ')).split(',')] for y in x]
+        beams_list = [y for x in [(lambda l: xrange(l[0], l[-1] + 1))(map(int, r.split('-'))) for r in "".join(preferred_beams.split(' ')).split(',')] for y in x]
 
         beams_extended = 50
         # accomodates for all possible beam configurations, plus room for flux and polarisation
@@ -423,7 +422,7 @@ class prepare_parallel(BaseModule):
         rejreasonsdict = {}
         for index in range(len(rejreasons)):
             rejreasonsdict[rejreasons[index]] = index
-        #this construct is because pymp.shared.array doesn't seem to be able to handle strings (at least from first glance)
+        # this construct is because pymp.shared.array doesn't seem to be able to handle strings (at least from first glance)
         requested_beams = sorted(beams_list[:])
         skipped_beams = [x for x in range(beams_extended - 2) if x not in requested_beams]
         preparebeamsrequested = np.isin(np.arange(beams_extended), requested_beams)
@@ -474,9 +473,9 @@ class prepare_parallel(BaseModule):
             beamobsnum[-2] = self.prepare_obsnum_polcal
             beamnum[-2] = '00' # but is already assigned by default
             beamnotpresent[-2] = "Polarisation calibration will not work! "
-            requested_beams.insert(0,beams_extended - 2)
+            requested_beams.insert(0, beams_extended - 2)
         else:
-            skipped_beams.insert(0,beams_extended - 2)
+            skipped_beams.insert(0, beams_extended - 2)
         beamdatasettypeslow[-2] = "polarisation calibrator dataset"
         beamwarning[-2] = "Polarisation calibration will not work! "
         if self.prepare_obsnum_fluxcal:
@@ -487,9 +486,9 @@ class prepare_parallel(BaseModule):
             beamobsnum[-1] = self.prepare_obsnum_fluxcal
             beamnum[-1] = '00' # but is already assigned by default
             beamnotpresent[-1] = "The next steps will not work! "
-            requested_beams.insert(0,beams_extended - 1)
+            requested_beams.insert(0, beams_extended - 1)
         else:
-            skipped_beams.insert(0,beams_extended - 1)
+            skipped_beams.insert(0, beams_extended - 1)
         beamdatasettypeslow[-1] = "flux calibrator dataset"
         beamwarning[-1] = "The next steps will not work! "
         # the 'proper' order to process the beams:
@@ -506,9 +505,9 @@ class prepare_parallel(BaseModule):
             preparebeamscopystatus[beam] = False
             preparebeamsrejreason_ind[beam] = rejreasonsdict['Dataset not specified']
             if beam == beams_extended - 1: #fluxcal
-                logger.error('No {beamtype} specified! {futuresteps}'.format(beamtype=beamdatasettypeslow[beam],futuresteps=beamwarning[beam]))
+                logger.error('No {beamtype} specified! {futuresteps}'.format(beamtype=beamdatasettypeslow[beam], futuresteps=beamwarning[beam]))
             else: #polcal or regular beam
-                logger.warning('No {beamtype} specified! {futuresteps}'.format(beamtype=beamdatasettypeslow[beam],futuresteps=beamwarning[beam]))
+                logger.warning('No {beamtype} specified! {futuresteps}'.format(beamtype=beamdatasettypeslow[beam], futuresteps=beamwarning[beam]))
 
         if preparebeamsrequested[0] or preparebeamsrequested[-1] or preparebeamsrequested[-2]:
             #directory for beam "00" needs to be created, but to avoid having to use a lock inside the loop, we do it a bit early
@@ -516,32 +515,32 @@ class prepare_parallel(BaseModule):
             if not os.path.isdir(beamzerodir):
                 subs_managefiles.director(self, 'mk', beamzerodir, verbose=False)
 
-        #loop over beams:
+        # loop over beams:
         with pymp.Parallel(first_level_threads) as p:
             for index in p.range(len(requested_beams)):
                 beam = requested_beams[index]
-                logger.warning('(PARALLEL) Starting beam {beamstring} (thread {thread} out of {threads})'.format(beamstring=str(beam).zfill(2),thread=str(p.thread_num + 1),threads=str(p.num_threads)))
+                logger.warning('(PARALLEL) Starting beam {beamstring} (thread {thread} out of {threads})'.format(beamstring=str(beam).zfill(2), thread=str(p.thread_num + 1), threads=str(p.num_threads)))
                 # Check which beams are already on disk
                 preparebeamsrejreason_ind[beam] = rejreasonsdict[''] # Empty the comment string
                 preparebeamsdiskstatus[beam] = os.path.isdir(beamlocations[beam])
                 if preparebeamsdiskstatus[beam]:
-                    logger.debug('(PARALLEL) {beamtype} found on disk ({location}) (thread {thread})'.format(beamtype=beamdatasettypescap[beam],location=beamlocations[beam],thread=str(p.thread_num + 1)))
+                    logger.debug('(PARALLEL) {beamtype} found on disk ({location}) (thread {thread})'.format(beamtype=beamdatasettypescap[beam], location=beamlocations[beam], thread=str(p.thread_num + 1)))
                 else:
-                    logger.debug('(PARALLEL) {beamtype} NOT found on disk ({location}) (thread {thread})'.format(beamtype=beamdatasettypescap[beam],location=beamlocations[beam],thread=str(p.thread_num + 1)))
+                    logger.debug('(PARALLEL) {beamtype} NOT found on disk ({location}) (thread {thread})'.format(beamtype=beamdatasettypescap[beam], location=beamlocations[beam], thread=str(p.thread_num + 1)))
                 if hasattr(self, 'prepare_bypass_alta') and self.prepare_bypass_alta:
                     logger.debug('(PARALLEL) Skipping fetching dataset from ALTA (thread {thread})'.format(thread=str(p.thread_num + 1)))
                 else:
                     # Check if the dataset is available on ALTA
                     preparebeamsaltastatus[beam] = subs_irods.getstatus_alta(self.prepare_date, beamobsnum[beam], beamnum[beam])
                     if preparebeamsaltastatus[beam]:
-                        logger.debug('(PARALLEL) {beamtype} available on ALTA (thread {thread})'.format(beamtype=beamdatasettypescap[beam],thread=str(p.thread_num + 1)))
+                        logger.debug('(PARALLEL) {beamtype} available on ALTA (thread {thread})'.format(beamtype=beamdatasettypescap[beam], thread=str(p.thread_num + 1)))
                     else:
-                        logger.warning('(PARALLEL) {beamtype} NOT available on ALTA (thread {thread})'.format(beamtype=beamdatasettypescap[beam],thread=str(p.thread_num + 1)))
+                        logger.warning('(PARALLEL) {beamtype} NOT available on ALTA (thread {thread})'.format(beamtype=beamdatasettypescap[beam], thread=str(p.thread_num + 1)))
                     # Copy the data from ALTA if needed
                     if preparebeamsdiskstatus[beam]:
                         preparebeamscopystatus[beam] = True
                         if not preparebeamsaltastatus[beam]:
-                            logger.warning('(PARALLEL) {beamtype} available on disk, but NOT in ALTA! (thread {thread})'.format(beamtype=beamdatasettypescap[beam],thread=str(p.thread_num + 1)))
+                            logger.warning('(PARALLEL) {beamtype} available on disk, but NOT in ALTA! (thread {thread})'.format(beamtype=beamdatasettypescap[beam], thread=str(p.thread_num + 1)))
                     elif not preparebeamsdiskstatus[beam] and preparebeamsaltastatus[beam]:  # if dataset is requested, but not on disk
                         #if beamnum[beam] == '00':
                         #    # flux-/polcal & beam 00 share the same directory, so the directory may already exist
@@ -552,29 +551,29 @@ class prepare_parallel(BaseModule):
                         if beamnum[beam] != '00' and not os.path.isdir(beamlocationsdir[beam]):
                             #directory for beam '00' already created if any of beam '00', flux- or polcal requested
                             subs_managefiles.director(self, 'mk', beamlocationsdir[beam], verbose=False)
-                        #for the next line, the original code had targetdir=self.rawdir + '/' + self.fluxcal or self.polcal for flux/polcal,
-                        #which is equivalent IFF beam == 0 for both special cases (which is the case using int(beamnum[beam]), which is 0 for both)
+                        # for the next line, the original code had targetdir=self.rawdir + '/' + self.fluxcal or self.polcal for flux/polcal,
+                        # which is equivalent IFF beam == 0 for both special cases (which is the case using int(beamnum[beam]), which is 0 for both)
                         getdata_alta(int(self.prepare_date), int(beamobsnum[beam]), int(beamnum[beam]), targetdir=beamlocations[beam], post_to_slack=False)
                         #             post_to_slack=False, check_with_rsync=False)
                         # Check if copy was successful
                         if os.path.isdir(beamlocations[beam]):
                             preparebeamscopystatus[beam] = True
                             if beam >= (beams_extended - 2):
-                                logger.debug('(PARALLEL) {beamtype} successfully copied from ALTA (thread {thread})'.format(beamtype=beamdatasettypescap[beam],thread=str(p.thread_num + 1)))
+                                logger.debug('(PARALLEL) {beamtype} successfully copied from ALTA (thread {thread})'.format(beamtype=beamdatasettypescap[beam], thread=str(p.thread_num + 1)))
                             else:#just for now, to debug PyMP parallel
-                                logger.warning('(PARALLEL) {beamtype} successfully copied from ALTA (thread {thread})'.format(beamtype=beamdatasettypescap[beam],thread=str(p.thread_num + 1)))
+                                logger.warning('(PARALLEL) {beamtype} successfully copied from ALTA (thread {thread})'.format(beamtype=beamdatasettypescap[beam], thread=str(p.thread_num + 1)))
                         else:
                             preparebeamscopystatus[beam] = False
                             preparebeamsrejreason_ind[beam] = rejreasonsdict['Copy from ALTA not successful']
-                            logger.error('(PARALLEL) {beamtype} available on ALTA, but NOT successfully copied! (thread {thread})'.format(beamtype=beamdatasettypescap[beam],thread=str(p.thread_num + 1)))
+                            logger.error('(PARALLEL) {beamtype} available on ALTA, but NOT successfully copied! (thread {thread})'.format(beamtype=beamdatasettypescap[beam], thread=str(p.thread_num + 1)))
                     elif not preparebeamsdiskstatus[beam] and not preparebeamsaltastatus[beam]:
                         preparebeamscopystatus[beam] = False
                         preparebeamsrejreason_ind[beam] = rejreasonsdict['Dataset not on ALTA or disk']
                         if beam == beams_extended - 2: #polcal
-                            logger.warning('(PARALLEL) {beamtype} not available on disk nor in ALTA! {futuresteps} (thread {thread})'.format(beamtype=beamdatasettypescap[beam],futuresteps=beamnotpresent[beam],thread=str(p.thread_num + 1)))
+                            logger.warning('(PARALLEL) {beamtype} not available on disk nor in ALTA! {futuresteps} (thread {thread})'.format(beamtype=beamdatasettypescap[beam], futuresteps=beamnotpresent[beam], thread=str(p.thread_num + 1)))
                         else: #fluxcal or regular target beam
-                            logger.error('(PARALLEL) {beamtype} not available on disk nor in ALTA! {futuresteps} (thread {thread})'.format(beamtype=beamdatasettypescap[beam],futuresteps=beamnotpresent[beam],thread=str(p.thread_num + 1)))
-                logger.warning('(PARALLEL) Ending beam {beamstring} (thread {thread} out of {threads})'.format(beamstring=str(beam).zfill(2),thread=str(p.thread_num + 1),threads=str(p.num_threads)))
+                            logger.error('(PARALLEL) {beamtype} not available on disk nor in ALTA! {futuresteps} (thread {thread})'.format(beamtype=beamdatasettypescap[beam], futuresteps=beamnotpresent[beam], thread=str(p.thread_num + 1)))
+                logger.warning('(PARALLEL) Ending beam {beamstring} (thread {thread} out of {threads})'.format(beamstring=str(beam).zfill(2), thread=str(p.thread_num + 1), threads=str(p.num_threads)))
 
         preparebeamsrejreason = np.array([rejreasons[index] for index in preparebeamsrejreason_ind])
 
@@ -616,7 +615,6 @@ class prepare_parallel(BaseModule):
         subs_param.add_param(self, 'prepare_targetbeams_altastatus', preparetargetbeamsaltastatus)
         subs_param.add_param(self, 'prepare_targetbeams_copystatus', preparetargetbeamscopystatus)
         subs_param.add_param(self, 'prepare_targetbeams_rejreason', preparetargetbeamsrejreason)
-
 
     def summary(self):
         """
