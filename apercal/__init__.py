@@ -11,6 +11,7 @@ from modules.polarisation import polarisation
 from modules.mosaic import mosaic
 from modules.transfer import transfer
 
+from modules.prepare_parallel import prepare_parallel
 from modules.line_parallel import line_parallel
 
 import subs.readmirlog
