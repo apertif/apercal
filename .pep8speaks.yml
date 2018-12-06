@@ -1,8 +1,12 @@
+scanner:
+  diff_only: True  # Errors caused by only the patch are shown, not the whole file
+
 pycodestyle:
-    max-line-length: 120  # Default is 79 in PEP8
-    ignore:  # Errors and warnings to ignore
-        - E122 # Continuation line missing indentation or outdented
-        - E126 # Continuation line over-indented for hanging indent
-        - E127 # Continuation line over-indented for visual indent
-        - E741 # Do not use variables named I, O or l
-        - W504 # Line break before / after binary operator
+  max-line-length: 120
+  ignore:  # Errors and warnings to ignore
+    - W391 # blank line at the end of file
+    - E203 # whitespace before ,;:
+    - W503 # newline before binary operator
+
+no_blank_comment: True  # If True, no comment is made when the bot does not find any pep8 errors
+
