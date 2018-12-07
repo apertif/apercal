@@ -83,7 +83,17 @@ class preflag(BaseModule):
         """
         logger.info('Starting Pre-flagging step')
         self.shadow()
+        query = "SELECT GNFALSE(FLAG) == 0 AS all_flagged, " + \
+                "GNTRUE(FLAG) == 0 AS all_unflagged FROM " + self.get_fluxcal_path()
+        query_result = pt.taql(query)
+        logger.debug("All visibilities     flagged before aoflag: " + str(query_result[0]["all_flagged"]))
+        logger.debug("All visibilities not flagged before aoflag: " + str(query_result[0]["all_unflagged"]))
         self.aoflagger()
+        query = "SELECT GNFALSE(FLAG) == 0 AS all_flagged, " + \
+                "GNTRUE(FLAG) == 0 AS all_unflagged FROM " + self.get_fluxcal_path()
+        query_result = pt.taql(query)
+        logger.debug("All visibilities     flagged after aoflag: " + str(query_result[0]["all_flagged"]))
+        logger.debug("All visibilities not flagged after aoflag: " + str(query_result[0]["all_unflagged"]))
         self.edges()
         self.ghosts()
         self.manualflag()
