@@ -92,7 +92,7 @@ class preflag(BaseModule):
     @staticmethod
     def _getnchan(msname):
         """Return the number of channels in a given ms"""
-        spectralwindowtable = pt.table(msname + '::SPECTRAL_WINDOW', ack=False)
+        spectralwindowtable = pt.table(str(msname).strip() + "::SPECTRAL_WINDOW", ack=False)
         nchan = spectralwindowtable.getcol("CHAN_FREQ").shape[1]
         return nchan
 
