@@ -3,9 +3,9 @@ import logging
 
 import numpy as np
 import pandas as pd
-import drivecasa
-import os
+from os import path
 
+from apercal.modules.base import BaseModule
 from apercal.subs import setinit as subs_setinit
 from apercal.subs import managefiles as subs_managefiles
 from apercal.subs.param import get_param_def
@@ -15,25 +15,20 @@ from apercal.libs import lib
 
 logger = logging.getLogger(__name__)
 
+exportuvfits_cmd = 'exportuvfits(vis="{vis}", fitsfile="{fits}",datacolumn="{datacolumn}", ' \
+                  'combinespw=True, padwithflags=True, multisource=True, writestation=True)'
 
-class convert:
+
+def mspath_to_fitspath(prefix, ms, ext='UVFITS'):
+    return path.join(prefix, ms.split('/')[-1].rstrip('MS') + ext)
+
+
+class convert(BaseModule):
     """
     Class to convert data from MS-format into UVFITS, and from UVFITS into MIRIAD format. Resulting datasets will
     have the endings .MS, .UVFITS, and .mir.
     """
-    fluxcal = None
-    polcal = None
-    target = None
-    basedir = None
-    beam = None
-    rawsubdir = None
-    crosscalsubdir = None
-    selfcalsubdir = None
-    linesubdir = None
-    contsubdir = None
-    polsubdir = None
-    mossubdir = None
-    transfersubdir = None
+    module_name = 'CONVERT'
 
     convert_fluxcal = True  # Convert the flux calibrator dataset
     convert_polcal = True  # Convert the polarised calibrator dataset
@@ -44,6 +39,12 @@ class convert:
     def __init__(self, file_=None, **kwargs):
         self.default = lib.load_config(self, file_)
         subs_setinit.setinitdirs(self)
+
+    def get_crosscalsubdir_path(self, beam='00'):
+        if self.subdirification:
+            return path.join(self.basedir, beam, self.crosscalsubdir)
+        else:
+            return self.crosscalsubdir
 
     def go(self):
         """
@@ -105,11 +106,11 @@ class convert:
 
         # Check which datasets are available in MS format #
         if self.fluxcal != '':
-            convertfluxcalmsavailable = os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal)
+            convertfluxcalmsavailable = path.isdir(self.get_fluxcal_path())
         else:
             logger.warning('Flux calibrator dataset not specified. Cannot convert flux calibrator!')
         if self.polcal != '':
-            convertpolcalmsavailable = os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal)
+            convertpolcalmsavailable = path.isdir(self.get_polcal_path())
         else:
             logger.warning('Polarised calibrator dataset not specified. Cannot convert polarised calibrator!')
         if self.target != '':
@@ -124,38 +125,30 @@ class convert:
         subs_param.add_param(self, 'convert_polcal_MSavailable', convertpolcalmsavailable)
         subs_param.add_param(self, 'convert_targetbeams_MSavailable', converttargetbeamsmsavailable)
 
-        # Convert the available MS-datasets to UVFITS #
-        raw_convert_cmd = 'exportuvfits(vis="{basedir}00/{rawsubdir}/{cal}", ' \
-                          'fitsfile="{basedir}00/{crosscalsubdir}/{calbase}UVFITS", datacolumn="{datacolumn}", ' \
-                          'combinespw=True, padwithflags=True, multisource=True, writestation=True)'
-
         # Convert the flux calibrator
         if self.convert_fluxcal:
             if self.fluxcal != '':
                 if not convertfluxcaluvfits2miriad:
                     if convertfluxcalmsavailable:
                         logger.debug('Converting flux calibrator dataset from MS to UVFITS format.')
-                        subs_managefiles.director(self, 'mk', self.basedir + '00' + '/' + self.crosscalsubdir,
+                        subs_managefiles.director(self, 'mk', self.get_crosscalsubdir_path(),
                                                   verbose=False)
-                        path = self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal
-                        if subs_msutils.has_correcteddata(path):
-                            fc_convert = raw_convert_cmd.format(basedir=self.basedir, rawsubdir=self.rawsubdir,
-                                                                cal=self.fluxcal, calbase=self.fluxcal[:-2],
-                                                                crosscalsubdir=self.crosscalsubdir,
-                                                                datacolumn="corrected")
+                        fluxcal_ms = self.get_fluxcal_path()
+                        if subs_msutils.has_correcteddata(fluxcal_ms):
+                            datacolumn = "corrected"
                         else:
-                            fc_convert = raw_convert_cmd.format(basedir=self.basedir, rawsubdir=self.rawsubdir,
-                                                                cal=self.fluxcal, calbase=self.fluxcal[:-2],
-                                                                crosscalsubdir=self.crosscalsubdir,
-                                                                datacolumn="data")
+                            datacolumn = "data"
                             logger.warning('Flux calibrator does not have a corrected_data column! Using uncorrected'
                                            'data for conversion!')
 
-                        casacmd = [fc_convert]
-                        casa = drivecasa.Casapy()
-                        casa.run_script(casacmd, raise_on_severe=True, timeout=3600)
-                        if os.path.isfile(self.basedir + '00' + '/' + self.crosscalsubdir + '/' + self.fluxcal.rstrip(
-                                'MS') + 'UVFITS'):
+                        fluxcal_fits = mspath_to_fitspath(self.get_crosscalsubdir_path(), fluxcal_ms)
+
+                        fc_convert = exportuvfits_cmd.format(vis=self.get_fluxcal_path(),
+                                                             fits=fluxcal_fits,
+                                                             datacolumn=datacolumn)
+
+                        lib.run_casa([fc_convert], timeout=3600)
+                        if path.isfile(fluxcal_fits):
                             convertfluxcalms2uvfits = True
                             logger.info('Converted flux calibrator dataset from MS to UVFITS format!')
                         else:
@@ -176,27 +169,23 @@ class convert:
                 if not convertpolcaluvfits2miriad:
                     if convertpolcalmsavailable:
                         logger.debug('Converting polarised calibrator dataset from MS to UVFITS format.')
-                        subs_managefiles.director(self, 'mk', self.basedir + '00' + '/' + self.crosscalsubdir,
-                                                  verbose=False)
-                        path = self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal
-                        if subs_msutils.has_correcteddata(path):
-                            pc_convert = raw_convert_cmd.format(basedir=self.basedir, rawsubdir=self.rawsubdir,
-                                                                cal=self.fluxcal, calbase=self.polcal[:-2],
-                                                                crosscalsubdir=self.crosscalsubdir,
-                                                                datacolumn="corrected")
+                        subs_managefiles.director(self, 'mk', self.get_crosscalsubdir_path(), verbose=False)
+                        polcal_ms = self.get_polcal_path()
+                        if subs_msutils.has_correcteddata(polcal_ms):
+                            datacolumn = "corrected"
                         else:
-                            pc_convert = raw_convert_cmd.format(basedir=self.basedir, rawsubdir=self.rawsubdir,
-                                                                cal=self.fluxcal, calbase=self.polcal[:-2],
-                                                                crosscalsubdir=self.crosscalsubdir,
-                                                                datacolumn="data")
+                            datacolumn = "data"
                             logger.warning('Polarised calibrator does not have a corrected_data column! Using'
                                            'uncorrected data for conversion!')
 
-                        casacmd = [pc_convert]
-                        casa = drivecasa.Casapy()
-                        casa.run_script(casacmd, raise_on_severe=True, timeout=3600)
-                        if os.path.isfile(self.basedir + '00' + '/' + self.crosscalsubdir + '/' + self.polcal.rstrip(
-                                'MS') + 'UVFITS'):
+                        polcal_fits = mspath_to_fitspath(self.get_crosscalsubdir_path(), polcal_ms)
+
+                        pc_convert = exportuvfits_cmd.format(vis=polcal_ms,
+                                                             fits=polcal_fits,
+                                                             datacolumn=datacolumn)
+
+                        lib.run_casa([pc_convert], timeout=3600)
+                        if path.isfile(polcal_fits):
                             convertpolcalms2uvfits = True
                             logger.info('Converted polarised calibrator dataset from MS to UVFITS format!')
                         else:
@@ -216,56 +205,44 @@ class convert:
             if self.target != '':
                 logger.info('Converting target beam datasets from MS to UVFITS format.')
                 if self.convert_targetbeams == 'all':
-                    datasets = glob.glob(self.basedir + '[0-9][0-9]' + '/' + self.rawsubdir + '/' + self.target)
+                    datasets = self.get_datasets()
                     logger.debug('Converting all available target beam datasets')
                 else:
                     beams = self.convert_targetbeams.split(",")
-                    datasets = [self.basedir + str(b).zfill(2) + '/' + self.rawsubdir + '/' + self.target for b in
-                                beams]
+                    datasets = self.get_datasets(beams)
                     logger.debug('Converting all selected target beam datasets')
-                for vis in datasets:
-                    if not converttargetbeamsuvfits2miriad[int(vis.split('/')[-3])]:
-                        if converttargetbeamsmsavailable[int(vis.split('/')[-3])]:
-                            subs_managefiles.director(self, 'mk',
-                                                      self.basedir + vis.split('/')[-3] + '/' + self.crosscalsubdir,
-                                                      verbose=False)
+                for vis, beam in datasets:
+                    if not converttargetbeamsuvfits2miriad[int(beam)]:
+                        if converttargetbeamsmsavailable[int(beam)]:
+                            subs_managefiles.director(self, 'mk', self.get_crosscalsubdir_path(beam), verbose=False)
 
-                            beam_dataset = vis.split('/')[-3]
-                            raw_tg_cmd = 'exportuvfits(vis="{basedir}{beam_dataset}/{rawsubdir}/{target}", ' \
-                                         'fitsfile="{basedir}{beam_dataset}/{crosscalsubdir}/{targetbase}UVFITS", ' \
-                                         'datacolumn="{datacolumn}", combinespw=True, padwithflags=True, ' \
-                                         'multisource=True, writestation=True)'
+                            target_ms = self.get_target_path(beam)
+                            target_fits = mspath_to_fitspath(self.get_crosscalsubdir_path(beam), target_ms)
 
-                            path = self.basedir + beam_dataset + '/' + self.rawsubdir + '/' + self.target
-                            if subs_msutils.has_correcteddata(path):
+                            if subs_msutils.has_correcteddata(target_ms):
                                 datacolumn = "corrected"
                             else:
                                 datacolumn = "data"
                                 logger.warning('Target beam dataset {} does not have a corrected_data column! Using '
-                                               'uncorrected data for conversion!'.format(beam_dataset))
+                                               'uncorrected data for conversion!'.format(beam))
 
-                            tg_convert = raw_tg_cmd.format(basedir=self.basedir, rawsubdir=self.rawsubdir,
-                                                           target=self.target, crosscalsubdir=self.crosscalsubdir,
-                                                           targetbase=self.target.rstrip('MS'), datacolumn=datacolumn,
-                                                           beam_dataset=beam_dataset)
+                            cmd = exportuvfits_cmd.format(vis=target_ms, fits=target_fits, beam=beam,
+                                                          datacolumn=datacolumn)
 
-                            casacmd = [tg_convert]
-                            casa = drivecasa.Casapy()
-                            casa.run_script(casacmd, raise_on_severe=True, timeout=7200)
-                            if os.path.isfile(self.basedir + vis.split('/')[-3] + '/' + self.crosscalsubdir + '/' +
-                                              self.target.rstrip('MS') + 'UVFITS'):
-                                converttargetbeamsms2uvfits[int(vis.split('/')[-3])] = True
-                                logger.debug('Converted dataset of target beam ' + vis.split('/')[
-                                    -3] + ' from MS to UVFITS format!')
+                            lib.run_casa([cmd], timeout=7200)
+                            if path.isfile(target_fits):
+                                converttargetbeamsms2uvfits[int(beam)] = True
+                                logger.debug('Converted dataset of target beam '
+                                             'l{} from MS to UVFITS format!'.format(beam))
                             else:
-                                converttargetbeamsms2uvfits[int(vis.split('/')[-3])] = False
-                                logger.warning('Could not convert dataset for target beam ' + vis.split('/')[
-                                    -3] + ' from MS to UVFITS format!')
+                                converttargetbeamsms2uvfits[int(beam)] = False
+                                logger.warning('Could not convert dataset for target beam '
+                                               '{} from MS to UVFITS format!'.format(beam))
                         else:
-                            logger.warning('Dataset for target beam ' + vis.split('/')[-3] + ' not available!')
+                            logger.warning('Dataset for target beam {} not available!'.format(beam))
                     else:
-                        logger.info('Dataset for target beam ' + vis.split('/')[
-                            -3] + ' was already converted from MS to UVFITS format')
+                        logger.info('Dataset for target beam {} was already '
+                                    'converted from MS to UVFITS format'.format(beam))
             else:
                 logger.warning('Target beam dataset(s) not specified. Cannot convert target beam datasets!')
         else:
@@ -279,13 +256,13 @@ class convert:
 
         # Check which datasets are available in UVFITS format #
         if self.fluxcal != '':
-            convertfluxcaluvfitsavailable = os.path.isfile(
-                self.basedir + '00' + '/' + self.crosscalsubdir + '/' + self.fluxcal.rstrip('MS') + 'UVFITS')
+            crosscal_fluxcal = mspath_to_fitspath(self.get_crosscalsubdir_path(), self.fluxcal)
+            convertfluxcaluvfitsavailable = path.isfile(crosscal_fluxcal)
         else:
             logger.warning('Flux calibrator dataset not specified. Cannot convert flux calibrator!')
         if self.polcal != '':
-            convertpolcaluvfitsavailable = os.path.isfile(
-                self.basedir + '00' + '/' + self.crosscalsubdir + '/' + self.polcal.rstrip('MS') + 'UVFITS')
+            crosscal_polcal = mspath_to_fitspath(self.get_crosscalsubdir_path(), self.polcal)
+            convertpolcaluvfitsavailable = path.isfile(crosscal_polcal)
         else:
             logger.warning('Polarised calibrator dataset not specified. Cannot convert polarised calibrator!')
         if self.target != '':
@@ -310,17 +287,13 @@ class convert:
                 if not convertfluxcaluvfits2miriad:
                     if convertfluxcaluvfitsavailable:
                         logger.debug('Converting flux calibrator dataset from UVFITS to MIRIAD format.')
-                        subs_managefiles.director(self, 'ch', self.basedir + '00' + '/' + self.crosscalsubdir,
-                                                  verbose=False)
+                        subs_managefiles.director(self, 'ch', self.get_crosscalsubdir_path(), verbose=False)
                         fits = lib.miriad('fits')
                         fits.op = 'uvin'
-                        fits.in_ = self.basedir + '00' + '/' + self.crosscalsubdir + '/' + self.fluxcal.rstrip(
-                            'MS') + 'UVFITS'
-                        fits.out = self.basedir + '00' + '/' + self.crosscalsubdir + '/' + self.fluxcal.rstrip(
-                            'MS') + 'mir'
+                        fits.in_ = mspath_to_fitspath(self.get_crosscalsubdir_path(), self.fluxcal)
+                        fits.out = mspath_to_fitspath(self.get_crosscalsubdir_path(), self.fluxcal, ext='mir')
                         fits.go()
-                        if os.path.isdir(self.basedir + '00' + '/' + self.crosscalsubdir + '/' + self.fluxcal.rstrip(
-                                'MS') + 'mir'):
+                        if path.isdir(fits.out):
                             convertfluxcaluvfits2miriad = True
                             logger.info('Converted flux calibrator dataset from UVFITS to MIRIAD format!')
                         else:
@@ -340,17 +313,13 @@ class convert:
                 if not convertpolcaluvfits2miriad:
                     if convertpolcaluvfitsavailable:
                         logger.debug('Converting polarised calibrator dataset from UVFITS to MIRIAD format.')
-                        subs_managefiles.director(self, 'ch', self.basedir + '00' + '/' + self.crosscalsubdir,
-                                                  verbose=False)
+                        subs_managefiles.director(self, 'ch', self.get_crosscalsubdir_path(), verbose=False)
                         fits = lib.miriad('fits')
                         fits.op = 'uvin'
-                        fits.in_ = self.basedir + '00' + '/' + self.crosscalsubdir + '/' + self.polcal.rstrip(
-                            'MS') + 'UVFITS'
-                        fits.out = self.basedir + '00' + '/' + self.crosscalsubdir + '/' + self.polcal.rstrip(
-                            'MS') + 'mir'
+                        fits.in_ = mspath_to_fitspath(self.get_crosscalsubdir_path(), self.polcal)
+                        fits.out = mspath_to_fitspath(self.get_crosscalsubdir_path(), self.polcal, ext='mir')
                         fits.go()
-                        if os.path.isdir(self.basedir + '00' + '/' + self.crosscalsubdir + '/' + self.polcal.rstrip(
-                                'MS') + 'mir'):
+                        if path.isdir(fits.out):
                             convertpolcaluvfits2miriad = True
                             logger.info('Converted polarised calibrator dataset from UVFITS to MIRIAD format!')
                         else:
@@ -370,41 +339,36 @@ class convert:
             if self.target != '':
                 logger.info('Converting target beam datasets from UVFITS to MIRIAD format.')
                 if self.convert_targetbeams == 'all':
-                    datasets = glob.glob(
-                        self.basedir + '[0-9][0-9]' + '/' + self.crosscalsubdir + '/' + self.target.rstrip(
-                            'MS') + 'UVFITS')
+                    datasets = glob.glob(mspath_to_fitspath(self.get_crosscalsubdir_path('[0-9][0-9]'),
+                                                            self.get_target_path()))
                     logger.debug('Converting all available target beam datasets')
                 else:
                     beams = self.convert_targetbeams.split(",")
-                    datasets = [self.basedir + str(b).zfill(2) + '/' + self.crosscalsubdir + '/' + self.target.rstrip(
-                        'MS') + 'UVFITS' for b in beams]
+                    datasets = [mspath_to_fitspath(self.get_crosscalsubdir_path(str(b).zfill(2)), self.target) for b in beams]
                     logger.debug('Converting all selected target beam datasets')
                 for vis in datasets:
-                    if not converttargetbeamsuvfits2miriad[int(vis.split('/')[-3])]:
-                        if converttargetbeamsuvfitsavailable[int(vis.split('/')[-3])]:
-                            subs_managefiles.director(self, 'ch',
-                                                      self.basedir + vis.split('/')[-3] + '/' + self.crosscalsubdir,
-                                                      verbose=False)
+                    beam = vis.split('/')[-3]
+                    if not converttargetbeamsuvfits2miriad[int(beam)]:
+                        if converttargetbeamsuvfitsavailable[int(beam)]:
+                            subs_managefiles.director(self, 'ch', self.get_crosscalsubdir_path(beam), verbose=False)
                             fits = lib.miriad('fits')
                             fits.op = 'uvin'
-                            fits.in_ = self.basedir + vis.split('/')[
-                                -3] + '/' + self.crosscalsubdir + '/' + self.target.rstrip('MS') + 'UVFITS'
-                            fits.out = self.basedir + vis.split('/')[
-                                -3] + '/' + self.crosscalsubdir + '/' + self.target.rstrip('MS') + 'mir'
+                            fits.in_ = mspath_to_fitspath(self.get_crosscalsubdir_path(beam), self.target)
+                            fits.out = mspath_to_fitspath(self.get_crosscalsubdir_path(beam), self.target, ext='mir')
                             fits.go()
-                            if os.path.isdir(self.basedir + vis.split('/')[-3] + '/' + self.crosscalsubdir + '/' + self.target.rstrip('MS') + 'mir'):
-                                converttargetbeamsuvfits2miriad[int(vis.split('/')[-3])] = True
-                                logger.debug('Converted dataset of target beam ' + vis.split('/')[
-                                    -3] + ' from UVFITS to MIRIAD format!')
+                            if path.isdir(fits.out):
+                                converttargetbeamsuvfits2miriad[int(beam)] = True
+                                logger.debug('Converted dataset of target beam {} from '
+                                             'UVFITS to MIRIAD format!'.format(beam))
                             else:
-                                converttargetbeamsuvfits2miriad[int(vis.split('/')[-3])] = False
-                                logger.warning('Could not convert dataset for target beam ' + vis.split('/')[
-                                    -3] + ' from UVFITS to MIRIAD format!')
+                                converttargetbeamsuvfits2miriad[int(beam)] = False
+                                logger.warning('Could not convert dataset for target beam '
+                                               '{} from UVFITS to MIRIAD format!'.format(beam))
                         else:
-                            logger.warning('Dataset for target beam ' + vis.split('/')[-3] + ' not available!')
+                            logger.warning('Dataset for target beam {} not available!'.format(beam))
                     else:
-                        logger.info('Dataset for target beam ' + vis.split('/')[
-                            -3] + ' was already converted from MS to UVFITS format')
+                        logger.info('Dataset for target beam {} was already converted '
+                                    'from MS to UVFITS format'.format(beam))
             else:
                 logger.warning('Target beam dataset(s) not specified. Cannot convert target beam datasets!')
         else:
@@ -478,9 +442,6 @@ class convert:
         df = pd.concat([df_msav, df_ms2uv, df_uv2mir], axis=1)
 
         return df
-
-    def show(self, showall=False):
-        lib.show(self, 'CONVERT', showall)
 
     def reset(self):
         """
