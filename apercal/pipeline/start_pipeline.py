@@ -41,6 +41,10 @@ def start_apercal_pipeline((taskid_fluxcal, name_fluxcal, beamlist_fluxcal),
                                       '&& git describe --tag; cd', shell=True).strip()
     logger.info("Apercal version: " + gitinfo)
 
+    name_fluxcal = str(name_fluxcal).strip()
+    name_polcal = str(name_polcal).strip()
+    name_target = str(name_target).strip()
+
     p0 = prepare()
     p0.basedir = basedir
     p0.fluxcal = name_fluxcal + ".MS"
