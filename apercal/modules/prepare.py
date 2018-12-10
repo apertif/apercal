@@ -52,7 +52,6 @@ class prepare(BaseModule):
         Checks for data in the current working directories and copies only missing data.
         """
         subs_setinit.setinitdirs(self)
-        beams = 37  # Number of beams
 
         # Check if the parameter is already in the parameter file and load it otherwise create the needed arrays #
 
@@ -66,7 +65,7 @@ class prepare(BaseModule):
         preparepolcalrequested = get_param_def(self, 'prepare_polcal_requested', False)
 
         # Is the target data requested? One entry per beam
-        preparetargetbeamsrequested = get_param_def(self, 'prepare_targetbeams_requested', np.full(beams, False))
+        preparetargetbeamsrequested = get_param_def(self, 'prepare_targetbeams_requested', np.full(self.NBEAMS, False))
 
         # Is the fluxcal data already on disk?
         preparefluxcaldiskstatus = get_param_def(self, 'prepare_fluxcal_diskstatus', False)
@@ -75,7 +74,7 @@ class prepare(BaseModule):
         preparepolcaldiskstatus = get_param_def(self, 'prepare_polcal_diskstatus', False)
 
         # Is the target data already on disk? One entry per beam
-        preparetargetbeamsdiskstatus = get_param_def(self, 'prepare_targetbeams_diskstatus', np.full(beams, False))
+        preparetargetbeamsdiskstatus = get_param_def(self, 'prepare_targetbeams_diskstatus', np.full(self.NBEAMS, False))
 
         # Is the fluxcal data on ALTA?
         preparefluxcalaltastatus = get_param_def(self, 'prepare_fluxcal_altastatus', False)
@@ -84,7 +83,7 @@ class prepare(BaseModule):
         preparepolcalaltastatus = get_param_def(self, 'prepare_polcal_altastatus', False)
 
         # Is the target data on disk? One entry per beam
-        preparetargetbeamsaltastatus = get_param_def(self, 'prepare_targetbeams_altastatus', np.full(beams, False))
+        preparetargetbeamsaltastatus = get_param_def(self, 'prepare_targetbeams_altastatus', np.full(self.NBEAMS, False))
 
         # Is the fluxcal data copied?
         preparefluxcalcopystatus = get_param_def(self, 'prepare_fluxcal_copystatus', False)
@@ -93,7 +92,7 @@ class prepare(BaseModule):
         preparepolcalcopystatus = get_param_def(self, 'prepare_polcal_copystatus', False)
 
         # Is the target data copied? One entry per beam
-        preparetargetbeamscopystatus = get_param_def(self, 'prepare_targetbeams_copystatus', np.full(beams, False))
+        preparetargetbeamscopystatus = get_param_def(self, 'prepare_targetbeams_copystatus', np.full(self.NBEAMS, False))
 
         # Reason for flux calibrator dataset not being there
         preparefluxcalrejreason = get_param_def(self, 'prepare_fluxcal_rejreason', np.full(1, '', dtype='U50'))
@@ -102,7 +101,7 @@ class prepare(BaseModule):
         preparepolcalrejreason = get_param_def(self, 'prepare_polcal_rejreason', np.full(1, '', dtype='U50'))
 
         # Reason for a beam dataset not being there
-        preparetargetbeamsrejreason = get_param_def(self, 'prepare_targetbeams_rejreason', np.full(beams, '', dtype='U50'))
+        preparetargetbeamsrejreason = get_param_def(self, 'prepare_targetbeams_rejreason', np.full(self.NBEAMS, '', dtype='U50'))
 
         ################################################
         # Start the preparation of the flux calibrator #
@@ -281,7 +280,7 @@ class prepare(BaseModule):
                         logger.error('Target beam dataset not available on disk nor in ALTA! Requested beam cannot be processed!')
         else:  # If no target dataset is requested meaning the parameter is empty
             logger.warning('No target datasets specified!')
-            for b in range(beams):
+            for b in range(self.NBEAMS):
                 preparetargetbeamsrequested[b] = False
                 preparetargetbeamsdiskstatus[b] = False
                 preparetargetbeamsaltastatus[b] = False
@@ -304,8 +303,6 @@ class prepare(BaseModule):
         returns (DataFrame): A python pandas dataframe object, which can be looked at with the style function in notebook
         """
 
-        beams = 37
-
         # Load the parameters from the parameter file
 
         FR = subs_param.get_param(self, 'prepare_fluxcal_requested')
@@ -326,7 +323,7 @@ class prepare(BaseModule):
 
         # Create the data frame
 
-        beam_range = range(beams)
+        beam_range = range(self.NBEAMS)
         dataset_beams = [self.target[:-3] + ' Beam ' + str(b).zfill(2) for b in beam_range]
         dataset_indices = ['Flux calibrator (' + self.fluxcal[:-3] + ')', 'Polarised calibrator (' + self.polcal[:-3] + ')'] + dataset_beams
 
