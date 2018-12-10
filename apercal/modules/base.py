@@ -27,6 +27,7 @@ class BaseModule:
     mossubdir = None
     transfersubdir = None
     subdirification = True
+    NBEAMS = 40
 
     def get_rawsubdir_path(self, beam='00'):
         if self.subdirification:
