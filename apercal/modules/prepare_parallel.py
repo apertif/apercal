@@ -341,7 +341,6 @@ class prepare_parallel(BaseModule):
         # - (lowest): selection set in configuration file (id.)
         # "None" means no parameter passed => selection from notebook, or from configuration file
         subs_setinit.setinitdirs(self)
-        beams = 37 # Number of beams
         if preferred_beams == "None": # no preferred_beams specified: fall back to predefined value
             preferred_beams = self.prepare_target_beams
         if preferred_beams == "all":
