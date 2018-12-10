@@ -9,6 +9,7 @@ import casacore.tables as pt
 
 from apercal.modules.base import BaseModule
 from apercal.subs import setinit as subs_setinit
+from apercal.subs.msutils import get_nchan
 from apercal.subs import managefiles as subs_managefiles
 from apercal.subs import param as subs_param
 from apercal.subs.param import get_param_def
@@ -83,25 +84,28 @@ class preflag(BaseModule):
         """
         logger.info('Starting Pre-flagging step')
         self.shadow()
+        query = "SELECT GNFALSE(FLAG) == 0 AS all_flagged, " + \
+                "GNTRUE(FLAG) == 0 AS all_unflagged FROM " + self.get_fluxcal_path()
+        query_result = pt.taql(query)
+        logger.debug("All visibilities     flagged before aoflag: " + str(query_result[0]["all_flagged"]))
+        logger.debug("All visibilities not flagged before aoflag: " + str(query_result[0]["all_unflagged"]))
+        self.aoflagger()
+        query = "SELECT GNFALSE(FLAG) == 0 AS all_flagged, " + \
+                "GNTRUE(FLAG) == 0 AS all_unflagged FROM " + self.get_fluxcal_path()
+        query_result = pt.taql(query)
+        logger.debug("All visibilities     flagged after aoflag: " + str(query_result[0]["all_flagged"]))
+        logger.debug("All visibilities not flagged after aoflag: " + str(query_result[0]["all_unflagged"]))
         self.edges()
         self.ghosts()
         self.manualflag()
-        self.aoflagger()
         logger.info('Pre-flagging step done')
 
-    @staticmethod
-    def _getnchan(msname):
-        """Return the number of channels in a given ms"""
-        spectralwindowtable = pt.table(msname + '::SPECTRAL_WINDOW', ack=False)
-        nchan = spectralwindowtable.getcol("CHAN_FREQ").shape[1]
-        return nchan
 
     def shadow(self):
         """
         Flag all data sets for shadowed antennas using drivecasa and the CASA task flagdata
         """
         subs_setinit.setinitdirs(self)
-        beams = 37
 
         logger.debug('Shadowed antenna flagging step started')
 
@@ -114,7 +118,7 @@ class preflag(BaseModule):
         preflagpolcalshadow = get_param_def(self, 'preflag_polcal_shadow', False)
 
         # Are the target beams shadow flagged?
-        preflagtargetbeamsshadow = get_param_def(self, 'preflag_targetbeams_shadow', np.full(beams, False))
+        preflagtargetbeamsshadow = get_param_def(self, 'preflag_targetbeams_shadow', np.full(self.NBEAMS, False))
 
         # Flag shadowed antennas
 
@@ -173,7 +177,6 @@ class preflag(BaseModule):
         Flag the edges of the subbands
         """
         subs_setinit.setinitdirs(self)
-        beams = 37
 
         logger.debug('Starting to flag the edges of the subbands')
 
@@ -186,7 +189,7 @@ class preflag(BaseModule):
         preflagpolcaledges = get_param_def(self, 'preflag_polcal_edges', False)
 
         # Edges of target beams flagged?
-        preflagtargetbeamsedges = get_param_def(self, 'preflag_targetbeams_edges', np.full(beams, False))
+        preflagtargetbeamsedges = get_param_def(self, 'preflag_targetbeams_edges', np.full(self.NBEAMS, False))
 
         if self.preflag_edges:
             logger.info('Flagging subband edges')
@@ -199,7 +202,7 @@ class preflag(BaseModule):
                     # Flag the subband edges of the flux calibrator data set
                     logger.debug('Flagging subband edges for flux calibrator')
                     # Get the number of channels of the flux calibrator data set
-                    nchannel = self._getnchan(self.get_fluxcal_path())
+                    nchannel = get_nchan(self.get_fluxcal_path())
                     # Calculate the subband edges of the flux calibrator data set
                     a = range(0, nchannel, 64)
                     b = range(1, nchannel, 64)
@@ -221,7 +224,7 @@ class preflag(BaseModule):
                     # Flag the subband edges of the polarised calibrator data set
                     logger.debug('Flagging subband edges for polarised calibrator #')
                     # Get the number of channels of the polarised calibrator data set
-                    nchannel = self._getnchan(self.get_polcal_path())
+                    nchannel = get_nchan(self.get_polcal_path())
                     # Calculate the subband edges of the polarised calibrator data set
                     a = range(0, nchannel, 64)
                     b = range(1, nchannel, 64)
@@ -243,7 +246,7 @@ class preflag(BaseModule):
                         logger.info('Subband edges for target beam ' + beam + ' were already flagged')
                     else:
                         logger.debug('Flagging subband edges for target beam ' + beam)
-                        nchannel = self._getnchan(vis)
+                        nchannel = get_nchan(vis)
                         # Calculate the subband edges for each target beam data set
                         a = range(0, nchannel, 64)
                         b = range(1, nchannel, 64)
@@ -270,7 +273,6 @@ class preflag(BaseModule):
         Flag the ghosts of each subband at channel 16 and 48
         """
         subs_setinit.setinitdirs(self)
-        beams = 37
 
         logger.debug(' Starting to flag the ghost channels')
 
@@ -283,7 +285,7 @@ class preflag(BaseModule):
         preflagpolcalghosts = get_param_def(self, 'preflag_polcal_ghosts', False)
 
         # Ghosts of target beams flagged?
-        preflagtargetbeamsghosts = get_param_def(self, 'preflag_targetbeams_ghosts', np.full(beams, False))
+        preflagtargetbeamsghosts = get_param_def(self, 'preflag_targetbeams_ghosts', np.full(self.NBEAMS, False))
 
         if self.preflag_ghosts:
             logger.info('Flagging ghost channels')
@@ -295,7 +297,7 @@ class preflag(BaseModule):
                     # Flag the ghosts in the flux calibrator data set
                     logger.debug('Flagging ghost channels for flux calibrator')
                     # Get the number of channels of the flux calibrator data set
-                    nchannel = self._getnchan(self.get_fluxcal_path())
+                    nchannel = get_nchan(self.get_fluxcal_path())
                     # Calculate the ghost positions for the flux calibrator data set
                     a = range(16, nchannel, 64)
                     b = range(48, nchannel, 64)
@@ -316,7 +318,7 @@ class preflag(BaseModule):
                     # Flag the ghosts in the polarised calibrator data set
                     logger.debug('Flagging ghost channels for polarised calibrator')
                     # Get the number of channels of the polarised calibrator data set
-                    nchannel = self._getnchan(self.get_polcal_path())
+                    nchannel = get_nchan(self.get_polcal_path())
                     # Calculate the subband edges of the polarised calibrator data set
                     a = range(0, nchannel, 64)
                     b = range(1, nchannel, 64)
@@ -337,7 +339,7 @@ class preflag(BaseModule):
                         logger.info('Ghost channels for target beam ' + beam + ' were already flagged')
                     else:
                         logger.debug('Flagging ghost channels for target beam ' + beam)
-                        nchannel = self._getnchan(vis)
+                        nchannel = get_nchan(vis)
                         # Calculate the ghost channels for each target beam data set
                         a = range(0, nchannel, 64)
                         b = range(1, nchannel, 64)
@@ -393,7 +395,6 @@ class preflag(BaseModule):
         Function to flag the auto-correlations
         """
         subs_setinit.setinitdirs(self)
-        beams = 37
 
         # Create the parameters for the parameter file for the manualflag step to flag the auto-correlations
 
@@ -404,7 +405,7 @@ class preflag(BaseModule):
         preflagpolcalmanualflagauto = get_param_def(self, 'preflag_polcal_manualflag_auto', False)
         # Auto-correlations of target beams flagged?
         preflagtargetbeamsmanualflagauto = get_param_def(self, 'preflag_targetbeams_manualflag_auto',
-                                                         np.full(beams, False))
+                                                         np.full(self.NBEAMS, False))
 
         if self.preflag_manualflag_auto:
             logger.info('Flagging auto-correlations')
@@ -467,7 +468,6 @@ class preflag(BaseModule):
         Antennas are named by their antenna names (e.g. 'RT2,RT3')
         """
         subs_setinit.setinitdirs(self)
-        beams = 37
 
         # Create the parameters for the parameter file for the manualflag step to flag individual antennas
 
@@ -475,9 +475,10 @@ class preflag(BaseModule):
         preflagfluxcalmanualflagantenna = get_param_def(self, 'preflag_fluxcal_manualflag_antenna', np.full(1, '', dtype='U50'))
 
         # Flagged antennas of polcal?
-        preflagpolcalmanualflagantenna = get_param_def(self, 'preflag_polcal_manualflag_antenna', np.full(1, '', dtype='U50'))  # Flagged antennas of target beams?
-        preflagtargetbeamsmanualflagantenna = get_param_def(self, 'preflag_targetbeams_manualflag_antenna', np.full(
-            beams, '', dtype='U50'))
+        preflagpolcalmanualflagantenna = get_param_def(self, 'preflag_polcal_manualflag_antenna', np.full(1, '', dtype='U50'))
+        # Flagged antennas of target beams?
+        preflagtargetbeamsmanualflagantenna = get_param_def(self, 'preflag_targetbeams_manualflag_antenna',
+                                                            np.full(self.NBEAMS, '', dtype='U50'))
 
         if self.preflag_manualflag_antenna != '':
             logger.info('Flagging antenna(s) ' + self.preflag_manualflag_antenna)
@@ -553,13 +554,12 @@ class preflag(BaseModule):
         Possible values are 'XX,XY,YX,YY'
         """
         subs_setinit.setinitdirs(self)
-        beams = 37
 
         # Create the parameters for the parameter file for the manualflag step to flag individual correlations
 
         preflagfluxcalmanualflagcorr = get_param_def(self, 'preflag_fluxcal_manualflag_corr', np.full(1, '', dtype='U50'))  # Flagged correlations of fluxcal?
         preflagpolcalmanualflagcorr = get_param_def(self, 'preflag_polcal_manualflag_corr', np.full(1, '', dtype='U50'))  # Flagged correlations of polcal?
-        preflagtargetbeamsmanualflagcorr = get_param_def(self, 'preflag_targetbeams_manualflag_corr', np.full(beams, '', dtype='U50'))  # Flagged correlations of target beams?
+        preflagtargetbeamsmanualflagcorr = get_param_def(self, 'preflag_targetbeams_manualflag_corr', np.full(self.NBEAMS, '', dtype='U50'))  # Flagged correlations of target beams?
 
         if self.preflag_manualflag_corr != '':
             logger.info('Flagging correlation(s) ' + self.preflag_manualflag_corr)
@@ -637,14 +637,13 @@ class preflag(BaseModule):
         Use antenna names and the notation 'ant1&ant2;ant3&ant4' etc.
         """
         subs_setinit.setinitdirs(self)
-        beams = 37
 
         # Create the parameters for the parameter file for the manualflag step to flag individual baselines
 
         preflagfluxcalmanualflagbaseline = get_param_def(self, 'preflag_fluxcal_manualflag_baseline', np.full(1, '', dtype='U50'))  # Flagged baselines of fluxcal?
         preflagpolcalmanualflagbaseline = get_param_def(self, 'preflag_polcal_manualflag_baseline', np.full(1, '', dtype='U50'))  # Flagged baselines of polcal?
-        preflagtargetbeamsmanualflagbaseline = get_param_def(self, 'preflag_targetbeams_manualflag_baseline', np.full(
-            beams, '', dtype='U50'))  # Flagged baselines of target beams?
+        preflagtargetbeamsmanualflagbaseline = get_param_def(self, 'preflag_targetbeams_manualflag_baseline',
+                                                             np.full(self.NBEAMS, '', dtype='U50'))  # Flagged baselines of target beams?
 
         if self.preflag_manualflag_baseline != '':
             logger.info('Flagging baseline(s) ' + self.preflag_manualflag_baseline)
@@ -721,14 +720,13 @@ class preflag(BaseModule):
         Use the CASA notation e.g. '0~5;120~128'. You don't need to give a '0:' for the spw. It's added automatically.
         """
         subs_setinit.setinitdirs(self)
-        beams = 37
 
         # Create the parameters for the parameter file for the manualflag step to flag individual channel ranges
 
         preflagfluxcalmanualflagchannel = get_param_def(self, 'preflag_fluxcal_manualflag_channel', np.full(1, '', dtype='U50'))  # Flagged channels of fluxcal?
         preflagpolcalmanualflagchannel = get_param_def(self, 'preflag_polcal_manualflag_channel', np.full(1, '', dtype='U50'))  # Flagged channels of polcal?
-        preflagtargetbeamsmanualflagchannel = get_param_def(self, 'preflag_targetbeams_manualflag_channel', np.full(
-            beams, '', dtype='U50'))  # Flagged channels of target beams?
+        preflagtargetbeamsmanualflagchannel = get_param_def(self, 'preflag_targetbeams_manualflag_channel',
+                                                            np.full(self.NBEAMS, '', dtype='U50'))  # Flagged channels of target beams?
 
         if self.preflag_manualflag_channel != '':
             logger.info('Flagging channel(s) ' + self.preflag_manualflag_channel)
@@ -803,13 +801,13 @@ class preflag(BaseModule):
         Use the CASA notation e.g. '09:14:0~09:54:0'.
         """
         subs_setinit.setinitdirs(self)
-        beams = 37
 
         # Create the parameters for the parameter file for the manualflag step to flag individual channel ranges
 
         preflagfluxcalmanualflagtime = get_param_def(self, 'preflag_fluxcal_manualflag_time', np.full(1, '', dtype='U50'))  # Flagged time range(s) of fluxcal?
         preflagpolcalmanualflagtime = get_param_def(self, 'preflag_polcal_manualflag_time', np.full(1, '', dtype='U50'))  # Flagged time range(s) of polcal?
-        preflagtargetbeamsmanualflagtime = get_param_def(self, 'preflag_targetbeams_manualflag_time', np.full(beams, '', dtype='U50'))  # Flagged time range(s) of target beams?
+        preflagtargetbeamsmanualflagtime = get_param_def(self, 'preflag_targetbeams_manualflag_time',
+                                                         np.full(self.NBEAMS, '', dtype='U50'))  # Flagged time range(s) of target beams?
 
         if self.preflag_manualflag_time != '':
             logger.info('Flagging time range ' + self.preflag_manualflag_time)
@@ -885,7 +883,6 @@ class preflag(BaseModule):
         Function to flag any zero-valued data
         """
         subs_setinit.setinitdirs(self)
-        beams = 37
 
         # Create the parameters for the parameter file for the manualflag step to flag the zero-valued data.
 
@@ -896,7 +893,7 @@ class preflag(BaseModule):
         preflagpolcalmanualflagclipzeros = get_param_def(self, 'preflag_polcal_manualflag_clipzeros', False)
         # Zero valued data of target beams flagged?
         preflagtargetbeamsmanualflagclipzeros = get_param_def(self, 'preflag_targetbeams_manualflag_clipzeros',
-                                                              np.full(beams, False))
+                                                              np.full(self.NBEAMS, False))
 
         if self.preflag_manualflag_clipzeros:
             logger.info('Flagging Zero-valued data')
@@ -1000,7 +997,6 @@ class preflag(BaseModule):
         visibilities if bandpass was derived and applied successfully beforehand.
         """
         subs_setinit.setinitdirs(self)
-        beams = 37
 
         # Create the parameters for the parameter file for the bandpass step of the AOFlagger step
 
@@ -1012,7 +1008,7 @@ class preflag(BaseModule):
 
         # AOFlagged the target beams?
         preflagaoflaggertargetbeamsflag = get_param_def(self, 'preflag_aoflagger_targetbeams_flag_status',
-                                                        np.full(beams, False))
+                                                        np.full(self.NBEAMS, False))
 
         base_cmd = 'aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_fluxcalstrat
         # Suppress logging of lines that start with this (to prevent 1000s of lines of logging)
@@ -1155,8 +1151,6 @@ class preflag(BaseModule):
         returns (DataFrame): A python pandas dataframe object, which can be looked at with the style function in the notebook
         """
 
-        beams = 37
-
         # Load the parameters from the parameter file
 
         FS = subs_param.get_param(self, 'preflag_fluxcal_shadow')
@@ -1197,7 +1191,7 @@ class preflag(BaseModule):
 
         # Create the data frame
 
-        beam_range = range(beams)
+        beam_range = range(self.NBEAMS)
         dataset_beams = [self.target[:-3] + ' Beam ' + str(b).zfill(2) for b in beam_range]
         dataset_indices = ['Flux calibrator (' + self.fluxcal[:-3] + ')', 'Polarised calibrator (' + self.polcal[:-3] + ')'] + dataset_beams
 

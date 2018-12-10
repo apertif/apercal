@@ -61,3 +61,34 @@ def add_caltables(ct, interp, addct, addinterp):
         newct = ct + ',' + addct
         newinterp = interp + ',' + addinterp
     return newct, newinterp
+
+
+def get_source_name(msname):
+    """
+    Get the source name from a Measurement Set
+
+    Args:
+        msname (str): full path to a Measurement Set
+
+    Returns:
+        str: Source name (e.g. 3C295)
+    """
+    query = "SELECT NAME FROM {}/FIELD".format(msname)
+    res_table = pt.taql(query)
+    return res_table[0]["NAME"]
+
+
+def get_nchan(msname):
+    """
+    Get the number of channels from a Measurement Set
+
+    Args:
+        msname (str): full path to a Measurement Set
+
+    Returns:
+        int: number of channels (in first spectral window)
+    """
+    assert(isinstance(msname,str))
+    spectralwindowtable = pt.table(msname + '::SPECTRAL_WINDOW', ack=False)
+    nchan = spectralwindowtable.getcol("CHAN_FREQ").shape[1]
+    return nchan
