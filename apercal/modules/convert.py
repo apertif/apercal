@@ -63,7 +63,6 @@ class convert(BaseModule):
         polarisation calibrator, and target field independently.
         """
         subs_setinit.setinitdirs(self)
-        nbeams = 37
 
         # Create the parameters for the parameter file for converting from MS to UVFITS format
 
@@ -74,7 +73,7 @@ class convert(BaseModule):
         convertpolcalmsavailable = get_param_def(self, 'convert_polcal_MSavailable', False)
 
         # Target beam MS dataset available?
-        converttargetbeamsmsavailable = get_param_def(self, 'convert_targetbeams_MSavailable', np.full(nbeams, False))
+        converttargetbeamsmsavailable = get_param_def(self, 'convert_targetbeams_MSavailable', np.full(self.NBEAMS, False))
 
         # Flux calibrator MS dataset converted to UVFITS?
         convertfluxcalms2uvfits = get_param_def(self, 'convert_fluxcal_MS2UVFITS', False)
@@ -83,7 +82,7 @@ class convert(BaseModule):
         convertpolcalms2uvfits = get_param_def(self, 'convert_polcal_MS2UVFITS', False)
 
         # Target beam MS dataset converted to UVFITS?
-        converttargetbeamsms2uvfits = get_param_def(self, 'convert_targetbeams_MS2UVFITS', np.full(nbeams, False))
+        converttargetbeamsms2uvfits = get_param_def(self, 'convert_targetbeams_MS2UVFITS', np.full(self.NBEAMS, False))
 
         # Flux calibrator UVFITS dataset available?
         convertfluxcaluvfitsavailable = get_param_def(self, 'convert_fluxcal_UVFITSavailable', False)
@@ -93,7 +92,7 @@ class convert(BaseModule):
 
         # Target beam UVFITS dataset available?
         converttargetbeamsuvfitsavailable = get_param_def(self, 'convert_targetbeams_UVFITSavailable',
-                                                          np.full(nbeams, False))
+                                                          np.full(self.NBEAMS, False))
 
         # Flux calibrator UVFITS dataset converted to MIRIAD?
         convertfluxcaluvfits2miriad = get_param_def(self, 'convert_fluxcal_UVFITS2MIRIAD', False)
@@ -103,7 +102,7 @@ class convert(BaseModule):
         # Target beam UVFITS dataset converted to MIRIAD?
 
         converttargetbeamsuvfits2miriad = get_param_def(self, 'convert_targetbeams_UVFITS2MIRIAD',
-                                                        np.full(nbeams, False))
+                                                        np.full(self.NBEAMS, False))
 
         # Check which datasets are available in MS format #
         if self.fluxcal != '':
@@ -115,7 +114,7 @@ class convert(BaseModule):
         else:
             logger.warning('Polarised calibrator dataset not specified. Cannot convert polarised calibrator!')
         if self.target != '':
-            for b in range(nbeams):
+            for b in range(self.NBEAMS):
                 converttargetbeamsmsavailable[b] = path.isdir(self.get_target_path(str(b).zfill(2)))
         else:
             logger.warning('Target beam dataset not specified. Cannot convert target beams!')
@@ -267,7 +266,7 @@ class convert(BaseModule):
         else:
             logger.warning('Polarised calibrator dataset not specified. Cannot convert polarised calibrator!')
         if self.target != '':
-            for b in range(nbeams):
+            for b in range(self.NBEAMS):
                 b_formatted = str(b).zfill(2)
                 converttargetbeamsuvfitsavailable[b] = path.isfile(
                     mspath_to_fitspath(self.get_crosscalsubdir_path(b_formatted), self.target))
@@ -400,8 +399,6 @@ class convert(BaseModule):
                              notebook
         """
 
-        nbeams = 37
-
         # Load the parameters from the parameter file
 
         FMSA = subs_param.get_param(self, 'convert_fluxcal_MSavailable')
@@ -418,7 +415,7 @@ class convert(BaseModule):
 
         # Create the data frame
 
-        beam_range = range(nbeams)
+        beam_range = range(self.NBEAMS)
         dataset_beams = [self.target[:-3] + ' Beam ' + str(b).zfill(2) for b in beam_range]
         dataset_indices = ['Flux calibrator (' + self.fluxcal[:-3] + ')',
                            'Polarised calibrator (' + self.polcal[:-3] + ')'] + dataset_beams
@@ -452,10 +449,9 @@ class convert(BaseModule):
         this step!
         """
         subs_setinit.setinitdirs(self)
-        nbeams = 37
 
         logger.warning(' Deleting all converted data.')
-        for beam in range(nbeams):
+        for beam in range(self.NBEAMS):
             path = self.get_crosscalsubdir_path(str(beam).zfill(2))
             if path.isdir(path):
                 subs_managefiles.director(self, 'rm', path + '/*')
