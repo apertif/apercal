@@ -9,6 +9,7 @@ import casacore.tables as pt
 
 from apercal.modules.base import BaseModule
 from apercal.subs import setinit as subs_setinit
+from apercal.subs.msutils import get_nchan
 from apercal.subs import managefiles as subs_managefiles
 from apercal.subs import param as subs_param
 from apercal.subs.param import get_param_def
@@ -99,12 +100,6 @@ class preflag(BaseModule):
         self.manualflag()
         logger.info('Pre-flagging step done')
 
-    @staticmethod
-    def _getnchan(msname):
-        """Return the number of channels in a given ms"""
-        spectralwindowtable = pt.table(str(msname).strip() + "::SPECTRAL_WINDOW", ack=False)
-        nchan = spectralwindowtable.getcol("CHAN_FREQ").shape[1]
-        return nchan
 
     def shadow(self):
         """
@@ -209,7 +204,7 @@ class preflag(BaseModule):
                     # Flag the subband edges of the flux calibrator data set
                     logger.debug('Flagging subband edges for flux calibrator')
                     # Get the number of channels of the flux calibrator data set
-                    nchannel = self._getnchan(self.get_fluxcal_path())
+                    nchannel = get_nchan(self.get_fluxcal_path())
                     # Calculate the subband edges of the flux calibrator data set
                     a = range(0, nchannel, 64)
                     b = range(1, nchannel, 64)
@@ -231,7 +226,7 @@ class preflag(BaseModule):
                     # Flag the subband edges of the polarised calibrator data set
                     logger.debug('Flagging subband edges for polarised calibrator #')
                     # Get the number of channels of the polarised calibrator data set
-                    nchannel = self._getnchan(self.get_polcal_path())
+                    nchannel = get_nchan(self.get_polcal_path())
                     # Calculate the subband edges of the polarised calibrator data set
                     a = range(0, nchannel, 64)
                     b = range(1, nchannel, 64)
@@ -253,7 +248,7 @@ class preflag(BaseModule):
                         logger.info('Subband edges for target beam ' + beam + ' were already flagged')
                     else:
                         logger.debug('Flagging subband edges for target beam ' + beam)
-                        nchannel = self._getnchan(vis)
+                        nchannel = get_nchan(vis)
                         # Calculate the subband edges for each target beam data set
                         a = range(0, nchannel, 64)
                         b = range(1, nchannel, 64)
@@ -305,7 +300,7 @@ class preflag(BaseModule):
                     # Flag the ghosts in the flux calibrator data set
                     logger.debug('Flagging ghost channels for flux calibrator')
                     # Get the number of channels of the flux calibrator data set
-                    nchannel = self._getnchan(self.get_fluxcal_path())
+                    nchannel = get_nchan(self.get_fluxcal_path())
                     # Calculate the ghost positions for the flux calibrator data set
                     a = range(16, nchannel, 64)
                     b = range(48, nchannel, 64)
@@ -326,7 +321,7 @@ class preflag(BaseModule):
                     # Flag the ghosts in the polarised calibrator data set
                     logger.debug('Flagging ghost channels for polarised calibrator')
                     # Get the number of channels of the polarised calibrator data set
-                    nchannel = self._getnchan(self.get_polcal_path())
+                    nchannel = get_nchan(self.get_polcal_path())
                     # Calculate the subband edges of the polarised calibrator data set
                     a = range(0, nchannel, 64)
                     b = range(1, nchannel, 64)
@@ -347,7 +342,7 @@ class preflag(BaseModule):
                         logger.info('Ghost channels for target beam ' + beam + ' were already flagged')
                     else:
                         logger.debug('Flagging ghost channels for target beam ' + beam)
-                        nchannel = self._getnchan(vis)
+                        nchannel = get_nchan(vis)
                         # Calculate the ghost channels for each target beam data set
                         a = range(0, nchannel, 64)
                         b = range(1, nchannel, 64)

@@ -1,6 +1,7 @@
 import numpy as np
 import casacore.tables as pt
 from apercal.subs import misc
+from apercal.subs.msutils import get_nchan
 
 np.set_printoptions(threshold=np.nan)
 
@@ -14,8 +15,7 @@ def create_bandpass(dataset, bp_file):
          0.96222, 0.96702, 0.96331, 0.95387, 0.93449, 0.92417, 0.92177, 0.93646, 0.95761, 0.98863, 1.00578, 0.99527,
          0.95907, 0.89373, 0.81069, 0.73628])
     # Get the number of channels of the dataset
-    spectralwindowtable = pt.table(dataset + '::SPECTRAL_WINDOW', ack=False)
-    nchannels = spectralwindowtable.getcol("CHAN_FREQ").shape[1]
+    nchannels = get_nchan(dataset)
     channels = range(nchannels)
     ants = np.array(misc.create_antnames())
     nants = len(ants)
