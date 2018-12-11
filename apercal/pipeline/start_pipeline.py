@@ -6,6 +6,7 @@ import matplotlib as mpl
 from apercal.modules.prepare import prepare
 from apercal.modules.preflag import preflag
 from apercal.modules.ccal import ccal
+from apercal.modules.convert import convert
 import apercal
 import os
 import subprocess
