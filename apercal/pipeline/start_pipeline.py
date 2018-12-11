@@ -6,6 +6,7 @@ import matplotlib as mpl
 from apercal.modules.prepare import prepare
 from apercal.modules.preflag import preflag
 from apercal.modules.ccal import ccal
+from apercal.modules.convert import convert
 import apercal
 import os
 import subprocess
@@ -45,12 +46,23 @@ def start_apercal_pipeline((taskid_fluxcal, name_fluxcal, beamlist_fluxcal),
     name_polcal = str(name_polcal).strip()
     name_target = str(name_target).strip()
 
-    p0 = prepare()
-    p0.basedir = basedir
-    p0.fluxcal = name_fluxcal + ".MS"
-    p0.polcal = name_polcal + ".MS"
-    p0.target = name_target + ".MS"
+    def set_files(p):
+        """
+        Set the basedir, fluxcal, polcal, target properties
 
+        Args:
+            p (BaseModule): apercal step object (e.g. prepare)
+
+        Returns:
+            None
+        """
+        p.basedir = basedir
+        p.fluxcal = name_fluxcal + ".MS"
+        p.polcal = name_polcal + ".MS"
+        p.target = name_target + ".MS"
+
+    p0 = prepare()
+    set_files(p0)
     p0.prepare_target_beams = ','.join(['{:02d}'.format(beamnr) for beamnr in beamlist_target])
     p0.prepare_date = str(taskid_target)[:6]
     p0.prepare_obsnum_fluxcal = str(taskid_fluxcal)[-3:]
@@ -60,11 +72,16 @@ def start_apercal_pipeline((taskid_fluxcal, name_fluxcal, beamlist_fluxcal),
     p0.go()
 
     p1 = preflag()
-    p1.basedir = basedir
-    p1.fluxcal = p0.fluxcal
-    p1.polcal = p0.polcal
-    p1.target = p0.target
+    set_files(p1)
 
     p1.go()
+
+    p2 = ccal()
+    set_files(p2)
+    p2.go()
+
+    p3 = convert()
+    set_files(p3)
+    p3.go()
 
     return True
