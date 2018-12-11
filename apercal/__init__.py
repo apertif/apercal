@@ -1,3 +1,5 @@
+__version__ = 2.1
+
 import libs.lib
 
 from modules.prepare import prepare
