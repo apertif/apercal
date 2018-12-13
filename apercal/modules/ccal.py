@@ -81,7 +81,6 @@ class ccal(BaseModule):
 
         subs_setinit.setinitdirs(self)
         subs_managefiles.director(self, 'ch', self.get_rawsubdir_path())
-        nbeams = 37
 
         # Create the parameters for the parameter file for the TEC correction step
 
@@ -92,7 +91,7 @@ class ccal(BaseModule):
         ccalpolcalTEC = get_param_def(self, 'ccal_polcal_TEC', False)
 
         # Status of TEC correction table for the target beams
-        ccaltargetbeamsTEC = get_param_def(self, 'ccal_targetbeams_TEC', np.full(nbeams, False))
+        ccaltargetbeamsTEC = get_param_def(self, 'ccal_targetbeams_TEC', np.full(self.NBEAMS, False))
 
         if self.crosscal_tec:
             logger.info('Calculating TEC corrections')
@@ -881,12 +880,11 @@ class ccal(BaseModule):
 
         subs_setinit.setinitdirs(self)
         subs_managefiles.director(self, 'ch', self.get_rawsubdir_path())
-        nbeams = 37
 
         # Create the parameters for the parameter file for the transfer step
 
         # Status of the solution transfer for the target beams
-        ccaltargetbeamstransfer = get_param_def(self, 'ccal_targetbeams_transfer', np.full(nbeams, False))
+        ccaltargetbeamstransfer = get_param_def(self, 'ccal_targetbeams_transfer', np.full(self.NBEAMS, False))
 
         if self.crosscal_transfer_to_target:
             logger.info('Applying solutions to target beams')
@@ -1103,8 +1101,6 @@ class ccal(BaseModule):
         the notebook
         """
 
-        nbeams = 37
-
         # Load the parameters from the parameter file
 
         FTEC = subs_param.get_param(self, 'ccal_fluxcal_TEC')
@@ -1124,7 +1120,7 @@ class ccal(BaseModule):
 
         # Create the data frame
 
-        beam_range = range(nbeams)
+        beam_range = range(self.NBEAMS)
         dataset_beams = [self.target[:-3] + ' Beam ' + str(b).zfill(2) for b in beam_range]
         dataset_indices = ['Flux calibrator (' + self.fluxcal[:-3] + ')',
                            'Polarised calibrator (' + self.polcal[:-3] + ')'] + dataset_beams

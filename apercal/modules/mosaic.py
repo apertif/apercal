@@ -575,8 +575,7 @@ class mosaic(BaseModule):
 
         # Create the data frame
 
-        beams = 37
-        beam_indices = range(beams)
+        beam_indices = range(self.NBEAMS)
         beam_indices = [str(item).zfill(2) for item in beam_indices]
 
         df_is = pd.DataFrame(np.ndarray.flatten(IS), index=beam_indices, columns=['Image accepted?'])
@@ -647,14 +646,13 @@ class mosaic(BaseModule):
 
         # Create the data frame
 
-        beams = 37
         chunks = len(subs_param.get_param(self, 'mosaic_continuum_chunks_beams_imagestatus'))
         chunk_indices = range(chunks)
         chunk_indices = [str(item).zfill(2) for item in chunk_indices]
 
         COM = np.full(chunks, 'Beam(s) ', dtype='U150')  # Comment for mosaicing
         for c in range(chunks):
-            for b in range(beams):
+            for b in range(self.NBEAMS):
                 if C[b, c]:
                     pass
                 else:
@@ -706,8 +704,7 @@ class mosaic(BaseModule):
             chunk_indices = [str(item).zfill(2) for item in chunk_indices]
         else:
             chunk_indices = [str(chunk).zfill(2)]
-        beams = 37
-        beam_indices = range(beams)
+        beam_indices = range(self.NBEAMS)
         beam_indices = [str(item).zfill(2) for item in beam_indices]
 
         chunk_beam_indices = pd.MultiIndex.from_product([chunk_indices, beam_indices], names=['Chunk', 'Beam'])
