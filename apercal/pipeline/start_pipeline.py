@@ -88,7 +88,7 @@ def start_apercal_pipeline((taskid_fluxcal, name_fluxcal, beamlist_fluxcal),
 
         p3 = convert()
         set_files(p3)
-        p3.go()
+        #p3.go()
 
         time_end = time()
         msg = "Apercal finished after " + timedelta(seconds=time()-time_start)
