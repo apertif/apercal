@@ -1,3 +1,6 @@
+def is_polarised(source_name):
+    return source_name.strip(".MS") in ["3C138", "3C286"]
+
 def get_calparameters(calibrator):
     """
     calibrator(string): Calibrator name to get the values for

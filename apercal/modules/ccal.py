@@ -647,11 +647,15 @@ class ccal(BaseModule):
         ccalpolcalpolarisationangle = get_param_def(self, 'ccal_polcal_polarisationangle',
                                                     False)  # Status of the polarisation angle corrections for the polarised calibrator
 
+        if not subs_calmodels.is_polarised(self.polcal) and self.crosscal_polarisation_angle:
+            self.crosscal_polarisation_angle = False
+            logger.warning("Changing crosscal_polarisation angle to false because " + self.polcal +
+                           "is unpolarised.")
+
         if self.crosscal_polarisation_angle:
             logger.info('Calculating polarisation angle corrections for polarised calibrator')
 
             if self.polcal != '' and os.path.isdir(self.get_polcal_path()):
-
                 # Create the polarisation angle correction table for the polarised calibrator
 
                 if ccalpolcalpolarisationangle or os.path.isdir(
@@ -714,8 +718,9 @@ class ccal(BaseModule):
                         logger.error('Polarisation angle correction table for polarised calibrator '
                                      'was not created successfully!')
             else:
-                logger.error('Polarised calibrator dataset not specified or dataset not available.'
-                             'Cross calibration will probably not work!')
+                msg = 'Polarised calibrator dataset not specified or dataset not available.' + \
+                      'Cross calibration will probably not work!'
+                logger.error(msg)
 
         subs_param.add_param(self, 'ccal_polcal_polarisationangle', ccalpolcalpolarisationangle)
 

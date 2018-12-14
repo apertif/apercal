@@ -7,6 +7,7 @@ from apercal.modules.prepare import prepare
 from apercal.modules.preflag import preflag
 from apercal.modules.ccal import ccal
 from apercal.modules.convert import convert
+from apercal.subs import calmodels as subs_calmodels
 import apercal
 import os
 import subprocess
@@ -49,6 +50,22 @@ def start_apercal_pipeline((taskid_fluxcal, name_fluxcal, beamlist_fluxcal),
     name_fluxcal = str(name_fluxcal).strip()
     name_polcal = str(name_polcal).strip()
     name_target = str(name_target).strip()
+
+    if not subs_calmodels.is_polarised(name_polcal):
+        if subs_calmodels.is_polarised(name_fluxcal):
+            logger.debug("Switching polcal and fluxcal because " + name_polcal +
+                         " is not polarised")
+            name_fluxcal, name_polcal = name_polcal, name_fluxcal
+            taskid_fluxcal, taskid_polcal = taskid_polcal, taskid_fluxcal
+            beamlist_fluxcal, beamlist_polcal = beamlist_polcal, beamlist_fluxcal
+        else:
+            logger.debug("Setting polcal to '' since " + self.polcal + " not polarised")
+            name_polcal = ""
+    else:
+        logger.debug("Polcal " + name_polcal + " is polarised, all good")
+
+    import sys
+    sys.exit(1)
 
     def set_files(p):
         """
