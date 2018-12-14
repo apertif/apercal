@@ -98,4 +98,4 @@ def start_apercal_pipeline((taskid_fluxcal, name_fluxcal, beamlist_fluxcal),
         time_end = time()
         msg = "Apercal threw an error after " + timedelta(seconds=time()-time_start)
         logger.exception(msg)
-        return False, msg + '\n' + "Check log at " + logfilepath
+        return False, msg + '\n' + str(e) + '\n' + "Check log at " + logfilepath
