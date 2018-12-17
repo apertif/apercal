@@ -991,6 +991,23 @@ class preflag(BaseModule):
 
         subs_param.add_param(self, 'preflag_aoflagger_bandpass_status', preflagaoflaggerbandpassstatus)
 
+    def aoflagger_plot(self, mspath, baselines=[(2,0xd),(4,9), (6,7)]):
+        """
+        Saves a png with the flags that AOFlagger added for some 'typical' baselines
+        Will save in the same directory as the measurement set
+
+        Args:
+            mspath (str): full path to the measurement set that has been flagged
+            baselines (List[Tuple[int]]): baselines for which to produce the plots
+        """
+        logger.info("Storing flagging images for " + mspath)
+        destination_path = '/'.join(mspath.rstrip('/').split('/')[:-1])+'/'
+        msname = mspath.rstrip('/').split('/')[-1].rstrip('.MS')
+        for (ant1, ant2) in baselines:
+            pngname = "{}-flags-{:02d}-{:02d}.png".format(msname, ant1, ant2)
+            lib.basher("rfigui -save-baseline {} {} {} 0 0 {}".format(destination_path + pngname, ant1, ant2, mspath))
+        logger.info("Done storing flagging images for " + mspath)
+
     def aoflagger_flag(self):
         """
         Uses the aoflagger to flag the calibrators and the target data set(s). Uses the bandpass corrected
@@ -1037,6 +1054,7 @@ class preflag(BaseModule):
                             logger.warning('Used AOFlagger to flag flux calibrator without preliminary bandpass '
                                            'applied. Better results are usually obtained with a preliminary bandpass applied.')
                             preflagaoflaggerfluxcalflag = True
+                        self.aoflagger_plot(self.get_fluxcal_path())
                     else:
                         error = 'Flux calibrator dataset or strategy not defined properly or dataset' \
                                 'not available. Not AOFlagging flux calibrator.'
@@ -1077,7 +1095,7 @@ class preflag(BaseModule):
                         logger.info('Used AOFlagger to flag polarised calibrator without preliminary bandpass '
                                     'applied. Better results are usually obtained with a preliminary bandpass applied.')
                         preflagaoflaggerpolcalflag = True
-
+                    self.aoflagger_plot(self.get_polcal_path())
                 else:
                     logger.info('Polarised calibrator was already flagged with AOFlagger!')
 
@@ -1116,6 +1134,7 @@ class preflag(BaseModule):
                                                'applied. Better results are usually obtained with a preliminary '
                                                'bandpass applied.'.format(beam))
                                 preflagaoflaggertargetbeamsflag[int(beam)] = True
+                            self.aoflagger_plot(vis)
                         else:
                             logger.info('Target beam ' + beam + ' was already flagged with AOFlagger!')
                 else:
