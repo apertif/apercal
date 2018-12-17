@@ -1101,7 +1101,7 @@ class preflag(BaseModule):
                             if self.preflag_aoflagger_bandpass and preflagaoflaggerbandpassstatus:
                                 lib.basher(base_cmd + ' -bandpass ' + self.get_fluxcal_path()[:-3] + '_Bpass.txt ' + vis,
                                            prefixes_to_strip=strip_prefixes)
-                                logger.debug('Used AOFlagger to flag target beam %s with preliminary '
+                                logger.debug('Used AOFlagger to flag target beam {} with preliminary '
                                              'bandpass applied'.format(beam))
                                 preflagaoflaggertargetbeamsflag[int(beam)] = True
                             elif self.preflag_aoflagger_bandpass and not preflagaoflaggerbandpassstatus:
