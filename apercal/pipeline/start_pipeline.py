@@ -64,9 +64,6 @@ def start_apercal_pipeline((taskid_fluxcal, name_fluxcal, beamlist_fluxcal),
     else:
         logger.debug("Polcal " + name_polcal + " is polarised, all good")
 
-    import sys
-    sys.exit(1)
-
     def set_files(p):
         """
         Set the basedir, fluxcal, polcal, target properties
