@@ -233,7 +233,7 @@ class convert(BaseModule):
                             if path.isfile(target_fits):
                                 converttargetbeamsms2uvfits[int(beam)] = True
                                 logger.debug('Converted dataset of target beam '
-                                             'l{} from MS to UVFITS format!'.format(beam))
+                                             '{} from MS to UVFITS format!'.format(beam))
                             else:
                                 converttargetbeamsms2uvfits[int(beam)] = False
                                 logger.warning('Could not convert dataset for target beam '
