@@ -110,12 +110,11 @@ class scal:
         Averages the data to one channel per subband for self-calibration
         """
         subs_setinit.setinitdirs(self)
-        nbeams = 37
 
         # Create the parameters for the parameter file for the averaging
 
         # Status of the averaging
-        selfcaltargetbeamsaverage = get_param_def(self, 'selfcal_targetbeams_average', np.full(nbeams, False))
+        selfcaltargetbeamsaverage = get_param_def(self, 'selfcal_targetbeams_average', np.full(self.NBEAMS, False))
 
         if self.selfcal_average:
             if not selfcaltargetbeamsaverage[int(self.beam)]:
@@ -158,13 +157,12 @@ class scal:
         outside of a given sigma interval are flagged in the self-calibration, continuum and polarisation imagaing, but are still used for line imaging.
         """
         subs_setinit.setinitdirs(self)
-        nbeams = 37
 
         # Create the parameters for the parameter file for the flagging of residual RFI/HI
 
         # Status of the flagging of RFI/HI
-        selfcaltargetbeamsflagline = get_param_def(self, 'selfcal_targetbeams_flagline', np.full(nbeams, False))
-        selfcaltargetbeamsflaglinechannels = get_param_def(self, 'selfcal_targetbeams_flagline_channels', np.full(nbeams, 'S50'))
+        selfcaltargetbeamsflagline = get_param_def(self, 'selfcal_targetbeams_flagline', np.full(self.NBEAMS, False))
+        selfcaltargetbeamsflaglinechannels = get_param_def(self, 'selfcal_targetbeams_flagline_channels', np.full(self.NBEAMS, 'S50'))
 
         if self.selfcal_flagline:
             if not selfcaltargetbeamsflagline[int(self.beam)]:
@@ -220,11 +218,10 @@ class scal:
         Parametric self calibration using an NVSS/FIRST skymodel and calculating spectral indices by source matching with WENSS.
         """
         subs_setinit.setinitdirs(self)
-        nbeams = 37
 
         # Create the parameters for the parameter file for the parametric self-calibration
 
-        selfcaltargetbeamsparametric = get_param_def(self, 'selfcal_targetbeams_parametric', np.full(nbeams, False))
+        selfcaltargetbeamsparametric = get_param_def(self, 'selfcal_targetbeams_parametric', np.full(self.NBEAMS, False))
 
         if self.selfcal_parametric:
             if not selfcaltargetbeamsparametric[int(self.beam)]:
@@ -300,27 +297,26 @@ class scal:
         Executes the phase self-calibration with the given parameters
         """
         subs_setinit.setinitdirs(self)
-        nbeams = 37
 
         # Create the parameters for the parameter file for the iterative phase self-calibration
 
-        selfcaltargetbeamsphasestatus = get_param_def(self, 'selfcal_targetbeams_phase_status', np.full(nbeams, False))
-        selfcaltargetbeamsphasemapstatus = get_param_def(self, 'selfcal_targetbeams_phase_mapstatus', np.full((nbeams, self.selfcal_phase_majorcycle), False))
-        selfcaltargetbeamsphasemapstats = get_param_def(self, 'selfcal_targetbeams_phase_mapstats', np.full((nbeams, self.selfcal_phase_majorcycle, 3), np.nan))
-        selfcaltargetbeamsphasebeamstatus = get_param_def(self, 'selfcal_targetbeams_phase_beamstatus', np.full((nbeams, self.selfcal_phase_majorcycle), False))
-        selfcaltargetbeamsphasemaskstatus = get_param_def(self, 'selfcal_targetbeams_phase_maskstatus', np.full((nbeams, self.selfcal_phase_majorcycle, self.selfcal_phase_minorcycle), False))
-        selfcaltargetbeamsphasemaskstats = get_param_def(self, 'selfcal_targetbeams_phase_maskstats', np.full((nbeams, self.selfcal_phase_majorcycle, self.selfcal_phase_minorcycle, 2), np.nan))
-        selfcaltargetbeamsphasemodelstatus = get_param_def(self, 'selfcal_targetbeams_phase_modelstatus', np.full((nbeams, self.selfcal_phase_majorcycle, self.selfcal_phase_minorcycle), False))
-        selfcaltargetbeamsphasemodelstats = get_param_def(self, 'selfcal_targetbeams_phase_modelstats', np.full((nbeams, self.selfcal_phase_majorcycle, self.selfcal_phase_minorcycle, 2), np.nan))
-        selfcaltargetbeamsphaseimagestatus = get_param_def(self, 'selfcal_targetbeams_phase_imagestatus', np.full((nbeams, self.selfcal_phase_majorcycle, self.selfcal_phase_minorcycle), False))
-        selfcaltargetbeamsphaseimagestats = get_param_def(self, 'selfcal_targetbeams_phase_imagestats', np.full((nbeams, self.selfcal_phase_majorcycle, self.selfcal_phase_minorcycle, 3), np.nan))
-        selfcaltargetbeamsphaseresidualstatus = get_param_def(self, 'selfcal_targetbeams_phase_residualstatus', np.full((nbeams), False))
-        selfcaltargetbeamsphaseresidualstats = get_param_def(self, 'selfcal_targetbeams_phase_residualstats', np.full((nbeams, self.selfcal_phase_majorcycle, self.selfcal_phase_minorcycle, 3), np.nan))
-        selfcaltargetbeamsphasemaskthreshold = get_param_def(self, 'selfcal_targetbeams_phase_maskthreshold', np.full((nbeams, self.selfcal_phase_majorcycle, self.selfcal_phase_minorcycle), np.nan))
-        selfcaltargetbeamsphasecleanthreshold = get_param_def(self, 'selfcal_targetbeams_phase_cleanthreshold', np.full((nbeams, self.selfcal_phase_majorcycle, self.selfcal_phase_minorcycle), np.nan))
-        selfcaltargetbeamsphasethresholdtype = get_param_def(self, 'selfcal_targetbeams_phase_thresholdtype', np.full((nbeams, self.selfcal_phase_majorcycle, self.selfcal_phase_minorcycle), 'NA'))
-        selfcaltargetbeamsphasefinalmajor = get_param_def(self, 'selfcal_targetbeams_phase_final_majorcycle', np.full((nbeams), 0))
-        selfcaltargetbeamsphasefinalminor = get_param_def(self, 'selfcal_targetbeams_phase_final_minorcycle', np.full((nbeams), 0))
+        selfcaltargetbeamsphasestatus = get_param_def(self, 'selfcal_targetbeams_phase_status', np.full(self.NBEAMS, False))
+        selfcaltargetbeamsphasemapstatus = get_param_def(self, 'selfcal_targetbeams_phase_mapstatus', np.full((self.NBEAMS, self.selfcal_phase_majorcycle), False))
+        selfcaltargetbeamsphasemapstats = get_param_def(self, 'selfcal_targetbeams_phase_mapstats', np.full((self.NBEAMS, self.selfcal_phase_majorcycle, 3), np.nan))
+        selfcaltargetbeamsphasebeamstatus = get_param_def(self, 'selfcal_targetbeams_phase_beamstatus', np.full((self.NBEAMS, self.selfcal_phase_majorcycle), False))
+        selfcaltargetbeamsphasemaskstatus = get_param_def(self, 'selfcal_targetbeams_phase_maskstatus', np.full((self.NBEAMS, self.selfcal_phase_majorcycle, self.selfcal_phase_minorcycle), False))
+        selfcaltargetbeamsphasemaskstats = get_param_def(self, 'selfcal_targetbeams_phase_maskstats', np.full((self.NBEAMS, self.selfcal_phase_majorcycle, self.selfcal_phase_minorcycle, 2), np.nan))
+        selfcaltargetbeamsphasemodelstatus = get_param_def(self, 'selfcal_targetbeams_phase_modelstatus', np.full((self.NBEAMS, self.selfcal_phase_majorcycle, self.selfcal_phase_minorcycle), False))
+        selfcaltargetbeamsphasemodelstats = get_param_def(self, 'selfcal_targetbeams_phase_modelstats', np.full((self.NBEAMS, self.selfcal_phase_majorcycle, self.selfcal_phase_minorcycle, 2), np.nan))
+        selfcaltargetbeamsphaseimagestatus = get_param_def(self, 'selfcal_targetbeams_phase_imagestatus', np.full((self.NBEAMS, self.selfcal_phase_majorcycle, self.selfcal_phase_minorcycle), False))
+        selfcaltargetbeamsphaseimagestats = get_param_def(self, 'selfcal_targetbeams_phase_imagestats', np.full((self.NBEAMS, self.selfcal_phase_majorcycle, self.selfcal_phase_minorcycle, 3), np.nan))
+        selfcaltargetbeamsphaseresidualstatus = get_param_def(self, 'selfcal_targetbeams_phase_residualstatus', np.full((self.NBEAMS), False))
+        selfcaltargetbeamsphaseresidualstats = get_param_def(self, 'selfcal_targetbeams_phase_residualstats', np.full((self.NBEAMS, self.selfcal_phase_majorcycle, self.selfcal_phase_minorcycle, 3), np.nan))
+        selfcaltargetbeamsphasemaskthreshold = get_param_def(self, 'selfcal_targetbeams_phase_maskthreshold', np.full((self.NBEAMS, self.selfcal_phase_majorcycle, self.selfcal_phase_minorcycle), np.nan))
+        selfcaltargetbeamsphasecleanthreshold = get_param_def(self, 'selfcal_targetbeams_phase_cleanthreshold', np.full((self.NBEAMS, self.selfcal_phase_majorcycle, self.selfcal_phase_minorcycle), np.nan))
+        selfcaltargetbeamsphasethresholdtype = get_param_def(self, 'selfcal_targetbeams_phase_thresholdtype', np.full((self.NBEAMS, self.selfcal_phase_majorcycle, self.selfcal_phase_minorcycle), 'NA'))
+        selfcaltargetbeamsphasefinalmajor = get_param_def(self, 'selfcal_targetbeams_phase_final_majorcycle', np.full((self.NBEAMS), 0))
+        selfcaltargetbeamsphasefinalminor = get_param_def(self, 'selfcal_targetbeams_phase_final_minorcycle', np.full((self.NBEAMS), 0))
 
         if self.selfcal_phase:
             subs_setinit.setinitdirs(self)
@@ -674,27 +670,26 @@ class scal:
         Executes amplitude self-calibration with the given parameters
         """
         subs_setinit.setinitdirs(self)
-        nbeams = 37
 
         # Create the parameters for the parameter file for the amplitude self-calibration
 
-        selfcaltargetbeamsampstatus = get_param_def(self, 'selfcal_targetbeams_amp_status', np.full(nbeams, False))
-        selfcaltargetbeamsampapplystatus = get_param_def(self, 'selfcal_targetbeams_amp_applystatus', np.full(nbeams, False))
-        selfcaltargetbeamsampmapstatus = get_param_def(self, 'selfcal_targetbeams_amp_mapstatus', np.full((nbeams), False))
-        selfcaltargetbeamsampmapstats = get_param_def(self, 'selfcal_targetbeams_amp_mapstats', np.full((nbeams, 3), np.nan))
-        selfcaltargetbeamsampbeamstatus = get_param_def(self, 'selfcal_targetbeams_amp_beamstatus', np.full((nbeams), False))
-        selfcaltargetbeamsampmaskstatus = get_param_def(self, 'selfcal_targetbeams_amp_maskstatus', np.full((nbeams, self.selfcal_amp_minorcycle), False))
-        selfcaltargetbeamsampmaskstats = get_param_def(self, 'selfcal_targetbeams_amp_maskstats', np.full((nbeams, self.selfcal_amp_minorcycle, 2), np.nan))
-        selfcaltargetbeamsampmodelstatus = get_param_def(self, 'selfcal_targetbeams_amp_modelstatus', np.full((nbeams, self.selfcal_amp_minorcycle), False))
-        selfcaltargetbeamsampmodelstats = get_param_def(self, 'selfcal_targetbeams_amp_modelstats', np.full((nbeams, self.selfcal_amp_minorcycle, 2), np.nan))
-        selfcaltargetbeamsampimagestatus = get_param_def(self, 'selfcal_targetbeams_phase_imagestatus', np.full((nbeams, self.selfcal_amp_minorcycle), False))
-        selfcaltargetbeamsampimagestats = get_param_def(self, 'selfcal_targetbeams_phase_imagestats', np.full((nbeams, self.selfcal_amp_minorcycle, 3), np.nan))
-        selfcaltargetbeamsampresidualstatus = get_param_def(self, 'selfcal_targetbeams_phase_residualstatus', np.full((nbeams), False))
-        selfcaltargetbeamsampresidualstats = get_param_def(self, 'selfcal_targetbeams_phase_residualstats', np.full((nbeams, self.selfcal_amp_minorcycle, 3), np.nan))
-        selfcaltargetbeamsampmaskthreshold = get_param_def(self, 'selfcal_targetbeams_phase_maskthreshold', np.full((nbeams, self.selfcal_amp_minorcycle), np.nan))
-        selfcaltargetbeamsampcleanthreshold = get_param_def(self, 'selfcal_targetbeams_phase_cleanthreshold', np.full((nbeams, self.selfcal_amp_minorcycle), np.nan))
-        selfcaltargetbeamsampthresholdtype = get_param_def(self, 'selfcal_targetbeams_phase_thresholdtype', np.full((nbeams, self.selfcal_amp_minorcycle), 'NA'))
-        selfcaltargetbeamsampfinalminor = get_param_def(self, 'selfcal_targetbeams_phase_final_minorcycle', np.full((nbeams), 0))
+        selfcaltargetbeamsampstatus = get_param_def(self, 'selfcal_targetbeams_amp_status', np.full(self.NBEAMS, False))
+        selfcaltargetbeamsampapplystatus = get_param_def(self, 'selfcal_targetbeams_amp_applystatus', np.full(self.NBEAMS, False))
+        selfcaltargetbeamsampmapstatus = get_param_def(self, 'selfcal_targetbeams_amp_mapstatus', np.full((self.NBEAMS), False))
+        selfcaltargetbeamsampmapstats = get_param_def(self, 'selfcal_targetbeams_amp_mapstats', np.full((self.NBEAMS, 3), np.nan))
+        selfcaltargetbeamsampbeamstatus = get_param_def(self, 'selfcal_targetbeams_amp_beamstatus', np.full((self.NBEAMS), False))
+        selfcaltargetbeamsampmaskstatus = get_param_def(self, 'selfcal_targetbeams_amp_maskstatus', np.full((self.NBEAMS, self.selfcal_amp_minorcycle), False))
+        selfcaltargetbeamsampmaskstats = get_param_def(self, 'selfcal_targetbeams_amp_maskstats', np.full((self.NBEAMS, self.selfcal_amp_minorcycle, 2), np.nan))
+        selfcaltargetbeamsampmodelstatus = get_param_def(self, 'selfcal_targetbeams_amp_modelstatus', np.full((self.NBEAMS, self.selfcal_amp_minorcycle), False))
+        selfcaltargetbeamsampmodelstats = get_param_def(self, 'selfcal_targetbeams_amp_modelstats', np.full((self.NBEAMS, self.selfcal_amp_minorcycle, 2), np.nan))
+        selfcaltargetbeamsampimagestatus = get_param_def(self, 'selfcal_targetbeams_phase_imagestatus', np.full((self.NBEAMS, self.selfcal_amp_minorcycle), False))
+        selfcaltargetbeamsampimagestats = get_param_def(self, 'selfcal_targetbeams_phase_imagestats', np.full((self.NBEAMS, self.selfcal_amp_minorcycle, 3), np.nan))
+        selfcaltargetbeamsampresidualstatus = get_param_def(self, 'selfcal_targetbeams_phase_residualstatus', np.full((self.NBEAMS), False))
+        selfcaltargetbeamsampresidualstats = get_param_def(self, 'selfcal_targetbeams_phase_residualstats', np.full((self.NBEAMS, self.selfcal_amp_minorcycle, 3), np.nan))
+        selfcaltargetbeamsampmaskthreshold = get_param_def(self, 'selfcal_targetbeams_phase_maskthreshold', np.full((self.NBEAMS, self.selfcal_amp_minorcycle), np.nan))
+        selfcaltargetbeamsampcleanthreshold = get_param_def(self, 'selfcal_targetbeams_phase_cleanthreshold', np.full((self.NBEAMS, self.selfcal_amp_minorcycle), np.nan))
+        selfcaltargetbeamsampthresholdtype = get_param_def(self, 'selfcal_targetbeams_phase_thresholdtype', np.full((self.NBEAMS, self.selfcal_amp_minorcycle), 'NA'))
+        selfcaltargetbeamsampfinalminor = get_param_def(self, 'selfcal_targetbeams_phase_final_minorcycle', np.full((self.NBEAMS), 0))
 
         if self.selfcal_amp:
             subs_setinit.setinitdirs(self)
