@@ -2,6 +2,8 @@ __version__ = '2.2'
 
 import libs.lib
 
+# a large line which should exceed 79 and 120 characters so that the error could be highlighted. Please do not merge this PR, I need it to test the bot on the repository.
+
 from modules.prepare import prepare
 from modules.preflag import preflag
 from modules.convert import convert
