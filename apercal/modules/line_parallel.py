@@ -596,14 +596,13 @@ class line_parallel(BaseModule):
                                     else:
                                         # Set the frequency bin to the number of channels in the chunk of the subband
                                         binchan = chan_per_chunk
-                                logger.info('(PARALLEL) Increasing frequency bin of data chunk ' + str(
-                                    chunk) + ' to keep bandwidth of chunks equal over the whole bandwidth (threads [' + str(
-                                    p1.thread_num + 1) + '/' + str(p1.num_threads) + ',' + str(
-                                    p2.thread_num + 1) + '/' + str(p2.num_threads) + '] [1st,2nd]) #')
-                                logger.info(
-                                    '(PARALLEL) New frequency bin is ' + str(binchan * finc) + ' GHz (threads [' + str(
-                                        p1.thread_num + 1) + '/' + str(p1.num_threads) + ',' + str(
-                                        p2.thread_num + 1) + '/' + str(p2.num_threads) + '] [1st,2nd]) #')
+                                logger.info('(PARALLEL) Increasing frequency bin of data chunk ' + str(chunk) +
+                                            ' to keep bandwidth of chunks equal over the whole bandwidth (threads [' +
+                                            str(p1.thread_num + 1) + '/' + str(p1.num_threads) + ',' +
+                                            str(p2.thread_num + 1) + '/' + str(p2.num_threads) + '] [1st,2nd]) #')
+                                logger.info('(PARALLEL) New frequency bin is ' + str(binchan * finc) +
+                                            ' GHz (threads [' + str(p1.thread_num + 1) + '/' + str(p1.num_threads) +
+                                            ',' + str(p2.thread_num + 1) + '/' + str(p2.num_threads) + '] [1st,2nd]) #')
                             nchan = int(chan_per_chunk / binchan)  # Total number of output channels per chunk
                             start = 1 + chunk * chan_per_chunk
                             width = int(binchan)
@@ -619,12 +618,12 @@ class line_parallel(BaseModule):
                             uvaver.go()
                             # old:
                             # counter = counter + 1
-                            logger.info('(PARALLEL) Splitting of data chunk ' + str(chunk) + ' for subband ' + str(
-                                subband) + ' done (threads [' + str(p1.thread_num + 1) + '/' + str(
-                                p1.num_threads) + ',' + str(p2.thread_num + 1) + '/' + str(
-                                p2.num_threads) + '] [1st,2nd]) #')
-                    logger.info('(PARALLEL) Splitting of data for subband ' + str(subband) + ' done (thread ' + str(
-                        p1.thread_num + 1) + '/' + str(p1.num_threads) + ' 1st level) #')
+                            logger.info('(PARALLEL) Splitting of data chunk ' + str(chunk) + ' for subband ' +
+                                        str(subband) + ' done (threads [' + str(p1.thread_num + 1) + '/' +
+                                        str(p1.num_threads) + ',' + str(p2.thread_num + 1) + '/' + str(p2.num_threads) +
+                                        '] [1st,2nd]) #')
+                    logger.info('(PARALLEL) Splitting of data for subband ' + str(subband) + ' done (thread ' +
+                                str(p1.thread_num + 1) + '/' + str(p1.num_threads) + ' 1st level) #')
             # new:
             pymp.config.nested = original_nested
             logger.info(' (PARALLEL) Splitting of target data into individual frequency chunks done')
@@ -955,7 +954,8 @@ class line_parallel(BaseModule):
                                         pass
                                 else:
                                     minc = 0
-                                    # Do one iteration of clean to create a model map for usage with restor to give the beam size.
+                                    # Do one iteration of clean to create a model map for usage with restor to give the
+                                    # beam size.
                                     clean = lib.miriad('clean')
                                     clean.map = 'map_00_' + str(channel_counter).zfill(5)
                                     clean.beam = 'beam_00_' + str(channel_counter).zfill(5)
@@ -1374,9 +1374,9 @@ class line_parallel(BaseModule):
                                             maxdr = np.divide(imax, float(theoretical_noise_threshold))
                                             nminiter = calc_miniter(maxdr, self.line_image_dr0)
                                             imclean, masklevels = calc_line_masklevel(nminiter,
-                                                                                           self.line_image_dr0, maxdr,
-                                                                                           self.line_image_minorcycle0_dr,
-                                                                                           imax)
+                                                                                      self.line_image_dr0, maxdr,
+                                                                                      self.line_image_minorcycle0_dr,
+                                                                                      imax)
                                             if imclean:
                                                 logger.info('(PARALLEL) Emission found in channel ' + str(
                                                     channel_counter).zfill(5) + '. Cleaning! (threads [' + str(
@@ -1594,10 +1594,13 @@ class line_parallel(BaseModule):
         if os.path.isfile(self.linedir + '/' + chunk + '/' + chunk + '.mir/gains'):
             theoretical_noise = calc_theoretical_noise(self.linedir + '/' + chunk + '/' + chunk + '.mir')
 
-            logger.info('# Theoretical noise for chunk ' + chunk + ' is ' + str(theoretical_noise / 1000) + ' Jy/beam #')
-            theoretical_noise_threshold = calc_theoretical_noise_threshold(float(theoretical_noise), self.line_subtract_mode_uvmodel_nsigma)
+            logger.info('# Theoretical noise for chunk ' + chunk + ' is ' + str(theoretical_noise / 1000) +
+                        ' Jy/beam #')
+            theoretical_noise_threshold = calc_theoretical_noise_threshold(float(theoretical_noise),
+                                                                           self.line_subtract_mode_uvmodel_nsigma)
             logger.info('# Your theoretical noise threshold will be ' + str(self.line_subtract_mode_uvmodel_nsigma) +
-                        ' times the theoretical noise corresponding to ' + str(theoretical_noise_threshold) + ' Jy/beam #')
+                        ' times the theoretical noise corresponding to ' + str(theoretical_noise_threshold) +
+                        ' Jy/beam #')
             dr_list = calc_dr_maj(self.line_subtract_mode_uvmodel_drinit, self.line_subtract_mode_uvmodel_dr0,
                                        majc, self.line_subtract_mode_uvmodel_majorcycle_function)
             dr_minlist = calc_dr_min(dr_list, majc - 1, self.line_subtract_mode_uvmodel_minorcycle,
