@@ -16,6 +16,7 @@ from apercal.libs.calculations import calc_dr_maj, calc_theoretical_noise, calc_
     calc_dr_min, calc_line_masklevel, calc_miniter
 from apercal.subs import setinit as subs_setinit
 from apercal.libs import lib
+from apercal.subs.managefiles import director
 
 from apercal.exceptions import ApercalException
 
@@ -301,7 +302,7 @@ class line_parallel(BaseModule):
         if self.splitdata:
             subs_setinit.setinitdirs(self)
             subs_setinit.setdatasetnamestomiriad(self)
-            self.director('ch', self.linedir)
+            director('ch', self.linedir)
             logger.info(' Splitting of target data into individual frequency chunks started')
             if os.path.isfile(self.linedir + '/' + self.target):
                 logger.info('Calibrator corrections already seem to have been applied #')
@@ -366,7 +367,7 @@ class line_parallel(BaseModule):
                     start = 1 + chunk * chan_per_chunk
                     width = int(binchan)
                     step = int(width)
-                    self.director('mk', self.linedir + '/' + str(counter).zfill(2))
+                    director('mk', self.linedir + '/' + str(counter).zfill(2))
                     uvaver = lib.miriad('uvaver')
                     uvaver.vis = self.linedir + '/' + self.target
                     uvaver.out = self.linedir + '/' + str(counter).zfill(2) + '/' + str(counter).zfill(2) + '.mir'
@@ -387,7 +388,7 @@ class line_parallel(BaseModule):
         if self.splitdata:
             subs_setinit.setinitdirs(self)
             subs_setinit.setdatasetnamestomiriad(self)
-            self.director('ch', self.linedir)
+            director('ch', self.linedir)
             logger.info(' (SEQUENTIAL) Splitting of target data into individual frequency chunks started')
             if os.path.isfile(self.linedir + '/' + self.target):
                 logger.info('(SEQUENTIAL) Calibrator corrections already seem to have been applied #')
@@ -472,7 +473,7 @@ class line_parallel(BaseModule):
                     start = 1 + chunk * chan_per_chunk
                     width = int(binchan)
                     step = int(width)
-                    self.director('mk', self.linedir + '/' + str(counter).zfill(2))
+                    director('mk', self.linedir + '/' + str(counter).zfill(2))
                     uvaver = lib.miriad('uvaver')
                     uvaver.vis = self.linedir + '/' + self.target
                     uvaver.out = self.linedir + '/' + str(counter).zfill(2) + '/' + str(counter).zfill(2) + '.mir'
@@ -498,7 +499,7 @@ class line_parallel(BaseModule):
         if self.splitdata:
             subs_setinit.setinitdirs(self)
             subs_setinit.setdatasetnamestomiriad(self)
-            self.director('ch', self.linedir)
+            director('ch', self.linedir)
             logger.info(' (PARALLEL) Splitting of target data into individual frequency chunks started')
             if os.path.isfile(self.linedir + '/' + self.target):
                 logger.info('(PARALLEL) Calibrator corrections already seem to have been applied #')
@@ -607,7 +608,7 @@ class line_parallel(BaseModule):
                             start = 1 + chunk * chan_per_chunk
                             width = int(binchan)
                             step = int(width)
-                            self.director('mk', self.linedir + '/' + str(counter).zfill(2))
+                            director('mk', self.linedir + '/' + str(counter).zfill(2))
                             uvaver = lib.miriad('uvaver')
                             uvaver.vis = self.linedir + '/' + self.target
                             uvaver.out = self.linedir + '/' + str(counter).zfill(2) + '/' + str(counter).zfill(
@@ -635,7 +636,7 @@ class line_parallel(BaseModule):
         if self.line_transfergains:
             subs_setinit.setinitdirs(self)
             subs_setinit.setdatasetnamestomiriad(self)
-            self.director('ch', self.linedir)
+            director('ch', self.linedir)
             logger.info(' Copying gains from continuum to line data')
             for chunk in self.list_chunks():
                 if os.path.isfile(self.selfcaldir + '/' + chunk + '/' + chunk + '.mir' + '/gains'):
@@ -656,7 +657,7 @@ class line_parallel(BaseModule):
         if self.line_transfergains:
             subs_setinit.setinitdirs(self)
             subs_setinit.setdatasetnamestomiriad(self)
-            self.director('ch', self.linedir)
+            director('ch', self.linedir)
             logger.info(' (PARALLEL) Copying gains from continuum to line data')
             # new:
             chunks_list = self.list_chunks()
@@ -685,7 +686,7 @@ class line_parallel(BaseModule):
         if self.line_subtract:
             subs_setinit.setinitdirs(self)
             subs_setinit.setdatasetnamestomiriad(self)
-            self.director('ch', self.linedir)
+            director('ch', self.linedir)
             if self.line_subtract_mode == 'uvlin':
                 logger.info(' Starting continuum subtraction of individual chunks using uvlin')
                 for chunk in self.list_chunks():
@@ -698,7 +699,7 @@ class line_parallel(BaseModule):
             elif self.line_subtract_mode == 'uvmodel':
                 logger.info(' Starting continuum subtraction of individual chunks using uvmodel')
                 for chunk in self.list_chunks():
-                    self.director('ch', self.linedir + '/' + chunk)
+                    director('ch', self.linedir + '/' + chunk)
                     uvcat = lib.miriad('uvcat')
                     uvcat.vis = chunk + '.mir'
                     uvcat.out = chunk + '_uvcat.mir'
@@ -708,9 +709,9 @@ class line_parallel(BaseModule):
                             self.line_subtract_mode_uvmodel_minorcycle - 1).zfill(2)):
                         logger.info('Found model for subtraction in final continuum directory. No need to redo'
                                     'continuum imaging #')
-                        self.director('cp', self.linedir + '/' + chunk,
-                                      file_=self.contdir + '/stack/' + chunk + '/model_' + str(
-                                          self.line_subtract_mode_uvmodel_minorcycle - 1).zfill(2))
+                        director('cp', self.linedir + '/' + chunk,
+                                 file_=self.contdir + '/stack/' + chunk + '/model_' + str(
+                                 self.line_subtract_mode_uvmodel_minorcycle - 1).zfill(2))
                     else:
                         self.create_uvmodel(chunk)
                     try:
@@ -720,7 +721,7 @@ class line_parallel(BaseModule):
                         uvmodel.options = 'subtract,mfs'
                         uvmodel.out = chunk + '_line.mir'
                         uvmodel.go()
-                        self.director('rm', chunk + '_uvcat.mir')
+                        director('rm', chunk + '_uvcat.mir')
                         logger.info(' Continuum subtraction using uvmodel method for chunk ' + chunk + ' successful!')
                     except Exception:
                         logger.warning(' Continuum subtraction using uvmodel method for chunk ' + chunk +
@@ -737,7 +738,7 @@ class line_parallel(BaseModule):
         if self.line_subtract:
             subs_setinit.setinitdirs(self)
             subs_setinit.setdatasetnamestomiriad(self)
-            self.director('ch', self.linedir)
+            director('ch', self.linedir)
             if self.line_subtract_mode == 'uvlin':
                 logger.info(' (PARALLEL) Starting continuum subtraction of individual chunks using uvlin')
                 # new:
@@ -759,7 +760,7 @@ class line_parallel(BaseModule):
                 with pymp.Parallel(nthreads) as p:
                     for index in p.range(len(chunks_list)):
                         chunk = chunks_list[index]
-                        self.director('ch', self.linedir + '/' + chunk)
+                        director('ch', self.linedir + '/' + chunk)
                         uvcat = lib.miriad('uvcat')
                         uvcat.vis = chunk + '.mir'
                         uvcat.out = chunk + '_uvcat.mir'
@@ -772,9 +773,9 @@ class line_parallel(BaseModule):
                             logger.info('(PARALLEL) Found model for subtraction in final continuum directory. No need'
                                         'to redo continuum imaging (thread ' + str(
                                     p.thread_num + 1) + ' out of ' + str(p.num_threads) + ') #')
-                            self.director('cp', self.linedir + '/' + chunk,
-                                          file_=self.contdir + '/stack/' + chunk + '/model_' + str(
-                                              self.line_subtract_mode_uvmodel_minorcycle - 1).zfill(2))
+                            director('cp', self.linedir + '/' + chunk,
+                                     file_=self.contdir + '/stack/' + chunk + '/model_' + str(
+                                     self.line_subtract_mode_uvmodel_minorcycle - 1).zfill(2))
                         else:
                             self.create_uvmodel(chunk)
                         try:
@@ -784,7 +785,7 @@ class line_parallel(BaseModule):
                             uvmodel.options = 'subtract,mfs'
                             uvmodel.out = chunk + '_line.mir'
                             uvmodel.go()
-                            self.director('rm', chunk + '_uvcat.mir')
+                            director('rm', chunk + '_uvcat.mir')
                             logger.info(' (PARALLEL) Continuum subtraction using uvmodel method for chunk ' + chunk +
                                         ' successful! (thread ' + str(
                                         p.thread_num + 1) + ' out of ' + str(p.num_threads) + ')')
@@ -804,8 +805,8 @@ class line_parallel(BaseModule):
         subs_setinit.setdatasetnamestomiriad(self)
         if self.line_image:
             logger.info(' Starting line imaging of dataset')
-            self.director('ch', self.linedir)
-            self.director('ch', self.linedir + '/cubes')
+            director('ch', self.linedir)
+            director('ch', self.linedir + '/cubes')
             logger.info('Imaging each individual channel separately #')
             channel_counter = 0  # Counter for numbering the channels for the whole dataset
             nchunks = len(self.list_chunks())
@@ -947,9 +948,9 @@ class line_parallel(BaseModule):
                                             5)
                                         convol.options = 'final'
                                         convol.go()
-                                        self.director('rn', 'image_' + str(channel_counter).zfill(5),
-                                                      file_='convol_' + str(minc).zfill(2) + '_' + str(
-                                                          channel_counter).zfill(5))
+                                        director('rn', 'image_' + str(channel_counter).zfill(5),
+                                                 file_='convol_' + str(minc).zfill(2) + '_' + str(
+                                                 channel_counter).zfill(5))
                                     else:
                                         pass
                                 else:
@@ -1003,13 +1004,13 @@ class line_parallel(BaseModule):
                         else:
                             channel_counter = channel_counter + 1
                     logger.info('All channels of chunk ' + chunk + ' imaged #')
-                    self.director('rm', self.linedir + '/cubes/' + 'image*')
-                    self.director('rm', self.linedir + '/cubes/' + 'beam*')
-                    self.director('rm', self.linedir + '/cubes/' + 'mask*')
-                    self.director('rm', self.linedir + '/cubes/' + 'model*')
-                    self.director('rm', self.linedir + '/cubes/' + 'map*')
-                    self.director('rm', self.linedir + '/cubes/' + 'convol*')
-                    self.director('rm', self.linedir + '/cubes/' + 'residual*')
+                    director('rm', self.linedir + '/cubes/' + 'image*')
+                    director('rm', self.linedir + '/cubes/' + 'beam*')
+                    director('rm', self.linedir + '/cubes/' + 'mask*')
+                    director('rm', self.linedir + '/cubes/' + 'model*')
+                    director('rm', self.linedir + '/cubes/' + 'map*')
+                    director('rm', self.linedir + '/cubes/' + 'convol*')
+                    director('rm', self.linedir + '/cubes/' + 'residual*')
                     logger.info('Cleaned up the directory for chunk ' + chunk + ' #')
                 else:
                     logger.warning(' No continuum subtracted data available for chunk ' + chunk + '!')
@@ -1028,7 +1029,7 @@ class line_parallel(BaseModule):
                                  int(str(self.line_image_channels).split(',')[0]), startfreq)
             logger.info('Created HI-beam cube #')
             logger.info('Removing obsolete files #')
-            self.director('rm', self.linedir + '/cubes/' + 'cube_*')
+            director('rm', self.linedir + '/cubes/' + 'cube_*')
 
     def image_line_sequential(self):
         """
@@ -1038,8 +1039,8 @@ class line_parallel(BaseModule):
         subs_setinit.setdatasetnamestomiriad(self)
         if self.line_image:
             logger.info(' (SEQUENTIAL) Starting line imaging of dataset')
-            self.director('ch', self.linedir)
-            self.director('ch', self.linedir + '/cubes')
+            director('ch', self.linedir)
+            director('ch', self.linedir + '/cubes')
             logger.info('(SEQUENTIAL) Imaging each individual channel separately #')
             # old:
             # channel_counter = 0  # Counter for numbering the channels for the whole dataset
@@ -1199,9 +1200,9 @@ class line_parallel(BaseModule):
                                             5)
                                         convol.options = 'final'
                                         convol.go()
-                                        self.director('rn', 'image_' + str(channel_counter).zfill(5),
-                                                      file_='convol_' + str(minc).zfill(2) + '_' + str(
-                                                          channel_counter).zfill(5))
+                                        director('rn', 'image_' + str(channel_counter).zfill(5),
+                                                 file_='convol_' + str(minc).zfill(2) + '_' + str(
+                                                 channel_counter).zfill(5))
                                     else:
                                         pass
                                 else:
@@ -1260,13 +1261,13 @@ class line_parallel(BaseModule):
                             # new:
                             pass
                     logger.info('(SEQUENTIAL) All channels of chunk ' + chunk + ' imaged #')
-                    self.director('rm', self.linedir + '/cubes/' + 'image*')
-                    self.director('rm', self.linedir + '/cubes/' + 'beam*')
-                    self.director('rm', self.linedir + '/cubes/' + 'mask*')
-                    self.director('rm', self.linedir + '/cubes/' + 'model*')
-                    self.director('rm', self.linedir + '/cubes/' + 'map*')
-                    self.director('rm', self.linedir + '/cubes/' + 'convol*')
-                    self.director('rm', self.linedir + '/cubes/' + 'residual*')
+                    director('rm', self.linedir + '/cubes/' + 'image*')
+                    director('rm', self.linedir + '/cubes/' + 'beam*')
+                    director('rm', self.linedir + '/cubes/' + 'mask*')
+                    director('rm', self.linedir + '/cubes/' + 'model*')
+                    director('rm', self.linedir + '/cubes/' + 'map*')
+                    director('rm', self.linedir + '/cubes/' + 'convol*')
+                    director('rm', self.linedir + '/cubes/' + 'residual*')
                     logger.info('(SEQUENTIAL) Cleaned up the directory for chunk ' + chunk + ' #')
                 else:
                     logger.warning(' (SEQUENTIAL) No continuum subtracted data available for chunk ' + chunk + '!')
@@ -1285,7 +1286,7 @@ class line_parallel(BaseModule):
                                  int(str(self.line_image_channels).split(',')[0]), startfreq)
             logger.info('(SEQUENTIAL) Created HI-beam cube #')
             logger.info('(SEQUENTIAL) Removing obsolete files #')
-            self.director('rm', self.linedir + '/cubes/' + 'cube_*')
+            director('rm', self.linedir + '/cubes/' + 'cube_*')
 
     def image_line_parallel(self, threads=None):
         """
@@ -1297,8 +1298,8 @@ class line_parallel(BaseModule):
         subs_setinit.setdatasetnamestomiriad(self)
         if self.line_image:
             logger.info(' (PARALLEL) Starting line imaging of dataset')
-            self.director('ch', self.linedir)
-            self.director('ch', self.linedir + '/cubes')
+            director('ch', self.linedir)
+            director('ch', self.linedir + '/cubes')
             logger.info('(PARALLEL) Imaging each individual channel separately #')
             # old:
             # channel_counter = 0  # Counter for numbering the channels for the whole dataset
@@ -1478,9 +1479,9 @@ class line_parallel(BaseModule):
                                                     channel_counter).zfill(5)
                                                 convol.options = 'final'
                                                 convol.go()
-                                                self.director('rn', 'image_' + str(channel_counter).zfill(5),
-                                                              file_='convol_' + str(minc).zfill(2) + '_' + str(
-                                                                  channel_counter).zfill(5))
+                                                director('rn', 'image_' + str(channel_counter).zfill(5),
+                                                         file_='convol_' + str(minc).zfill(2) + '_' + str(
+                                                         channel_counter).zfill(5))
                                             else:
                                                 pass
                                         else:
@@ -1555,13 +1556,13 @@ class line_parallel(BaseModule):
                                        chunk + '! (thread ' + str(p1.thread_num + 1) + ' out of ' +
                                        str(p1.num_threads) + ' 1st level)')
             # new:
-            self.director('rm', self.linedir + '/cubes/' + 'image*')
-            self.director('rm', self.linedir + '/cubes/' + 'beam*')
-            self.director('rm', self.linedir + '/cubes/' + 'mask*')
-            self.director('rm', self.linedir + '/cubes/' + 'model*')
-            self.director('rm', self.linedir + '/cubes/' + 'map*')
-            self.director('rm', self.linedir + '/cubes/' + 'convol*')
-            self.director('rm', self.linedir + '/cubes/' + 'residual*')
+            director('rm', self.linedir + '/cubes/' + 'image*')
+            director('rm', self.linedir + '/cubes/' + 'beam*')
+            director('rm', self.linedir + '/cubes/' + 'mask*')
+            director('rm', self.linedir + '/cubes/' + 'model*')
+            director('rm', self.linedir + '/cubes/' + 'map*')
+            director('rm', self.linedir + '/cubes/' + 'convol*')
+            director('rm', self.linedir + '/cubes/' + 'residual*')
             logger.info('(PARALLEL) Cleaned up the cubes directory #')
             pymp.config.nested = original_nested
             logger.info('(PARALLEL) Combining images to line cubes #')
@@ -1579,7 +1580,7 @@ class line_parallel(BaseModule):
                                  int(str(self.line_image_channels).split(',')[0]), startfreq)
             logger.info('(PARALLEL) Created HI-beam cube #')
             # logger.info('(PARALLEL) Removing obsolete files #')
-            # self.director('rm', self.linedir + '/cubes/' + 'cube_*')
+            # director('rm', self.linedir + '/cubes/' + 'cube_*')
 
     def create_uvmodel(self, chunk):
         """
@@ -1641,9 +1642,9 @@ class line_parallel(BaseModule):
                                                                         self.line_subtract_mode_uvmodel_minorcycle0_dr)
             mask_threshold, mask_threshold_type = calc_mask_threshold(theoretical_noise_threshold, noise_threshold,
                                                                            dynamic_range_threshold)
-            self.director('cp', 'mask_' + str(minc).zfill(2),
-                          file_=self.selfcaldir + '/' + chunk + '/' + str(majc - 2).zfill(2) + '/mask_' + str(
-                              self.line_subtract_mode_uvmodel_minorcycle - 1).zfill(2))
+            director('cp', 'mask_' + str(minc).zfill(2),
+                     file_=self.selfcaldir + '/' + chunk + '/' + str(majc - 2).zfill(2) + '/mask_' + str(
+                     self.line_subtract_mode_uvmodel_minorcycle - 1).zfill(2))
             logger.info('Last mask from self-calibration copied #')
             clean_cutoff = calc_clean_cutoff(mask_threshold, self.line_image_c1)
             logger.info(
@@ -1806,7 +1807,7 @@ class line_parallel(BaseModule):
         data = image_data[0].data
         imax = np.nanstd(data)  # Get the standard deviation
         image_data.close()  # Close the image
-        self.director('rm', image + '.fits')
+        director('rm', image + '.fits')
         return imax
 
     def calc_imax(self, image):
@@ -1824,7 +1825,7 @@ class line_parallel(BaseModule):
         data = image_data[0].data
         imax = np.nanmax(data)  # Get the maximum
         image_data.close()  # Close the image
-        self.director('rm', image + '.fits')
+        director('rm', image + '.fits')
         return imax
 
     def calc_max_min_ratio(self, image):
@@ -1846,7 +1847,7 @@ class line_parallel(BaseModule):
         min_max = np.abs(imin / imax)
         ratio = np.nanmax([max_min, min_max])  # Take the maximum of both ratios and return it
         image_data.close()  # Close the image
-        self.director('rm', image + '.fits')
+        director('rm', image + '.fits')
         return ratio
 
     def calc_isum(self, image):
@@ -1864,7 +1865,7 @@ class line_parallel(BaseModule):
         data = image_data[0].data
         isum = np.nansum(data)  # Get the maximum
         image_data.close()  # Close the image
-        self.director('rm', image + '.fits')
+        director('rm', image + '.fits')
         return isum
 
     def list_chunks(self):
@@ -1902,51 +1903,5 @@ class line_parallel(BaseModule):
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
         logger.warning(' Deleting all continuum subtracted line data.')
-        self.director('ch', self.linedir)
-        self.director('rm', self.linedir + '/*')
-
-    def director(self, option, dest, file_=None, verbose=True):
-        """
-        director: Function to move, remove, and copy file_s and directories
-        option: 'mk', 'ch', 'mv', 'rm', 'rn', and 'cp' are supported
-        dest: Destination of a file_ or directory to move to
-        file_: Which file_ to move or copy, otherwise None
-        """
-        subs_setinit.setinitdirs(self)
-        subs_setinit.setdatasetnamestomiriad(self)
-        if option == 'mk':
-            if os.path.exists(dest):
-                pass
-            else:
-                os.mkdir(dest)
-                if verbose:
-                    logger.info('Creating directory ' + str(dest) + ' #')
-        elif option == 'ch':
-            if os.getcwd() == dest:
-                pass
-            else:
-                lwd = os.getcwd()  # Save the former working directory in a variable
-                try:
-                    os.chdir(dest)
-                except Exception:
-                    os.mkdir(dest)
-                    if verbose:
-                        logger.info('Creating directory ' + str(dest) + ' #')
-                    os.chdir(dest)
-                cwd = os.getcwd()  # Save the current working directory in a variable
-                if verbose:
-                    logger.info('Moved to directory ' + str(dest) + ' #')
-        elif option == 'mv':  # Move
-            if os.path.exists(dest):
-                lib.basher("mv " + str(file_) + " " + str(dest))
-            else:
-                os.mkdir(dest)
-                lib.basher("mv " + str(file_) + " " + str(dest))
-        elif option == 'rn':  # Rename
-            lib.basher("mv " + str(file_) + " " + str(dest))
-        elif option == 'cp':  # Copy
-            lib.basher("cp -r " + str(file_) + " " + str(dest))
-        elif option == 'rm':  # Remove
-            lib.basher("rm -r " + str(dest))
-        else:
-            print(' Option not supported! Only mk, ch, mv, rm, rn, and cp are supported!')
+        director('ch', self.linedir)
+        director('rm', self.linedir + '/*')
