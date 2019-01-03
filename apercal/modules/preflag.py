@@ -990,7 +990,7 @@ class preflag(BaseModule):
 
         subs_param.add_param(self, 'preflag_aoflagger_bandpass_status', preflagaoflaggerbandpassstatus)
 
-    def aoflagger_plot(self, mspath, baselines=[(0,0xb),(2,7), (4,5)]):
+    def aoflagger_plot(self, mspath, baselines=[(0, 0xb), (2, 7), (4, 5)]):
         """
         Saves a png with the flags that AOFlagger added for some 'typical' baselines
         Will save in the same directory as the measurement set
@@ -1001,7 +1001,7 @@ class preflag(BaseModule):
                                           antenna number in the MS (typically 0 means RT2).
         """
         logger.info("Storing flagging images for " + mspath)
-        destination_path = '/'.join(mspath.rstrip('/').split('/')[:-1])+'/'
+        destination_path = '/'.join(mspath.rstrip('/').split('/')[:-1]) + '/'
         msname = mspath.rstrip('/').split('/')[-1].rstrip('.MS')
         for (ant1, ant2) in baselines:
             pngname = "{}-flags-{:02d}-{:02d}.png".format(msname, ant1, ant2)
