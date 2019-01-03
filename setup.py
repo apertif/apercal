@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-__version__ = '2.2'
+__version__ = '2.3'
 
 scripts = []
 
@@ -42,5 +42,5 @@ setup(
         "Topic :: Scientific/Engineering",
         "Topic :: System :: Distributed Computing",
         "Topic :: System :: Operating System Kernels :: Linux",
-        ]
+                ]
 )
