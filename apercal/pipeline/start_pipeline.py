@@ -21,6 +21,20 @@ from datetime import timedelta
 mpl.use('TkAgg')
 
 
+def validate_taskid(taskid_from_autocal):
+    """Parses a taskid from autocal, returns empty string or the proper taskid
+
+    Args:
+        taskid_from_autocal (str): task id from autocal, e.g. 20180403-003 or None
+    Returns:
+        str: Task id that is accepted by prepare step, e.g. '003' or ''
+    """
+    if task_id_from_autocal and len(str(task_id_from_autocal)) > 3:
+        return str(task_id_from_autocal)[-3:]
+    else:
+        return ''
+
+
 def start_apercal_pipeline((taskid_fluxcal, name_fluxcal, beamlist_fluxcal),
                            (taskid_polcal, name_polcal, beamlist_polcal),
                            (taskid_target, name_target, beamlist_target)):
@@ -86,8 +100,8 @@ def start_apercal_pipeline((taskid_fluxcal, name_fluxcal, beamlist_fluxcal),
         p0.prepare_target_beams = ','.join(['{:02d}'.format(beamnr) for beamnr in beamlist_target])
         p0.prepare_date = str(taskid_target)[:6]
         p0.prepare_obsnum_fluxcal = str(taskid_fluxcal)[-3:]
-        p0.prepare_obsnum_polcal = str(taskid_polcal)[-3:]
-        p0.prepare_obsnum_target = str(taskid_target)[-3:]
+        p0.prepare_obsnum_polcal = validate_taskid(taskid_polcal)
+        p0.prepare_obsnum_target = validate_taskid(taskid_target)
 
         p0.go()
 
