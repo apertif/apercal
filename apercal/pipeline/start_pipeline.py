@@ -36,7 +36,7 @@ def validate_taskid(taskid_from_autocal):
         return ''
 
 
-def start_apercal_pipeline(fluxcals, polcals, targets, dry_run=False):
+def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False):
     """
     Trigger the start of a fluxcal pipeline. Returns when pipeline is done.
     Example for taskid, name, beamnr: (190108926, '3C147_36', 36)
@@ -45,9 +45,9 @@ def start_apercal_pipeline(fluxcals, polcals, targets, dry_run=False):
     Only one polcal beam is supported for now.
 
     Args:
+        targets (Tuple[int, str, List[int]]): taskid, name, list of beamnrs
         fluxcals (List[Tuple[int, str, int]]): fluxcals: taskid, name, beamnr
         polcals (List[Tuple[int, str, int]]): polcals: taskid, name, beamnr (can be None)
-        targets (Tuple[int, str, List[int]]): taskid, name, list of beamnrs
         dry_run (bool): interpret arguments, do not actually run pipeline
 
     Returns:
@@ -141,7 +141,7 @@ def start_apercal_pipeline(fluxcals, polcals, targets, dry_run=False):
 
         p2 = ccal()
         set_files(p2)
-        
+
         if not dry_run:
             p2.go()
 
