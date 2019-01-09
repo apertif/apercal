@@ -29,8 +29,8 @@ def validate_taskid(taskid_from_autocal):
     Returns:
         str: Task id that is accepted by prepare step, e.g. '003' or ''
     """
-    if task_id_from_autocal and len(str(task_id_from_autocal)) > 3:
-        return str(task_id_from_autocal)[-3:]
+    if taskid_from_autocal and len(str(taskid_from_autocal)) > 3:
+        return str(taskid_from_autocal)[-3:]
     else:
         return ''
 
