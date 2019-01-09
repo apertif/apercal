@@ -73,7 +73,7 @@ def start_apercal_pipeline((taskid_fluxcal, name_fluxcal, beamlist_fluxcal),
             taskid_fluxcal, taskid_polcal = taskid_polcal, taskid_fluxcal
             beamlist_fluxcal, beamlist_polcal = beamlist_polcal, beamlist_fluxcal
         else:
-            logger.debug("Setting polcal to '' since " + self.polcal + " not polarised")
+            logger.debug("Setting polcal to '' since " + name_polcal + " not polarised")
             name_polcal = ""
     else:
         logger.debug("Polcal " + name_polcal + " is polarised, all good")
