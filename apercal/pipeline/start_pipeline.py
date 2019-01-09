@@ -54,7 +54,7 @@ def start_apercal_pipeline((taskid_fluxcal, name_fluxcal, beamlist_fluxcal),
     if not os.path.exists(basedir):
         os.mkdir(basedir)
 
-    logfilepath = socket.gethostname() + ':' + os.path.join(basedir, 'apercal.log')
+    logfilepath = os.path.join(basedir, 'apercal.log')
 
     lib.setup_logger('debug', logfile=logfilepath)
     logger = logging.getLogger(__name__)
@@ -127,4 +127,4 @@ def start_apercal_pipeline((taskid_fluxcal, name_fluxcal, beamlist_fluxcal),
         time_end = time()
         msg = "Apercal threw an error after " + str(timedelta(seconds=time() - time_start))
         logger.exception(msg)
-        return False, msg + '\n' + str(e) + '\n' + "Check log at " + logfilepath
+        return False, msg + '\n' + str(e) + '\n' + "Check log at " + socket.gethostname() + ':' + logfilepath
