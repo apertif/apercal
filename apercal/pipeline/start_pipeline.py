@@ -79,6 +79,12 @@ def start_apercal_pipeline((taskid_fluxcal, name_fluxcal, beamlist_fluxcal),
     else:
         logger.debug("Polcal " + name_polcal + " is polarised, all good")
 
+    def name_to_ms(name):
+        if not name:
+            return ''
+        else:
+            return name + '.MS'
+
     def set_files(p):
         """
         Set the basedir, fluxcal, polcal, target properties
@@ -90,9 +96,9 @@ def start_apercal_pipeline((taskid_fluxcal, name_fluxcal, beamlist_fluxcal),
             None
         """
         p.basedir = basedir
-        p.fluxcal = name_fluxcal + ".MS"
-        p.polcal = name_polcal + ".MS"
-        p.target = name_target + ".MS"
+        p.fluxcal = name_to_ms(name_fluxcal)
+        p.polcal = name_to_ms(name_polcal)
+        p.target = name_to_ms(name_target)
 
     time_start = time()
     try:
