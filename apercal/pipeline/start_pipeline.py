@@ -67,9 +67,9 @@ def start_apercal_pipeline(fluxcals, polcals, targets, dry_run=False):
                                       '&& git describe --tag; cd', shell=True).strip()
     logger.info("Apercal version: " + gitinfo)
 
-    name_fluxcal = str(fluxcals[0][1]).strip()
+    name_fluxcal = str(fluxcals[0][1]).strip().split('_')[0]
     if polcals:
-        name_polcal = str(polcals[0][1]).strip()
+        name_polcal = str(polcals[0][1]).strip().split('_')[0]
     else:
         name_polcal = ''
     name_target = str(name_target).strip()
