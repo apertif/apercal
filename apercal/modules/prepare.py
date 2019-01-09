@@ -228,7 +228,7 @@ class prepare(BaseModule):
 
         if self.prepare_obsnum_target != '':
             if self.prepare_target_beams == 'all':  # if all beams are requested
-                reqbeams_nozero = range(beams)  # create a list of numbers for the beams
+                reqbeams_nozero = range(self.NBEAMS)  # create a list of numbers for the beams
                 reqbeams = [str(b).zfill(2) for b in reqbeams_nozero]  # Add the leading zeros
             else:  # if only certain beams are requested
                 reqbeams = self.prepare_target_beams.split(",")

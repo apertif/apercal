@@ -36,20 +36,25 @@ def validate_taskid(taskid_from_autocal):
         return ''
 
 
-def start_apercal_pipeline((taskid_fluxcal, name_fluxcal, beamlist_fluxcal),
-                           (taskid_polcal, name_polcal, beamlist_polcal),
-                           (taskid_target, name_target, beamlist_target)):
+def start_apercal_pipeline(fluxcals, polcals, targets, dry_run=False):
     """
-    Trigger the start of a fluxcal pipeline. Returns immediately.
+    Trigger the start of a fluxcal pipeline. Returns when pipeline is done.
+    Example for taskid, name, beamnr: (190108926, '3C147_36', 36)
+    Fluxcals and polcals can be specified in the wrong order, if the polcal is not polarised
+    they will be flipped.
+    Only one polcal beam is supported for now.
 
     Args:
-        taskid_* (int): something like 181204020
-        name_* (str): something like '3C295'
-        beamlist_* (List[int]): something like [0, 1, 2, ..., 9]
+        fluxcals (List[Tuple[int, str, int]]): fluxcals: taskid, name, beamnr
+        polcals (List[Tuple[int, str, int]]): polcals: taskid, name, beamnr (can be None)
+        targets (Tuple[int, str, List[int]]): taskid, name, list of beamnrs
+        dry_run (bool): interpret arguments, do not actually run pipeline
 
     Returns:
         Tuple[bool, str]: True if the pipeline succeeds, informative message
     """
+    (taskid_target, name_target, beamlist_target) = targets
+
     basedir = '/data/apertif/{}/'.format(taskid_target)
     if not os.path.exists(basedir):
         os.mkdir(basedir)
@@ -62,22 +67,27 @@ def start_apercal_pipeline((taskid_fluxcal, name_fluxcal, beamlist_fluxcal),
                                       '&& git describe --tag; cd', shell=True).strip()
     logger.info("Apercal version: " + gitinfo)
 
-    name_fluxcal = str(name_fluxcal).strip()
-    name_polcal = str(name_polcal).strip()
+    name_fluxcal = str(fluxcals[0][1]).strip()
+    if polcals:
+        name_polcal = str(polcals[0][1]).strip()
+    else:
+        name_polcal = ''
     name_target = str(name_target).strip()
 
+    # Exchange polcal and fluxcal if specified in the wrong order
     if not subs_calmodels.is_polarised(name_polcal):
         if subs_calmodels.is_polarised(name_fluxcal):
             logger.debug("Switching polcal and fluxcal because " + name_polcal +
                          " is not polarised")
-            name_fluxcal, name_polcal = name_polcal, name_fluxcal
-            taskid_fluxcal, taskid_polcal = taskid_polcal, taskid_fluxcal
-            beamlist_fluxcal, beamlist_polcal = beamlist_polcal, beamlist_fluxcal
+            fluxcals, polcals = polcals, fluxcals
         else:
-            logger.debug("Setting polcal to '' since " + name_polcal + " not polarised")
+            logger.debug("Setting polcal to '' since " + name_polcal + " is not polarised")
             name_polcal = ""
     else:
         logger.debug("Polcal " + name_polcal + " is polarised, all good")
+
+    if name_polcal != "":
+        taskid_polcal, name_polcal, beamnr_polcal = polcals[0]
 
     def name_to_ms(name):
         if not name:
@@ -102,28 +112,34 @@ def start_apercal_pipeline((taskid_fluxcal, name_fluxcal, beamlist_fluxcal),
 
     time_start = time()
     try:
-        p0 = prepare()
-        set_files(p0)
-        p0.prepare_target_beams = ','.join(['{:02d}'.format(beamnr) for beamnr in beamlist_target])
-        p0.prepare_date = str(taskid_target)[:6]
-        p0.prepare_obsnum_fluxcal = str(taskid_fluxcal)[-3:]
-        p0.prepare_obsnum_polcal = validate_taskid(taskid_polcal)
-        p0.prepare_obsnum_target = validate_taskid(taskid_target)
+        for (taskid_fluxcal, name_fluxcal, beamnr_fluxcal) in fluxcals:
+            p0 = prepare()
+            set_files(p0)
+            p0.prepare_target_beams = ','.join(['{:02d}'.format(beamnr) for beamnr in beamlist_target])
+            p0.prepare_date = str(taskid_target)[:6]
+            p0.prepare_obsnum_fluxcal = str(taskid_fluxcal)[-3:]
+            p0.prepare_obsnum_polcal = validate_taskid(taskid_polcal)
+            p0.prepare_obsnum_target = validate_taskid(taskid_target)
 
-        p0.go()
+        if not dry_run:
+            p0.go()
 
         p1 = preflag()
         set_files(p1)
 
-        p1.go()
+        if not dry_run:
+            p1.go()
 
         p2 = ccal()
         set_files(p2)
-        p2.go()
+        
+        if not dry_run:
+            p2.go()
 
         p3 = convert()
         set_files(p3)
-        p3.go()
+        if not dry_run:
+            p3.go()
 
         time_end = time()
         msg = "Apercal finished after " + str(timedelta(seconds=time() - time_start))
