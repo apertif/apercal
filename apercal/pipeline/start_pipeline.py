@@ -80,6 +80,7 @@ def start_apercal_pipeline(fluxcals, polcals, targets, dry_run=False):
             logger.debug("Switching polcal and fluxcal because " + name_polcal +
                          " is not polarised")
             fluxcals, polcals = polcals, fluxcals
+            name_polcal = str(polcals[0][1]).strip().split('_')[0]
         else:
             logger.debug("Setting polcal to '' since " + name_polcal + " is not polarised")
             name_polcal = ""
@@ -129,8 +130,8 @@ def start_apercal_pipeline(fluxcals, polcals, targets, dry_run=False):
             p0.prepare_target_beams = str(beamnr_fluxcal)
             p0.prepare_date = str(taskid_fluxcal)[:6]
             p0.prepare_obsnum_target = validate_taskid(taskid_fluxcal)
-        if not dry_run:
-            p0.go()
+            if not dry_run:
+                p0.go()
 
         p1 = preflag()
         set_files(p1)
