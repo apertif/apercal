@@ -1066,7 +1066,7 @@ class preflag(BaseModule):
             if self.preflag_aoflagger_polcal and self.polcal != '':
                 if not preflagaoflaggerpolcalflag:
                     if not os.path.isdir(self.get_polcal_path()):
-                        error = "can't find polarisation calibrator dataset: %s".format(self.get_polcal_path())
+                        error = "Can't find polarisation calibrator dataset: {}".format(self.get_polcal_path())
                         logger.error(error)
                         raise ApercalException(error)
 
@@ -1124,13 +1124,13 @@ class preflag(BaseModule):
                                 preflagaoflaggertargetbeamsflag[int(beam)] = True
                             elif self.preflag_aoflagger_bandpass and not preflagaoflaggerbandpassstatus:
                                 lib.basher(base_cmd + ' ' + vis, prefixes_to_strip=strip_prefixes)
-                                logger.warning('Used AOFlagger to flag target beam %s without preliminary bandpass '
+                                logger.warning('Used AOFlagger to flag target beam {} without preliminary bandpass '
                                                'applied. Better results are usually obtained with a preliminary '
                                                'bandpass applied.'.format(beam))
                                 preflagaoflaggertargetbeamsflag[int(beam)] = True
                             elif not self.preflag_aoflagger_bandpass:
                                 lib.basher(base_cmd + ' ' + vis, prefixes_to_strip=strip_prefixes)
-                                logger.warning('Used AOFlagger to flag target beam %s without preliminary bandpass '
+                                logger.warning('Used AOFlagger to flag target beam {} without preliminary bandpass '
                                                'applied. Better results are usually obtained with a preliminary '
                                                'bandpass applied.'.format(beam))
                                 preflagaoflaggertargetbeamsflag[int(beam)] = True
