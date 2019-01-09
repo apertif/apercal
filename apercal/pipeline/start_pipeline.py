@@ -112,15 +112,23 @@ def start_apercal_pipeline(fluxcals, polcals, targets, dry_run=False):
 
     time_start = time()
     try:
-        for (taskid_fluxcal, name_fluxcal, beamnr_fluxcal) in fluxcals:
-            p0 = prepare()
-            set_files(p0)
-            p0.prepare_target_beams = ','.join(['{:02d}'.format(beamnr) for beamnr in beamlist_target])
-            p0.prepare_date = str(taskid_target)[:6]
-            p0.prepare_obsnum_fluxcal = str(taskid_fluxcal)[-3:]
-            p0.prepare_obsnum_polcal = validate_taskid(taskid_polcal)
-            p0.prepare_obsnum_target = validate_taskid(taskid_target)
+        # Prepare
+        p0 = prepare()
+        p0.basedir = basedir
+        # Prepare target and polcal
+        p0.fluxcal = ''
+        p0.polcal = name_to_ms(name_polcal)
+        p0.target = name_to_ms(name_target)
+        p0.prepare_target_beams = ','.join(['{:02d}'.format(beamnr) for beamnr in beamlist_target])
+        p0.prepare_obsnum_target = validate_taskid(taskid_target)
+        if not dry_run:
+            p0.go()
 
+        # Prepare fluxcals
+        for (taskid_fluxcal, name_fluxcal, beamnr_fluxcal) in fluxcals:
+            p0.prepare_target_beams = str(beamnr_fluxcal)
+            p0.prepare_date = str(taskid_fluxcal)[:6]
+            p0.prepare_obsnum_target = validate_taskid(taskid_fluxcal)
         if not dry_run:
             p0.go()
 
