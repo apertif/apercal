@@ -8,6 +8,7 @@ from apercal.modules.preflag import preflag
 from apercal.modules.ccal import ccal
 from apercal.modules.convert import convert
 from apercal.subs import calmodels as subs_calmodels
+import socket
 import apercal
 import os
 import subprocess
@@ -53,7 +54,7 @@ def start_apercal_pipeline((taskid_fluxcal, name_fluxcal, beamlist_fluxcal),
     if not os.path.exists(basedir):
         os.mkdir(basedir)
 
-    logfilepath = os.path.join(basedir, 'apercal.log')
+    logfilepath = socket.gethostname() + ':' + os.path.join(basedir, 'apercal.log')
 
     lib.setup_logger('debug', logfile=logfilepath)
     logger = logging.getLogger(__name__)
