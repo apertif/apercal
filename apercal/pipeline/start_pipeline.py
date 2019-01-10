@@ -80,7 +80,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False):
             logger.debug("Switching polcal and fluxcal because " + name_polcal +
                          " is not polarised")
             fluxcals, polcals = polcals, fluxcals
-            name_polcal = str(polcals[0][1]).strip().split('_')[0]
+            name_polcal = str(polcals[0][1]).strip()
         else:
             logger.debug("Setting polcal to '' since " + name_polcal + " is not polarised")
             name_polcal = ""
@@ -94,7 +94,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False):
         if not name:
             return ''
         else:
-            return name + '.MS'
+            return name.strip().split('_')[0] + '.MS'
 
     def set_files(p):
         """
