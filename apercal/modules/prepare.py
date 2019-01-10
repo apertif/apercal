@@ -228,13 +228,14 @@ class prepare(BaseModule):
 
         if self.prepare_obsnum_target != '':
             if self.prepare_target_beams == 'all':  # if all beams are requested
-                reqbeams_nozero = range(self.NBEAMS)  # create a list of numbers for the beams
-                reqbeams = [str(b).zfill(2) for b in reqbeams_nozero]  # Add the leading zeros
+                reqbeams_int = range(self.NBEAMS)  # create a list of numbers for the beams
+                reqbeams = [str(b).zfill(2) for b in reqbeams_int]  # Add the leading zeros
             else:  # if only certain beams are requested
                 reqbeams = self.prepare_target_beams.split(",")
+                reqbeams_int = [int(b) for b in reqbeams]
             for beam in reqbeams:
                 preparetargetbeamsrequested[int(beam)] = True
-            for b in range(self.NBEAMS):
+            for b in reqbeams_int:
                 # Check which target beams are already on disk
                 preparetargetbeamsrejreason[int(b)] = ''  # Empty the comment string
                 preparetargetbeamsdiskstatus[b] = os.path.isdir(
@@ -258,7 +259,7 @@ class prepare(BaseModule):
                 logger.debug("Skipping fetching dataset from ALTA")
             else:
                 # Set the copystatus of the beams and copy beams which are requested but not on disk
-                for c in range(self.NBEAMS):  # TODO: fix this for when not all beams are requested
+                for c in reqbeams_int:
                     if preparetargetbeamsdiskstatus[c] and preparetargetbeamsaltastatus[c]:
                         preparetargetbeamscopystatus[c] = True
                     elif preparetargetbeamsdiskstatus[c] and not preparetargetbeamsaltastatus[c]:

@@ -94,7 +94,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False):
         if not name:
             return ''
         else:
-            return name.strip().split('_')[0] + '.MS'
+            return name.upper().strip().split('_')[0] + '.MS'
 
     def set_files(p):
         """
@@ -120,6 +120,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False):
         p0.fluxcal = ''
         p0.polcal = name_to_ms(name_polcal)
         p0.target = name_to_ms(name_target)
+        p0.prepare_date = str(taskid_target)[:6]
         p0.prepare_target_beams = ','.join(['{:02d}'.format(beamnr) for beamnr in beamlist_target])
         p0.prepare_obsnum_target = validate_taskid(taskid_target)
         if not dry_run:
