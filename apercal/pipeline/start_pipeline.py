@@ -128,6 +128,11 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False):
 
         # Prepare fluxcals
         for (taskid_fluxcal, name_fluxcal, beamnr_fluxcal) in fluxcals:
+            p0 = prepare()
+            p0.basedir = basedir
+            p0.fluxcal = ''
+            p0.polcal = ''
+            p0.target = name_to_ms(name_fluxcal)
             p0.prepare_target_beams = str(beamnr_fluxcal)
             p0.prepare_date = str(taskid_fluxcal)[:6]
             p0.prepare_obsnum_target = validate_taskid(taskid_fluxcal)
