@@ -1,7 +1,7 @@
 FILE=small.tgz
 URL=http://astron.nl/citt/apercal-testdata/small.tgz
 VENV=$(CURDIR)/.venv2
-CWLTOOL=$(VENV)/bin/cwltool --enable-ext  --no-compute-checksum --outdir=cwl/outdir
+CWLTOOL=$(VENV)/bin/cwltool --enable-ext  --no-compute-checksum --outdir=cwl/outdir --leave-tmp --cachedir=cache --leave-tmpdir --tmpdir-prefix=apercal
 
 .PHONY: run docker test
 
