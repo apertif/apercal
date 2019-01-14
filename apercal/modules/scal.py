@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import os
 
+from apercal.modules.base import BaseModule
 from apercal.subs import setinit as subs_setinit
 from apercal.subs import managefiles as subs_managefiles
 
@@ -23,10 +24,12 @@ from apercal.exceptions import ApercalException
 logger = logging.getLogger(__name__)
 
 
-class scal:
+class scal(BaseModule):
     """
     Selfcal class to do the self-calibration on a dataset.
     """
+    module_name = 'SCAL'
+
     fluxcal = None
     polcal = None
     target = None
@@ -507,7 +510,9 @@ class scal:
                                         else:
                                             selfcaltargetbeamsphasemaskstatus[int(self.beam), majc, minc] = False
                                             selfcaltargetbeamsphasestatus[int(self.beam)] = False
-                                            logger.error('Beam ' + self.beam + ': Mask image for cycle ' + str(majc) + '/' + str(minc) + ' is invalid. Stopping self-calibration!')
+                                            msg = 'Beam ' + self.beam + ': Mask image for cycle ' + str(majc) + '/' + str(minc) + ' is invalid. Stopping self-calibration!'
+                                            logger.error(msg)
+                                            raise ApercalException(msg)
                                             stop = True
                                             selfcaltargetbeamsphasefinalmajor[int(self.beam)] = majc
                                             selfcaltargetbeamsphasefinalminor[int(self.beam)] = minc
@@ -515,7 +520,9 @@ class scal:
                                     else:
                                         selfcaltargetbeamsphasemaskstatus[int(self.beam), majc, minc] = False
                                         selfcaltargetbeamsphasestatus[int(self.beam)] = False
-                                        logger.error('Beam ' + self.beam + ': Mask image for cycle ' + str(majc) + '/' + str(minc) + ' not found. Stopping self-calibration!')
+                                        msg = 'Beam ' + self.beam + ': Mask image for cycle ' + str(majc) + '/' + str(minc) + ' not found. Stopping self-calibration!'
+                                        logger.error(msg)
+                                        raise ApercalException(msg)
                                         stop = True
                                         selfcaltargetbeamsphasefinalmajor[int(self.beam)] = majc
                                         selfcaltargetbeamsphasefinalminor[int(self.beam)] = minc
@@ -537,7 +544,9 @@ class scal:
                                         else:
                                             selfcaltargetbeamsphasemodelstatus[int(self.beam), majc, minc] = False
                                             selfcaltargetbeamsphasestatus[int(self.beam)] = False
-                                            logger.error('Beam ' + self.beam + ': Clean component image for cycle ' + str(majc) + '/' + str(minc) + ' is invalid. Stopping self-calibration!')
+                                            msg = 'Beam ' + self.beam + ': Clean component image for cycle ' + str(majc) + '/' + str(minc) + ' is invalid. Stopping self-calibration!'
+                                            logger.error(msg)
+                                            raise ApercalException(msg)
                                             stop = True
                                             selfcaltargetbeamsphasefinalmajor[int(self.beam)] = majc
                                             selfcaltargetbeamsphasefinalminor[int(self.beam)] = minc
@@ -545,7 +554,9 @@ class scal:
                                     else:
                                         selfcaltargetbeamsphasemodelstatus[int(self.beam), majc, minc] = False
                                         selfcaltargetbeamsphasestatus[int(self.beam)] = False
-                                        logger.error('Beam ' + self.beam + ': Clean component image for cycle ' + str(majc) + '/' + str(minc) + ' not found. Stopping self-calibration!')
+                                        msg = 'Beam ' + self.beam + ': Clean component image for cycle ' + str(majc) + '/' + str(minc) + ' not found. Stopping self-calibration!'
+                                        logger.error(msg)
+                                        raise ApercalException(msg)
                                         stop = True
                                         selfcaltargetbeamsphasefinalmajor[int(self.beam)] = majc
                                         selfcaltargetbeamsphasefinalminor[int(self.beam)] = minc

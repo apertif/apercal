@@ -129,7 +129,7 @@ def calc_theoretical_noise_dr(imax, theoretical_noise, nsigma):
 
 def calc_dynamic_range_dr(minor_cycle_list, minor_cycle, dynamic_range_minimum):
     """
-    Calculates the dynamic range threshold
+    Calculates the dynamic range hreshold
     imax (float): the maximum in the input image
     dynamic_range (float): the dynamic range you want to calculate the threshold for
     returns (float): the dynamic range threshold

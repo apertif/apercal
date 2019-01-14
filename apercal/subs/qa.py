@@ -67,7 +67,7 @@ def checkdirtyimage(self, image):
 
 def checkmaskimage(self, image):
     """
-    check_blank: Checks if a mask is completely blanked.
+    Checks if a mask is completely blanked.
     image: The input mask to check
     return: True if mask is not blank
     """
