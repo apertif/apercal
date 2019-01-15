@@ -233,6 +233,7 @@ class prepare(BaseModule):
             else:  # if only certain beams are requested
                 reqbeams = self.prepare_target_beams.split(",")
                 reqbeams_int = [int(b) for b in reqbeams]
+                reqbeams = [str(b).zfill(2) for b in reqbeams_int] # Add leading zeros
             for beam in reqbeams:
                 preparetargetbeamsrequested[int(beam)] = True
             for b in reqbeams_int:
