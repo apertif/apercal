@@ -1071,8 +1071,6 @@ class scal(BaseModule):
         returns (DataFrame): A python pandas dataframe object, which can be looked at with the style function in the notebook
         """
 
-        beams = 37
-
         # Load the parameters from the parameter file
 
         AV = subs_param.get_param(self, 'selfcal_targetbeams_average')
@@ -1083,7 +1081,7 @@ class scal(BaseModule):
 
         # Create the data frame
 
-        beam_range = range(beams)
+        beam_range = range(self.NBEAMS)
         dataset_beams = [self.target[:-3] + ' Beam ' + str(b).zfill(2) for b in beam_range]
         dataset_indices = dataset_beams
 
