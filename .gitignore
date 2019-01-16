@@ -9,3 +9,5 @@ casa.log
 .eggs/
 data/
 cwl/outdir/
+dist/
+
