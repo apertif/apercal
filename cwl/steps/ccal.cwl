@@ -41,37 +41,37 @@ outputs:
   target_Df:
     type: Directory
     outputBinding:
-      glob: $(inputs.target_preflagged.nameroot)Df
+      glob: $(inputs.target_preflagged.nameroot).Df
 
   target_Kcross:
     type: Directory
     outputBinding:
-      glob: $(inputs.target_preflagged.nameroot)Kcross
+      glob: $(inputs.target_preflagged.nameroot).Kcross
 
   target_Xf:
     type: Directory
     outputBinding:
-      glob: $(inputs.target_preflagged.nameroot)Xf
+      glob: $(inputs.target_preflagged.nameroot).Xf
 
   target_Bscan:
     type: Directory
     outputBinding:
-      glob: $(inputs.target_preflagged.nameroot)Bscan
+      glob: $(inputs.target_preflagged.nameroot).Bscan
 
   target_G0ph:
     type: Directory
     outputBinding:
-      glob: $(inputs.target_preflagged.nameroot)G0ph
+      glob: $(inputs.target_preflagged.nameroot).G0ph
 
   target_G1ap:
     type: Directory
     outputBinding:
-      glob: $(inputs.target_preflagged.nameroot)G1ap
+      glob: $(inputs.target_preflagged.nameroot).G1ap
 
   target_K:
     type: Directory
     outputBinding:
-      glob: $(inputs.target_preflagged.nameroot)K
+      glob: $(inputs.target_preflagged.nameroot).K
 
 
 arguments:
@@ -81,7 +81,7 @@ arguments:
         logging.basicConfig(level=logging.DEBUG)
         from apercal.modules.ccal import ccal
 
-        p = convert()
+        p = ccal()
         p.target = "$(inputs.target_preflagged.path)"
         p.fluxcal = "$(inputs.fluxcal_preflagged.path)"
         p.polcal = "$(inputs.polcal_preflagged.path)"

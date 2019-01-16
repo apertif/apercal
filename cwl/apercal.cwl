@@ -39,6 +39,15 @@ steps:
       - target_G1ap
       - target_K
 
+
+  convert:
+    run: steps/convert.cwl
+    in:
+      target: preflag/target_calibrated
+    out:
+      - target_converted
+
+
 #scal
 #continuum
 #line
@@ -47,17 +56,6 @@ steps:
 #transfer
 #convert
 
-
-  #convert:
-  #  run: steps/convert.cwl
-  #  in:
-  #    target: preflag/target_preflagged
-  #    fluxcal: preflag/fluxcal_preflagged
-  #    polcal: preflag/polcal_preflagged
-  #  out:
-  #    - target_converted
-  #    - fluxcal_converted
-  #    - polcal_converted
 
 
 # convert
