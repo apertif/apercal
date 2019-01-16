@@ -14,14 +14,11 @@ RUN pip install aipy pymp-pypi pyephem pycodestyle \
 ADD . /code
 WORKDIR /code
 
-ENV MIR=/usr/bin MIRCAT=/usr/share/miriad MIRDEF=.
-RUN export MIRARCH=$(mirarch)
-#RUN make data/small
+ENV MIR /usr/bin
+ENV MIRCAT /usr/share/miriad
+ENV MIRDEF=.
+RUN export MIRARCH=linux64
 
 RUN pip install .
 RUN pip install -r test/requirements.txt
-
-## disable test run until all tests are working
-#RUN pytest
-
 
