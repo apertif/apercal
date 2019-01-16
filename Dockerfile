@@ -1,4 +1,4 @@
-FROM kernsuite/casa:kern-dev
+FROM kernsuite/casa:kern-5
 
 RUN docker-apt-install \
           miriad python-pip python-numpy python-notebook \
