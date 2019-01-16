@@ -29,25 +29,33 @@ class BaseModule:
     subdirification = True
     NBEAMS = 40
 
-    def get_rawsubdir_path(self, beam='00'):
+    def get_rawsubdir_path(self, beam=None):
+        if not beam:
+            beam = self.beam
         if self.subdirification:
             return path.join(self.basedir, beam, self.rawsubdir)
         else:
             return curdir
 
-    def get_fluxcal_path(self, beam='00'):
+    def get_fluxcal_path(self, beam=None):
+        if not beam:
+            beam = self.beam
         if self.subdirification:
             return path.join(self.basedir, beam, self.rawsubdir, self.fluxcal)
         else:
             return self.fluxcal
 
-    def get_polcal_path(self, beam='00'):
+    def get_polcal_path(self, beam=None):
+        if not beam:
+            beam = self.beam
         if self.subdirification:
             return path.join(self.basedir, beam, self.rawsubdir, self.polcal)
         else:
             return self.polcal
 
-    def get_target_path(self, beam='00'):
+    def get_target_path(self, beam=None):
+        if not beam:
+            beam = self.beam
         if self.subdirification:
             return path.join(self.basedir, beam, self.rawsubdir, self.target)
         else:
