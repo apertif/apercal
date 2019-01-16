@@ -91,9 +91,9 @@ def calc_appflux(infile, cat, beam):
              pointing centre
     """
     if beam == 'WSRT':  # Check which beam model to use. APERTIF going to be included later.
-        logging.info(' Using standard WSRT beam for calculating apparent fluxes!')
+        logging.warning(' Using standard WSRT beam for calculating apparent fluxes!')
     else:
-        logging.info(' Beam model not supported yet! Using standard WSRT beam instead!')
+        logging.warning(' Beam model not supported yet! Using standard WSRT beam instead!')
     sep = cat.dist
     appflux = np.zeros((len(cat)))
     for c in range(0, len(cat)):  # calculate the apparent flux of the sources
@@ -123,14 +123,14 @@ def cutoff_catalogue(catalogue, cutoff):
     returns: a catalogue with the weak sources removed according to the cutoff parameter
     """
     allflux = np.sum(catalogue.appflux)
-    logging.info(' Field seems to have a flux of ' + str(allflux) + ' Jy')
+    logging.debug(' Field seems to have a flux of ' + str(allflux) + ' Jy')
     limflux = allflux * cutoff  # determine the cutoff
     cat = sort_catalogue(catalogue, 'appflux')
     limidx = np.delete(np.where(np.cumsum(cat.appflux) > limflux),
                        0)  # find the index of the sources above the cutoff to remove them from the list
     cat = np.delete(cat, limidx)  # remove the faint sources from the list
     usedflux = np.sum(cat.appflux)
-    logging.info(' Found ' + str(len(cat)) + ' source(s) in the model at a cutoff of ' + str(
+    logging.debug(' Found ' + str(len(cat)) + ' source(s) in the model at a cutoff of ' + str(
         cutoff * 100) + ' percent with a total flux of ' + str(usedflux) + ' Jy')
     return cat
 
@@ -160,11 +160,10 @@ def calc_SI(cat1, cat2, limit):
                           nomatch)  # Array of source fluxes at 20cm for all matches including resolved sources
         flux2 = np.asarray(cat2.flux)[idx_match]  # Array of source fluxes at 90cm for all matches including multiples
         src, counts = np.unique(idx_match, return_counts=True)
-        logging.info(' Found ' + str(
-            len(np.asarray(nomatch)[0])) + ' source(s) with no counterparts. Setting their spectral index to -0.7')
+        logging.debug(' Found ' + str(len(np.asarray(nomatch)[0])) + ' source(s) with no counterparts. Setting their spectral index to -0.7')
         num, occ = np.unique(counts, return_counts=True)
         for n, g in enumerate(num):
-            logging.info(' Found ' + str(occ[n]) + ' source(s) with ' + str(num[n]) + ' counterpart(s)')
+            logging.debug(' Found ' + str(occ[n]) + ' source(s) with ' + str(num[n]) + ' counterpart(s)')
         src_wgt_1 = np.zeros(len(flux2))  # Calculate the fluxes for the matched and resolved sources using weighting
         for s in src:
             src_idx = np.where(s == idx_match)
@@ -243,7 +242,7 @@ def write_model(outfile, cat):
     mirmdlfile = open(outfile, 'w')
     mirmdlfile.write(srctext)
     mirmdlfile.close()
-    logging.info(' Wrote source textfile to ' + str(outfile) + '!')
+    logging.debug(' Wrote source textfile to ' + str(outfile) + '!')
 
 
 def write_mask(outfile, cat):
@@ -267,7 +266,7 @@ def write_mask(outfile, cat):
     mirmskfile = open(outfile, 'w')
     mirmskfile.write(msktext)
     mirmskfile.close()
-    logging.info(' Wrote mask textfile to ' + str(outfile) + '!')
+    logging.debug(' Wrote mask textfile to ' + str(outfile) + '!')
 
 
 def fixra(ra0):

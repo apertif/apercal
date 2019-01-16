@@ -1,18 +1,23 @@
 import logging
 
 import aipy
-import astropy.io.fits as pyfits
 import numpy as np
+import pandas as pd
 import os
 
-from apercal.libs.calculations import calc_dr_maj, calc_theoretical_noise, calc_dynamic_range_threshold, \
-    calc_mask_threshold
 from apercal.modules.base import BaseModule
 from apercal.subs import setinit as subs_setinit
 from apercal.subs import managefiles as subs_managefiles
 
+from apercal.libs.calculations import calc_scal_interval
+
 from apercal.libs import lib
 from apercal.subs import lsm
+from apercal.subs import imstats
+from apercal.subs.param import get_param_def
+from apercal.subs import param as subs_param
+from apercal.subs import masking
+from apercal.subs import qa
 
 from apercal.exceptions import ApercalException
 
@@ -21,17 +26,28 @@ logger = logging.getLogger(__name__)
 
 class scal(BaseModule):
     """
-    Selfcal class to do the self-calibration on a dataset. Can be done with several different algorithms.
+    Selfcal class to do the self-calibration on a dataset.
     """
-    module_name = 'SELFCAL'
+    module_name = 'SCAL'
+
+    fluxcal = None
+    polcal = None
+    target = None
+    basedir = None
+    beam = None
+    rawsubdir = None
+    crosscalsubdir = None
+    selfcalsubdir = None
+    linesubdir = None
+    contsubdir = None
+    polsubdir = None
+    mossubdir = None
+    transfersubdir = None
 
     selfcal_image_imsize = None
     selfcal_image_cellsize = None
     selfcal_refant = None
-    selfcal_splitdata = None
-    selfcal_splitdata_chunkbandwidth = None
-    selfcal_splitdata_channelbandwidth = None
-    selfcal_flagantenna = None
+    selfcal_average = None
     selfcal_flagline = None
     selfcal_flagline_sigma = None
     selfcal_parametric = None
@@ -42,22 +58,27 @@ class scal(BaseModule):
     selfcal_parametric_uvmin = None
     selfcal_parametric_uvmax = None
     selfcal_parametric_amp = None
-    selfcal_standard_majorcycle = None
-    selfcal_standard_majorcycle_function = None
-    selfcal_standard_minorcycle = None
-    selfcal_standard_minorcycle_function = None
-    selfcal_standard_c0 = None
-    selfcal_standard_c1 = None
-    selfcal_standard_minorcycle0_dr = None
-    selfcal_standard_drinit = None
-    selfcal_standard_dr0 = None
-    selfcal_standard_nsigma = None
-    selfcal_standard_uvmin = None
-    selfcal_standard_uvmax = None
-    selfcal_standard_solint = None
-    selfcal_standard_amp = None
-    selfcal_standard_amp_auto_limit = None
-    selfcal_standard_nfbin = None
+    selfcal_parametric_nfbin = None
+    selfcal_phase = None
+    selfcal_phase_majorcycle = None
+    selfcal_phase_majorcycle_function = None
+    selfcal_phase_minorcycle = None
+    selfcal_phase_minorcycle_function = None
+    selfcal_phase_c0 = None
+    selfcal_phase_c1 = None
+    selfcal_phase_minorcycle0_dr = None
+    selfcal_phase_drinit = None
+    selfcal_phase_dr0 = None
+    selfcal_phase_mindr = None
+    selfcal_phase_nsigma = None
+    selfcal_phase_uvmin = None
+    selfcal_phase_uvmax = None
+    selfcal_phase_solint = None
+    selfcal_phase_nfbin = None
+    selfcal_phase_gaussianity = None
+    selfcal_amp = None
+    selfcal_amp_auto_limit = None
+    selfcal_amp_nfbin = None
 
     selfcaldir = None
     crosscaldir = None
@@ -68,221 +89,186 @@ class scal(BaseModule):
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
 
+
     def go(self):
         """
         Executes the whole self-calibration process in the following order:
-        splitdata
+        averagedata
         flagline
         parametric
-        selfcal_standard
+        phase
+        amp
         """
-        logger.info("Starting SELF CALIBRATION ")
-        self.splitdata()
+        logger.info("Starting SELF CALIBRATION")
+        self.averagedata()
         self.flagline()
         self.parametric()
-        self.selfcal_standard()
-        logger.info("SELF CALIBRATION done ")
+        self.phase()
+        self.amp()
+        logger.info("SELF CALIBRATION done")
 
-    def splitdata(self):
-        """
-        Applies calibrator corrections to data, splits the data into chunks in frequency and bins it to the given
-        frequency resolution for the self-calibration
-        """
-        if self.selfcal_splitdata:
-            subs_setinit.setinitdirs(self)
-            subs_setinit.setdatasetnamestomiriad(self)
-            subs_managefiles.director(self, 'ch', self.selfcaldir)
-            logger.info(' Splitting of target data into individual frequency chunks started')
-            if os.path.exists(self.selfcaldir + '/' + self.target):
-                logger.info('Calibrator corrections already seem to have been applied #')
-            else:
-                logger.info('Applying calibrator solutions to target data before averaging #')
-                uvaver = lib.miriad('uvaver')
-                uvaver.vis = self.crosscaldir + '/' + self.target
-                uvaver.out = self.selfcaldir + '/' + self.target
-                uvaver.go()
-                logger.info('Calibrator solutions to target data applied #')
-            if self.selfcal_flagantenna != '':
-                uvflag = lib.miriad('uvflag')
-                uvflag.vis = self.selfcaldir + '/' + self.target
-                uvflag.flagval = 'flag'
-                uvflag.select = 'antenna(' + str(self.selfcal_flagantenna) + ')'
-                uvflag.go()
-            else:
-                pass
-            try:
-                uv = aipy.miriad.UV(self.selfcaldir + '/' + self.target)
-            except RuntimeError:
-                raise ApercalException(' No data in your selfcal directory!')
 
-            try:
-                nsubband = len(uv['nschan'])  # Number of subbands in data
-            except TypeError:
-                nsubband = 1  # Only one subband in data since exception was triggered
-            logger.info('Found ' + str(nsubband) + ' subband(s) in target data #')
-            counter = 0  # Counter for naming the chunks and directories
-            for subband in range(nsubband):
-                logger.info('Started splitting of subband ' + str(subband) + ' #')
-                if nsubband == 1:
+    def averagedata(self):
+        """
+        Averages the data to one channel per subband for self-calibration
+        """
+        subs_setinit.setinitdirs(self)
+
+        # Create the parameters for the parameter file for the averaging
+
+        # Status of the averaging
+        selfcaltargetbeamsaverage = get_param_def(self, 'selfcal_targetbeams_average', np.full(self.NBEAMS, False))
+
+        if self.selfcal_average:
+            if not selfcaltargetbeamsaverage[int(self.beam)]:
+                subs_setinit.setinitdirs(self)
+                subs_setinit.setdatasetnamestomiriad(self)
+                subs_managefiles.director(self, 'ch', self.selfcaldir)
+                logger.info('Beam ' + self.beam + ': Averaging data to one channel per subband for self-calibration')
+                if os.path.isdir(self.crosscaldir + '/' + self.target):
+                    uv = aipy.miriad.UV(self.crosscaldir + '/' + self.target) # Get the number of channels for the original dataset
                     numchan = uv['nschan']
-                    finc = np.fabs(uv['sdf'])
-                else:
-                    numchan = uv['nschan'][subband]  # Number of channels per subband
-                    finc = np.fabs(uv['sdf'][subband])  # Frequency increment for each channel
-                subband_bw = numchan * finc  # Bandwidth of one subband
-                subband_chunks = round(subband_bw / self.selfcal_splitdata_chunkbandwidth)
-                # Round to the closest power of 2 for frequency chunks with the same bandwidth over the frequency
-                # range of a subband
-                subband_chunks = int(np.power(2, np.ceil(np.log(subband_chunks) / np.log(2))))
-                if subband_chunks == 0:
-                    subband_chunks = 1
-                chunkbandwidth = (numchan / subband_chunks) * finc
-                logger.info('Adjusting chunk size to ' + str(
-                    chunkbandwidth) + ' GHz for regular gridding of the data chunks over frequency #')
-                for chunk in range(subband_chunks):
-                    logger.info(
-                        'Starting splitting of data chunk ' + str(chunk) + ' for subband ' + str(subband) + ' #')
-                    binchan = round(
-                        self.selfcal_splitdata_channelbandwidth / finc)  # Number of channels per frequency bin
-                    chan_per_chunk = numchan / subband_chunks
-                    if chan_per_chunk % binchan == 0:  # Check if the freqeuncy bin exactly fits
-                        logger.info('Using frequency binning of ' + str(
-                            self.selfcal_splitdata_channelbandwidth) + ' for all subbands #')
+                    if os.path.isdir(self.selfcaldir + '/' + self.target):
+                        selfcaltargetbeamsaverage[int(self.beam)] = True
+                        logger.info('Beam ' + self.beam + ': Averaged dataset already available')
                     else:
-                        # Increase the frequency bin to keep a regular grid for the chunks
-                        while chan_per_chunk % binchan != 0:
-                            binchan = binchan + 1
+                        uvaver = lib.miriad('uvaver')
+                        uvaver.vis = self.crosscaldir + '/' + self.target
+                        uvaver.line = "'" + 'channel,' + str(numchan/64) + ',1,64,64' + "'"
+                        uvaver.out = self.selfcaldir + '/' + self.target
+                        uvaver.go()
+                        if os.path.isdir(self.selfcaldir + '/' + self.target): # Check if file was produced
+                            selfcaltargetbeamsaverage[int(self.beam)] = True
                         else:
-                            # Check if the calculated bin is not larger than the subband channel number
-                            if chan_per_chunk >= binchan:
-                                pass
-                            else:
-                                # Set the frequency bin to the number of channels in the chunk of the subband
-                                binchan = chan_per_chunk
-                        logger.info('Increasing frequency bin of data chunk ' + str(
-                            chunk) + ' to keep bandwidth of chunks equal over the whole bandwidth #')
-                        logger.info('New frequency bin is ' + str(binchan * finc) + ' GHz #')
-                    nchan = int(chan_per_chunk / binchan)  # Total number of output channels per chunk
-                    start = 1 + chunk * chan_per_chunk
-                    width = int(binchan)
-                    step = int(width)
-                    subs_managefiles.director(self, 'mk', self.selfcaldir + '/' + str(counter).zfill(2))
-                    uvaver = lib.miriad('uvaver')
-                    uvaver.vis = self.selfcaldir + '/' + self.target
-                    uvaver.out = self.selfcaldir + '/' + str(counter).zfill(2) + '/' + str(counter).zfill(2) + '.mir'
-                    uvaver.select = "'" + 'window(' + str(subband + 1) + ')' + "'"
-                    uvaver.line = "'" + 'channel,' + str(nchan) + ',' + str(start) + ',' + str(width) + ',' + str(
-                        step) + "'"
-                    uvaver.go()
-                    counter = counter + 1
-                    logger.info('Splitting of data chunk ' + str(chunk) + ' for subband ' + str(subband) + ' done #')
-                logger.info('Splitting of data for subband ' + str(subband) + ' done #')
-            logger.info(' Splitting of target data into individual frequency chunks done')
+                            selfcaltargetbeamsaverage[int(self.beam)] = False
+                            logger.error('Beam ' + self.beam + ': Averaging of data not successful')
+                else:
+                    selfcaltargetbeamsaverage[int(self.beam)] = False
+                    logger.error('Beam ' + self.beam + ': Converted dataset not available')
+            else:
+                logger.info('Beam ' + self.beam + ': Dataset was already averaged')
+                selfcaltargetbeamsaverage[int(self.beam)] = True
+
+        # Save the derived parameters to the parameter file
+
+        subs_param.add_param(self, 'selfcal_targetbeams_average', selfcaltargetbeamsaverage)
+
 
     def flagline(self):
         """
-        Creates an image cube of the different chunks and measures the rms in each channel. All channels with an rms
-        outside of a given sigma interval are flagged in the continuum calibration, but are still used for line imaging.
+        Creates an image cube of the averaged datasets and measures the rms in each channel. All channels with an rms
+        outside of a given sigma interval are flagged in the self-calibration, continuum and polarisation imagaing, but are still used for line imaging.
         """
+        subs_setinit.setinitdirs(self)
+
+        # Create the parameters for the parameter file for the flagging of residual RFI/HI
+
+        # Status of the flagging of RFI/HI
+        selfcaltargetbeamsflagline = get_param_def(self, 'selfcal_targetbeams_flagline', np.full(self.NBEAMS, False))
+        selfcaltargetbeamsflaglinechannels = get_param_def(self, 'selfcal_targetbeams_flagline_channels', np.full(self.NBEAMS, 'S50'))
+
         if self.selfcal_flagline:
-            subs_setinit.setinitdirs(self)
-            subs_setinit.setdatasetnamestomiriad(self)
-            logger.info(' Automatic flagging of HI-line/RFI started')
-            subs_managefiles.director(self, 'ch', self.selfcaldir)
-            for chunk in self.list_chunks():
-                subs_managefiles.director(self, 'ch', self.selfcaldir + '/' + str(chunk))
-                logger.info('Looking through data chunk ' + str(chunk) + ' #')
+            if not selfcaltargetbeamsflagline[int(self.beam)]:
+                subs_setinit.setinitdirs(self)
+                subs_setinit.setdatasetnamestomiriad(self)
+                subs_managefiles.director(self, 'ch', self.selfcaldir)
+                logger.info('Beam ' + self.beam + ': Automatically flagging HI-line/RFI')
                 invert = lib.miriad('invert')
-                invert.vis = chunk + '.mir'
+                invert.vis = self.target
                 invert.map = 'map'
                 invert.beam = 'beam'
-                invert.imsize = self.selfcal_image_imsize
-                invert.cell = self.selfcal_image_cellsize
-                invert.stokes = 'ii'
+                invert.imsize = 1024
+                invert.cell = 5
+                invert.stokes = 'i'
                 invert.slop = 1
                 invert.go()
                 if os.path.exists('map'):
-                    fits = lib.miriad('fits')
-                    fits.in_ = 'map'
-                    fits.op = 'xyout'
-                    fits.out = 'map.fits'
-                    fits.go()
-                    cube = pyfits.open('map.fits')
-                    data = cube[0].data
-                    std = np.nanstd(data, axis=(0, 2, 3))
+                    min, max, std = imstats.getcubestats(self, 'map')
                     median = np.median(std)
                     stdall = np.nanstd(std)
                     diff = std - median
                     detections = np.where(np.abs(self.selfcal_flagline_sigma * diff) > stdall)[0]
+                    selfcaltargetbeamsflaglinechannels[int(self.beam)] = np.array2string(detections, separator=',')
                     if len(detections) > 0:
-                        logger.info('Found high noise in channel(s) ' + str(detections).lstrip('[').rstrip(']') + ' #')
+                        logger.info('Beam ' + self.beam + ': Flagging high noise in channel(s) ' + str(detections).lstrip('[').rstrip(']'))
                         for d in detections:
                             uvflag = lib.miriad('uvflag')
-                            uvflag.vis = chunk + '.mir'
+                            uvflag.vis = self.target
                             uvflag.flagval = 'flag'
-                            uvflag.line = "'" + 'channel,1,' + str(d + 1) + "'"
+                            uvflag.line = "'" + 'channel,1,' + str(d) + "'"
                             uvflag.go()
-                        logger.info(
-                            'Flagged channel(s) ' + str(detections).lstrip('[').rstrip(']') + ' in data chunk ' + str(
-                                chunk) + ' #')
                     else:
-                        logger.info('No high noise found in data chunk ' + str(chunk) + ' #')
-                    subs_managefiles.director(self, 'rm', self.selfcaldir + '/' + str(chunk) + '/' + 'map')
-                    subs_managefiles.director(self, 'rm', self.selfcaldir + '/' + str(chunk) + '/' + 'map.fits')
-                    subs_managefiles.director(self, 'rm', self.selfcaldir + '/' + str(chunk) + '/' + 'beam')
+                        logger.debug('Beam ' + self.beam + ': No HI-line/RFI found!')
+                    selfcaltargetbeamsflagline[int(self.beam)] = True
+                    subs_managefiles.director(self, 'rm', self.selfcaldir + '/' + 'map')
+                    subs_managefiles.director(self, 'rm', self.selfcaldir + '/' + 'beam')
                 else:
-                    logger.info(' No data in chunk ' + str(chunk) + '!')
-            logger.info(' Automatic flagging of HI-line/RFI done')
+                    selfcaltargetbeamsflagline[int(self.beam)] = False
+                    logger.error('Beam ' + self.beam + ': Averaged line cube could not be created! Skipping flagging of HI-line/RFI!')
+            else:
+                logger.info('Beam ' + self.beam + ': Automatic flagging of HI-line/RFI was already executed!')
+        else:
+            logger.warning('Beam ' + self.beam + ': Automatic HI-line/RFI flagging disabled!')
+
+        # Save the derived parameters to the parameter file
+
+        subs_param.add_param(self, 'selfcal_targetbeams_flagline', selfcaltargetbeamsflagline)
+        subs_param.add_param(self, 'selfcal_targetbeams_flagline_channels', selfcaltargetbeamsflaglinechannels)
+
 
     def parametric(self):
         """
-        Parametric self calibration using an NVSS/FIRST skymodel and calculating spectral indices by source matching
-        with WENSS.
+        Parametric self calibration using an NVSS/FIRST skymodel and calculating spectral indices by source matching with WENSS.
         """
+        subs_setinit.setinitdirs(self)
+
+        # Create the parameters for the parameter file for the parametric self-calibration
+
+        selfcaltargetbeamsparametric = get_param_def(self, 'selfcal_targetbeams_parametric', np.full(self.NBEAMS, False))
+
         if self.selfcal_parametric:
-            subs_setinit.setinitdirs(self)
-            subs_setinit.setdatasetnamestomiriad(self)
-            logger.info(' Doing parametric self calibration')
-            subs_managefiles.director(self, 'ch', self.selfcaldir)
-            for chunk in self.list_chunks():
-                logger.info('Starting parametric self calibration routine on chunk ' + chunk + ' #')
-                subs_managefiles.director(self, 'ch', self.selfcaldir + '/' + chunk)
-                subs_managefiles.director(self, 'mk', self.selfcaldir + '/' + chunk + '/' + 'pm')
-                parametric_textfile = lsm.lsm_model(chunk + '.mir', self.selfcal_parametric_skymodel_radius,
-                                                    self.selfcal_parametric_skymodel_cutoff,
-                                                    self.selfcal_parametric_skymodel_distance)
-                lsm.write_model(self.selfcaldir + '/' + chunk + '/' + 'pm' + '/model.txt', parametric_textfile)
-                logger.info('Creating model from textfile model.txt for chunk ' + chunk + ' #')
-                uv = aipy.miriad.UV(self.selfcaldir + '/' + chunk + '/' + chunk + '.mir')
+            if not selfcaltargetbeamsparametric[int(self.beam)]:
+                subs_setinit.setinitdirs(self)
+                subs_setinit.setdatasetnamestomiriad(self)
+                subs_managefiles.director(self, 'ch', self.selfcaldir)
+                logger.info('Beam ' + self.beam + ': Parametric self calibration')
+                subs_managefiles.director(self, 'mk', self.selfcaldir + '/pm')
+                parametric_textfile = lsm.lsm_model(self.target, self.selfcal_parametric_skymodel_radius, self.selfcal_parametric_skymodel_cutoff, self.selfcal_parametric_skymodel_distance)
+                lsm.write_model(self.selfcaldir + '/pm/model.txt', parametric_textfile)
+                logger.debug('Beam ' + self.beam + ': Creating model from textfile model.txt')
+                uv = aipy.miriad.UV(self.selfcaldir + '/' + self.target)
                 freq = uv['sfreq']
                 uvmodel = lib.miriad('uvmodel')
-                uvmodel.vis = chunk + '.mir'
-                parametric_modelfile = open(self.selfcaldir + '/' + str(chunk) + '/' + 'pm' + '/model.txt', 'r')
+                uvmodel.vis = self.target
+                parametric_modelfile = open(self.selfcaldir + '/pm/model.txt', 'r')
                 for n, source in enumerate(parametric_modelfile.readlines()):
                     if n == 0:
                         uvmodel.options = 'replace,mfs'
                     else:
                         uvmodel.options = 'add,mfs'
                     uvmodel.offset = source.split(',')[0] + ',' + source.split(',')[1]
-                    uvmodel.flux = source.split(',')[2] + ',i,' + str(freq) + ',' + source.split(',')[4].rstrip(
-                        '\n') + ',0,0'
+                    uvmodel.flux = source.split(',')[2] + ',i,' + str(freq) + ',' + source.split(',')[4].rstrip('\n') + ',0,0'
                     uvmodel.out = 'pm/tmp' + str(n)
                     uvmodel.go()
                     uvmodel.vis = uvmodel.out
-                subs_managefiles.director(self, 'rn', 'pm/model', uvmodel.out)  # Rename the last modelfile to model
+                subs_managefiles.director(self, 'rn', 'pm/model.mir', uvmodel.out)  # Rename the last modelfile to model
                 subs_managefiles.director(self, 'rm', 'pm/tmp*')  # Remove all the obsolete modelfiles
-
-                logger.info('Doing parametric self-calibration on chunk {} with solution interval {} min'
-                            'and uvrange limits of {}~{} klambda #'.format(chunk, self.selfcal_parametric_solint,
-                                                                           self.selfcal_parametric_uvmin,
-                                                                           self.selfcal_parametric_uvmax))
-
+                logger.debug('Beam ' + self.beam + ': Parametric self-calibration with solution interval {} min and uvrange limits of {}~{} klambda #'.format(self.selfcal_parametric_solint, self.selfcal_parametric_uvmin, self.selfcal_parametric_uvmax))
                 selfcal = lib.miriad('selfcal')
-                selfcal.vis = chunk + '.mir'
-                selfcal.model = 'pm/model'
-                selfcal.interval = self.selfcal_parametric_solint
-                selfcal.select = "'" + 'uvrange(' + str(self.selfcal_parametric_uvmin) + ',' + str(
-                    self.selfcal_parametric_uvmax) + ')' + "'"
+                selfcal.vis = self.target
+                selfcal.model = 'pm/model.mir'
+                if self.selfcal_parametric_solint == 'auto':
+                    parmodelarray = np.loadtxt('pm/model.txt', delimiter=',')
+                    parflux = np.sum(parmodelarray[:,2])
+                    gaussianity, TN = masking.get_theoretical_noise(self, self.target)  # Gaussianity test and theoretical noise calculation using Stokes V image
+                    if self.selfcal_parametric_amp:
+                        selfcal.interval = calc_scal_interval(parflux, TN, 720, 66, self.selfcal_parametric_nfbin, 2, 10.0, 1)
+                    else:
+                        selfcal.interval = calc_scal_interval(parflux, TN, 720, 66, self.selfcal_parametric_nfbin, 2, 3.0, 1)
+                else:
+                    selfcal.interval = self.selfcal_parametric_solint
+                selfcal.select = "'" + 'uvrange(' + str(self.selfcal_parametric_uvmin) + ',' + str(self.selfcal_parametric_uvmax) + ')' + "'"
+                selfcal.nfbin = self.selfcal_parametric_nfbin
                 # Choose reference antenna if given
                 if self.selfcal_refant == '':
                     pass
@@ -291,377 +277,824 @@ class scal(BaseModule):
                 # Do amplitude calibration if wanted
                 if self.selfcal_parametric_amp:
                     selfcal.options = 'mfs,amp'
+                    logger.warning('Beam ' + self.beam + ': Doing parametric amplitude calibration. Your fluxes might be wrong!')
                 else:
                     selfcal.options = 'mfs'
                 selfcal.go()
-                logger.info('Parametric self calibration routine on chunk ' + chunk + ' done! #')
-            logger.info(' Parametric self calibration done')
+                selfcaltargetbeamsparametric[int(self.beam)] = True
+                logger.debug('Beam ' + self.beam + ': Parametric self calibration done!')
+            else:
+                selfcaltargetbeamsparametric[int(self.beam)] = True
+                logger.info('Beam ' + self.beam + ': Data was already calibrated with parametric model!')
         else:
-            logger.info(' Parametric self calibration disabled')
+            selfcaltargetbeamsparametric[int(self.beam)] = False
+            logger.info('Beam ' + self.beam + ': Parametric self calibration disabled!')
 
-    def selfcal_standard(self):
+        # Save the derived parameters to the parameter file
+
+        subs_param.add_param(self, 'selfcal_targetbeams_parametric', selfcaltargetbeamsparametric)
+
+
+    def phase(self):
         """
-        Executes the standard method of self-calibration with the given parameters
+        Executes the phase self-calibration with the given parameters
         """
         subs_setinit.setinitdirs(self)
-        subs_setinit.setdatasetnamestomiriad(self)
-        logger.info(' Starting standard self calibration routine')
-        subs_managefiles.director(self, 'ch', self.selfcaldir)
-        for chunk in self.list_chunks():
-            logger.info('Starting standard self-calibration routine on frequency chunk ' + chunk + ' #')
-            subs_managefiles.director(self, 'ch', self.selfcaldir + '/' + chunk)
-            if os.path.isfile(self.selfcaldir + '/' + chunk + '/' + chunk + '.mir/visdata'):
-                theoretical_noise = calc_theoretical_noise(self.selfcaldir + '/' + chunk + '/' + chunk + '.mir')
-                logger.info('Theoretical noise for chunk ' + chunk + ' is ' + str(theoretical_noise) + ' Jy/beam #')
-                theoretical_noise_threshold = self.calc_theoretical_noise_threshold(theoretical_noise)
-                logger.info('Your theoretical noise threshold will be ' + str(
-                    self.selfcal_standard_nsigma) + ' times the theoretical noise corresponding to ' + str(
-                    theoretical_noise_threshold) + ' Jy/beam #')
-                dr_list = calc_dr_maj(self.selfcal_standard_drinit, self.selfcal_standard_dr0,
-                                           self.selfcal_standard_majorcycle, self.selfcal_standard_majorcycle_function)
-                logger.info(
-                    'Your dynamic range limits are set to ' + str(dr_list) + ' for the major self-calibration cycles #')
-                for majc in range(self.selfcal_standard_majorcycle):
-                    logger.info(
-                        'Major self-calibration cycle ' + str(majc) + ' for frequency chunk ' + chunk + ' started #')
-                    subs_managefiles.director(self, 'mk', self.selfcaldir + '/' + str(chunk) + '/' + str(majc).zfill(2))
-                    # Calculate the dynamic ranges during minor cycles
-                    dr_minlist = self.calc_dr_min(dr_list, majc, self.selfcal_standard_minorcycle,
-                                                  self.selfcal_standard_minorcycle_function)
-                    logger.info('The minor cycle dynamic range limits for major cycle ' + str(majc) + ' are ' + str(
-                        dr_minlist) + ' #')
-                    for minc in range(self.selfcal_standard_minorcycle):
-                        try:
-                            self.run_continuum_minoriteration(chunk, majc, minc, dr_minlist[minc],
-                                                              theoretical_noise_threshold)
-                        except Exception:
-                            logger.warning('Chunk ' + chunk + ' does not seem to contain data to image #')
-                            break
-                    try:
-                        logger.info('Doing self-calibration with uvmin=' + str(
-                            self.selfcal_standard_uvmin[majc]) + ', uvmax=' + str(
-                            self.selfcal_standard_uvmax[majc]) + ', solution interval=' + str(
-                            self.selfcal_standard_solint[majc]) + ' minutes for major cycle ' + str(majc).zfill(
-                            2) + ' #')
+
+        # Create the parameters for the parameter file for the iterative phase self-calibration
+
+        selfcaltargetbeamsphasestatus = get_param_def(self, 'selfcal_targetbeams_phase_status', np.full(self.NBEAMS, False))
+        selfcaltargetbeamsphasemapstatus = get_param_def(self, 'selfcal_targetbeams_phase_mapstatus', np.full((self.NBEAMS, self.selfcal_phase_majorcycle), False))
+        selfcaltargetbeamsphasemapstats = get_param_def(self, 'selfcal_targetbeams_phase_mapstats', np.full((self.NBEAMS, self.selfcal_phase_majorcycle, 3), np.nan))
+        selfcaltargetbeamsphasebeamstatus = get_param_def(self, 'selfcal_targetbeams_phase_beamstatus', np.full((self.NBEAMS, self.selfcal_phase_majorcycle), False))
+        selfcaltargetbeamsphasemaskstatus = get_param_def(self, 'selfcal_targetbeams_phase_maskstatus', np.full((self.NBEAMS, self.selfcal_phase_majorcycle, self.selfcal_phase_minorcycle), False))
+        selfcaltargetbeamsphasemaskstats = get_param_def(self, 'selfcal_targetbeams_phase_maskstats', np.full((self.NBEAMS, self.selfcal_phase_majorcycle, self.selfcal_phase_minorcycle, 2), np.nan))
+        selfcaltargetbeamsphasemodelstatus = get_param_def(self, 'selfcal_targetbeams_phase_modelstatus', np.full((self.NBEAMS, self.selfcal_phase_majorcycle, self.selfcal_phase_minorcycle), False))
+        selfcaltargetbeamsphasemodelstats = get_param_def(self, 'selfcal_targetbeams_phase_modelstats', np.full((self.NBEAMS, self.selfcal_phase_majorcycle, self.selfcal_phase_minorcycle, 2), np.nan))
+        selfcaltargetbeamsphaseimagestatus = get_param_def(self, 'selfcal_targetbeams_phase_imagestatus', np.full((self.NBEAMS, self.selfcal_phase_majorcycle, self.selfcal_phase_minorcycle), False))
+        selfcaltargetbeamsphaseimagestats = get_param_def(self, 'selfcal_targetbeams_phase_imagestats', np.full((self.NBEAMS, self.selfcal_phase_majorcycle, self.selfcal_phase_minorcycle, 3), np.nan))
+        selfcaltargetbeamsphaseresidualstatus = get_param_def(self, 'selfcal_targetbeams_phase_residualstatus', np.full((self.NBEAMS), False))
+        selfcaltargetbeamsphaseresidualstats = get_param_def(self, 'selfcal_targetbeams_phase_residualstats', np.full((self.NBEAMS, self.selfcal_phase_majorcycle, self.selfcal_phase_minorcycle, 3), np.nan))
+        selfcaltargetbeamsphasemaskthreshold = get_param_def(self, 'selfcal_targetbeams_phase_maskthreshold', np.full((self.NBEAMS, self.selfcal_phase_majorcycle, self.selfcal_phase_minorcycle), np.nan))
+        selfcaltargetbeamsphasecleanthreshold = get_param_def(self, 'selfcal_targetbeams_phase_cleanthreshold', np.full((self.NBEAMS, self.selfcal_phase_majorcycle, self.selfcal_phase_minorcycle), np.nan))
+        selfcaltargetbeamsphasethresholdtype = get_param_def(self, 'selfcal_targetbeams_phase_thresholdtype', np.full((self.NBEAMS, self.selfcal_phase_majorcycle, self.selfcal_phase_minorcycle), 'NA'))
+        selfcaltargetbeamsphasefinalmajor = get_param_def(self, 'selfcal_targetbeams_phase_final_majorcycle', np.full((self.NBEAMS), 0))
+        selfcaltargetbeamsphasefinalminor = get_param_def(self, 'selfcal_targetbeams_phase_final_minorcycle', np.full((self.NBEAMS), 0))
+
+        if self.selfcal_phase:
+            subs_setinit.setinitdirs(self)
+            subs_setinit.setdatasetnamestomiriad(self)
+            subs_managefiles.director(self, 'ch', self.selfcaldir)
+            logger.info('Beam ' + self.beam + ': Iterative phase self calibration')
+            majdr_list = masking.calc_dr_maj(self.selfcal_phase_drinit, self.selfcal_phase_dr0, self.selfcal_phase_majorcycle, self.selfcal_phase_majorcycle_function) # List with dynamic range dynamic range for major cycle
+            TNreached = False # Stop self-calibration if theoretical noise is reached
+            stop = False # Variable to stop self-calibration, if something goes wrong
+            for majc in range(self.selfcal_phase_majorcycle):
+                if stop:
+                    break
+                else:
+                    if not TNreached:
+                        if majc == 0: # Calculate theoretical noise at the beginning of the first major cycle
+                            gaussianity, TN = masking.get_theoretical_noise(self, self.target)  # Gaussianity test and theoretical noise calculation using Stokes V image
+                            if gaussianity:
+                                pass
+                            else:
+                                logger.warning('Beam ' + self.beam + ': Stokes V image shows non-gaussian distribution. Your theoretical noise value might be off!')
+                            logger.info('Beam ' + self.beam + ': Theoretical noise is ' + '%.6f' % TN + ' Jy')
+                        else:
+                            pass
+                        subs_managefiles.director(self, 'mk', self.selfcaldir + '/' + str(majc).zfill(2))
+                        mindr_list = masking.calc_dr_min(majdr_list, majc, self.selfcal_phase_minorcycle, self.selfcal_phase_mindr, self.selfcal_phase_minorcycle_function) # List with dynamic range dynamic range for minor cycles
+                        for minc in range(self.selfcal_phase_minorcycle):
+                            if not TNreached:
+                                if minc == 0: # Create a new dirty image after self-calibration
+                                    invert = lib.miriad('invert')  # Create the dirty image
+                                    invert.vis = self.target
+                                    invert.map = str(majc).zfill(2) + '/map_00'
+                                    invert.beam = str(majc).zfill(2) + '/beam_00'
+                                    invert.imsize = self.selfcal_image_imsize
+                                    invert.cell = self.selfcal_image_cellsize
+                                    invert.stokes = 'i'
+                                    invert.options = 'mfs,sdb,double'
+                                    invert.slop = 1
+                                    invert.robust = -2
+                                    invert.go()
+                                    # Check if dirty image and beam is there and ok
+                                    if os.path.isdir(str(majc).zfill(2) + '/map_00') and os.path.isdir(str(majc).zfill(2) + '/beam_00'):
+                                        selfcaltargetbeamsphasebeamstatus[int(self.beam), majc] = True
+                                        selfcaltargetbeamsphasemapstats[int(self.beam), majc,:] = imstats.getimagestats(self, str(majc).zfill(2) + '/map_00')
+                                        if qa.checkdirtyimage(self, str(majc).zfill(2) + '/map_00'):
+                                            selfcaltargetbeamsphasemapstatus[int(self.beam), majc] = True
+                                        else:
+                                            selfcaltargetbeamsphasemapstatus[int(self.beam), majc] = False
+                                            selfcaltargetbeamsphasestatus[int(self.beam)] = False
+                                            logger.error('Beam ' + self.beam + ': Dirty image for major cycle ' + str(majc) + ' is invalid. Stopping self calibration!')
+                                            stop = True
+                                            selfcaltargetbeamsphasefinalmajor[int(self.beam)] = majc
+                                            selfcaltargetbeamsphasefinalminor[int(self.beam)] = minc
+                                            break
+                                    else:
+                                        selfcaltargetbeamsphasebeamstatus[int(self.beam), majc] = False
+                                        selfcaltargetbeamsphasestatus[int(self.beam)] = False
+                                        logger.error('Beam ' + self.beam + ': Dirty image or beam for major cycle ' + str(majc) + ' not found. Stopping self-calibration!')
+                                        stop = True
+                                        selfcaltargetbeamsphasefinalmajor[int(self.beam)] = majc
+                                        selfcaltargetbeamsphasefinalminor[int(self.beam)] = minc
+                                        break
+                                    dirtystats = imstats.getimagestats(self, str(majc).zfill(2) + '/map_00') # Min, max, rms of the dirty image
+                                    TNdr = masking.calc_theoretical_noise_dr(dirtystats[1], TN, self.selfcal_phase_nsigma) # Theoretical noise dynamic range
+                                    DRdr = masking.calc_dynamic_range_dr(mindr_list, minc, self.selfcal_phase_mindr) # Dynamic range dynamic range
+                                    Ndr = masking.calc_noise_dr(minc, majc, self.selfcal_phase_c0) # Noise dynamic range
+                                    TNth = masking.calc_theoretical_noise_threshold(dirtystats[1], TNdr) # Theoretical noise threshold
+                                    DRth = masking.calc_dynamic_range_threshold(dirtystats[1], DRdr) # Dynamic range threshold
+                                    Nth = masking.calc_noise_threshold(dirtystats[1], Ndr) # Noise threshold
+                                    Mth = masking.calc_mask_threshold(TNth, Nth, DRth) # Masking threshold
+                                    Cc = masking.calc_clean_cutoff(Mth[0], self.selfcal_phase_c1) # Clean cutoff
+                                    selfcaltargetbeamsphasemaskthreshold[int(self.beam), majc, minc] = Mth[0]
+                                    selfcaltargetbeamsphasethresholdtype[int(self.beam), majc, minc] = Mth[1]
+                                    selfcaltargetbeamsphasecleanthreshold[int(self.beam), majc, minc] = Cc
+                                    if majc == 0: # Create mask from dirty image in the first major cycle
+                                        beampars = masking.get_beam(self, invert.map, invert.beam)
+                                        masking.create_mask(self, str(majc).zfill(2) + '/map_00', str(majc).zfill(2) + '/mask_00', Mth[0], TN, beampars=beampars)
+                                    else: # Otherwise copy the mask from the last minor cycle of the previous major iteration
+                                        subs_managefiles.director(self, 'cp', str(majc).zfill(2) + '/mask_00', file_=str(majc-1).zfill(2) + '/mask_' + str(self.selfcal_phase_minorcycle-1).zfill(2))
+                                    # Check if mask is there and ok
+                                    if os.path.isdir(str(majc).zfill(2) + '/mask_00'):
+                                        selfcaltargetbeamsphasemaskstats[int(self.beam), majc, minc, :] = imstats.getmaskstats(self, str(majc).zfill(2) + '/mask_00', self.selfcal_image_imsize)
+                                        if qa.checkmaskimage(self, str(majc).zfill(2) + '/mask_00'):
+                                            selfcaltargetbeamsphasemaskstatus[int(self.beam), majc, minc] = True
+                                        else:
+                                            selfcaltargetbeamsphasemaskstatus[int(self.beam), majc, minc] = False
+                                            selfcaltargetbeamsphasestatus[int(self.beam)] = False
+                                            logger.error('Beam ' + self.beam + ': Mask image for cycle ' + str(majc) + '/' + str(minc) + ' is invalid. Stopping self-calibration!')
+                                            stop = True
+                                            selfcaltargetbeamsphasefinalmajor[int(self.beam)] = majc
+                                            selfcaltargetbeamsphasefinalminor[int(self.beam)] = minc
+                                            break
+                                    else:
+                                        selfcaltargetbeamsphasemaskstatus[int(self.beam), majc, minc] = False
+                                        selfcaltargetbeamsphasestatus[int(self.beam)] = False
+                                        logger.error('Beam ' + self.beam + ': Mask image for cycle ' + str(majc) + '/' + str(minc) + ' not found. Stopping self-calibration!')
+                                        stop = True
+                                        selfcaltargetbeamsphasefinalmajor[int(self.beam)] = majc
+                                        selfcaltargetbeamsphasefinalminor[int(self.beam)] = minc
+                                        break
+                                    mfclean = lib.miriad('mfclean')  # Clean the image down to the calculated threshold
+                                    mfclean.map = str(majc).zfill(2) + '/map_00'
+                                    mfclean.beam = str(majc).zfill(2) + '/beam_00'
+                                    mfclean.out = str(majc).zfill(2) + '/model_00'
+                                    mfclean.cutoff = Cc
+                                    mfclean.niters = 1000000
+                                    mfclean.region = '"' + 'mask(' + str(majc).zfill(2) + '/mask_00)' + '"'
+                                    mfclean.go()
+                                    # Check if clean component image is there and ok
+                                    if os.path.isdir(str(majc).zfill(2) + '/model_00'):
+                                        selfcaltargetbeamsphasemodelstats[int(self.beam), majc, minc, :] = imstats.getmodelstats(self, str(majc).zfill(2) + '/model_00')
+                                        if qa.checkmodelimage(self, str(majc).zfill(2) + '/model_00'):
+                                            selfcaltargetbeamsphasemodelstatus[int(self.beam), majc, minc] = True
+                                        else:
+                                            selfcaltargetbeamsphasemodelstatus[int(self.beam), majc, minc] = False
+                                            selfcaltargetbeamsphasestatus[int(self.beam)] = False
+                                            logger.error('Beam ' + self.beam + ': Clean component image for cycle ' + str(majc) + '/' + str(minc) + ' is invalid. Stopping self-calibration!')
+                                            stop = True
+                                            selfcaltargetbeamsphasefinalmajor[int(self.beam)] = majc
+                                            selfcaltargetbeamsphasefinalminor[int(self.beam)] = minc
+                                            break
+                                    else:
+                                        selfcaltargetbeamsphasemodelstatus[int(self.beam), majc, minc] = False
+                                        selfcaltargetbeamsphasestatus[int(self.beam)] = False
+                                        logger.error('Beam ' + self.beam + ': Clean component image for cycle ' + str(majc) + '/' + str(minc) + ' not found. Stopping self-calibration!')
+                                        stop = True
+                                        selfcaltargetbeamsphasefinalmajor[int(self.beam)] = majc
+                                        selfcaltargetbeamsphasefinalminor[int(self.beam)] = minc
+                                        break
+                                    restor = lib.miriad('restor') # Create the restored image
+                                    restor.model = str(majc).zfill(2) + '/model_00'
+                                    restor.beam = str(majc).zfill(2) + '/beam_00'
+                                    restor.map = str(majc).zfill(2) + '/map_00'
+                                    restor.out = str(majc).zfill(2) + '/image_00'
+                                    restor.mode = 'clean'
+                                    restor.go()
+                                    # Check if restored image is there and ok
+                                    if os.path.isdir(str(majc).zfill(2) + '/image_00'):
+                                        selfcaltargetbeamsphaseimagestats[int(self.beam), majc, minc, :] = imstats.getimagestats(self, str(majc).zfill(2) + '/image_00')
+                                        if qa.checkrestoredimage(self, str(majc).zfill(2) + '/image_00'):
+                                            selfcaltargetbeamsphaseimagestatus[int(self.beam), majc, minc] = True
+                                        else:
+                                            selfcaltargetbeamsphaseimagestatus[int(self.beam), majc, minc] = False
+                                            selfcaltargetbeamsphasestatus[int(self.beam)] = False
+                                            logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(majc) + '/' + str(minc) + ' is invalid. Stopping self-calibration!')
+                                            stop = True
+                                            selfcaltargetbeamsphasefinalmajor[int(self.beam)] = majc
+                                            selfcaltargetbeamsphasefinalminor[int(self.beam)] = minc
+                                            break
+                                    else:
+                                        selfcaltargetbeamsphaseimagestatus[int(self.beam), majc, minc] = False
+                                        selfcaltargetbeamsphasestatus[int(self.beam)] = False
+                                        logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(majc) + '/' + str(minc) + ' not found. Stopping self-calibration!')
+                                        stop = True
+                                        selfcaltargetbeamsphasefinalmajor[int(self.beam)] = majc
+                                        selfcaltargetbeamsphasefinalminor[int(self.beam)] = minc
+                                        break
+                                    restor.mode = 'residual' # Create the residual image
+                                    restor.out = str(majc).zfill(2) + '/residual_00'
+                                    restor.go()
+                                    residualstats = imstats.getimagestats(self, str(majc).zfill(2) + '/residual_00') # Min, max, rms of the residual image
+                                    selfcaltargetbeamsphaseresidualstats[int(self.beam), majc, minc, :] = residualstats
+                                    currdr = dirtystats[1]/residualstats[1]
+                                    logger.info('Beam ' + self.beam + ': Dynamic range is ' + '%.3f' % currdr + ' for cycle ' + str(majc) + '/' + str(minc))
+                                    selfcaltargetbeamsphasefinalminor[int(self.beam)] = minc
+                                    if Mth[1] == 'TN':
+                                        TNreached = True
+                                        logger.info('Beam ' + self.beam + ': Theoretical noise threshold reached. Using last model for final self-calibration!')
+                                    else:
+                                        TNreached = False
+                                else: # Use the first clean model to continue cleaning
+                                    TNdr = masking.calc_theoretical_noise_dr(dirtystats[1], TN, self.selfcal_phase_nsigma) # Theoretical noise dynamic range
+                                    DRdr = masking.calc_dynamic_range_dr(mindr_list, minc, self.selfcal_phase_mindr) # Dynamic range dynamic range
+                                    Ndr = masking.calc_noise_dr(minc, majc, self.selfcal_phase_c0) # Noise dynamic range
+                                    TNth = masking.calc_theoretical_noise_threshold(dirtystats[1], TNdr) # Theoretical noise threshold
+                                    DRth = masking.calc_dynamic_range_threshold(dirtystats[1], DRdr) # Dynamic range threshold
+                                    Nth = masking.calc_noise_threshold(dirtystats[1], Ndr) # Noise threshold
+                                    Mth = masking.calc_mask_threshold(TNth, Nth, DRth) # Masking threshold
+                                    Cc = masking.calc_clean_cutoff(Mth[0], self.selfcal_phase_c1) # Clean cutoff
+                                    selfcaltargetbeamsphasemaskthreshold[int(self.beam), majc, minc] = Mth[0]
+                                    selfcaltargetbeamsphasethresholdtype[int(self.beam), majc, minc] = Mth[1]
+                                    selfcaltargetbeamsphasecleanthreshold[int(self.beam), majc, minc] = Cc
+                                    masking.create_mask(self, str(majc).zfill(2) + '/image_' + str(minc-1).zfill(2), str(majc).zfill(2) + '/mask_' + str(minc).zfill(2), Mth[0], TN, beampars=None)
+                                    # Check if mask is there and ok
+                                    if os.path.isdir(str(majc).zfill(2) + '/mask_' + str(minc).zfill(2)):
+                                        selfcaltargetbeamsphasemaskstats[int(self.beam), majc, minc, :] = imstats.getmaskstats(self, str(majc).zfill(2) + '/mask_' + str(minc).zfill(2), self.selfcal_image_imsize)
+                                        if qa.checkmaskimage(self, str(majc).zfill(2) + '/mask_' + str(minc).zfill(2)):
+                                            selfcaltargetbeamsphasemaskstatus[int(self.beam), majc, minc] = True
+                                        else:
+                                            selfcaltargetbeamsphasemaskstatus[int(self.beam), majc, minc] = False
+                                            selfcaltargetbeamsphasestatus[int(self.beam)] = False
+                                            msg = 'Beam ' + self.beam + ': Mask image for cycle ' + str(majc) + '/' + str(minc) + ' is invalid. Stopping self-calibration!'
+                                            logger.error(msg)
+                                            raise ApercalException(msg)
+                                            stop = True
+                                            selfcaltargetbeamsphasefinalmajor[int(self.beam)] = majc
+                                            selfcaltargetbeamsphasefinalminor[int(self.beam)] = minc
+                                            break
+                                    else:
+                                        selfcaltargetbeamsphasemaskstatus[int(self.beam), majc, minc] = False
+                                        selfcaltargetbeamsphasestatus[int(self.beam)] = False
+                                        msg = 'Beam ' + self.beam + ': Mask image for cycle ' + str(majc) + '/' + str(minc) + ' not found. Stopping self-calibration!'
+                                        logger.error(msg)
+                                        raise ApercalException(msg)
+                                        stop = True
+                                        selfcaltargetbeamsphasefinalmajor[int(self.beam)] = majc
+                                        selfcaltargetbeamsphasefinalminor[int(self.beam)] = minc
+                                        break
+                                    mfclean = lib.miriad('mfclean')  # Clean the image down to the calculated threshold
+                                    mfclean.map = str(majc).zfill(2) + '/map_00'
+                                    mfclean.beam = str(majc).zfill(2) + '/beam_00'
+                                    mfclean.model = str(majc).zfill(2) + '/model_' + str(minc-1).zfill(2)
+                                    mfclean.out = str(majc).zfill(2) + '/model_' + str(minc).zfill(2)
+                                    mfclean.cutoff = Cc
+                                    mfclean.niters = 1000000
+                                    mfclean.region = '"' + 'mask(' + str(majc).zfill(2) + '/mask_' + str(minc).zfill(2) + ')' + '"'
+                                    mfclean.go()
+                                    # Check if clean component image is there and ok
+                                    if os.path.isdir(str(majc).zfill(2) + '/model_' + str(minc).zfill(2)):
+                                        selfcaltargetbeamsphasemodelstats[int(self.beam), majc, minc, :] = imstats.getmodelstats(self, str(majc).zfill(2) + '/model_' + str(minc).zfill(2))
+                                        if qa.checkmodelimage(self, str(majc).zfill(2) + '/model_' + str(minc).zfill(2)):
+                                            selfcaltargetbeamsphasemodelstatus[int(self.beam), majc, minc] = True
+                                        else:
+                                            selfcaltargetbeamsphasemodelstatus[int(self.beam), majc, minc] = False
+                                            selfcaltargetbeamsphasestatus[int(self.beam)] = False
+                                            msg = 'Beam ' + self.beam + ': Clean component image for cycle ' + str(majc) + '/' + str(minc) + ' is invalid. Stopping self-calibration!'
+                                            logger.error(msg)
+                                            raise ApercalException(msg)
+                                            stop = True
+                                            selfcaltargetbeamsphasefinalmajor[int(self.beam)] = majc
+                                            selfcaltargetbeamsphasefinalminor[int(self.beam)] = minc
+                                            break
+                                    else:
+                                        selfcaltargetbeamsphasemodelstatus[int(self.beam), majc, minc] = False
+                                        selfcaltargetbeamsphasestatus[int(self.beam)] = False
+                                        msg = 'Beam ' + self.beam + ': Clean component image for cycle ' + str(majc) + '/' + str(minc) + ' not found. Stopping self-calibration!'
+                                        logger.error(msg)
+                                        raise ApercalException(msg)
+                                        stop = True
+                                        selfcaltargetbeamsphasefinalmajor[int(self.beam)] = majc
+                                        selfcaltargetbeamsphasefinalminor[int(self.beam)] = minc
+                                        break
+                                    restor = lib.miriad('restor') # Create the restored image
+                                    restor.model = str(majc).zfill(2) + '/model_' + str(minc).zfill(2)
+                                    restor.beam = str(majc).zfill(2) + '/beam_00'
+                                    restor.map = str(majc).zfill(2) + '/map_00'
+                                    restor.out = str(majc).zfill(2) + '/image_' + str(minc).zfill(2)
+                                    restor.mode = 'clean'
+                                    restor.go()
+                                    # Check if restored image is there and ok
+                                    if os.path.isdir(str(majc).zfill(2) + '/image_' + str(minc).zfill(2)):
+                                        selfcaltargetbeamsphaseimagestats[int(self.beam), majc, minc, :] = imstats.getimagestats(self, str(majc).zfill(2) + '/image_00')
+                                        if qa.checkrestoredimage(self, str(majc).zfill(2) + '/image_' + str(minc).zfill(2)):
+                                            selfcaltargetbeamsphaseimagestatus[int(self.beam), majc, minc] = True
+                                        else:
+                                            selfcaltargetbeamsphaseimagestatus[int(self.beam), majc, minc] = False
+                                            selfcaltargetbeamsphasestatus[int(self.beam)] = False
+                                            logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(majc) + '/' + str(minc) + ' is invalid. Stopping self-calibration!')
+                                            stop = True
+                                            selfcaltargetbeamsphasefinalmajor[int(self.beam)] = majc
+                                            selfcaltargetbeamsphasefinalminor[int(self.beam)] = minc
+                                            break
+                                    else:
+                                        selfcaltargetbeamsphaseimagestatus[int(self.beam), majc, minc] = False
+                                        selfcaltargetbeamsphasestatus[int(self.beam)] = False
+                                        logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(majc) + '/' + str(minc) + ' not found. Stopping self-calibration!')
+                                        stop = True
+                                        selfcaltargetbeamsphasefinalmajor[int(self.beam)] = majc
+                                        selfcaltargetbeamsphasefinalminor[int(self.beam)] = minc
+                                        break
+                                    restor.mode = 'residual' # Create the residual image
+                                    restor.out = str(majc).zfill(2) + '/residual_' + str(minc).zfill(2)
+                                    restor.go()
+                                    residualstats = imstats.getimagestats(self, str(majc).zfill(2) + '/residual_' + str(minc).zfill(2)) # Min, max, rms of the residual image
+                                    selfcaltargetbeamsphaseresidualstats[int(self.beam), majc, minc, :] = residualstats
+                                    currdr = dirtystats[1]/residualstats[1]
+                                    logger.info('Beam ' + self.beam + ': Dynamic range is ' + '%.3f' % currdr + ' for cycle ' + str(majc) + '/' + str(minc))
+                                    selfcaltargetbeamsphasefinalminor[int(self.beam)] = minc
+                                    if Mth[1] == 'TN':
+                                        TNreached = True
+                                        logger.info('Beam ' + self.beam + ': Theoretical noise threshold reached. Using last model for final self-calibration!')
+                                    else:
+                                        TNreached = False
+                            else:
+                                pass
+                        # Do the self calibration in the normal cycle
+                        selfcaltargetbeamsphasefinalmajor[int(self.beam)] = majc
+                        selfcaltargetbeamsphasefinalminor[int(self.beam)] = minc
                         selfcal = lib.miriad('selfcal')
-                        selfcal.vis = chunk + '.mir'
-                        selfcal.select = '"' + 'uvrange(' + str(self.selfcal_standard_uvmin[majc]) + ',' + str(
-                            self.selfcal_standard_uvmax[majc]) + ')"'
+                        selfcal.vis = self.target
+                        selfcal.select = '"' + 'uvrange(' + str(self.selfcal_phase_uvmin[majc]) + ',' + str(self.selfcal_phase_uvmax[majc]) + ')"'
                         selfcal.model = str(majc).zfill(2) + '/model_' + str(minc).zfill(2)
-                        selfcal.interval = self.selfcal_standard_solint[majc]
-                        # Choose reference antenna if given
-                        if self.selfcal_refant == '':
+                        if self.selfcal_phase_solint == 'auto':
+                            selfcal.interval = calc_scal_interval(selfcaltargetbeamsphasemodelstats[int(self.beam), majc, minc, 1], TN, 720, 66, self.selfcal_phase_nfbin, 2, 3.0, majc+1)
+                        else:
+                            selfcal.interval = self.selfcal_phase_solint[majc]
+                        if self.selfcal_refant == '': # Choose reference antenna if given
                             pass
                         else:
                             selfcal.refant = self.selfcal_refant
-                        # Enable amplitude calibration if triggered
-                        if not self.selfcal_standard_amp:  # See if we want to do amplitude calibration
-                            selfcal.options = 'mfs,phase'
-                        elif self.selfcal_standard_amp:
-                            selfcal.options = 'mfs,amp'
-                        elif self.selfcal_standard_amp == 'auto':
-                            modelflux = self.calc_isum(str(majc).zfill(2) + '/model_' + str(minc).zfill(2))
-                            if modelflux >= self.selfcal_standard_amp_auto_limit:
-                                logger.info(
-                                    'Flux of clean model is ' + str(modelflux) + ' Jy. Doing amplitude calibration. #')
-                                selfcal.options = 'mfs,amp'
-                            else:
-                                selfcal.options = 'mfs,phase'
-                        if self.selfcal_standard_nfbin >= 1:
-                            selfcal.nfbin = self.selfcal_standard_nfbin
+                        selfcal.options = 'phase,mfs'
+                        selfcal.nfbin = self.selfcal_phase_nfbin
                         selfcal.go()
-                        logger.info('Major self-calibration cycle ' + str(
-                            majc) + ' for frequency chunk ' + chunk + ' finished #')
-                    except Exception:
-                        logger.warning(
-                            'Model for self-calibration not found. No further calibration on this chunk possible!')
-                        break
-                logger.info('Standard self-calibration routine for chunk ' + chunk + ' finished #')
+                    else:
+                        # When theoretical noise is reached, do a last self-calibration round
+                        selfcal = lib.miriad('selfcal')
+                        selfcal.vis = self.target
+                        selfcal.select = '"' + 'uvrange(' + str(self.selfcal_phase_uvmin[-1]) + ',' + str(self.selfcal_phase_uvmax[-1]) + ')"'
+                        selfcal.model = str(selfcaltargetbeamsphasefinalmajor[int(self.beam)]).zfill(2) + '/model_' + str(selfcaltargetbeamsphasefinalminor[int(self.beam)]).zfill(2) # Update model via param file
+                        if self.selfcal_phase_solint == 'auto':
+                            selfcal.interval = calc_scal_interval(selfcaltargetbeamsphasemodelstats[int(self.beam), selfcaltargetbeamsphasefinalmajor[int(self.beam)], selfcaltargetbeamsphasefinalminor[int(self.beam)], 1], TN, 720, 66, self.selfcal_phase_nfbin, 2, 3.0, majc+1)
+                        else:
+                            selfcal.interval = self.selfcal_phase_solint[-1]
+                        if self.selfcal_refant == '': # Choose reference antenna if given
+                            pass
+                        else:
+                            selfcal.refant = self.selfcal_refant
+                        selfcal.options = 'phase,mfs'
+                        selfcal.nfbin = self.selfcal_phase_nfbin
+                        selfcal.go()
+            # Check final residual image for gaussianity, we should add more metrics here to check selfcal
+            if TNreached or (self.selfcal_phase_minorcycle == selfcaltargetbeamsphasefinalminor[int(self.beam)] and self.selfcal_phase_majorcycle == selfcaltargetbeamsphasefinalmajor[int(self.beam)]):
+                if qa.checkimagegaussianity(self, str(selfcaltargetbeamsphasefinalmajor[int(self.beam)]).zfill(2) + '/residual_' + str(selfcaltargetbeamsphasefinalminor[int(self.beam)]).zfill(2), self.selfcal_phase_gaussianity):
+                    selfcaltargetbeamsphaseresidualstatus[int(self.beam)] = True
+                    selfcaltargetbeamsphasestatus[int(self.beam)] = True
+                    logger.info('Beam ' + self.beam + ': Iterative phase self calibration successfully done!')
+                else:
+                    selfcaltargetbeamsphaseresidualstatus[int(self.beam)] = False
+                    selfcaltargetbeamsphasestatus[int(self.beam)] = False
+                    logger.warning('Beam ' + self.beam + ': Final residual image shows non-gaussian statistics. Phase self-calibration was not successful!')
             else:
-                logger.warning('No data in chunk ' + chunk + '. Maybe all data is flagged? #')
-        logger.info(' Standard self calibration routine finished')
+                selfcaltargetbeamsphasestatus[int(self.beam)] = False
+                logger.warning('Beam ' + self.beam + ': Iterative phase self-calibration did not reach the final cycle or the theoretical noise. Calibration was not successful.')
+        else:
+            logger.warning('Beam ' + self.beam + ': Not doing iterative phase self-calibration!')
 
-    def run_continuum_minoriteration(self, chunk, majc, minc, drmin, theoretical_noise_threshold):
+        # Save the derived parameters to the parameter file
+
+        subs_param.add_param(self, 'selfcal_targetbeams_phase_status', selfcaltargetbeamsphasestatus)
+        subs_param.add_param(self, 'selfcal_targetbeams_phase_mapstatus', selfcaltargetbeamsphasemapstatus)
+        subs_param.add_param(self, 'selfcal_targetbeams_phase_mapstats', selfcaltargetbeamsphasemapstats)
+        subs_param.add_param(self, 'selfcal_targetbeams_phase_beamstatus', selfcaltargetbeamsphasebeamstatus)
+        subs_param.add_param(self, 'selfcal_targetbeams_phase_maskstatus', selfcaltargetbeamsphasemaskstatus)
+        subs_param.add_param(self, 'selfcal_targetbeams_phase_maskstats', selfcaltargetbeamsphasemaskstats)
+        subs_param.add_param(self, 'selfcal_targetbeams_phase_modelstatus', selfcaltargetbeamsphasemodelstatus)
+        subs_param.add_param(self, 'selfcal_targetbeams_phase_modelstats', selfcaltargetbeamsphasemodelstats)
+        subs_param.add_param(self, 'selfcal_targetbeams_phase_imagestatus', selfcaltargetbeamsphaseimagestatus)
+        subs_param.add_param(self, 'selfcal_targetbeams_phase_imagestats', selfcaltargetbeamsphaseimagestats)
+        subs_param.add_param(self, 'selfcal_targetbeams_phase_residualstatus', selfcaltargetbeamsphaseresidualstatus)
+        subs_param.add_param(self, 'selfcal_targetbeams_phase_residualstats', selfcaltargetbeamsphaseresidualstats)
+        subs_param.add_param(self, 'selfcal_targetbeams_phase_maskthreshold', selfcaltargetbeamsphasemaskthreshold)
+        subs_param.add_param(self, 'selfcal_targetbeams_phase_cleanthreshold', selfcaltargetbeamsphasecleanthreshold)
+        subs_param.add_param(self, 'selfcal_targetbeams_phase_thresholdtype', selfcaltargetbeamsphasethresholdtype)
+        subs_param.add_param(self, 'selfcal_targetbeams_phase_final_majorcycle', selfcaltargetbeamsphasefinalmajor)
+        subs_param.add_param(self, 'selfcal_targetbeams_phase_final_minorcycle', selfcaltargetbeamsphasefinalminor)
+
+
+    def amp(self):
         """
-        Does a selfcal minor iteration for the standard mode
-        chunk: The frequency chunk to image and calibrate
-        maj: Current major iteration
-        min: Current minor iteration
-        drmin: maximum dynamic range for minor iteration
-        theoretical_noise_threshold: calculated theoretical noise threshold
+        Executes amplitude self-calibration with the given parameters
         """
         subs_setinit.setinitdirs(self)
-        subs_setinit.setdatasetnamestomiriad(self)
-        logger.info('Minor self-calibration cycle ' + str(minc) + ' for frequency chunk ' + chunk + ' started #')
-        if minc == 0:
-            invert = lib.miriad('invert')  # Create the dirty image
-            invert.vis = chunk + '.mir'
-            invert.map = str(majc).zfill(2) + '/map_' + str(minc).zfill(2)
-            invert.beam = str(majc).zfill(2) + '/beam_' + str(minc).zfill(2)
-            invert.imsize = self.selfcal_image_imsize
-            invert.cell = self.selfcal_image_cellsize
-            invert.stokes = 'ii'
-            invert.options = 'mfs,double'
-            invert.slop = 1
-            invert.robust = -2
-            invert.go()
-            imax = self.calc_imax(str(majc).zfill(2) + '/map_' + str(minc).zfill(2))
-            noise_threshold = self.calc_noise_threshold(imax, minc, majc)
-            dynamic_range_threshold = calc_dynamic_range_threshold(imax, drmin,
-                                                                        self.selfcal_standard_minorcycle0_dr)
-            mask_threshold, mask_threshold_type = calc_mask_threshold(theoretical_noise_threshold, noise_threshold,
-                                                                           dynamic_range_threshold)
-            logger.info('Mask threshold for major/minor cycle ' + str(majc) + '/' + str(minc) + ' set to ' + str(
-                mask_threshold) + ' Jy/beam #')
-            logger.info('Mask threshold set by ' + str(mask_threshold_type) + ' #')
-            if majc == 0:
-                maths = lib.miriad('maths')
-                maths.out = str(majc).zfill(2) + '/mask_' + str(minc).zfill(2)
-                maths.exp = '"<' + str(majc).zfill(2) + '/map_' + str(minc).zfill(2) + '>"'
-                maths.mask = '"<' + str(majc).zfill(2) + '/map_' + str(minc).zfill(2) + '>.gt.' + str(
-                    mask_threshold) + '"'
-                maths.go()
-                logger.info('Mask with threshold ' + str(mask_threshold) + ' Jy/beam created #')
+
+        # Create the parameters for the parameter file for the amplitude self-calibration
+
+        selfcaltargetbeamsampstatus = get_param_def(self, 'selfcal_targetbeams_amp_status', np.full(self.NBEAMS, False))
+        selfcaltargetbeamsampapplystatus = get_param_def(self, 'selfcal_targetbeams_amp_applystatus', np.full(self.NBEAMS, False))
+        selfcaltargetbeamsampmapstatus = get_param_def(self, 'selfcal_targetbeams_amp_mapstatus', np.full((self.NBEAMS), False))
+        selfcaltargetbeamsampmapstats = get_param_def(self, 'selfcal_targetbeams_amp_mapstats', np.full((self.NBEAMS, 3), np.nan))
+        selfcaltargetbeamsampbeamstatus = get_param_def(self, 'selfcal_targetbeams_amp_beamstatus', np.full((self.NBEAMS), False))
+        selfcaltargetbeamsampmaskstatus = get_param_def(self, 'selfcal_targetbeams_amp_maskstatus', np.full((self.NBEAMS, self.selfcal_amp_minorcycle), False))
+        selfcaltargetbeamsampmaskstats = get_param_def(self, 'selfcal_targetbeams_amp_maskstats', np.full((self.NBEAMS, self.selfcal_amp_minorcycle, 2), np.nan))
+        selfcaltargetbeamsampmodelstatus = get_param_def(self, 'selfcal_targetbeams_amp_modelstatus', np.full((self.NBEAMS, self.selfcal_amp_minorcycle), False))
+        selfcaltargetbeamsampmodelstats = get_param_def(self, 'selfcal_targetbeams_amp_modelstats', np.full((self.NBEAMS, self.selfcal_amp_minorcycle, 2), np.nan))
+        selfcaltargetbeamsampimagestatus = get_param_def(self, 'selfcal_targetbeams_phase_imagestatus', np.full((self.NBEAMS, self.selfcal_amp_minorcycle), False))
+        selfcaltargetbeamsampimagestats = get_param_def(self, 'selfcal_targetbeams_phase_imagestats', np.full((self.NBEAMS, self.selfcal_amp_minorcycle, 3), np.nan))
+        selfcaltargetbeamsampresidualstatus = get_param_def(self, 'selfcal_targetbeams_phase_residualstatus', np.full((self.NBEAMS), False))
+        selfcaltargetbeamsampresidualstats = get_param_def(self, 'selfcal_targetbeams_phase_residualstats', np.full((self.NBEAMS, self.selfcal_amp_minorcycle, 3), np.nan))
+        selfcaltargetbeamsampmaskthreshold = get_param_def(self, 'selfcal_targetbeams_phase_maskthreshold', np.full((self.NBEAMS, self.selfcal_amp_minorcycle), np.nan))
+        selfcaltargetbeamsampcleanthreshold = get_param_def(self, 'selfcal_targetbeams_phase_cleanthreshold', np.full((self.NBEAMS, self.selfcal_amp_minorcycle), np.nan))
+        selfcaltargetbeamsampthresholdtype = get_param_def(self, 'selfcal_targetbeams_phase_thresholdtype', np.full((self.NBEAMS, self.selfcal_amp_minorcycle), 'NA'))
+        selfcaltargetbeamsampfinalminor = get_param_def(self, 'selfcal_targetbeams_phase_final_minorcycle', np.full((self.NBEAMS), 0))
+
+        if self.selfcal_amp:
+            subs_setinit.setinitdirs(self)
+            subs_setinit.setdatasetnamestomiriad(self)
+            subs_managefiles.director(self, 'ch', self.selfcaldir)
+            # Check if phase self-calibration was successful
+            phasestatus = subs_param.get_param(self, 'selfcal_targetbeams_phase_status')[int(self.beam)]
+            if phasestatus:
+                logger.info('Beam ' + self.beam + ': Amplitude self calibration')
+                # Apply the phase self-calibration
+                uvaver = lib.miriad('uvaver')
+                uvaver.vis = self.target
+                uvaver.out = self.target.rstrip('.mir') + '_amp.mir'
+                uvaver.go()
+                # Check if dataset was copied correctly
+                if os.path.isdir(self.target.rstrip('.mir') + '_amp.mir'):
+                    selfcaltargetbeamsampapplystatus[int(self.beam)] = True
+                    subs_managefiles.director(self, 'mk', self.selfcaldir + '/amp') # Create the amplitude self-calibration directory
+                    phasemajor = subs_param.get_param(self, 'selfcal_targetbeams_phase_final_majorcycle')[int(self.beam)] # Get the number of the last iteration during phase selfcal
+                    phaseminor = subs_param.get_param(self, 'selfcal_targetbeams_phase_final_minorcycle')[int(self.beam)]
+                    lastphasemapmax = subs_param.get_param(self, 'selfcal_targetbeams_phase_mapstats')[int(self.beam), phasemajor, 1]
+                    lastphaseresidualmax = subs_param.get_param(self, 'selfcal_targetbeams_phase_residualstats')[int(self.beam), phasemajor, phaseminor, 1]
+                    lastphasedr = lastphasemapmax/lastphaseresidualmax
+                    mindr_list = masking.calc_dr_amp(lastphasedr, self.selfcal_amp_dr0, self.selfcal_amp_minorcycle, self.selfcal_amp_minorcycle_function)  # List with dynamic range dynamic range for minor cycles
+                    gaussianity, TN = masking.get_theoretical_noise(self, self.target.rstrip('.mir') + '_amp.mir')  # Gaussianity test and theoretical noise calculation using Stokes V image
+                    if gaussianity:
+                        pass
+                    else:
+                        logger.warning('Beam ' + self.beam + ': Stokes V image shows non-gaussian distribution. Your theoretical noise value might be off!')
+                    logger.info('Beam ' + self.beam + ': Theoretical noise is ' + '%.6f' % TN + ' Jy')
+                    TNreached = False  # Stop self-calibration if theoretical noise is reached
+                    stop = False
+                    for minc in range(self.selfcal_amp_minorcycle):
+                        if not TNreached:
+                            if minc == 0:  # Create a new dirty image after phase self-calibration
+                                invert = lib.miriad('invert')  # Create the dirty image
+                                invert.vis = self.target.rstrip('.mir') + '_amp.mir'
+                                invert.map = 'amp/map_00'
+                                invert.beam = 'amp/beam_00'
+                                invert.imsize = self.selfcal_image_imsize
+                                invert.cell = self.selfcal_image_cellsize
+                                invert.stokes = 'i'
+                                invert.options = 'mfs,sdb,double'
+                                invert.slop = 1
+                                invert.robust = -2
+                                invert.go()
+                                # Check if dirty image and beam is there and ok
+                                if os.path.isdir('amp/map_00') and os.path.isdir('amp/beam_00'):
+                                    selfcaltargetbeamsampbeamstatus[int(self.beam)] = True
+                                    selfcaltargetbeamsampmapstats[int(self.beam), :] = imstats.getimagestats(self, 'amp/map_00')
+                                    if qa.checkdirtyimage(self, 'amp/map_00'):
+                                        selfcaltargetbeamsampmapstatus[int(self.beam)] = True
+                                    else:
+                                        selfcaltargetbeamsampmapstatus[int(self.beam)] = False
+                                        selfcaltargetbeamsampstatus[int(self.beam)] = False
+                                        logger.error('Beam ' + self.beam + ': Dirty image for amplitude self-calibration is invalid. Stopping self calibration!')
+                                        stop = True
+                                        selfcaltargetbeamsampfinalminor[int(self.beam)] = minc
+                                        break
+                                else:
+                                    selfcaltargetbeamsampbeamstatus[int(self.beam)] = False
+                                    selfcaltargetbeamsampstatus[int(self.beam)] = False
+                                    logger.error('Beam ' + self.beam + ': Dirty image or beam for amplitude self-calibration not found. Stopping self-calibration!')
+                                    stop = True
+                                    selfcaltargetbeamsampfinalminor[int(self.beam)] = minc
+                                    break
+                                dirtystats = imstats.getimagestats(self, 'amp/map_00')  # Min, max, rms of the dirty image
+                                subs_managefiles.director(self, 'cp', self.selfcaldir + '/amp/' + 'mask_00', file_=self.selfcaldir + '/' + str(phasemajor).zfill(2) + '/mask_' + str(phaseminor).zfill(2))  # Copy the last mask from the phase selfcal over
+                                # Check if mask is there and ok
+                                if os.path.isdir('amp/mask_00'):
+                                    selfcaltargetbeamsampmaskstats[int(self.beam), minc, :] = imstats.getmaskstats(self, 'amp/mask_00', self.selfcal_image_imsize)
+                                    if qa.checkmaskimage(self, 'amp/mask_00'):
+                                        selfcaltargetbeamsampmaskstatus[int(self.beam), minc] = True
+                                    else:
+                                        selfcaltargetbeamsampmaskstatus[int(self.beam), minc] = False
+                                        selfcaltargetbeamsampstatus[int(self.beam)] = False
+                                        logger.error('Beam ' + self.beam + ': Mask image for amplitude self-calibration is invalid. Stopping self-calibration!')
+                                        stop = True
+                                        selfcaltargetbeamsampfinalminor[int(self.beam)] = minc
+                                        break
+                                else:
+                                    selfcaltargetbeamsampmaskstatus[int(self.beam), minc] = False
+                                    selfcaltargetbeamsampstatus[int(self.beam)] = False
+                                    logger.error('Beam ' + self.beam + ': Mask image for amplitude self-calibration not found. Stopping self-calibration!')
+                                    stop = True
+                                    selfcaltargetbeamsampfinalminor[int(self.beam)] = minc
+                                    break
+                                TNdr = masking.calc_theoretical_noise_dr(dirtystats[1], TN, self.selfcal_amp_nsigma)  # Theoretical noise dynamic range
+                                DRdr = masking.calc_dynamic_range_dr(mindr_list, minc, self.selfcal_amp_mindr)  # Dynamic range dynamic range
+                                Ndr = masking.calc_noise_dr(minc, phasemajor+1, self.selfcal_amp_c0)  # Noise dynamic range
+                                TNth = masking.calc_theoretical_noise_threshold(dirtystats[1], TNdr)  # Theoretical noise threshold
+                                DRth = masking.calc_dynamic_range_threshold(dirtystats[1], DRdr)  # Dynamic range threshold
+                                Nth = masking.calc_noise_threshold(dirtystats[1], Ndr)  # Noise threshold
+                                Mth = masking.calc_mask_threshold(TNth, Nth, DRth)  # Masking threshold
+                                Cc = masking.calc_clean_cutoff(Mth[0], self.selfcal_phase_c1)  # Clean cutoff
+                                selfcaltargetbeamsampmaskthreshold[int(self.beam), minc] = Mth[0]
+                                selfcaltargetbeamsampthresholdtype[int(self.beam), minc] = Mth[1]
+                                selfcaltargetbeamsampcleanthreshold[int(self.beam), minc] = Cc
+                                mfclean = lib.miriad('mfclean')  # Clean the image down to the calculated threshold
+                                mfclean.map = 'amp/map_00'
+                                mfclean.beam = 'amp/beam_00'
+                                mfclean.out = 'amp/model_00'
+                                mfclean.cutoff = Cc
+                                mfclean.niters = 1000000
+                                mfclean.region = '"' + 'mask(amp/mask_00)' + '"'
+                                mfclean.go()
+                                # Check if clean component image is there and ok
+                                if os.path.isdir('amp/model_00'):
+                                    selfcaltargetbeamsampmodelstats[int(self.beam), minc, :] = imstats.getmodelstats(self, 'amp/model_00')
+                                    if qa.checkmodelimage(self, 'amp/model_00'):
+                                        selfcaltargetbeamsampmodelstatus[int(self.beam), minc] = True
+                                    else:
+                                        selfcaltargetbeamsampmodelstatus[int(self.beam), minc] = False
+                                        selfcaltargetbeamsampstatus[int(self.beam)] = False
+                                        logger.error('Beam ' + self.beam + ': Clean component image for cycle ' + str(minc) + ' is invalid. Stopping self-calibration!')
+                                        stop = True
+                                        selfcaltargetbeamsampfinalminor[int(self.beam)] = minc
+                                        break
+                                else:
+                                    selfcaltargetbeamsampmodelstatus[int(self.beam), minc] = False
+                                    selfcaltargetbeamsampstatus[int(self.beam)] = False
+                                    logger.error('Beam ' + self.beam + ': Clean component image for cycle ' + str(minc) + ' not found. Stopping self-calibration!')
+                                    stop = True
+                                    selfcaltargetbeamsampfinalminor[int(self.beam)] = minc
+                                    break
+                                restor = lib.miriad('restor')  # Create the restored image
+                                restor.model = 'amp/model_00'
+                                restor.beam = 'amp/beam_00'
+                                restor.map = 'amp/map_00'
+                                restor.out = 'amp/image_00'
+                                restor.mode = 'clean'
+                                restor.go()
+                                # Check if restored image is there and ok
+                                if os.path.isdir('amp/image_00'):
+                                    selfcaltargetbeamsampimagestats[int(self.beam), minc, :] = imstats.getimagestats(self, 'amp/image_00')
+                                    if qa.checkrestoredimage(self, 'amp/image_00'):
+                                        selfcaltargetbeamsampimagestatus[int(self.beam), minc] = True
+                                    else:
+                                        selfcaltargetbeamsampimagestatus[int(self.beam), minc] = False
+                                        selfcaltargetbeamsampstatus[int(self.beam)] = False
+                                        logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(minc) + ' is invalid. Stopping self-calibration!')
+                                        stop = True
+                                        selfcaltargetbeamsampfinalminor[int(self.beam)] = minc
+                                        break
+                                else:
+                                    selfcaltargetbeamsampimagestatus[int(self.beam), minc] = False
+                                    selfcaltargetbeamsampstatus[int(self.beam)] = False
+                                    logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(minc) + ' not found. Stopping self-calibration!')
+                                    stop = True
+                                    selfcaltargetbeamsampfinalminor[int(self.beam)] = minc
+                                    break
+                                restor.mode = 'residual'  # Create the residual image
+                                restor.out = 'amp/residual_00'
+                                restor.go()
+                                residualstats = imstats.getimagestats(self, 'amp/residual_00')  # Min, max, rms of the residual image
+                                selfcaltargetbeamsampresidualstats[int(self.beam), minc, :] = residualstats
+                                currdr = dirtystats[1] / residualstats[1]
+                                logger.info('Beam ' + self.beam + ': Dynamic range is ' + '%.3f' % currdr + ' for cycle ' + str(minc))
+                                selfcaltargetbeamsampfinalminor[int(self.beam)] = minc
+                                if Mth[1] == 'TN':
+                                    TNreached = True
+                                    logger.info('Beam ' + self.beam + ': Theoretical noise threshold reached. Using last model for final self-calibration!')
+                                else:
+                                    TNreached = False
+                            else:
+                                TNdr = masking.calc_theoretical_noise_dr(dirtystats[1], TN, self.selfcal_amp_nsigma)  # Theoretical noise dynamic range
+                                DRdr = masking.calc_dynamic_range_dr(mindr_list, minc, self.selfcal_amp_mindr)  # Dynamic range dynamic range
+                                Ndr = masking.calc_noise_dr(minc, phasemajor+1, self.selfcal_amp_c0)  # Noise dynamic range
+                                TNth = masking.calc_theoretical_noise_threshold(dirtystats[1], TNdr)  # Theoretical noise threshold
+                                DRth = masking.calc_dynamic_range_threshold(dirtystats[1], DRdr)  # Dynamic range threshold
+                                Nth = masking.calc_noise_threshold(dirtystats[1], Ndr)  # Noise threshold
+                                Mth = masking.calc_mask_threshold(TNth, Nth, DRth)  # Masking threshold
+                                Cc = masking.calc_clean_cutoff(Mth[0], self.selfcal_phase_c1)  # Clean cutoff
+                                selfcaltargetbeamsampmaskthreshold[int(self.beam), minc] = Mth[0]
+                                selfcaltargetbeamsampthresholdtype[int(self.beam), minc] = Mth[1]
+                                selfcaltargetbeamsampcleanthreshold[int(self.beam), minc] = Cc
+                                masking.create_mask(self, 'amp/image_' + str(minc - 1).zfill(2), 'amp/mask_' + str(minc).zfill(2), Mth[0], TN, beampars=None)
+                                # Check if mask is there and ok
+                                if os.path.isdir('amp/mask_' + str(minc).zfill(2)):
+                                    selfcaltargetbeamsampmaskstats[int(self.beam), minc, :] = imstats.getmaskstats(self, 'amp/mask_' + str(minc).zfill(2), self.selfcal_image_imsize)
+                                    if qa.checkmaskimage(self, 'amp/mask_' + str(minc).zfill(2)):
+                                        selfcaltargetbeamsampmaskstatus[int(self.beam), minc] = True
+                                    else:
+                                        selfcaltargetbeamsampmaskstatus[int(self.beam), minc] = False
+                                        selfcaltargetbeamsampstatus[int(self.beam)] = False
+                                        logger.error('Beam ' + self.beam + ': Mask image for cycle ' + str(minc) + ' is invalid. Stopping self-calibration!')
+                                        stop = True
+                                        selfcaltargetbeamsampfinalminor[int(self.beam)] = minc
+                                        break
+                                else:
+                                    selfcaltargetbeamsampmaskstatus[int(self.beam), minc] = False
+                                    selfcaltargetbeamsampstatus[int(self.beam)] = False
+                                    logger.error('Beam ' + self.beam + ': Mask image for cycle ' + str(minc) + ' not found. Stopping self-calibration!')
+                                    stop = True
+                                    selfcaltargetbeamsampfinalminor[int(self.beam)] = minc
+                                    break
+                                mfclean = lib.miriad('mfclean')  # Clean the image down to the calculated threshold
+                                mfclean.map = 'amp/map_00'
+                                mfclean.beam = 'amp/beam_00'
+                                mfclean.model = 'amp/model_' + str(minc - 1).zfill(2)
+                                mfclean.out = 'amp/model_' + str(minc).zfill(2)
+                                mfclean.cutoff = Cc
+                                mfclean.niters = 1000000
+                                mfclean.region = '"' + 'mask(amp/mask_' + str(minc).zfill(2) + ')' + '"'
+                                mfclean.go()
+                                # Check if clean component image is there and ok
+                                if os.path.isdir('amp/model_' + str(minc).zfill(2)):
+                                    selfcaltargetbeamsampmodelstats[int(self.beam), minc, :] = imstats.getmodelstats(self, 'amp/model_' + str(minc).zfill(2))
+                                    if qa.checkmodelimage(self, 'amp/model_' + str(minc).zfill(2)):
+                                        selfcaltargetbeamsampmodelstatus[int(self.beam), minc] = True
+                                    else:
+                                        selfcaltargetbeamsampmodelstatus[int(self.beam), minc] = False
+                                        selfcaltargetbeamsampstatus[int(self.beam)] = False
+                                        logger.error('Beam ' + self.beam + ': Clean component image for cycle ' + str(minc) + ' is invalid. Stopping self-calibration!')
+                                        stop = True
+                                        selfcaltargetbeamsampfinalminor[int(self.beam)] = minc
+                                        break
+                                else:
+                                    selfcaltargetbeamsampmodelstatus[int(self.beam), minc] = False
+                                    selfcaltargetbeamsampstatus[int(self.beam)] = False
+                                    logger.error('Beam ' + self.beam + ': Clean component image for cycle ' + str(minc) + ' not found. Stopping self-calibration!')
+                                    stop = True
+                                    selfcaltargetbeamsampfinalminor[int(self.beam)] = minc
+                                    break
+                                restor = lib.miriad('restor')  # Create the restored image
+                                restor.model = 'amp/model_' + str(minc).zfill(2)
+                                restor.beam = 'amp/beam_00'
+                                restor.map = 'amp/map_00'
+                                restor.out = 'amp/image_' + str(minc).zfill(2)
+                                restor.mode = 'clean'
+                                restor.go()
+                                # Check if restored image is there and ok
+                                if os.path.isdir('amp/image_' + str(minc).zfill(2)):
+                                    selfcaltargetbeamsampimagestats[int(self.beam), minc, :] = imstats.getimagestats(self, 'amp/image_00')
+                                    if qa.checkrestoredimage(self, 'amp/image_' + str(minc).zfill(2)):
+                                        selfcaltargetbeamsampimagestatus[int(self.beam), minc] = True
+                                    else:
+                                        selfcaltargetbeamsampimagestatus[int(self.beam), minc] = False
+                                        selfcaltargetbeamsampstatus[int(self.beam)] = False
+                                        logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(minc) + ' is invalid. Stopping self-calibration!')
+                                        stop = True
+                                        selfcaltargetbeamsampfinalminor[int(self.beam)] = minc
+                                        break
+                                else:
+                                    selfcaltargetbeamsampimagestatus[int(self.beam), minc] = False
+                                    selfcaltargetbeamsampstatus[int(self.beam)] = False
+                                    logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(minc) + ' not found. Stopping self-calibration!')
+                                    stop = True
+                                    selfcaltargetbeamsampfinalminor[int(self.beam)] = minc
+                                    break
+                                restor.mode = 'residual'  # Create the residual image
+                                restor.out = 'amp/residual_' + str(minc).zfill(2)
+                                restor.go()
+                                residualstats = imstats.getimagestats(self, 'amp/residual_' + str(minc).zfill(2))  # Min, max, rms of the residual image
+                                selfcaltargetbeamsampresidualstats[int(self.beam), minc, :] = residualstats
+                                currdr = dirtystats[1] / residualstats[1]
+                                logger.info('Beam ' + self.beam + ': Dynamic range is ' + '%.3f' % currdr + ' for cycle ' + str(minc))
+                                selfcaltargetbeamsampfinalminor[int(self.beam)] = minc
+                                if Mth[1] == 'TN':
+                                    TNreached = True
+                                    logger.info('Beam ' + self.beam + ': Theoretical noise threshold reached. Using last model for final self-calibration!')
+                                else:
+                                    TNreached = False
+                        else: # If theoretical noise has been reached
+                            break
+                    if not stop:
+                        if not TNreached:
+                            logger.warning('Beam ' + self.beam + ': Theoretical noise limit not reached for final amplitude self-calibration model! Your model might be incomplete!')
+                        else:
+                            pass
+                        # Do the amplitude self calibration if everything worked ok
+                        selfcal = lib.miriad('selfcal')
+                        selfcal.vis = self.target.rstrip('.mir') + '_amp.mir'
+                        selfcal.select = '"' + 'uvrange(' + str(self.selfcal_amp_uvmin) + ',' + str(self.selfcal_amp_uvmax) + ')"'
+                        selfcal.model = 'amp/model_' + str(selfcaltargetbeamsampfinalminor[int(self.beam)]).zfill(2)
+                        if self.selfcal_amp_solint == 'auto':
+                            selfcal.interval = calc_scal_interval(selfcaltargetbeamsampmodelstats[int(self.beam), selfcaltargetbeamsampfinalminor[int(self.beam)], 1], TN, 720, 66, self.selfcal_amp_nfbin, 2, 10.0, phasemajor + 1)
+                        else:
+                            selfcal.interval = self.selfcal_amp_solint
+                        if self.selfcal_refant == '':  # Choose reference antenna if given
+                            pass
+                        else:
+                            selfcal.refant = self.selfcal_refant
+                        selfcal.options = 'amp,mfs'
+                        selfcal.nfbin = self.selfcal_amp_nfbin
+                        selfcal.go()
+                        if qa.checkimagegaussianity(self, 'amp/residual_' + str(selfcaltargetbeamsampfinalminor[int(self.beam)]).zfill(2), self.selfcal_amp_gaussianity):
+                            selfcaltargetbeamsampresidualstatus[int(self.beam)] = True
+                        else:
+                            selfcaltargetbeamsampresidualstatus[int(self.beam)] = False
+                            logger.error('Beam ' + self.beam + ': Final residual image shows non-gaussian statistics. Amplitude self-calibration was not successful!')
+                        invert = lib.miriad('invert')  # Create a dirty image after final calibration and compare statistics to original one for qualtiy assurance
+                        invert.vis = self.target.rstrip('.mir') + '_amp.mir'
+                        invert.map = 'amp/check_map'
+                        invert.beam = 'amp/check_beam'
+                        invert.imsize = self.selfcal_image_imsize
+                        invert.cell = self.selfcal_image_cellsize
+                        invert.stokes = 'i'
+                        invert.options = 'mfs,sdb,double'
+                        invert.slop = 1
+                        invert.robust = -2
+                        invert.go()
+                        checkstats = imstats.getimagestats(self, 'amp/check_map')
+                        subs_managefiles.director(self, 'rm', 'amp/check_map')
+                        subs_managefiles.director(self, 'rm', 'amp/check_beam')
+                        if np.abs(checkstats[0])/np.abs(dirtystats[0]) >= self.selfcal_amp_ratio or np.abs(dirtystats[0])/np.abs(checkstats[0]) >= self.selfcal_amp_ratio:
+                            minok = False
+                            logger.error('Beam ' + self.beam + ': Discrepeancy between minimum flux of dirty image before and after selfcal!')
+                        else:
+                            minok = True
+                        if np.abs(checkstats[1])/np.abs(dirtystats[1]) >= self.selfcal_amp_ratio or np.abs(dirtystats[1])/np.abs(checkstats[1]) >= self.selfcal_amp_ratio:
+                            maxok = False
+                            logger.error('Beam ' + self.beam + ': Discrepeancy between maximum flux of dirty image before and after selfcal!')
+                        else:
+                            maxok = True
+                        if np.abs(checkstats[2])/np.abs(dirtystats[2]) >= self.selfcal_amp_ratio or np.abs(dirtystats[2])/np.abs(checkstats[2]) >= self.selfcal_amp_ratio:
+                            stdok = False
+                            logger.error('Beam ' + self.beam + ': Discrepeancy between standard deviation of dirty image before and after selfcal!')
+                        else:
+                            stdok = True
+                        if minok == False or maxok == False or stdok == False:
+                            selfcaltargetbeamsampstatus[int(self.beam)] = False
+                            logger.error('Beam ' + self.beam + ': Amplitude self-calibration was not successful!')
+                        else:
+                            selfcaltargetbeamsampstatus[int(self.beam)] = True
+                            logger.info('Beam ' + self.beam + ': Amplitude self-calibration was successful!')
+                    else:
+                        selfcaltargetbeamsampstatus[int(self.beam)] = False
+                        logger.error('Beam ' + self.beam + ': Amplitude self-calibration was not successful!')
+                else:
+                    selfcaltargetbeamsampapplystatus[int(self.beam)] = False
+                    selfcaltargetbeamsampstatus[int(self.beam)] = False
+                    logger.error('Beam ' + self.beam + ': Phase self-calibration gains were not applied successfully! Stopping amplitude self-calibration!')
             else:
-                subs_managefiles.director(self, 'cp', str(majc).zfill(2) + '/mask_' + str(minc).zfill(2),
-                                          file_=str(majc - 1).zfill(2) + '/mask_' + str(
-                                              self.selfcal_standard_minorcycle - 1).zfill(2))
-                logger.info('Mask from last minor iteration of last major cycle copied #')
-            clean_cutoff = self.calc_clean_cutoff(mask_threshold)
-            logger.info('Clean threshold at major/minor cycle ' + str(majc) + '/' + str(minc) + ' was set to ' + str(
-                clean_cutoff) + ' Jy/beam #')
-            clean = lib.miriad('clean')  # Clean the image down to the calculated threshold
-            clean.map = str(majc).zfill(2) + '/map_' + str(0).zfill(2)
-            clean.beam = str(majc).zfill(2) + '/beam_' + str(0).zfill(2)
-            clean.out = str(majc).zfill(2) + '/model_' + str(minc).zfill(2)
-            clean.cutoff = clean_cutoff
-            clean.niters = 1000000
-            clean.region = '"' + 'mask(' + str(majc).zfill(2) + '/mask_' + str(minc).zfill(2) + ')' + '"'
-            clean.go()
-            logger.info('Major/minor cycle ' + str(majc) + '/' + str(minc) + ' cleaning done #')
-            restor = lib.miriad('restor')
-            restor.model = str(majc).zfill(2) + '/model_' + str(minc).zfill(2)
-            restor.beam = str(majc).zfill(2) + '/beam_' + str(0).zfill(2)
-            restor.map = str(majc).zfill(2) + '/map_' + str(0).zfill(2)
-            restor.out = str(majc).zfill(2) + '/image_' + str(minc).zfill(2)
-            restor.mode = 'clean'
-            restor.go()  # Create the cleaned image
-            logger.info('Cleaned image for major/minor cycle ' + str(majc) + '/' + str(minc) + ' created #')
-            restor.mode = 'residual'
-            restor.out = str(majc).zfill(2) + '/residual_' + str(minc).zfill(2)
-            restor.go()
-            logger.info('Residual image for major/minor cycle ' + str(majc) + '/' + str(minc) + ' created #')
-            logger.info('Peak of the residual image is ' + str(
-                self.calc_imax(str(majc).zfill(2) + '/residual_' + str(minc).zfill(2))) + ' Jy/beam #')
-            logger.info('RMS of the residual image is ' + str(
-                self.calc_irms(str(majc).zfill(2) + '/residual_' + str(minc).zfill(2))) + ' Jy/beam #')
-        else:
-            imax = self.calc_imax(str(majc).zfill(2) + '/map_' + str(0).zfill(2))
-            noise_threshold = self.calc_noise_threshold(imax, minc, majc)
-            dynamic_range_threshold = calc_dynamic_range_threshold(imax, drmin,
-                                                                        self.selfcal_standard_minorcycle0_dr)
-            mask_threshold, mask_threshold_type = calc_mask_threshold(theoretical_noise_threshold, noise_threshold,
-                                                                           dynamic_range_threshold)
-            logger.info('Mask threshold for major/minor cycle ' + str(majc) + '/' + str(minc) + ' set to ' + str(
-                mask_threshold) + ' Jy/beam #')
-            logger.info('Mask threshold set by ' + str(mask_threshold_type) + ' #')
-            maths = lib.miriad('maths')
-            maths.out = str(majc).zfill(2) + '/mask_' + str(minc).zfill(2)
-            maths.exp = '"<' + str(majc).zfill(2) + '/image_' + str(minc - 1).zfill(2) + '>"'
-            maths.mask = '"<' + str(majc).zfill(2) + '/image_' + str(minc - 1).zfill(2) + '>.gt.' + str(
-                mask_threshold) + '"'
-            maths.go()
-            logger.info('Mask with threshold ' + str(mask_threshold) + ' Jy/beam created #')
-            clean_cutoff = self.calc_clean_cutoff(mask_threshold)
-            logger.info('Clean threshold at major/minor cycle ' + str(majc) + '/' + str(minc) + ' was set to ' + str(
-                clean_cutoff) + ' Jy/beam #')
-            clean = lib.miriad('clean')  # Clean the image down to the calculated threshold
-            clean.map = str(majc).zfill(2) + '/map_' + str(0).zfill(2)
-            clean.beam = str(majc).zfill(2) + '/beam_' + str(0).zfill(2)
-            clean.model = str(majc).zfill(2) + '/model_' + str(minc - 1).zfill(2)
-            clean.out = str(majc).zfill(2) + '/model_' + str(minc).zfill(2)
-            clean.cutoff = clean_cutoff
-            clean.niters = 1000000
-            clean.region = '"' + 'mask(' + str(majc).zfill(2) + '/mask_' + str(minc).zfill(2) + ')' + '"'
-            clean.go()
-            logger.info('Major/minor cycle ' + str(majc) + '/' + str(minc) + ' cleaning done #')
-            restor = lib.miriad('restor')
-            restor.model = str(majc).zfill(2) + '/model_' + str(minc).zfill(2)
-            restor.beam = str(majc).zfill(2) + '/beam_' + str(0).zfill(2)
-            restor.map = str(majc).zfill(2) + '/map_' + str(0).zfill(2)
-            restor.out = str(majc).zfill(2) + '/image_' + str(minc).zfill(2)
-            restor.mode = 'clean'
-            restor.go()  # Create the cleaned image
-            logger.info('Cleaned image for major/minor cycle ' + str(majc) + '/' + str(minc) + ' created #')
-            restor.mode = 'residual'
-            restor.out = str(majc).zfill(2) + '/residual_' + str(minc).zfill(2)
-            restor.go()
-            logger.info('Residual image for major/minor cycle ' + str(majc) + '/' + str(minc) + ' created #')
-            logger.info('Peak of the residual image is ' + str(
-                self.calc_imax(str(majc).zfill(2) + '/residual_' + str(minc).zfill(2))) + ' Jy/beam #')
-            logger.info('RMS of the residual image is ' + str(
-                self.calc_irms(str(majc).zfill(2) + '/residual_' + str(minc).zfill(2))) + ' Jy/beam #')
-        logger.info('Minor self-calibration cycle ' + str(minc) + ' for frequency chunk ' + chunk + ' finished #')
+                selfcaltargetbeamsampstatus[int(self.beam)] = False
+                logger.error('Beam ' + self.beam + ': Phase self-calibration was not successful! Cannot do amplitude self-calibration!')
 
-    def create_parametric_mask(self, dataset, radius, cutoff, cat, outputdir):
-        """
-        Creates a parametric mask using a model from an input catalogue.
-        dataset (string): The dataset to get the coordiantes for the model from.
-        radius (float): The radius around the pointing centre of the input dataset to consider sources in in deg.
-        cutoff (float): The apparent flux percentage to consider sources from 0.0 accounts for no sources, 1.0 for all
-                        sources in the catalogue within the search radius of the target field.
-        cat (string): The catalogue to search sources in. Possible options are 'NVSS', 'FIRST', and 'WENSS'.
-        outputdir (string): The output directory to create the MIRIAD mask file in. The file is named mask.
-        """
-        lsm.write_mask(outputdir + '/mask.txt', lsm.lsm_mask(dataset, radius, cutoff, cat))
-        mskfile = open(outputdir + '/mask.txt', 'r')
-        object_ = mskfile.readline().rstrip('\n')
-        spar = mskfile.readline()
-        mskfile.close()
-        imgen = lib.miriad('imgen')
-        imgen.imsize = self.selfcal_image_imsize
-        imgen.cell = self.selfcal_image_cellsize
-        imgen.object = object_
-        imgen.spar = spar
-        imgen.out = outputdir + '/imgen'
-        imgen.go()
-        maths = lib.miriad('maths')
-        maths.exp = '"<' + outputdir + '/imgen' + '>"'
-        maths.mask = '"<' + outputdir + '/imgen>.gt.1e-6' + '"'
-        maths.out = outputdir + '/mask'
-        maths.go()
-        subs_managefiles.director(self, 'rm', outputdir + '/imgen')
-        subs_managefiles.director(self, 'rm', outputdir + '/mask.txt')
+        # Save the derived parameters to the parameter file
 
-    def calc_irms(self, image):
-        """
-        Function to calculate the maximum of an image
-        image (string): The name of the image file. Must be in MIRIAD-format
-        returns (float): the maximum in the image
-        """
-        fits = lib.miriad('fits')
-        fits.op = 'xyout'
-        fits.in_ = image
-        fits.out = image + '.fits'
-        fits.go()
-        image_data = pyfits.open(image + '.fits')  # Open the image
-        data = image_data[0].data
-        imax = np.nanstd(data)  # Get the standard deviation
-        image_data.close()  # Close the image
-        subs_managefiles.director(self, 'rm', image + '.fits')
-        return imax
+        subs_param.add_param(self, 'selfcal_targetbeams_amp_status', selfcaltargetbeamsampstatus)
+        subs_param.add_param(self, 'selfcal_targetbeams_amp_applystatus', selfcaltargetbeamsampapplystatus)
+        subs_param.add_param(self, 'selfcal_targetbeams_amp_mapstatus', selfcaltargetbeamsampmapstatus)
+        subs_param.add_param(self, 'selfcal_targetbeams_amp_mapstats', selfcaltargetbeamsampmapstats)
+        subs_param.add_param(self, 'selfcal_targetbeams_amp_beamstatus', selfcaltargetbeamsampbeamstatus)
+        subs_param.add_param(self, 'selfcal_targetbeams_amp_maskstatus', selfcaltargetbeamsampmaskstatus)
+        subs_param.add_param(self, 'selfcal_targetbeams_amp_maskstats', selfcaltargetbeamsampmaskstats)
+        subs_param.add_param(self, 'selfcal_targetbeams_amp_modelstatus', selfcaltargetbeamsampmodelstatus)
+        subs_param.add_param(self, 'selfcal_targetbeams_amp_modelstats', selfcaltargetbeamsampmodelstats)
+        subs_param.add_param(self, 'selfcal_targetbeams_amp_imagestatus', selfcaltargetbeamsampimagestatus)
+        subs_param.add_param(self, 'selfcal_targetbeams_amp_imagestats', selfcaltargetbeamsampimagestats)
+        subs_param.add_param(self, 'selfcal_targetbeams_amp_residualstatus', selfcaltargetbeamsampresidualstatus)
+        subs_param.add_param(self, 'selfcal_targetbeams_amp_residualstats', selfcaltargetbeamsampresidualstats)
+        subs_param.add_param(self, 'selfcal_targetbeams_amp_maskthreshold', selfcaltargetbeamsampmaskthreshold)
+        subs_param.add_param(self, 'selfcal_targetbeams_amp_cleanthreshold', selfcaltargetbeamsampcleanthreshold)
+        subs_param.add_param(self, 'selfcal_targetbeams_amp_thresholdtype', selfcaltargetbeamsampthresholdtype)
+        subs_param.add_param(self, 'selfcal_targetbeams_amp_final_minorcycle', selfcaltargetbeamsampfinalminor)
 
-    def calc_imax(self, image):
-        """
-        Function to calculate the maximum of an image
-        image (string): The name of the image file. Must be in MIRIAD-format
-        returns (float): the maximum in the image
-        """
-        fits = lib.miriad('fits')
-        fits.op = 'xyout'
-        fits.in_ = image
-        fits.out = image + '.fits'
-        fits.go()
-        image_data = pyfits.open(image + '.fits')  # Open the image
-        data = image_data[0].data
-        imax = np.nanmax(data)  # Get the maximum
-        image_data.close()  # Close the image
-        subs_managefiles.director(self, 'rm', image + '.fits')
-        return imax
 
-    def calc_isum(self, image):
-        """
-        Function to calculate the sum of the values of the pixels in an image
-        image (string): The name of the image file. Must be in MIRIAD-format
-        returns (float): the sum of the pxiels in the image
-                """
-        fits = lib.miriad('fits')
-        fits.op = 'xyout'
-        fits.in_ = image
-        fits.out = image + '.fits'
-        fits.go()
-        image_data = pyfits.open(image + '.fits')  # Open the image
-        data = image_data[0].data
-        isum = np.nansum(data)  # Get the maximum
-        image_data.close()  # Close the image
-        subs_managefiles.director(self, 'rm', image + '.fits')
-        return isum
+    def show(self, showall=False):
+        lib.show(self, 'SELFCAL', showall)
 
-    def calc_dr_min(self, dr_maj, majc, minorcycles, function_):
-        """
-        Function to calculate the dynamic range limits during minor cycles
-        dr_maj (list of floats): List with dynamic range limits for major cycles. Usually from calc_dr_maj
-        majc (int): The major cycles you want to calculate the minor cycle dynamic ranges for
-        minorcycles (int): The number of minor cycles to use
-        function_ (string): The function to follow for increasing the dynamic ranges. Currently 'square', 'power', and
-                           'linear' is supported.
-        returns (list of floats): A list of floats for the dynamic range limits within the minor cycles.
-        """
-        if majc == 0:  # Take care about the first major cycle
-            prevdr = 0
-        else:
-            prevdr = dr_maj[majc - 1]
-        # The different options to increase the minor cycle threshold
-        if function_ == 'square':
-            dr_min = [prevdr + ((dr_maj[majc] - prevdr) * (n ** 2.0)) / ((minorcycles - 1) ** 2.0) for n in
-                      range(minorcycles)]
-        elif function_ == 'power':
-            dr_min = [prevdr + np.power((dr_maj[majc] - prevdr), (1.0 / n)) for n in range(minorcycles)][
-                     ::-1]  # Not exactly need to work on this, but close
-        elif function_ == 'linear':
-            dr_min = [(prevdr + ((dr_maj[majc] - prevdr) / (minorcycles - 1)) * n) for n in range(minorcycles)]
-        else:
-            raise ApercalException(' Function for minor cycles not supported! Exiting!')
-        if dr_min[0] == 0:
-            dr_min[0] = self.selfcal_standard_minorcycle0_dr
-        else:
-            pass
-        return dr_min
 
-    def calc_noise_threshold(self, imax, minor_cycle, major_cycle):
+    def summary(self):
         """
-        Calculates the noise threshold
-        imax (float): the maximum in the input image
-        minor_cycle (int): the current minor cycle the self-calibration is in
-        major_cycle (int): the current major cycle the self-calibration is in
-        returns (float): the noise threshold
-        """
-        noise_threshold = imax / (
-                (self.selfcal_standard_c0 + minor_cycle * self.selfcal_standard_c0) * (major_cycle + 1))
-        return noise_threshold
+        Creates a general summary of the parameters in the parameter file generated during SELFCAL. No detailed summary
+        is available for SELFCAL up to now.
 
-    def calc_clean_cutoff(self, mask_threshold):
+        returns (DataFrame): A python pandas dataframe object, which can be looked at with the style function in the notebook
         """
-        Calculates the cutoff for the cleaning
-        mask_threshold (float): the mask threshold to calculate the clean cutoff from
-        returns (float): the clean cutoff
-        """
-        clean_cutoff = mask_threshold / self.selfcal_standard_c1
-        return clean_cutoff
 
-    def calc_theoretical_noise_threshold(self, theoretical_noise):
-        """
-        Calculates the theoretical noise threshold from the theoretical noise
-        theoretical_noise (float): the theoretical noise of the observation
-        returns (float): the theoretical noise threshold
-        """
-        theoretical_noise_threshold = (self.selfcal_standard_nsigma * theoretical_noise)
-        return theoretical_noise_threshold
+        # Load the parameters from the parameter file
 
-    def list_chunks(self):
-        """
-        Checks how many chunk directories exist and returns a list of them.
-        """
-        subs_setinit.setinitdirs(self)
-        subs_setinit.setdatasetnamestomiriad(self)
-        for n in range(100):
-            if os.path.exists(self.selfcaldir + '/' + str(n).zfill(2)):
-                pass
-            else:
-                break  # Stop the counting loop at the directory you cannot find anymore
-        chunks = range(n)
-        chunkstr = [str(i).zfill(2) for i in chunks]
-        return chunkstr
+        AV = subs_param.get_param(self, 'selfcal_targetbeams_average')
+        FL = subs_param.get_param(self, 'selfcal_targetbeams_flagline')
+        PA = subs_param.get_param(self, 'selfcal_targetbeams_parametric')
+        PH = subs_param.get_param(self, 'selfcal_targetbeams_phase_status')
+        AM = subs_param.get_param(self, 'selfcal_targetbeams_amp_status')
+
+        # Create the data frame
+
+        beam_range = range(self.NBEAMS)
+        dataset_beams = [self.target[:-3] + ' Beam ' + str(b).zfill(2) for b in beam_range]
+        dataset_indices = dataset_beams
+
+        df_average = pd.DataFrame(np.ndarray.flatten(AV), index=dataset_indices, columns=['Average data'])
+        df_flagline = pd.DataFrame(np.ndarray.flatten(FL), index=dataset_indices, columns=['Flag RFI/line'])
+        df_parametric = pd.DataFrame(np.ndarray.flatten(PA), index=dataset_indices, columns=['Parametric calibration'])
+        df_phase = pd.DataFrame(np.ndarray.flatten(PH), index=dataset_indices, columns=['Phase calibration'])
+        df_amp = pd.DataFrame(np.ndarray.flatten(AM), index=dataset_indices, columns=['Amplitude calibration'])
+
+        df = pd.concat([df_average, df_flagline, df_parametric, df_phase, df_amp], axis=1)
+
+        return df
+
 
     def reset(self):
         """
@@ -670,6 +1103,43 @@ class scal(BaseModule):
         """
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
-        logger.warning(' Deleting all self-calibrated data.')
-        subs_managefiles.director(self, 'ch', self.selfcaldir)
-        subs_managefiles.director(self, 'rm', self.selfcaldir + '/*')
+        logger.warning('Beam ' + self.beam + ': Deleting all self-calibrated data.')
+        subs_managefiles.director(self, 'rm', self.selfcaldir)
+        subs_param.del_param(self, 'selfcal_targetbeams_average')
+        subs_param.del_param(self, 'selfcal_targetbeams_flagline')
+        subs_param.del_param(self, 'selfcal_targetbeams_flagline_channels')
+        subs_param.del_param(self, 'selfcal_targetbeams_parametric')
+        subs_param.del_param(self, 'selfcal_targetbeams_phase_status')
+        subs_param.del_param(self, 'selfcal_targetbeams_phase_mapstatus')
+        subs_param.del_param(self, 'selfcal_targetbeams_phase_mapstats')
+        subs_param.del_param(self, 'selfcal_targetbeams_phase_beamstatus')
+        subs_param.del_param(self, 'selfcal_targetbeams_phase_maskstatus')
+        subs_param.del_param(self, 'selfcal_targetbeams_phase_maskstats')
+        subs_param.del_param(self, 'selfcal_targetbeams_phase_modelstatus')
+        subs_param.del_param(self, 'selfcal_targetbeams_phase_modelstats')
+        subs_param.del_param(self, 'selfcal_targetbeams_phase_imagestatus')
+        subs_param.del_param(self, 'selfcal_targetbeams_phase_imagestats')
+        subs_param.del_param(self, 'selfcal_targetbeams_phase_residualstatus')
+        subs_param.del_param(self, 'selfcal_targetbeams_phase_residualstats')
+        subs_param.del_param(self, 'selfcal_targetbeams_phase_maskthreshold')
+        subs_param.del_param(self, 'selfcal_targetbeams_phase_cleanthreshold')
+        subs_param.del_param(self, 'selfcal_targetbeams_phase_thresholdtype')
+        subs_param.del_param(self, 'selfcal_targetbeams_phase_final_majorcycle')
+        subs_param.del_param(self, 'selfcal_targetbeams_phase_final_minorcycle')
+        subs_param.del_param(self, 'selfcal_targetbeams_amp_status')
+        subs_param.del_param(self, 'selfcal_targetbeams_amp_applystatus')
+        subs_param.del_param(self, 'selfcal_targetbeams_amp_mapstatus')
+        subs_param.del_param(self, 'selfcal_targetbeams_amp_mapstats')
+        subs_param.del_param(self, 'selfcal_targetbeams_amp_beamstatus')
+        subs_param.del_param(self, 'selfcal_targetbeams_amp_maskstatus')
+        subs_param.del_param(self, 'selfcal_targetbeams_amp_maskstats')
+        subs_param.del_param(self, 'selfcal_targetbeams_amp_modelstatus')
+        subs_param.del_param(self, 'selfcal_targetbeams_amp_modelstats')
+        subs_param.del_param(self, 'selfcal_targetbeams_amp_imagestatus')
+        subs_param.del_param(self, 'selfcal_targetbeams_amp_imagestats')
+        subs_param.del_param(self, 'selfcal_targetbeams_amp_residualstatus')
+        subs_param.del_param(self, 'selfcal_targetbeams_amp_residualstats')
+        subs_param.del_param(self, 'selfcal_targetbeams_amp_maskthreshold')
+        subs_param.del_param(self, 'selfcal_targetbeams_amp_cleanthreshold')
+        subs_param.del_param(self, 'selfcal_targetbeams_amp_thresholdtype')
+        subs_param.del_param(self, 'selfcal_targetbeams_amp_final_minorcycle')
