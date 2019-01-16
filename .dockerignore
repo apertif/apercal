@@ -1,5 +1,5 @@
 .git
-*.pyc
+**/*.pyc
 .ipynb_checkpoints
 casa.log
 *.log
@@ -8,6 +8,6 @@ casa.log
 .virtualenv*/
 *.egg-info/
 notebooks/
-__pycache__
+**/__pycache__/
 .eggs/
 data/

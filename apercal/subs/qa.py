@@ -1,75 +1,107 @@
 import os
+import random
+import string
+import logging
 
 import astropy.io.fits as pyfits
 import numpy as np
+import scipy.stats
 
 from apercal.libs import lib
+from apercal.subs import setinit, managetmp
+from apercal.exceptions import ApercalException
+from apercal.subs import imstats
+
+logger = logging.getLogger(__name__)
 
 
-def resistats(infile):
-    fits = lib.miriad('fits')
-    fits.in_ = 'residual'
-    fits.op = 'xyout'
-    fits.out = 'rmsresidual' + '.fits'
-    fits.go()
-    pyfile = pyfits.open(fits.out)
-    image = pyfile[0].data[0][0]
-    pyfile.close()
-    resimax = np.amax(image)
-    resirms = np.std(image)
-    os.system('rm -rf rms*')
-    return resirms, resimax
-
-
-def imstats(infile, stokes):
-    invert = lib.miriad('invert')
-    invert.vis = infile
-    invert.map = 'rmsmap'
-    invert.beam = 'rmsbeam'
-    invert.imsize = 2049
-    invert.cell = 3
-    invert.stokes = stokes
-    invert.options = 'mfs'
-    invert.robust = 0
-    invert.slop = 1
-    invert.go()
-    fits = lib.miriad('fits')
-    fits.in_ = invert.map
-    fits.op = 'xyout'
-    fits.out = invert.map + '.fits'
-    fits.go()
-    pyfile = pyfits.open(fits.out)
-    image = pyfile[0].data[0][0]
-    pyfile.close()
-    inimax = np.amax(image)
-    inirms = np.std(image)
-    os.system('rm -rf rms*')
-    return inimax, inirms
-
-
-def theostats(infile):
+def checkimagegaussianity(self, image, alpha):
     """
-    theostats: Calculates the theoretical noise of an observation using the MIRIAD task obsrms
-    infile: The input file to calculate the noise for
-    return: The theoretical rms
+    Subroutine to check if an image has gaussian distribution
+    image (string): The path/name of the image to check in FITS-format
+    returns (boolean): True if image is ok, False otherwise
     """
-    obsrms = lib.miriad('obsrms')
-    theorms = 0.00004
-    return theorms
-
-
-def check_blank(infile):
-    """
-    check_blank: Checks if an image is completely blanked. Mostly used for checking if self calibration cycles
-                 produced a valid output.
-    infile: The input image to check
-    return: True if image is blank
-    """
-    if np.any(np.nan):
-        status = True
+    setinit.setinitdirs(self)
+    char_set = string.ascii_uppercase + string.digits
+    if os.path.isdir(image) or os.path.isfile(image):
+        if os.path.isdir(image):
+            tempdir = managetmp.manage_tempdir('images')
+            temp_string = ''.join(random.sample(char_set * 8, 8))
+            fits = lib.miriad('fits')
+            fits.op = 'xyout'
+            fits.in_ = image
+            fits.out = tempdir + '/' + temp_string + '.fits'
+            fits.go()
+            pyfile = pyfits.open(tempdir + '/' + temp_string + '.fits')
+        elif os.path.isfile(image):
+            pyfile = pyfits.open(image)
+        else:
+            error = 'Image format not supported. Only MIRIAD and FITS formats are supported!'
+            logger.error(error)
+            raise ApercalException(error)
+        image = pyfile[0].data[0][0]
+        pyfile.close()
+        k2, p = scipy.stats.normaltest(image, nan_policy='omit', axis=None)
+        if p < alpha:
+            return True
+        else:
+            return False
     else:
-        status = False
-    return status
+        error = 'Image does not seem to exist!'
+        logger.error(error)
+        raise ApercalException(error)
+
+
+def checkdirtyimage(self, image):
+    """
+    Subroutine to check if a dirty image is valid
+    image (string): The path/name of the image to check
+    returns (boolean): True if image is ok, False otherwise
+    """
+    dirtystats = imstats.getimagestats(self, image)
+    if (dirtystats[1] >= dirtystats[0]) and (dirtystats[2] != np.nan):
+        return True
+    else:
+        return False
+
+
+def checkmaskimage(self, image):
+    """
+    Checks if a mask is completely blanked.
+    image: The input mask to check
+    return: True if mask is not blank
+    """
+    maskstats = imstats.getimagestats(self, image)
+    if np.isnan(maskstats[0]) or np.isnan(maskstats[1]) or np.isnan(maskstats[2]):
+        return False
+    else:
+        return True
+
+
+def checkmodelimage(self, image):
+    """
+    Subroutine to check if a model image is valid
+    image (string): The path/name of the image to check
+    returns (boolean): True if image is ok, False otherwise
+    """
+    modelstats = imstats.getimagestats(self, image)
+    if modelstats[2] != np.nan and modelstats[1] <= 1000 and modelstats[0] >= -2.0:
+        return True
+    else:
+        return False
+
+
+def checkrestoredimage(self, image):
+    """
+    Subroutine to check if a restored image is valid
+    image (string): The path/name of the image to check
+    returns (boolean): True if image is ok, False otherwise
+    """
+    restoredstats = imstats.getimagestats(self, image)
+    if restoredstats[2] != np.nan and restoredstats[1] <= 1000 and restoredstats[0] >= -1.0:
+        return True
+    else:
+        return False
 
 
 def fieldflux(infile):
