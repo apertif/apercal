@@ -13,4 +13,4 @@ dist/
 .pytest_cache/*
 cache/*
 tmp/*
-
+test/param.npy

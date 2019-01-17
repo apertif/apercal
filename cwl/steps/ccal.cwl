@@ -17,7 +17,10 @@ requirements:
       listing:
       - entry: $(inputs.target_preflagged)
         writable: true
-
+      - entry: $(inputs.polcal_preflagged)
+        writable: true
+      - entry: $(inputs.fluxcal_preflagged)
+        writable: true
 
 baseCommand: [python]
 

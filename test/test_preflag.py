@@ -20,8 +20,8 @@ class TestPreflag(unittest.TestCase):
         p.fluxcal = '3C295.MS'
         p.polcal = '3C138.MS'
         p.target = 'NGC807.MS'
-        p.prepare_bypass_alta = True
-        p.prepare_target_beams = '00,04'
+        p.preflag_manualflag_targetbeams = '00'  # '00,04'
+        p.preflag_aoflagger_targetbeams = '00'
         p.go()
 
     def test_preflag_nosubdirs(self):
@@ -30,8 +30,9 @@ class TestPreflag(unittest.TestCase):
         p.fluxcal = path.join(data_prefix, '3C295.MS')
         p.polcal = path.join(data_prefix, '3C138.MS')
         p.target = path.join(data_prefix, 'NGC807.MS')
-        p.prepare_bypass_alta = True
-        p.prepare_target_beams = '00,04'
+        p.preflag_manualflag_targetbeams = '00'
+        p.preflag_aoflagger_targetbeams = '00'
+
         p.go()
         for ms in [p.fluxcal, p.polcal, p.target]:
             query = "SELECT GNFALSE(FLAG) == 0 AS all_flagged, " + \
