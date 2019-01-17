@@ -13,6 +13,8 @@ hints:
     inplaceUpdate: true
 
 requirements:
+  InlineJavascriptRequirement: {}
+
   InitialWorkDirRequirement:
       listing:
       - entry: $(inputs.target_preflagged)
@@ -41,40 +43,50 @@ outputs:
     outputBinding:
       glob: $(inputs.target_preflagged.basename)
 
-  target_Df:
+  polcal_Kcross:
     type: Directory
     outputBinding:
-      glob: $(inputs.target_preflagged.nameroot).Df
+      glob: $(inputs.polcal_preflagged.basename.split('.').slice(0,-1).join('.')).Kcross
 
-  target_Kcross:
+  polcal_flagversions:
     type: Directory
     outputBinding:
-      glob: $(inputs.target_preflagged.nameroot).Kcross
+      glob: $(inputs.polcal_preflagged.basename).flagversions
 
-  target_Xf:
+  polcal_Xf:
     type: Directory
     outputBinding:
-      glob: $(inputs.target_preflagged.nameroot).Xf
+      glob: $(inputs.polcal_preflagged.basename.split('.').slice(0,-1).join('.')).Xf
 
-  target_Bscan:
+  fluxcal_Df:
     type: Directory
     outputBinding:
-      glob: $(inputs.target_preflagged.nameroot).Bscan
+      glob: $(inputs.fluxcal_preflagged.basename.split('.').slice(0,-1).join('.')).Df
 
-  target_G0ph:
+  fluxcal_Bscan:
     type: Directory
     outputBinding:
-      glob: $(inputs.target_preflagged.nameroot).G0ph
+      glob: $(inputs.fluxcal_preflagged.basename.split('.').slice(0,-1).join('.')).Bscan
 
-  target_G1ap:
+  fluxcal_G0ph:
     type: Directory
     outputBinding:
-      glob: $(inputs.target_preflagged.nameroot).G1ap
+      glob: $(inputs.fluxcal_preflagged.basename.split('.').slice(0,-1).join('.')).G0ph
 
-  target_K:
+  fluxcal_G1ap:
     type: Directory
     outputBinding:
-      glob: $(inputs.target_preflagged.nameroot).K
+      glob: $(inputs.fluxcal_preflagged.basename.split('.').slice(0,-1).join('.')).G1ap
+
+  fluxcal_K:
+    type: Directory
+    outputBinding:
+      glob: $(inputs.fluxcal_preflagged.basename.split('.').slice(0,-1).join('.')).K
+
+  fluxcal_flagversions:
+    type: Directory
+    outputBinding:
+      glob: $(inputs.fluxcal_preflagged.basename).flagversions
 
 
 arguments:
