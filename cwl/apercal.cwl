@@ -31,21 +31,22 @@ steps:
       polcal_preflagged: preflag/polcal_preflagged
     out:
       - target_calibrated
+      - polcal_calibrated
+      - fluxcal_calibrated
       - target_Df
       - target_Kcross
-      - target_Xf
+      #- target_Xf
       - target_Bscan
       - target_G0ph
       - target_G1ap
       - target_K
 
-
   convert:
     run: steps/convert.cwl
     in:
-      target_calibrated: preflag/target_calibrated
-      fluxcal_calibrated: preflag/fluxcal_preflagged
-      polcal_calibrated: preflag/polcal_preflagged
+      target_calibrated: ccal/target_calibrated
+      fluxcal_calibrated: ccal/fluxcal_calibrated
+      polcal_calibrated: ccal/polcal_calibrated
     out:
       - target_mir
       - fluxcal_mir

@@ -43,6 +43,16 @@ outputs:
     outputBinding:
       glob: $(inputs.target_preflagged.basename)
 
+  polcal_calibrated:
+    type: Directory
+    outputBinding:
+      glob: $(inputs.polcal_preflagged.basename)
+
+  fluxcal_calibrated:
+    type: Directory
+    outputBinding:
+      glob: $(inputs.fluxcal_preflagged.basename)
+
   polcal_Kcross:
     type: Directory
     outputBinding:
@@ -53,10 +63,12 @@ outputs:
     outputBinding:
       glob: $(inputs.polcal_preflagged.basename).flagversions
 
-  polcal_Xf:
-    type: Directory
-    outputBinding:
-      glob: $(inputs.polcal_preflagged.basename.split('.').slice(0,-1).join('.')).Xf
+  # somehow this one doesn't show up when running with CWL/containers
+  #
+  #polcal_Xf:
+  #  type: Directory
+  #  outputBinding:
+  #    glob: $(inputs.polcal_preflagged.basename.split('.').slice(0,-1).join('.')).Xf
 
   fluxcal_Df:
     type: Directory
