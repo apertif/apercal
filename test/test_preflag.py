@@ -39,13 +39,6 @@ class TestPreflag(unittest.TestCase):
         p.preflag_aoflagger_targetbeams = '00'
 
         p.go()
-        for ms in [p.fluxcal, p.polcal, p.target]:
-            query = "SELECT GNFALSE(FLAG) == 0 AS all_flagged, " + \
-                    "GNTRUE(FLAG) == 0 AS all_unflagged FROM " + path.join(p.basedir, ms)
-            query_result = pt.taql(query)
-            #assert(not(query_result[0]['all_flagged'])) # Fails on travis, not on happili?
-            #assert(not(query_result[0]['all_unflagged']))
-
 
 if __name__ == "__main__":
     unittest.main()
