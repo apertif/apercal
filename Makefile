@@ -11,7 +11,7 @@ CWLTOOL=$(VENV3)/bin/cwltool \
 	--no-compute-checksum \
 	--outdir=cwl/outdir \
 	--leave-tmp \
-	--cachedir=cwl/cache/ \
+	--cachedir=cache \
 	--leave-tmpdir \
 	--tmpdir-prefix=cwl/tmp/
 
@@ -23,7 +23,7 @@ $(VENV2):
 	virtualenv -p python2 $(VENV2)
 
 $(VENV3):
-	virtualenv -p python2 $(VENV3)
+	virtualenv -p python3 $(VENV3)
 
 $(VENV2)/bin/cwltool: $(VENV2)
 	$(VENV2)/bin/pip install .
@@ -31,7 +31,7 @@ $(VENV2)/bin/cwltool: $(VENV2)
 	$(VENV2)/bin/pip install -r test/requirements.txt
 
 $(VENV3)/bin/cwltool: $(VENV3)
-	$(VENV3)/bin/pip install -r test/requirements.txt
+	$(VENV3)/bin/pip install -r cwl/requirements.txt
 
 docker:
 	docker build . -t apertif/apercal
