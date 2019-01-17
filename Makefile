@@ -8,12 +8,12 @@ VENV3=$(CURDIR)/.venv3
 
 CWLTOOL=$(VENV3)/bin/cwltool \
 	--enable-ext  \
-	--no-compute-checksum \
-	--outdir=cwl/outdir \
-	--leave-tmp \
-	--cachedir=cache \
-	--leave-tmpdir \
-	--tmpdir-prefix=cwl/tmp/
+	--outdir=$(CURDIR)/cwl/output/
+#	--no-compute-checksum \
+#	--leave-tmp \
+#	--leave-tmpdir \
+#	--tmpdir-prefix=$(CURDIR)/cwl/tmp/
+#	--cachedir=$(CURDIR)/cwl/cache/
 
 .PHONY: run docker test
 
@@ -50,7 +50,7 @@ test: data/small
 	docker run -v `pwd`/data:/code/data:rw apertif/apercal pytest -s test/test_preflag.py
 
 clean:
-	rm -rf cwl/cache/* cwl/tmp/* data/small
+	rm -rf cwl/cache/* cwl/tmp/* cwl/output/* data/small
 
 cwl-preflag: $(VENV3)/bin/cwltool data/small
 	$(CWLTOOL) cwl/steps/preflag.cwl \

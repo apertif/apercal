@@ -4,6 +4,7 @@ import logging
 import numpy as np
 import pandas as pd
 from os import path
+import os
 
 from apercal.modules.base import BaseModule
 from apercal.subs import setinit as subs_setinit
@@ -44,7 +45,7 @@ class convert(BaseModule):
         if self.subdirification:
             return path.join(self.basedir, beam, self.crosscalsubdir)
         else:
-            return self.crosscalsubdir
+            return os.getcwd()
 
     def go(self):
         """
@@ -153,9 +154,10 @@ class convert(BaseModule):
                             logger.info('Converted flux calibrator dataset from MS to UVFITS format!')
                         else:
                             convertfluxcalms2uvfits = False
-                            logger.warning('Could not convert flux calibrator dataset from MS to UVFITS format!')
+                            logger.warning('Could not convert flux calibrator dataset {} '
+                                           'from MS to UVFITS format!'.format(fluxcal_fits))
                     else:
-                        logger.warning('Flux calibrator dataset not available!')
+                        logger.warning('Flux calibrator dataset {} not available!'.format(self.get_fluxcal_path()))
                 else:
                     logger.info('Flux calibrator dataset was already converted from MS to UVFITS format')
             else:
@@ -298,7 +300,8 @@ class convert(BaseModule):
                             logger.info('Converted flux calibrator dataset from UVFITS to MIRIAD format!')
                         else:
                             convertfluxcaluvfits2miriad = False
-                            logger.warning('Could not convert flux calibrator dataset from UVFITS to MIRIAD format!')
+                            logger.warning('Could not convert flux calibrator dataset {} from UVFITS to '
+                                           'MIRIAD format!'.format(fits.out))
                     else:
                         logger.warning('Flux calibrator dataset not available!')
                 else:
@@ -339,15 +342,13 @@ class convert(BaseModule):
             if self.target != '':
                 logger.info('Converting target beam datasets from UVFITS to MIRIAD format.')
                 if self.convert_targetbeams == 'all':
-                    datasets = glob.glob(mspath_to_fitspath(self.get_crosscalsubdir_path('[0-9][0-9]'),
-                                                            self.get_target_path()))
+                    datasets = self.get_datasets()
                     logger.debug('Converting all available target beam datasets')
                 else:
                     beams = self.convert_targetbeams.split(",")
-                    datasets = [mspath_to_fitspath(self.get_crosscalsubdir_path(str(b).zfill(2)), self.target) for b in beams]
+                    datasets = self.get_datasets(beams)
                     logger.debug('Converting all selected target beam datasets')
-                for vis in datasets:
-                    beam = vis.split('/')[-3]
+                for vis, beam in datasets:
                     if not converttargetbeamsuvfits2miriad[int(beam)]:
                         if converttargetbeamsuvfitsavailable[int(beam)]:
                             subs_managefiles.director(self, 'ch', self.get_crosscalsubdir_path(beam), verbose=False)
@@ -362,8 +363,8 @@ class convert(BaseModule):
                                              'UVFITS to MIRIAD format!'.format(beam))
                             else:
                                 converttargetbeamsuvfits2miriad[int(beam)] = False
-                                logger.warning('Could not convert dataset for target beam '
-                                               '{} from UVFITS to MIRIAD format!'.format(beam))
+                                logger.warning('Could not convert dataset {} for target beam '
+                                               '{} from UVFITS to MIRIAD format!'.format(fits.out, beam))
                         else:
                             logger.warning('Dataset for target beam {} not available!'.format(beam))
                     else:
@@ -380,8 +381,8 @@ class convert(BaseModule):
         subs_param.add_param(self, 'convert_polcal_UVFITS2MIRIAD', convertpolcaluvfits2miriad)
         subs_param.add_param(self, 'convert_targetbeams_UVFITS2MIRIAD', converttargetbeamsuvfits2miriad)
 
-        # Remove the UVFITS files if wanted #
-        if self.convert_removeuvfits:
+        # Remove the UVFITS files if wanted (we don't need to remove them when we in docker / no subdirification)
+        if self.convert_removeuvfits and self.subdirification:
             logger.info('Removing all UVFITS files')
             subs_managefiles.director(self, 'rm', mspath_to_fitspath(self.get_crosscalsubdir_path(), self.fluxcal))
             subs_managefiles.director(self, 'rm', mspath_to_fitspath(self.get_crosscalsubdir_path(), self.polcal))
