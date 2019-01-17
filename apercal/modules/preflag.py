@@ -107,7 +107,7 @@ class preflag(BaseModule):
         if self.subdirification:
             return path.join(self.basedir, self.beam, self.rawsubdir, 'Bpass.txt')
         else:
-            return 'Bpass.txt'
+            return path.join(os.getcwd(), 'Bpass.txt')
 
     def shadow(self):
         """
