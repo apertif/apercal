@@ -1,7 +1,7 @@
 #!/bin/bash -ve
 
 docker build . -t apertif/apercal
-rm -rf data/small
+make clean
 make data/small
 docker run -v `pwd`/data:/code/data:rw apertif/apercal pytest -s test/test_prepare.py
 docker run -v `pwd`/data:/code/data:rw apertif/apercal pytest -s test/test_preflag.py
