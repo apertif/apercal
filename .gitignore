@@ -10,4 +10,7 @@ casa.log
 data/
 cwl/outdir/
 dist/
+.pytest_cache/*
+cache/*
+tmp/*
 

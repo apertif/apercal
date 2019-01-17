@@ -11,3 +11,4 @@ notebooks/
 **/__pycache__/
 .eggs/
 data/
+.pytest_cache/

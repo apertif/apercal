@@ -43,25 +43,27 @@ steps:
   convert:
     run: steps/convert.cwl
     in:
-      target: preflag/target_calibrated
+      target_calibrated: preflag/target_calibrated
+      fluxcal_calibrated: preflag/fluxcal_preflagged
+      polcal_calibrated: preflag/polcal_preflagged
     out:
-      - target_converted
+      - target_mir
+      - fluxcal_mir
+      - polcal_mir
+
+  scal:
+    run: steps/scal.cwl
+    in:
+      target_mir: convert/target_converted
+      fluxcal_mir: convert/fluxcal_converted
+      polcal_mir: covert/polcal_converted
+    out:
+      - target_selfcalibrated
 
 
-#scal
+# next steps:
 #continuum
 #line
 #polarisation
 #mosaic
 #transfer
-#convert
-
-
-
-# convert
-# ccal
-# scal
-# line
-# transfer
-# continuum
-# mosaic
