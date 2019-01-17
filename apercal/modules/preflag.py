@@ -441,7 +441,7 @@ class preflag(BaseModule):
                     logger.debug('Flagging auto-correlations for all target beams')
                 else:
                     beams = self.preflag_manualflag_targetbeams.split(",")
-                    datasets = [self.get_datasets(beams=beams)]
+                    datasets = self.get_datasets(beams=beams)
                     logger.debug('Flagging auto-correlations for selected target beams')
                 for vis, beam in datasets:
                     if preflagtargetbeamsmanualflagauto[int(beam)]:
@@ -1111,7 +1111,7 @@ class preflag(BaseModule):
                         logger.info('AOFlagging all target beams')
                     else:
                         beams = self.preflag_aoflagger_targetbeams.split(",")
-                        datasets = [self.get_datasets(beams=beams)]
+                        datasets = self.get_datasets(beams=beams)
                         logger.info('AOFlagging all selected target beam(s)')
                     for vis, beam in datasets:
                         base_cmd = 'aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_targetstrat
