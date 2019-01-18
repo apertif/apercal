@@ -174,7 +174,7 @@ class ccal(BaseModule):
 
             if self.target != '':
                 for vis, beam in self.get_datasets():
-                    if ccaltargetbeamsTEC[int(beam)] or os.path.isdir(self.get_target_path().rstrip('.MS') + '_B' +
+                    if ccaltargetbeamsTEC[int(beam)] or os.path.isdir(self.get_target_path(beam=beam).rstrip('.MS') + '_B' +
                                                                       beam + '.MS.tecim'):
                         logger.info(
                             '# TEC correction tables for beam ' + beam + ' were already generated')
