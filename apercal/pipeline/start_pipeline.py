@@ -115,12 +115,18 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         p.polcal = name_to_ms(name_polcal)
         p.target = name_to_ms(name_target)
 
+    beamnrs_fluxcal = [f[2] for f in fluxcals]
+    if len(fluxcals) > 1:
+        # Check every target beam has a fluxcal beam
+        for beamnr_target in beamlist_target:
+            assert(beamnr_target in beamnrs_fluxcal)
+
     time_start = time()
     try:
         # Prepare
         p0 = prepare()
         p0.basedir = basedir
-        # director(p0, 'rm', basedir+'/param.npy', ignore_nonexistent=False)
+        # director(p0, 'rm', basedir+'/param.npy', ignore_nonexistent=True)
         # Prepare target and polcal
         p0.fluxcal = ''
         p0.polcal = name_to_ms(name_polcal)
@@ -145,8 +151,23 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                 p0.go()
 
         p1 = preflag()
-        set_files(p1)
-
+        p1.basedir = basedir
+        director(p0, 'rm', basedir+'/param.npy', ignore_nonexistent=True)
+        # Flag target and polcal
+        p1.fluxcal = ''
+        p1.polcal = name_to_ms(name_polcal)
+        p1.target = name_to_ms(name_target)
+        p1.beam = "{:02d}".format(beamlist_target[0])
+        if not dry_run:
+            p1.go()
+        p1 = preflag()
+        p1.basedir = basedir
+        director(p0, 'rm', basedir+'/param.npy', ignore_nonexistent=True)
+        # Flag fluxcal (pretending it's a target)
+        p1.fluxcal = ''
+        p1.polcal = ''
+        p1.target = name_to_ms(name_fluxcal)
+        p1.beam = "{:02d}".format(beamlist_target[0])
         if not dry_run:
             p1.go()
 
