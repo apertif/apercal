@@ -174,7 +174,7 @@ class ccal(BaseModule):
 
             if self.target != '':
                 for vis, beam in self.get_datasets():
-                    if ccaltargetbeamsTEC[int(beam)] or os.path.isdir(self.get_target_path().rstrip('.MS') + '_B' +
+                    if ccaltargetbeamsTEC[int(beam)] or os.path.isdir(self.get_target_path(beam=beam).rstrip('.MS') + '_B' +
                                                                       beam + '.MS.tecim'):
                         logger.info(
                             '# TEC correction tables for beam ' + beam + ' were already generated')
@@ -335,8 +335,9 @@ class ccal(BaseModule):
                         logger.error(error)
                         raise RuntimeError(error)
             else:
-                logger.error('Flux calibrator dataset not specified or dataset not available. Bandpass corrections '
-                             'are not available!')
+                error = 'Flux calibrator dataset {} not specified or dataset not available. Bandpass corrections ' + \
+                        'are not available!'.format(self.get_fluxcal_path())
+                logger.error(error)
 
         subs_param.add_param(self, 'ccal_fluxcal_phgains', ccalfluxcalphgains)
         subs_param.add_param(self, 'ccal_fluxcal_bandpass', ccalfluxcalbandpass)
@@ -392,8 +393,9 @@ class ccal(BaseModule):
                         logger.error(error)
                         raise RuntimeError(error)
             else:
-                logger.error('Flux calibrator dataset not specified or dataset not available. Cross calibration '
-                             'will probably not work!')
+                error = 'Flux calibrator dataset not specified or dataset {} not available. Cross calibration will probably not work!'.format(self.get_fluxcal_path())
+                logger.error(error)
+                raise RuntimeError(error)
 
         subs_param.add_param(self, 'ccal_fluxcal_apgains', ccalfluxcalapgains)
 
@@ -453,8 +455,9 @@ class ccal(BaseModule):
                         logger.error(
                             '# Global delay correction table for flux calibrator was not created successfully!')
             else:
-                logger.error(
-                    '# Flux calibrator dataset not specified or dataset not available. Cross calibration will probably not work!')
+                error = 'Flux calibrator dataset not specified or dataset not available. Cross calibration will probably not work!'
+                logger.error(error)
+                raise RuntimeError(error)
 
         subs_param.add_param(self, 'ccal_fluxcal_globaldelay', ccalfluxcalglobaldelay)
 
@@ -555,8 +558,9 @@ class ccal(BaseModule):
                         logger.error('Cross hand delay correction table for polarised calibrator was '
                                      'not created successfully!')
             else:
-                logger.error('Polarised calibrator dataset not specified or dataset not available. Polarisation '
-                             'calibration will probably not work!')
+                error = 'Polarised calibrator dataset not specified or dataset not available. Polarisation ' + \
+                        'calibration will probably not work!'
+                logger.error(error)
 
         subs_param.add_param(self, 'ccal_polcal_model', ccalpolcalmodel)
         subs_param.add_param(self, 'ccal_polcal_crosshanddelay', ccalpolcalcrosshanddelay)
@@ -629,8 +633,9 @@ class ccal(BaseModule):
                         logger.error(
                             '# Leakage correction table for flux calibrator was not created successfully!')
             else:
-                logger.error(
-                    '# Flux calibrator dataset not specified or dataset not available. Cross calibration will probably not work!')
+                error = 'Flux calibrator dataset not specified or dataset not available. Cross calibration will probably not work!'
+                logger.error(error)
+                raise RuntimeError(error)
 
         subs_param.add_param(self, 'ccal_fluxcal_leakage', ccalfluxcalleakage)
 
@@ -804,8 +809,9 @@ class ccal(BaseModule):
                         ccalfluxcaltransfer = False
                         logger.warning('Corrected visibilities were not written to flux calibrator dataset !')
             else:
-                logger.error(
-                    '# Flux calibrator dataset not specified or dataset not available. Application of cross calibration solutions not possible!')
+                error = 'Flux calibrator dataset not specified or dataset not available. Application of cross calibration solutions not possible!'
+                logger.error(error)
+                raise RuntimeError(error)
                 ccalfluxcaltransfer = False
 
             # Apply solutions to the polarised calibrator

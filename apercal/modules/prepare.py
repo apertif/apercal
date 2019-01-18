@@ -110,7 +110,7 @@ class prepare(BaseModule):
         if self.prepare_obsnum_fluxcal != '':  # If the flux calibrator is requested
             preparefluxcalrejreason[0] = ''  # Empty the comment string
             preparefluxcalrequested = True
-            fluxcal = self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal
+            fluxcal = self.get_fluxcal_path()
             preparefluxcaldiskstatus = os.path.isdir(fluxcal)
             if preparefluxcaldiskstatus:
                 logger.debug('Flux calibrator dataset found on disk ({})'.format(fluxcal))
@@ -122,7 +122,7 @@ class prepare(BaseModule):
             else:
                 # Check if the flux calibrator dataset is available on ALTA
                 preparefluxcalaltastatus = subs_irods.getstatus_alta(self.prepare_date, self.prepare_obsnum_fluxcal,
-                                                                     '00')
+                                                                     self.beam)
                 if preparefluxcalaltastatus:
                     logger.debug('Flux calibrator dataset available on ALTA')
                 else:
@@ -134,9 +134,9 @@ class prepare(BaseModule):
                     preparefluxcalcopystatus = True
                     logger.warning('Flux calibrator data available on disk, but not in ALTA!')
                 elif not preparefluxcaldiskstatus and preparefluxcalaltastatus:
-                    subs_managefiles.director(self, 'mk', self.basedir + '00' + '/' + self.rawsubdir, verbose=False)
+                    subs_managefiles.director(self, 'mk', self.basedir + self.beam + '/' + self.rawsubdir, verbose=False)
                     getdata_alta(int(self.prepare_date), int(self.prepare_obsnum_fluxcal), 0, targetdir=self.rawdir + '/' + self.fluxcal)
-                    if os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.fluxcal):
+                    if os.path.isdir(self.get_fluxcal_path()):
                         preparefluxcalcopystatus = True
                         logger.debug('Flux calibrator dataset successfully copied from ALTA')
                     else:
@@ -170,7 +170,7 @@ class prepare(BaseModule):
         if self.prepare_obsnum_polcal != '':  # If the polarised calibrator is requested
             preparepolcalrejreason[0] = ''  # Empty the comment string
             preparepolcalrequested = True
-            preparepolcaldiskstatus = os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal)
+            preparepolcaldiskstatus = os.path.isdir(self.get_polcal_path())
             if preparepolcaldiskstatus:
                 logger.debug('Polarisation calibrator dataset found on disk')
             else:
@@ -181,7 +181,7 @@ class prepare(BaseModule):
             else:
 
                 # Check if the polarisation calibrator dataset is available on ALTA
-                preparepolcalaltastatus = subs_irods.getstatus_alta(self.prepare_date, self.prepare_obsnum_polcal, '00')
+                preparepolcalaltastatus = subs_irods.getstatus_alta(self.prepare_date, self.prepare_obsnum_polcal, self.beam)
                 if preparepolcalaltastatus:
                     logger.debug('Polarisation calibrator dataset available on ALTA')
                 else:
@@ -193,9 +193,9 @@ class prepare(BaseModule):
                     preparepolcalcopystatus = True
                     logger.warning('Polarisation calibrator data available on disk, but not in ALTA!')
                 elif not preparepolcaldiskstatus and preparepolcalaltastatus:
-                    subs_managefiles.director(self, 'mk', self.basedir + '00' + '/' + self.rawsubdir, verbose=False)
+                    subs_managefiles.director(self, 'mk', self.basedir + self.beam + '/' + self.rawsubdir, verbose=False)
                     getdata_alta(int(self.prepare_date), int(self.prepare_obsnum_polcal), 0, targetdir=self.rawdir + '/' + self.polcal)
-                    if os.path.isdir(self.basedir + '00' + '/' + self.rawsubdir + '/' + self.polcal):
+                    if os.path.isdir(self.get_polcal_path()):
                         preparepolcalcopystatus = True
                         logger.debug('Polarisation calibrator dataset successfully copied from ALTA')
                     else:
@@ -233,6 +233,7 @@ class prepare(BaseModule):
             else:  # if only certain beams are requested
                 reqbeams = self.prepare_target_beams.split(",")
                 reqbeams_int = [int(b) for b in reqbeams]
+                reqbeams = [str(b).zfill(2) for b in reqbeams_int] # Add leading zeros
             for beam in reqbeams:
                 preparetargetbeamsrequested[int(beam)] = True
             for b in reqbeams_int:

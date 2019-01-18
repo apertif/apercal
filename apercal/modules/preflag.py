@@ -4,6 +4,7 @@ import logging
 import numpy as np
 import pandas as pd
 import os
+from os import path
 
 import casacore.tables as pt
 
@@ -84,21 +85,29 @@ class preflag(BaseModule):
         """
         logger.info('Starting Pre-flagging step')
         self.shadow()
-        query = "SELECT GNFALSE(FLAG) == 0 AS all_flagged, " + \
-                "GNTRUE(FLAG) == 0 AS all_unflagged FROM " + self.get_fluxcal_path()
-        query_result = pt.taql(query)
-        logger.debug("All visibilities     flagged before aoflag: " + str(query_result[0]["all_flagged"]))
-        logger.debug("All visibilities not flagged before aoflag: " + str(query_result[0]["all_unflagged"]))
+        if self.fluxcal != '':
+            query = "SELECT GNFALSE(FLAG) == 0 AS all_flagged, " + \
+                    "GNTRUE(FLAG) == 0 AS all_unflagged FROM " + self.get_fluxcal_path()
+            query_result = pt.taql(query)
+            logger.debug("All visibilities     flagged before aoflag: " + str(query_result[0]["all_flagged"]))
+            logger.debug("All visibilities not flagged before aoflag: " + str(query_result[0]["all_unflagged"]))
         self.aoflagger()
-        query = "SELECT GNFALSE(FLAG) == 0 AS all_flagged, " + \
-                "GNTRUE(FLAG) == 0 AS all_unflagged FROM " + self.get_fluxcal_path()
-        query_result = pt.taql(query)
-        logger.debug("All visibilities     flagged after aoflag: " + str(query_result[0]["all_flagged"]))
-        logger.debug("All visibilities not flagged after aoflag: " + str(query_result[0]["all_unflagged"]))
+        if self.fluxcal != '':
+            query = "SELECT GNFALSE(FLAG) == 0 AS all_flagged, " + \
+                    "GNTRUE(FLAG) == 0 AS all_unflagged FROM " + self.get_fluxcal_path()
+            query_result = pt.taql(query)
+            logger.debug("All visibilities     flagged after aoflag: " + str(query_result[0]["all_flagged"]))
+            logger.debug("All visibilities not flagged after aoflag: " + str(query_result[0]["all_unflagged"]))
         self.edges()
         self.ghosts()
         self.manualflag()
         logger.info('Pre-flagging step done')
+
+    def get_bandpass_path(self):
+        if self.subdirification:
+            return path.join(self.basedir, self.beam, self.rawsubdir, 'Bpass.txt')
+        else:
+            return path.join(os.getcwd(), 'Bpass.txt')
 
     def shadow(self):
         """
@@ -963,26 +972,26 @@ class preflag(BaseModule):
 
         if self.preflag_aoflagger_bandpass:
             # Check if bandpass was already derived and bandpass table is available
-            if os.path.isfile(self.get_fluxcal_path()[:-3] + '_Bpass.txt'):
+            if os.path.isfile(self.get_bandpass_path()):
                 logger.info('Preliminary bandpass table was already derived')
                 preflagaoflaggerbandpassstatus = True
             # If not, calculate the bandpass for the setup of the observation using the flux calibrator
             elif not preflagaoflaggerbandpassstatus:
-                if self.fluxcal != '' and os.path.isdir(self.get_fluxcal_path()):
-                    create_bandpass(self.get_fluxcal_path(), self.get_fluxcal_path()[:-3] + '_Bpass.txt')
-                    if os.path.isfile(self.get_fluxcal_path()[:-3] + '_Bpass.txt'):
-                        preflagaoflaggerbandpassstatus = True
-                        logger.info('Derived preliminary bandpass table for AOFlagging')
-                    else:
-                        error = 'Preliminary bandpass table for flux calibrator was not derived successfully!'
-                        logger.error(error)
-                        raise ApercalException(error)
+                if self.fluxcal != '':
+                    create_bandpass(self.get_fluxcal_path(), self.get_bandpass_path())
+                elif self.polcal != '':
+                    create_bandpass(self.get_polcal_path(), self.get_bandpass_path())
                 else:
-                    error = 'Bandpass calibrator not specified or dataset not available!'
+                    create_bandpass(self.get_target_path(self.beam), self.get_bandpass_path())
+                if os.path.isfile(self.get_bandpass_path()):
+                    preflagaoflaggerbandpassstatus = True
+                    logger.info('Derived preliminary bandpass table for AOFlagging')
+                else:
+                    error = 'Preliminary bandpass table for flux calibrator was not derived successfully!'
                     logger.error(error)
                     raise ApercalException(error)
             else:
-                error = 'Bandpass table not available. Preliminary bandpass cannot be applied'
+                error = 'Bandpass table not available at {}. Preliminary bandpass cannot be applied'.format(self.get_bandpass_path())
                 logger.error(error)
                 raise ApercalException(error)
 
@@ -1039,7 +1048,7 @@ class preflag(BaseModule):
                         # Check if bandpass table was derived successfully
                         preflagaoflaggerbandpassstatus = get_param_def(self, 'preflag_aoflagger_bandpass_status', True)
                         if self.preflag_aoflagger_bandpass and preflagaoflaggerbandpassstatus:
-                            lib.basher(base_cmd + ' -bandpass ' + self.get_fluxcal_path()[:-3] + '_Bpass.txt ' + self.get_fluxcal_path(),
+                            lib.basher(base_cmd + ' -bandpass ' + self.get_bandpass_path() + ' ' + self.get_fluxcal_path(),
                                        prefixes_to_strip=strip_prefixes)
                             logger.debug('Used AOFlagger to flag flux calibrator with preliminary bandpass applied')
                             preflagaoflaggerfluxcalflag = True
@@ -1081,7 +1090,7 @@ class preflag(BaseModule):
                     preflagaoflaggerbandpassstatus = get_param_def(self, 'preflag_aoflagger_bandpass_status', False)
                     ao_base_cmd = 'aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_polcalstrat
                     if self.preflag_aoflagger_bandpass and preflagaoflaggerbandpassstatus:
-                        lib.basher(ao_base_cmd + ' -bandpass ' + self.get_fluxcal_path()[:-3] + '_Bpass.txt ' + self.get_polcal_path(),
+                        lib.basher(ao_base_cmd + ' -bandpass ' + self.get_bandpass_path() + ' ' + self.get_polcal_path(),
                                    prefixes_to_strip=strip_prefixes)
                         logger.debug('Used AOFlagger to flag polarised calibrator with preliminary bandpass applied.')
                         preflagaoflaggerpolcalflag = True
@@ -1117,7 +1126,7 @@ class preflag(BaseModule):
                         base_cmd = 'aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_targetstrat
                         if not preflagaoflaggertargetbeamsflag[int(beam)]:
                             if self.preflag_aoflagger_bandpass and preflagaoflaggerbandpassstatus:
-                                lib.basher(base_cmd + ' -bandpass ' + self.get_fluxcal_path()[:-3] + '_Bpass.txt ' + vis,
+                                lib.basher(base_cmd + ' -bandpass ' + self.get_bandpass_path() + ' ' + vis,
                                            prefixes_to_strip=strip_prefixes)
                                 logger.debug('Used AOFlagger to flag target beam {} with preliminary '
                                              'bandpass applied'.format(beam))

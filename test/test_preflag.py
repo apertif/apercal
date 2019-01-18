@@ -4,6 +4,7 @@ mpl.use('TkAgg')
 from apercal.modules.preflag import preflag
 import casacore.tables as pt
 from os import path
+import os
 import logging
 
 
@@ -17,6 +18,8 @@ class TestPreflag(unittest.TestCase):
     def test_preflag(self):
         p = preflag()
         p.basedir = path.join(here, '../data/small/')
+        if path.exists(path.join(p.basedir, "param.npy")):
+            os.remove(path.join(p.basedir, "param.npy"))
         p.fluxcal = '3C295.MS'
         p.polcal = '3C138.MS'
         p.target = 'NGC807.MS'
@@ -25,6 +28,8 @@ class TestPreflag(unittest.TestCase):
         p.go()
 
     def test_preflag_nosubdirs(self):
+        if path.exists("param.npy"):
+            os.remove("param.npy")
         p = preflag()
         p.subdirification = False
         p.fluxcal = path.join(data_prefix, '3C295.MS')
@@ -33,13 +38,6 @@ class TestPreflag(unittest.TestCase):
         p.prepare_bypass_alta = True
         p.prepare_target_beams = '00,04'
         p.go()
-        for ms in [p.fluxcal, p.polcal, p.target]:
-            query = "SELECT GNFALSE(FLAG) == 0 AS all_flagged, " + \
-                    "GNTRUE(FLAG) == 0 AS all_unflagged FROM " + path.join(p.basedir, ms)
-            query_result = pt.taql(query)
-            #assert(not(query_result[0]['all_flagged'])) # Fails on travis, not on happili?
-            #assert(not(query_result[0]['all_unflagged']))
-
 
 if __name__ == "__main__":
     unittest.main()
