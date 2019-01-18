@@ -160,6 +160,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         p1.beam = "{:02d}".format(beamlist_target[0])
         if not dry_run:
             p1.go()
+
         p1 = preflag()
         p1.basedir = basedir
         director(p0, 'rm', basedir+'/param.npy', ignore_nonexistent=True)
@@ -171,11 +172,23 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         if not dry_run:
             p1.go()
 
-        p2 = ccal()
-        set_files(p2)
-
-        if not dry_run:
-            p2.go()
+        if len(fluxcals) == 1:
+           p2 = ccal()
+           set_files(p2)
+           if not dry_run:
+               p2.go()
+        else:
+            for beamnr in beamlist_target:
+                p2 = ccal()
+                p2.basedir = basedir
+                director(p2, 'rm', basedir+'/param.npy', ignore_nonexistent=True)
+                p2.fluxcal = name_to_ms(name_fluxcal)
+                p2.polcal = name_to_ms(name_polcal)
+                p2.target = name_to_ms(name_target)
+                p2.beam = "{:02d}".format(beamnr)
+                p2.crosscal_transfer_to_target_targetbeams = "{:02d}".format(beamnr)
+                if not dry_run:
+                    p2.go()
 
         p3 = convert()
         set_files(p3)
