@@ -16,6 +16,7 @@ install_requires = [
     'aipy',
     'pymp-pypi',
     'typing',
+    'bdsf'
 ]
 
 

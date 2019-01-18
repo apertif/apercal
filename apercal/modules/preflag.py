@@ -142,8 +142,8 @@ class preflag(BaseModule):
                     lib.run_casa([fc_shadow])
                     preflagfluxcalshadow = True
                 else:
-                    logger.warning('Flux calibrator dataset {} not available. Not flagging '
-                                   'shadowed antennas for flux calibrator'.format(self.get_fluxcal_path()))
+                    logger.warning('Flux calibrator dataset not available or dataset not specified. Not flagging '
+                                   'shadowed antennas for flux calibrator')
                     preflagfluxcalshadow = False
             # Flag the polarised calibrator
             if preflagpolcalshadow:
@@ -155,7 +155,7 @@ class preflag(BaseModule):
                     lib.run_casa([pc_shadow])
                     preflagpolcalshadow = True
                 else:
-                    logger.warning('Polarised calibrator dataset not specified or dataset not available. Not '
+                    logger.warning('Polarised calibrator dataset not available or dataset not specified. Not '
                                    'flagging shadowed antennas for polarised calibrator')
                     preflagpolcalshadow = False
             # Flag the target beams

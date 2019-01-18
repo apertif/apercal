@@ -1,12 +1,13 @@
 import unittest
 import matplotlib as mpl
+mpl.use('TkAgg')
 from apercal.modules.preflag import preflag
 import casacore.tables as pt
 from os import path
 import os
 import logging
 
-mpl.use('TkAgg')
+
 logging.basicConfig(level=logging.DEBUG)
 here = path.dirname(__file__)
 

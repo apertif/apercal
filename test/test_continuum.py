@@ -1,10 +1,10 @@
 import unittest
 from os import path
 import matplotlib as mpl
+mpl.use('TkAgg')
 from apercal.modules.continuum import continuum
 import logging
 
-mpl.use('TkAgg')
 logging.basicConfig(level=logging.DEBUG)
 here = path.dirname(__file__)
 

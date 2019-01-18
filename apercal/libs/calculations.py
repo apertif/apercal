@@ -5,6 +5,33 @@ from apercal.exceptions import ApercalException
 from apercal.libs import lib
 
 
+def calc_scal_interval(flux, noise, obstime, baselines, nfbin, feeds, snr, cycle):
+    """
+    Function to automatically calculate the self-calibration solution interval for each major cycle of an observation
+    flux (float): Flux in the clean model in Jy
+    noise (float): Theoretical noise of the dataset
+    obstime (float): Total integration time in minutes
+    baselines (int): Number of available baselines
+    nfbin (int): Number of frequency solution intervals
+    feeds (int): Number of feeds
+    snr (float): SNR for calculation. Typically 3 for phase and 10 for amplitude
+    cycle (int): Major self-calibration cycle to use. Usually 1 for amplitude.
+    returns (float): Solution interval to use
+    """
+    dof = baselines*nfbin*feeds
+    noiseperdof = noise*np.sqrt(dof)
+    noisesnr = snr * noiseperdof
+    nsolint = flux / noisesnr
+    interval = ((obstime / nsolint) / cycle)
+    if interval > obstime:
+        interval = obstime
+    elif interval < 0.5:
+        interval = 0.5
+    else:
+        interval = np.round(interval)
+    return interval
+
+
 def calc_dr_maj(drinit, dr0, majorcycles, func):
     """
     Function to calculate the dynamic range limits during major cycles
