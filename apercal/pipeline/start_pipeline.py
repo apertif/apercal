@@ -54,6 +54,8 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
     Returns:
         Tuple[bool, str]: True if the pipeline succeeds, informative message
     """
+    logger.debug("start_apercal called with arguments targets={}; fluxcals={}; polcals={}".format(
+                  targets, fluxcals, polcals))
     (taskid_target, name_target, beamlist_target) = targets
 
     if not basedir:
@@ -152,7 +154,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
 
         p1 = preflag()
         p1.basedir = basedir
-        director(p0, 'rm', basedir+'/param.npy', ignore_nonexistent=True)
+        director(p0, 'rm', basedir + '/param.npy', ignore_nonexistent=True)
         # Flag target and polcal
         p1.fluxcal = ''
         p1.polcal = name_to_ms(name_polcal)
@@ -163,7 +165,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
 
         p1 = preflag()
         p1.basedir = basedir
-        director(p0, 'rm', basedir+'/param.npy', ignore_nonexistent=True)
+        director(p0, 'rm', basedir + '/param.npy', ignore_nonexistent=True)
         # Flag fluxcal (pretending it's a target)
         p1.fluxcal = ''
         p1.polcal = ''
@@ -173,15 +175,15 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             p1.go()
 
         if len(fluxcals) == 1:
-           p2 = ccal()
-           set_files(p2)
-           if not dry_run:
-               p2.go()
+            p2 = ccal()
+            set_files(p2)
+            if not dry_run:
+                p2.go()
         else:
             for beamnr in beamlist_target:
                 p2 = ccal()
                 p2.basedir = basedir
-                director(p2, 'rm', basedir+'/param.npy', ignore_nonexistent=True)
+                director(p2, 'rm', basedir + '/param.npy', ignore_nonexistent=True)
                 p2.fluxcal = name_to_ms(name_fluxcal)
                 p2.polcal = name_to_ms(name_polcal)
                 p2.target = name_to_ms(name_target)
