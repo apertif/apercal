@@ -54,8 +54,6 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
     Returns:
         Tuple[bool, str]: True if the pipeline succeeds, informative message
     """
-    logger.debug("start_apercal called with arguments targets={}; fluxcals={}; polcals={}".format(
-                  targets, fluxcals, polcals))
     (taskid_target, name_target, beamlist_target) = targets
 
     if not basedir:
@@ -72,6 +70,9 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
     gitinfo = subprocess.check_output('cd ' + os.path.dirname(apercal.__file__) +
                                       '&& git describe --tag; cd', shell=True).strip()
     logger.info("Apercal version: " + gitinfo)
+
+    logger.debug("start_apercal called with arguments targets={}; fluxcals={}; polcals={}".format(
+                  targets, fluxcals, polcals))
 
     name_fluxcal = str(fluxcals[0][1]).strip().split('_')[0]
     if polcals:
