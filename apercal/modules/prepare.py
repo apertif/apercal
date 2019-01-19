@@ -107,7 +107,7 @@ class prepare(BaseModule):
         # Start the preparation of the flux calibrator #
         ################################################
 
-        if self.prepare_obsnum_fluxcal != '':  # If the flux calibrator is requested
+        if self.fluxcal != '':  # If the flux calibrator is requested
             preparefluxcalrejreason[0] = ''  # Empty the comment string
             preparefluxcalrequested = True
             fluxcal = self.get_fluxcal_path()
@@ -167,7 +167,7 @@ class prepare(BaseModule):
         # Start the preparation of the polarisation calibrator #
         ########################################################
 
-        if self.prepare_obsnum_polcal != '':  # If the polarised calibrator is requested
+        if self.polcal != '':  # If the polarised calibrator is requested
             preparepolcalrejreason[0] = ''  # Empty the comment string
             preparepolcalrequested = True
             preparepolcaldiskstatus = os.path.isdir(self.get_polcal_path())
