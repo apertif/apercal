@@ -54,6 +54,8 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
     Returns:
         Tuple[bool, str]: True if the pipeline succeeds, informative message
     """
+    logger.debug("start_apercal called with arguments targets={}; fluxcals={}; polcals={}".format(
+                  targets, fluxcals, polcals))
     (taskid_target, name_target, beamlist_target) = targets
 
     if not basedir:
