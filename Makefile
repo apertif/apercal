@@ -72,6 +72,6 @@ cwl-convert: $(VENV3)/bin/cwltool data/small
 
 cwl-scal: $(VENV3)/bin/cwltool data/small
 	$(CWLTOOL) cwl/steps/scal.cwl \
-		--fluxcal_mir data/small/00/crosscal/3C295.mir \
-		--polcal_mir data/small/00/crosscal/3C138.mir \
-		--target_mir data/small/00/crosscal/NGC807.mir
+		--fluxcal_mir cwl/output/3C295.mir \
+		--polcal_mir cwl/output/3C138.mir \
+		--target_mir cwl/output/NGC807.mir
