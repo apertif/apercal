@@ -241,7 +241,7 @@ class ccal(BaseModule):
                 else:
                     ms = self.get_fluxcal_path()  # Get the name of the calibrator
                     t = pt.table("%s::FIELD" % ms, ack=False)
-                    srcname = t.getcol('NAME')[0]
+                    srcname = t.getcol('NAME')[0].split('_')[0].upper()
                     av, fluxdensity, spix, reffreq, rotmeas = subs_calmodels.get_calparameters(srcname)
                     cc_fluxcal_model = 'setjy(vis = "' + self.get_fluxcal_path() + '", scalebychan = True, standard = "manual", fluxdensity = [' + \
                                        fluxdensity + '], spix = [' + spix + '], reffreq = "' + reffreq + \
@@ -249,8 +249,9 @@ class ccal(BaseModule):
                     if av:
                         pass
                     else:
-                        logger.warning('Calibrator model not in database. Using unpolarised calibrator model with a '
-                                       'constant flux density of 1.0Jy!')
+                        error = 'Calibrator model not in database for source ' + srcname
+                        logging.error(error)
+                        raise ApercalException(error)
                     lib.run_casa([cc_fluxcal_model], log_output=True, timeout=3600)
 
                     # Check if model was ingested successfully
@@ -489,7 +490,7 @@ class ccal(BaseModule):
                     # Get the name of the calibrator
                     ms = self.get_polcal_path()
                     t = pt.table("%s::FIELD" % ms, ack=False)
-                    srcname = t.getcol('NAME')[0]
+                    srcname = t.getcol('NAME')[0].split('_')[0].upper()
                     av, fluxdensity, spix, reffreq, rotmeas = subs_calmodels.get_calparameters(srcname)
                     cc_polcal_model = 'setjy(vis = "' + self.get_polcal_path() + '", scalebychan = True, standard = "manual", fluxdensity = [' + \
                                       fluxdensity + '], spix = [' + spix + '], reffreq = "' + reffreq + \
@@ -497,8 +498,9 @@ class ccal(BaseModule):
                     if av:
                         pass
                     else:
-                        logger.warning(
-                            '# Calibrator model not in database. Using unpolarised calibrator model with a constant flux density of 1.0Jy!')
+                        error = 'Calibrator model not in database for source ' + srcname
+                        logging.error(error)
+                        raise ApercalException(error)
                     lib.run_casa([cc_polcal_model], log_output=True, timeout=3600)
 
                     # Check if model was ingested successfully
