@@ -250,7 +250,7 @@ class ccal(BaseModule):
                         pass
                     else:
                         error = 'Calibrator model not in database for source ' + srcname
-                        logging.error(error)
+                        logger.error(error)
                         raise ApercalException(error)
                     lib.run_casa([cc_fluxcal_model], log_output=True, timeout=3600)
 
@@ -499,7 +499,7 @@ class ccal(BaseModule):
                         pass
                     else:
                         error = 'Calibrator model not in database for source ' + srcname
-                        logging.error(error)
+                        logger.error(error)
                         raise ApercalException(error)
                     lib.run_casa([cc_polcal_model], log_output=True, timeout=3600)
 
