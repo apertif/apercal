@@ -9,11 +9,9 @@ VENV3=$(CURDIR)/.venv3
 CWLTOOL=$(VENV3)/bin/cwltool \
 	--enable-ext  \
 	--outdir=$(CURDIR)/cwl/output/
-#	--no-compute-checksum \
-#	--leave-tmp \
-#	--leave-tmpdir \
-#	--tmpdir-prefix=$(CURDIR)/cwl/tmp/
-#	--cachedir=$(CURDIR)/cwl/cache/
+## scal step creates massive temp files, so you might want to set these
+#	--tmpdir-prefix=/scratch/tmp/cwl/ \
+#	--tmp-outdir-prefix=/scratch/tmp/cwl/
 
 .PHONY: run docker test
 
