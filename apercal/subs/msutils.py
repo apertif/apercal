@@ -123,6 +123,8 @@ def flip_ra(msname, logger=None, force=False):
     Returns:
         bool: True if ra has been flipped
     """
+    if logger:
+        logger.info("Flipping RA for {}".msname)
     if ra_flipped(msname):
         if not force:
             msg = "Not flipping RA since it has been done already"
