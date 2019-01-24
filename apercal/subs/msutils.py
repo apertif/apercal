@@ -90,7 +90,7 @@ def get_nchan(msname):
     Returns:
         int: number of channels (in first spectral window)
     """
-    assert(isinstance(msname,str))
+    assert(isinstance(msname, str))
     spectralwindowtable = pt.table(msname + '::SPECTRAL_WINDOW', ack=False)
     nchan = spectralwindowtable.getcol("CHAN_FREQ").shape[1]
     return nchan
@@ -140,13 +140,13 @@ def flip_ra(msname, logger=None, force=False):
             else:
                 print(msg)
 
-    t_field = pt.table(msname+"::FIELD", readonly=False, ack=False)
+    t_field = pt.table(msname + "::FIELD", readonly=False, ack=False)
     phasedir = t_field[0]["PHASE_DIR"]
-    refdir = t_field[0]["REFERENCE_DIR"] # Pointing of beam 0
+    refdir = t_field[0]["REFERENCE_DIR"]  # Pointing of beam 0
     newphasedir = np.copy(phasedir)
 
     # Reflect phasedir around reference dir to get new phasedir
-    newphasedir[0,0] = phasedir[0,0] + 2 * (refdir[0,0] - phasedir[0,0])
+    newphasedir[0, 0] = phasedir[0, 0] + 2 * (refdir[0, 0] - phasedir[0, 0])
 
     string_phase = format_dir(phasedir[0])
     string_newphase = format_dir(newphasedir[0])
