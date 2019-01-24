@@ -12,6 +12,7 @@ from apercal.subs.param import get_param_def
 from apercal.subs import param as subs_param
 from apercal.subs.getdata_alta import getdata_alta
 from apercal.libs import lib
+from apercal.subs.msutils import flip_ra
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +29,7 @@ class prepare(BaseModule):
     prepare_obsnum_target = None
     prepare_target_beams = None
     prepare_bypass_alta = None
+    prepare_flip_ra = False
 
     def __init__(self, file_=None, **kwargs):
         self.default = lib.load_config(self, file_)
@@ -143,6 +145,8 @@ class prepare(BaseModule):
                         preparefluxcalcopystatus = False
                         preparefluxcalrejreason[0] = 'Copy from ALTA not successful'
                         logger.error('Flux calibrator dataset available on ALTA, but NOT successfully copied!')
+                    if self.prepare_flip_ra:
+                        flip_ra(self.rawdir + '/' + self.fluxcal, logger=logger)
                 elif not preparefluxcaldiskstatus and not preparefluxcalaltastatus:
                     preparefluxcalcopystatus = False
                     preparefluxcalrejreason[0] = 'Dataset not on ALTA or disk'
@@ -202,6 +206,8 @@ class prepare(BaseModule):
                         preparepolcalcopystatus = False
                         preparepolcalrejreason[0] = 'Copy from ALTA not successful'
                         logger.error('Polarisation calibrator dataset available on ALTA, but NOT successfully copied!')
+                    if self.prepare_flip_ra:
+                        flip_ra(self.rawdir + '/' + self.polcal, logger=logger)
                 elif not preparepolcaldiskstatus and not preparepolcalaltastatus:
                     preparepolcalcopystatus = False
                     preparepolcalrejreason[0] = 'Dataset not on ALTA or disk'
@@ -276,6 +282,8 @@ class prepare(BaseModule):
                             preparetargetbeamscopystatus[c] = False
                             preparetargetbeamsrejreason[int(c)] = 'Copy from ALTA not successful'
                             logger.error('Target beam dataset available on ALTA, but NOT successfully copied!')
+                        if self.prepare_flip_ra:
+                            flip_ra(self.basedir + str(c).zfill(2) + '/' + self.rawsubdir + '/' + self.target, logger=logger)
                     elif not preparetargetbeamsdiskstatus[c] and not preparetargetbeamsaltastatus[c] and str(c).zfill(2) in reqbeams:
                         preparetargetbeamscopystatus[c] = False
                         preparetargetbeamsrejreason[int(c)] = 'Dataset not on ALTA or disk'
