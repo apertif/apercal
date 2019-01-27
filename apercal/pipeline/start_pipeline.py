@@ -83,7 +83,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
     name_target = str(name_target).strip()
 
     # Exchange polcal and fluxcal if specified in the wrong order
-    if not subs_calmodels.is_polarised(name_polcal):
+    if not subs_calmodels.is_polarised(name_polcal) and name_polcal != '':
         if subs_calmodels.is_polarised(name_fluxcal):
             logger.debug("Switching polcal and fluxcal because " + name_polcal +
                          " is not polarised")
@@ -92,7 +92,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         else:
             logger.debug("Setting polcal to '' since " + name_polcal + " is not polarised")
             name_polcal = ""
-    else:
+    elif name_polcal != '':
         logger.debug("Polcal " + name_polcal + " is polarised, all good")
 
     if name_polcal != "":
