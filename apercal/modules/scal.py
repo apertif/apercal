@@ -998,9 +998,9 @@ class scal(BaseModule):
                         selfcal.nfbin = self.selfcal_amp_nfbin
                         selfcal.go()
                         if qa.checkimagegaussianity(self, 'amp/residual_' + str(selfcaltargetbeamsampfinalminor).zfill(2), self.selfcal_amp_gaussianity):
-                            selfcaltargetbeamsampresidualstatus[int(self.beam)] = True
+                            selfcaltargetbeamsampresidualstatus = True
                         else:
-                            selfcaltargetbeamsampresidualstatus[int(self.beam)] = False
+                            selfcaltargetbeamsampresidualstatus = False
                             logger.error('Beam ' + self.beam + ': Final residual image shows non-gaussian statistics. Amplitude self-calibration was not successful!')
                         invert = lib.miriad('invert')  # Create a dirty image after final calibration and compare statistics to original one for qualtiy assurance
                         invert.vis = self.target.rstrip('.mir') + '_amp.mir'
