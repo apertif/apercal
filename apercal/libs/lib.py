@@ -271,7 +271,7 @@ def basher(cmd, showasinfo=False, prefixes_to_strip=[]):
     # NOTE: Returns the STD output.
     exceptioner(out, err)
     if proc.returncode != 0:
-        raise RuntimeError()
+        raise RuntimeError("Error in command " + cmd.split(" ")[0] + ": \n" + err)
     logger.debug("Returning output.")
     # Standard output error are returned in a more convenient way
     return out.split('\n')[0:-1]
