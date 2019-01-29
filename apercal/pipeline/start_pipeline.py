@@ -184,16 +184,20 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                 p2.go()
         else:
             for beamnr in beamlist_target:
-                p2 = ccal()
-                p2.basedir = basedir
-                director(p2, 'rm', basedir + '/param.npy', ignore_nonexistent=True)
-                p2.fluxcal = name_to_ms(name_fluxcal)
-                p2.polcal = name_to_ms(name_polcal)
-                p2.target = name_to_ms(name_target)
-                p2.beam = "{:02d}".format(beamnr)
-                p2.crosscal_transfer_to_target_targetbeams = "{:02d}".format(beamnr)
-                if not dry_run:
-                    p2.go()
+                try:
+                    p2 = ccal()
+                    p2.basedir = basedir
+                    director(p2, 'rm', basedir + '/param.npy', ignore_nonexistent=True)
+                    p2.fluxcal = name_to_ms(name_fluxcal)
+                    p2.polcal = name_to_ms(name_polcal)
+                    p2.target = name_to_ms(name_target)
+                    p2.beam = "{:02d}".format(beamnr)
+                    p2.crosscal_transfer_to_target_targetbeams = "{:02d}".format(beamnr)
+                    if not dry_run:
+                        p2.go()
+                except ApercalException as e:
+                    # Exception was already logged just before
+                    logger.error("Failed beam {}, skipping that from crosscal".format(beamnr))
 
         p3 = convert()
         set_files(p3)
