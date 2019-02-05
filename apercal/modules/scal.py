@@ -333,335 +333,339 @@ class scal(BaseModule):
             subs_setinit.setinitdirs(self)
             subs_setinit.setdatasetnamestomiriad(self)
             subs_managefiles.director(self, 'ch', self.selfcaldir)
-            logger.info('Beam ' + self.beam + ': Iterative phase self calibration')
-            majdr_list = masking.calc_dr_maj(self.selfcal_phase_drinit, self.selfcal_phase_dr0, self.selfcal_phase_majorcycle, self.selfcal_phase_majorcycle_function) # List with dynamic range dynamic range for major cycle
-            TNreached = False # Stop self-calibration if theoretical noise is reached
-            stop = False # Variable to stop self-calibration, if something goes wrong
-            for majc in range(self.selfcal_phase_majorcycle):
-                if stop:
-                    break
-                else:
-                    if not TNreached:
-                        if majc == 0: # Calculate theoretical noise at the beginning of the first major cycle
-                            gaussianity, TN = masking.get_theoretical_noise(self, self.target)  # Gaussianity test and theoretical noise calculation using Stokes V image
-                            if gaussianity:
-                                pass
-                            else:
-                                logger.warning('Beam ' + self.beam + ': Stokes V image shows non-gaussian distribution. Your theoretical noise value might be off!')
-                            logger.info('Beam ' + self.beam + ': Theoretical noise is ' + '%.6f' % TN + ' Jy')
-                        else:
-                            pass
-                        subs_managefiles.director(self, 'mk', self.selfcaldir + '/' + str(majc).zfill(2))
-                        mindr_list = masking.calc_dr_min(majdr_list, majc, self.selfcal_phase_minorcycle, self.selfcal_phase_mindr, self.selfcal_phase_minorcycle_function) # List with dynamic range dynamic range for minor cycles
-                        for minc in range(self.selfcal_phase_minorcycle):
-                            if not TNreached:
-                                if minc == 0: # Create a new dirty image after self-calibration
-                                    invert = lib.miriad('invert')  # Create the dirty image
-                                    invert.vis = self.target
-                                    invert.map = str(majc).zfill(2) + '/map_00'
-                                    invert.beam = str(majc).zfill(2) + '/beam_00'
-                                    invert.imsize = self.selfcal_image_imsize
-                                    invert.cell = self.selfcal_image_cellsize
-                                    invert.stokes = 'i'
-                                    invert.options = 'mfs,sdb,double'
-                                    invert.slop = 1
-                                    invert.robust = -2
-                                    invert.go()
-                                    # Check if dirty image and beam is there and ok
-                                    if os.path.isdir(str(majc).zfill(2) + '/map_00') and os.path.isdir(str(majc).zfill(2) + '/beam_00'):
-                                        selfcaltargetbeamsphasebeamstatus[majc] = True
-                                        selfcaltargetbeamsphasemapstats[majc,:] = imstats.getimagestats(self, str(majc).zfill(2) + '/map_00')
-                                        if qa.checkdirtyimage(self, str(majc).zfill(2) + '/map_00'):
-                                            selfcaltargetbeamsphasemapstatus[majc] = True
-                                        else:
-                                            selfcaltargetbeamsphasemapstatus[majc] = False
-                                            selfcaltargetbeamsphasestatus = False
-                                            logger.error('Beam ' + self.beam + ': Dirty image for major cycle ' + str(majc) + ' is invalid. Stopping self calibration!')
-                                            stop = True
-                                            selfcaltargetbeamsphasefinalmajor = majc
-                                            selfcaltargetbeamsphasefinalminor = minc
-                                            break
-                                    else:
-                                        selfcaltargetbeamsphasebeamstatus[majc] = False
-                                        selfcaltargetbeamsphasestatus = False
-                                        logger.error('Beam ' + self.beam + ': Dirty image or beam for major cycle ' + str(majc) + ' not found. Stopping self-calibration!')
-                                        stop = True
-                                        selfcaltargetbeamsphasefinalmajor = majc
-                                        selfcaltargetbeamsphasefinalminor = minc
-                                        break
-                                    dirtystats = imstats.getimagestats(self, str(majc).zfill(2) + '/map_00') # Min, max, rms of the dirty image
-                                    TNdr = masking.calc_theoretical_noise_dr(dirtystats[1], TN, self.selfcal_phase_nsigma) # Theoretical noise dynamic range
-                                    DRdr = masking.calc_dynamic_range_dr(mindr_list, minc, self.selfcal_phase_mindr) # Dynamic range dynamic range
-                                    Ndr = masking.calc_noise_dr(minc, majc, self.selfcal_phase_c0) # Noise dynamic range
-                                    TNth = masking.calc_theoretical_noise_threshold(dirtystats[1], TNdr) # Theoretical noise threshold
-                                    DRth = masking.calc_dynamic_range_threshold(dirtystats[1], DRdr) # Dynamic range threshold
-                                    Nth = masking.calc_noise_threshold(dirtystats[1], Ndr) # Noise threshold
-                                    Mth = masking.calc_mask_threshold(TNth, Nth, DRth) # Masking threshold
-                                    Cc = masking.calc_clean_cutoff(Mth[0], self.selfcal_phase_c1) # Clean cutoff
-                                    selfcaltargetbeamsphasemaskthreshold[majc, minc] = Mth[0]
-                                    selfcaltargetbeamsphasethresholdtype[majc, minc] = Mth[1]
-                                    selfcaltargetbeamsphasecleanthreshold[majc, minc] = Cc
-                                    if majc == 0: # Create mask from dirty image in the first major cycle
-                                        beampars = masking.get_beam(self, invert.map, invert.beam)
-                                        masking.create_mask(self, str(majc).zfill(2) + '/map_00', str(majc).zfill(2) + '/mask_00', Mth[0], TN, beampars=beampars)
-                                    else: # Otherwise copy the mask from the last minor cycle of the previous major iteration
-                                        subs_managefiles.director(self, 'cp', str(majc).zfill(2) + '/mask_00', file_=str(majc-1).zfill(2) + '/mask_' + str(self.selfcal_phase_minorcycle-1).zfill(2))
-                                    # Check if mask is there and ok
-                                    if os.path.isdir(str(majc).zfill(2) + '/mask_00'):
-                                        selfcaltargetbeamsphasemaskstats[majc, minc, :] = imstats.getmaskstats(self, str(majc).zfill(2) + '/mask_00', self.selfcal_image_imsize)
-                                        if qa.checkmaskimage(self, str(majc).zfill(2) + '/mask_00'):
-                                            selfcaltargetbeamsphasemaskstatus[majc, minc] = True
-                                        else:
-                                            selfcaltargetbeamsphasemaskstatus[majc, minc] = False
-                                            selfcaltargetbeamsphasestatus = False
-                                            logger.error('Beam ' + self.beam + ': Mask image for cycle ' + str(majc) + '/' + str(minc) + ' is invalid. Stopping self-calibration!')
-                                            stop = True
-                                            selfcaltargetbeamsphasefinalmajor = majc
-                                            selfcaltargetbeamsphasefinalminor = minc
-                                            break
-                                    else:
-                                        selfcaltargetbeamsphasemaskstatus[majc, minc] = False
-                                        selfcaltargetbeamsphasestatus = False
-                                        logger.error('Beam ' + self.beam + ': Mask image for cycle ' + str(majc) + '/' + str(minc) + ' not found. Stopping self-calibration!')
-                                        stop = True
-                                        selfcaltargetbeamsphasefinalmajor = majc
-                                        selfcaltargetbeamsphasefinalminor = minc
-                                        break
-                                    mfclean = lib.miriad('mfclean')  # Clean the image down to the calculated threshold
-                                    mfclean.map = str(majc).zfill(2) + '/map_00'
-                                    mfclean.beam = str(majc).zfill(2) + '/beam_00'
-                                    mfclean.out = str(majc).zfill(2) + '/model_00'
-                                    mfclean.cutoff = Cc
-                                    mfclean.niters = 1000000
-                                    mfclean.region = '"' + 'mask(' + str(majc).zfill(2) + '/mask_00)' + '"'
-                                    mfclean.go()
-                                    # Check if clean component image is there and ok
-                                    if os.path.isdir(str(majc).zfill(2) + '/model_00'):
-                                        selfcaltargetbeamsphasemodelstats[majc, minc, :] = imstats.getmodelstats(self, str(majc).zfill(2) + '/model_00')
-                                        if qa.checkmodelimage(self, str(majc).zfill(2) + '/model_00'):
-                                            selfcaltargetbeamsphasemodelstatus[majc, minc] = True
-                                        else:
-                                            selfcaltargetbeamsphasemodelstatus[majc, minc] = False
-                                            selfcaltargetbeamsphasestatus = False
-                                            logger.error('Beam ' + self.beam + ': Clean component image for cycle ' + str(majc) + '/' + str(minc) + ' is invalid. Stopping self-calibration!')
-                                            stop = True
-                                            selfcaltargetbeamsphasefinalmajor = majc
-                                            selfcaltargetbeamsphasefinalminor = minc
-                                            break
-                                    else:
-                                        selfcaltargetbeamsphasemodelstatus[majc, minc] = False
-                                        selfcaltargetbeamsphasestatus = False
-                                        logger.error('Beam ' + self.beam + ': Clean component image for cycle ' + str(majc) + '/' + str(minc) + ' not found. Stopping self-calibration!')
-                                        stop = True
-                                        selfcaltargetbeamsphasefinalmajor = majc
-                                        selfcaltargetbeamsphasefinalminor = minc
-                                        break
-                                    restor = lib.miriad('restor') # Create the restored image
-                                    restor.model = str(majc).zfill(2) + '/model_00'
-                                    restor.beam = str(majc).zfill(2) + '/beam_00'
-                                    restor.map = str(majc).zfill(2) + '/map_00'
-                                    restor.out = str(majc).zfill(2) + '/image_00'
-                                    restor.mode = 'clean'
-                                    restor.go()
-                                    # Check if restored image is there and ok
-                                    if os.path.isdir(str(majc).zfill(2) + '/image_00'):
-                                        selfcaltargetbeamsphaseimagestats[majc, minc, :] = imstats.getimagestats(self, str(majc).zfill(2) + '/image_00')
-                                        if qa.checkrestoredimage(self, str(majc).zfill(2) + '/image_00'):
-                                            selfcaltargetbeamsphaseimagestatus[majc, minc] = True
-                                        else:
-                                            selfcaltargetbeamsphaseimagestatus[majc, minc] = False
-                                            selfcaltargetbeamsphasestatus = False
-                                            logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(majc) + '/' + str(minc) + ' is invalid. Stopping self-calibration!')
-                                            stop = True
-                                            selfcaltargetbeamsphasefinalmajor = majc
-                                            selfcaltargetbeamsphasefinalminor = minc
-                                            break
-                                    else:
-                                        selfcaltargetbeamsphaseimagestatus[majc, minc] = False
-                                        selfcaltargetbeamsphasestatus = False
-                                        logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(majc) + '/' + str(minc) + ' not found. Stopping self-calibration!')
-                                        stop = True
-                                        selfcaltargetbeamsphasefinalmajor = majc
-                                        selfcaltargetbeamsphasefinalminor = minc
-                                        break
-                                    restor.mode = 'residual' # Create the residual image
-                                    restor.out = str(majc).zfill(2) + '/residual_00'
-                                    restor.go()
-                                    residualstats = imstats.getimagestats(self, str(majc).zfill(2) + '/residual_00') # Min, max, rms of the residual image
-                                    selfcaltargetbeamsphaseresidualstats[majc, minc, :] = residualstats
-                                    currdr = dirtystats[1]/residualstats[1]
-                                    logger.info('Beam ' + self.beam + ': Dynamic range is ' + '%.3f' % currdr + ' for cycle ' + str(majc) + '/' + str(minc))
-                                    selfcaltargetbeamsphasefinalminor = minc
-                                    if Mth[1] == 'TN':
-                                        TNreached = True
-                                        logger.info('Beam ' + self.beam + ': Theoretical noise threshold reached. Using last model for final self-calibration!')
-                                    else:
-                                        TNreached = False
-                                else: # Use the first clean model to continue cleaning
-                                    TNdr = masking.calc_theoretical_noise_dr(dirtystats[1], TN, self.selfcal_phase_nsigma) # Theoretical noise dynamic range
-                                    DRdr = masking.calc_dynamic_range_dr(mindr_list, minc, self.selfcal_phase_mindr) # Dynamic range dynamic range
-                                    Ndr = masking.calc_noise_dr(minc, majc, self.selfcal_phase_c0) # Noise dynamic range
-                                    TNth = masking.calc_theoretical_noise_threshold(dirtystats[1], TNdr) # Theoretical noise threshold
-                                    DRth = masking.calc_dynamic_range_threshold(dirtystats[1], DRdr) # Dynamic range threshold
-                                    Nth = masking.calc_noise_threshold(dirtystats[1], Ndr) # Noise threshold
-                                    Mth = masking.calc_mask_threshold(TNth, Nth, DRth) # Masking threshold
-                                    Cc = masking.calc_clean_cutoff(Mth[0], self.selfcal_phase_c1) # Clean cutoff
-                                    selfcaltargetbeamsphasemaskthreshold[majc, minc] = Mth[0]
-                                    selfcaltargetbeamsphasethresholdtype[majc, minc] = Mth[1]
-                                    selfcaltargetbeamsphasecleanthreshold[majc, minc] = Cc
-                                    masking.create_mask(self, str(majc).zfill(2) + '/image_' + str(minc-1).zfill(2), str(majc).zfill(2) + '/mask_' + str(minc).zfill(2), Mth[0], TN, beampars=None)
-                                    # Check if mask is there and ok
-                                    if os.path.isdir(str(majc).zfill(2) + '/mask_' + str(minc).zfill(2)):
-                                        selfcaltargetbeamsphasemaskstats[majc, minc, :] = imstats.getmaskstats(self, str(majc).zfill(2) + '/mask_' + str(minc).zfill(2), self.selfcal_image_imsize)
-                                        if qa.checkmaskimage(self, str(majc).zfill(2) + '/mask_' + str(minc).zfill(2)):
-                                            selfcaltargetbeamsphasemaskstatus[majc, minc] = True
-                                        else:
-                                            selfcaltargetbeamsphasemaskstatus[majc, minc] = False
-                                            selfcaltargetbeamsphasestatus = False
-                                            msg = 'Beam ' + self.beam + ': Mask image for cycle ' + str(majc) + '/' + str(minc) + ' is invalid. Stopping self-calibration!'
-                                            logger.error(msg)
-                                            raise ApercalException(msg)
-                                            stop = True
-                                            selfcaltargetbeamsphasefinalmajor = majc
-                                            selfcaltargetbeamsphasefinalminor = minc
-                                            break
-                                    else:
-                                        selfcaltargetbeamsphasemaskstatus[majc, minc] = False
-                                        selfcaltargetbeamsphasestatus = False
-                                        msg = 'Beam ' + self.beam + ': Mask image for cycle ' + str(majc) + '/' + str(minc) + ' not found. Stopping self-calibration!'
-                                        logger.error(msg)
-                                        raise ApercalException(msg)
-                                        stop = True
-                                        selfcaltargetbeamsphasefinalmajor = majc
-                                        selfcaltargetbeamsphasefinalminor = minc
-                                        break
-                                    mfclean = lib.miriad('mfclean')  # Clean the image down to the calculated threshold
-                                    mfclean.map = str(majc).zfill(2) + '/map_00'
-                                    mfclean.beam = str(majc).zfill(2) + '/beam_00'
-                                    mfclean.model = str(majc).zfill(2) + '/model_' + str(minc-1).zfill(2)
-                                    mfclean.out = str(majc).zfill(2) + '/model_' + str(minc).zfill(2)
-                                    mfclean.cutoff = Cc
-                                    mfclean.niters = 1000000
-                                    mfclean.region = '"' + 'mask(' + str(majc).zfill(2) + '/mask_' + str(minc).zfill(2) + ')' + '"'
-                                    mfclean.go()
-                                    # Check if clean component image is there and ok
-                                    if os.path.isdir(str(majc).zfill(2) + '/model_' + str(minc).zfill(2)):
-                                        selfcaltargetbeamsphasemodelstats[majc, minc, :] = imstats.getmodelstats(self, str(majc).zfill(2) + '/model_' + str(minc).zfill(2))
-                                        if qa.checkmodelimage(self, str(majc).zfill(2) + '/model_' + str(minc).zfill(2)):
-                                            selfcaltargetbeamsphasemodelstatus[majc, minc] = True
-                                        else:
-                                            selfcaltargetbeamsphasemodelstatus[majc, minc] = False
-                                            selfcaltargetbeamsphasestatus = False
-                                            msg = 'Beam ' + self.beam + ': Clean component image for cycle ' + str(majc) + '/' + str(minc) + ' is invalid. Stopping self-calibration!'
-                                            logger.error(msg)
-                                            raise ApercalException(msg)
-                                            stop = True
-                                            selfcaltargetbeamsphasefinalmajor = majc
-                                            selfcaltargetbeamsphasefinalminor = minc
-                                            break
-                                    else:
-                                        selfcaltargetbeamsphasemodelstatus[majc, minc] = False
-                                        selfcaltargetbeamsphasestatus = False
-                                        msg = 'Beam ' + self.beam + ': Clean component image for cycle ' + str(majc) + '/' + str(minc) + ' not found. Stopping self-calibration!'
-                                        logger.error(msg)
-                                        raise ApercalException(msg)
-                                        stop = True
-                                        selfcaltargetbeamsphasefinalmajor = majc
-                                        selfcaltargetbeamsphasefinalminor = minc
-                                        break
-                                    restor = lib.miriad('restor') # Create the restored image
-                                    restor.model = str(majc).zfill(2) + '/model_' + str(minc).zfill(2)
-                                    restor.beam = str(majc).zfill(2) + '/beam_00'
-                                    restor.map = str(majc).zfill(2) + '/map_00'
-                                    restor.out = str(majc).zfill(2) + '/image_' + str(minc).zfill(2)
-                                    restor.mode = 'clean'
-                                    restor.go()
-                                    # Check if restored image is there and ok
-                                    if os.path.isdir(str(majc).zfill(2) + '/image_' + str(minc).zfill(2)):
-                                        selfcaltargetbeamsphaseimagestats[majc, minc, :] = imstats.getimagestats(self, str(majc).zfill(2) + '/image_00')
-                                        if qa.checkrestoredimage(self, str(majc).zfill(2) + '/image_' + str(minc).zfill(2)):
-                                            selfcaltargetbeamsphaseimagestatus[majc, minc] = True
-                                        else:
-                                            selfcaltargetbeamsphaseimagestatus[majc, minc] = False
-                                            selfcaltargetbeamsphasestatus = False
-                                            logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(majc) + '/' + str(minc) + ' is invalid. Stopping self-calibration!')
-                                            stop = True
-                                            selfcaltargetbeamsphasefinalmajor = majc
-                                            selfcaltargetbeamsphasefinalminor = minc
-                                            break
-                                    else:
-                                        selfcaltargetbeamsphaseimagestatus[majc, minc] = False
-                                        selfcaltargetbeamsphasestatus = False
-                                        logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(majc) + '/' + str(minc) + ' not found. Stopping self-calibration!')
-                                        stop = True
-                                        selfcaltargetbeamsphasefinalmajor = majc
-                                        selfcaltargetbeamsphasefinalminor = minc
-                                        break
-                                    restor.mode = 'residual' # Create the residual image
-                                    restor.out = str(majc).zfill(2) + '/residual_' + str(minc).zfill(2)
-                                    restor.go()
-                                    residualstats = imstats.getimagestats(self, str(majc).zfill(2) + '/residual_' + str(minc).zfill(2)) # Min, max, rms of the residual image
-                                    selfcaltargetbeamsphaseresidualstats[majc, minc, :] = residualstats
-                                    currdr = dirtystats[1]/residualstats[1]
-                                    logger.info('Beam ' + self.beam + ': Dynamic range is ' + '%.3f' % currdr + ' for cycle ' + str(majc) + '/' + str(minc))
-                                    selfcaltargetbeamsphasefinalminor = minc
-                                    if Mth[1] == 'TN':
-                                        TNreached = True
-                                        logger.info('Beam ' + self.beam + ': Theoretical noise threshold reached. Using last model for final self-calibration!')
-                                    else:
-                                        TNreached = False
-                            else:
-                                pass
-                        # Do the self calibration in the normal cycle
-                        selfcaltargetbeamsphasefinalmajor = majc
-                        selfcaltargetbeamsphasefinalminor = minc
-                        selfcal = lib.miriad('selfcal')
-                        selfcal.vis = self.target
-                        selfcal.select = '"' + 'uvrange(' + str(self.selfcal_phase_uvmin[majc]) + ',' + str(self.selfcal_phase_uvmax[majc]) + ')"'
-                        selfcal.model = str(majc).zfill(2) + '/model_' + str(minc).zfill(2)
-                        if self.selfcal_phase_solint == 'auto':
-                            selfcal.interval = calc_scal_interval(selfcaltargetbeamsphasemodelstats[majc, minc, 1], TN, 720, 66, self.selfcal_phase_nfbin, 2, 3.0, majc+1)
-                        else:
-                            selfcal.interval = self.selfcal_phase_solint[majc]
-                        if self.selfcal_refant == '': # Choose reference antenna if given
-                            pass
-                        else:
-                            selfcal.refant = self.selfcal_refant
-                        selfcal.options = 'phase,mfs'
-                        selfcal.nfbin = self.selfcal_phase_nfbin
-                        selfcal.go()
+            if not selfcaltargetbeamsphasestatus:
+                logger.info('Beam ' + self.beam + ': Iterative phase self calibration')
+                majdr_list = masking.calc_dr_maj(self.selfcal_phase_drinit, self.selfcal_phase_dr0, self.selfcal_phase_majorcycle, self.selfcal_phase_majorcycle_function) # List with dynamic range dynamic range for major cycle
+                TNreached = False # Stop self-calibration if theoretical noise is reached
+                stop = False # Variable to stop self-calibration, if something goes wrong
+                for majc in range(self.selfcal_phase_majorcycle):
+                    if stop:
+                        break
                     else:
-                        # When theoretical noise is reached, do a last self-calibration round
-                        selfcal = lib.miriad('selfcal')
-                        selfcal.vis = self.target
-                        selfcal.select = '"' + 'uvrange(' + str(self.selfcal_phase_uvmin[-1]) + ',' + str(self.selfcal_phase_uvmax[-1]) + ')"'
-                        selfcal.model = str(selfcaltargetbeamsphasefinalmajor).zfill(2) + '/model_' + str(selfcaltargetbeamsphasefinalminor).zfill(2) # Update model via param file
-                        if self.selfcal_phase_solint == 'auto':
-                            selfcal.interval = calc_scal_interval(selfcaltargetbeamsphasemodelstats[selfcaltargetbeamsphasefinalmajor, selfcaltargetbeamsphasefinalminor, 1], TN, 720, 66, self.selfcal_phase_nfbin, 2, 3.0, majc+1)
+                        if not TNreached:
+                            if majc == 0: # Calculate theoretical noise at the beginning of the first major cycle
+                                gaussianity, TN = masking.get_theoretical_noise(self, self.target)  # Gaussianity test and theoretical noise calculation using Stokes V image
+                                if gaussianity:
+                                    pass
+                                else:
+                                    logger.warning('Beam ' + self.beam + ': Stokes V image shows non-gaussian distribution. Your theoretical noise value might be off!')
+                                logger.info('Beam ' + self.beam + ': Theoretical noise is ' + '%.6f' % TN + ' Jy')
+                            else:
+                                pass
+                            subs_managefiles.director(self, 'mk', self.selfcaldir + '/' + str(majc).zfill(2))
+                            mindr_list = masking.calc_dr_min(majdr_list, majc, self.selfcal_phase_minorcycle, self.selfcal_phase_mindr, self.selfcal_phase_minorcycle_function) # List with dynamic range dynamic range for minor cycles
+                            for minc in range(self.selfcal_phase_minorcycle):
+                                if not TNreached:
+                                    if minc == 0: # Create a new dirty image after self-calibration
+                                        invert = lib.miriad('invert')  # Create the dirty image
+                                        invert.vis = self.target
+                                        invert.map = str(majc).zfill(2) + '/map_00'
+                                        invert.beam = str(majc).zfill(2) + '/beam_00'
+                                        invert.imsize = self.selfcal_image_imsize
+                                        invert.cell = self.selfcal_image_cellsize
+                                        invert.stokes = 'i'
+                                        invert.options = 'mfs,sdb,double'
+                                        invert.slop = 1
+                                        invert.robust = -2
+                                        invert.go()
+                                        # Check if dirty image and beam is there and ok
+                                        if os.path.isdir(str(majc).zfill(2) + '/map_00') and os.path.isdir(str(majc).zfill(2) + '/beam_00'):
+                                            selfcaltargetbeamsphasebeamstatus[majc] = True
+                                            selfcaltargetbeamsphasemapstats[majc,:] = imstats.getimagestats(self, str(majc).zfill(2) + '/map_00')
+                                            if qa.checkdirtyimage(self, str(majc).zfill(2) + '/map_00'):
+                                                selfcaltargetbeamsphasemapstatus[majc] = True
+                                            else:
+                                                selfcaltargetbeamsphasemapstatus[majc] = False
+                                                selfcaltargetbeamsphasestatus = False
+                                                logger.error('Beam ' + self.beam + ': Dirty image for major cycle ' + str(majc) + ' is invalid. Stopping self calibration!')
+                                                stop = True
+                                                selfcaltargetbeamsphasefinalmajor = majc
+                                                selfcaltargetbeamsphasefinalminor = minc
+                                                break
+                                        else:
+                                            selfcaltargetbeamsphasebeamstatus[majc] = False
+                                            selfcaltargetbeamsphasestatus = False
+                                            logger.error('Beam ' + self.beam + ': Dirty image or beam for major cycle ' + str(majc) + ' not found. Stopping self-calibration!')
+                                            stop = True
+                                            selfcaltargetbeamsphasefinalmajor = majc
+                                            selfcaltargetbeamsphasefinalminor = minc
+                                            break
+                                        dirtystats = imstats.getimagestats(self, str(majc).zfill(2) + '/map_00') # Min, max, rms of the dirty image
+                                        TNdr = masking.calc_theoretical_noise_dr(dirtystats[1], TN, self.selfcal_phase_nsigma) # Theoretical noise dynamic range
+                                        DRdr = masking.calc_dynamic_range_dr(mindr_list, minc, self.selfcal_phase_mindr) # Dynamic range dynamic range
+                                        Ndr = masking.calc_noise_dr(minc, majc, self.selfcal_phase_c0) # Noise dynamic range
+                                        TNth = masking.calc_theoretical_noise_threshold(dirtystats[1], TNdr) # Theoretical noise threshold
+                                        DRth = masking.calc_dynamic_range_threshold(dirtystats[1], DRdr) # Dynamic range threshold
+                                        Nth = masking.calc_noise_threshold(dirtystats[1], Ndr) # Noise threshold
+                                        Mth = masking.calc_mask_threshold(TNth, Nth, DRth) # Masking threshold
+                                        Cc = masking.calc_clean_cutoff(Mth[0], self.selfcal_phase_c1) # Clean cutoff
+                                        selfcaltargetbeamsphasemaskthreshold[majc, minc] = Mth[0]
+                                        selfcaltargetbeamsphasethresholdtype[majc, minc] = Mth[1]
+                                        selfcaltargetbeamsphasecleanthreshold[majc, minc] = Cc
+                                        if majc == 0: # Create mask from dirty image in the first major cycle
+                                            beampars = masking.get_beam(self, invert.map, invert.beam)
+                                            masking.create_mask(self, str(majc).zfill(2) + '/map_00', str(majc).zfill(2) + '/mask_00', Mth[0], TN, beampars=beampars, rms_map=False)
+                                        else: # Otherwise copy the mask from the last minor cycle of the previous major iteration
+                                            subs_managefiles.director(self, 'cp', str(majc).zfill(2) + '/mask_00', file_=str(majc-1).zfill(2) + '/mask_' + str(self.selfcal_phase_minorcycle-1).zfill(2))
+                                        # Check if mask is there and ok
+                                        if os.path.isdir(str(majc).zfill(2) + '/mask_00'):
+                                            selfcaltargetbeamsphasemaskstats[majc, minc, :] = imstats.getmaskstats(self, str(majc).zfill(2) + '/mask_00', self.selfcal_image_imsize)
+                                            if qa.checkmaskimage(self, str(majc).zfill(2) + '/mask_00'):
+                                                selfcaltargetbeamsphasemaskstatus[majc, minc] = True
+                                            else:
+                                                selfcaltargetbeamsphasemaskstatus[majc, minc] = False
+                                                selfcaltargetbeamsphasestatus = False
+                                                logger.error('Beam ' + self.beam + ': Mask image for cycle ' + str(majc) + '/' + str(minc) + ' is invalid. Stopping self-calibration!')
+                                                stop = True
+                                                selfcaltargetbeamsphasefinalmajor = majc
+                                                selfcaltargetbeamsphasefinalminor = minc
+                                                break
+                                        else:
+                                            selfcaltargetbeamsphasemaskstatus[majc, minc] = False
+                                            selfcaltargetbeamsphasestatus = False
+                                            logger.error('Beam ' + self.beam + ': Mask image for cycle ' + str(majc) + '/' + str(minc) + ' not found. Stopping self-calibration!')
+                                            stop = True
+                                            selfcaltargetbeamsphasefinalmajor = majc
+                                            selfcaltargetbeamsphasefinalminor = minc
+                                            break
+                                        mfclean = lib.miriad('mfclean')  # Clean the image down to the calculated threshold
+                                        mfclean.map = str(majc).zfill(2) + '/map_00'
+                                        mfclean.beam = str(majc).zfill(2) + '/beam_00'
+                                        mfclean.out = str(majc).zfill(2) + '/model_00'
+                                        mfclean.cutoff = Cc
+                                        mfclean.niters = 1000000
+                                        mfclean.region = '"' + 'mask(' + str(majc).zfill(2) + '/mask_00)' + '"'
+                                        mfclean.go()
+                                        # Check if clean component image is there and ok
+                                        if os.path.isdir(str(majc).zfill(2) + '/model_00'):
+                                            selfcaltargetbeamsphasemodelstats[majc, minc, :] = imstats.getmodelstats(self, str(majc).zfill(2) + '/model_00')
+                                            if qa.checkmodelimage(self, str(majc).zfill(2) + '/model_00'):
+                                                selfcaltargetbeamsphasemodelstatus[majc, minc] = True
+                                            else:
+                                                selfcaltargetbeamsphasemodelstatus[majc, minc] = False
+                                                selfcaltargetbeamsphasestatus = False
+                                                logger.error('Beam ' + self.beam + ': Clean component image for cycle ' + str(majc) + '/' + str(minc) + ' is invalid. Stopping self-calibration!')
+                                                stop = True
+                                                selfcaltargetbeamsphasefinalmajor = majc
+                                                selfcaltargetbeamsphasefinalminor = minc
+                                                break
+                                        else:
+                                            selfcaltargetbeamsphasemodelstatus[majc, minc] = False
+                                            selfcaltargetbeamsphasestatus = False
+                                            logger.error('Beam ' + self.beam + ': Clean component image for cycle ' + str(majc) + '/' + str(minc) + ' not found. Stopping self-calibration!')
+                                            stop = True
+                                            selfcaltargetbeamsphasefinalmajor = majc
+                                            selfcaltargetbeamsphasefinalminor = minc
+                                            break
+                                        restor = lib.miriad('restor') # Create the restored image
+                                        restor.model = str(majc).zfill(2) + '/model_00'
+                                        restor.beam = str(majc).zfill(2) + '/beam_00'
+                                        restor.map = str(majc).zfill(2) + '/map_00'
+                                        restor.out = str(majc).zfill(2) + '/image_00'
+                                        restor.mode = 'clean'
+                                        restor.go()
+                                        # Check if restored image is there and ok
+                                        if os.path.isdir(str(majc).zfill(2) + '/image_00'):
+                                            selfcaltargetbeamsphaseimagestats[majc, minc, :] = imstats.getimagestats(self, str(majc).zfill(2) + '/image_00')
+                                            if qa.checkrestoredimage(self, str(majc).zfill(2) + '/image_00'):
+                                                selfcaltargetbeamsphaseimagestatus[majc, minc] = True
+                                            else:
+                                                selfcaltargetbeamsphaseimagestatus[majc, minc] = False
+                                                selfcaltargetbeamsphasestatus = False
+                                                logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(majc) + '/' + str(minc) + ' is invalid. Stopping self-calibration!')
+                                                stop = True
+                                                selfcaltargetbeamsphasefinalmajor = majc
+                                                selfcaltargetbeamsphasefinalminor = minc
+                                                break
+                                        else:
+                                            selfcaltargetbeamsphaseimagestatus[majc, minc] = False
+                                            selfcaltargetbeamsphasestatus = False
+                                            logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(majc) + '/' + str(minc) + ' not found. Stopping self-calibration!')
+                                            stop = True
+                                            selfcaltargetbeamsphasefinalmajor = majc
+                                            selfcaltargetbeamsphasefinalminor = minc
+                                            break
+                                        restor.mode = 'residual' # Create the residual image
+                                        restor.out = str(majc).zfill(2) + '/residual_00'
+                                        restor.go()
+                                        residualstats = imstats.getimagestats(self, str(majc).zfill(2) + '/residual_00') # Min, max, rms of the residual image
+                                        selfcaltargetbeamsphaseresidualstats[majc, minc, :] = residualstats
+                                        currdr = dirtystats[1]/residualstats[1]
+                                        logger.info('Beam ' + self.beam + ': Dynamic range is ' + '%.3f' % currdr + ' for cycle ' + str(majc) + '/' + str(minc))
+                                        selfcaltargetbeamsphasefinalminor = minc
+                                        if Mth[1] == 'TN':
+                                            TNreached = True
+                                            logger.info('Beam ' + self.beam + ': Theoretical noise threshold reached. Using last model for final self-calibration!')
+                                        else:
+                                            TNreached = False
+                                    else: # Use the first clean model to continue cleaning
+                                        TNdr = masking.calc_theoretical_noise_dr(dirtystats[1], TN, self.selfcal_phase_nsigma) # Theoretical noise dynamic range
+                                        DRdr = masking.calc_dynamic_range_dr(mindr_list, minc, self.selfcal_phase_mindr) # Dynamic range dynamic range
+                                        Ndr = masking.calc_noise_dr(minc, majc, self.selfcal_phase_c0) # Noise dynamic range
+                                        TNth = masking.calc_theoretical_noise_threshold(dirtystats[1], TNdr) # Theoretical noise threshold
+                                        DRth = masking.calc_dynamic_range_threshold(dirtystats[1], DRdr) # Dynamic range threshold
+                                        Nth = masking.calc_noise_threshold(dirtystats[1], Ndr) # Noise threshold
+                                        Mth = masking.calc_mask_threshold(TNth, Nth, DRth) # Masking threshold
+                                        Cc = masking.calc_clean_cutoff(Mth[0], self.selfcal_phase_c1) # Clean cutoff
+                                        selfcaltargetbeamsphasemaskthreshold[majc, minc] = Mth[0]
+                                        selfcaltargetbeamsphasethresholdtype[majc, minc] = Mth[1]
+                                        selfcaltargetbeamsphasecleanthreshold[majc, minc] = Cc
+                                        masking.create_mask(self, str(majc).zfill(2) + '/image_' + str(minc-1).zfill(2), str(majc).zfill(2) + '/mask_' + str(minc).zfill(2), Mth[0], TN, beampars=None)
+                                        # Check if mask is there and ok
+                                        if os.path.isdir(str(majc).zfill(2) + '/mask_' + str(minc).zfill(2)):
+                                            selfcaltargetbeamsphasemaskstats[majc, minc, :] = imstats.getmaskstats(self, str(majc).zfill(2) + '/mask_' + str(minc).zfill(2), self.selfcal_image_imsize)
+                                            if qa.checkmaskimage(self, str(majc).zfill(2) + '/mask_' + str(minc).zfill(2)):
+                                                selfcaltargetbeamsphasemaskstatus[majc, minc] = True
+                                            else:
+                                                selfcaltargetbeamsphasemaskstatus[majc, minc] = False
+                                                selfcaltargetbeamsphasestatus = False
+                                                msg = 'Beam ' + self.beam + ': Mask image for cycle ' + str(majc) + '/' + str(minc) + ' is invalid. Stopping self-calibration!'
+                                                logger.error(msg)
+                                                raise ApercalException(msg)
+                                                stop = True
+                                                selfcaltargetbeamsphasefinalmajor = majc
+                                                selfcaltargetbeamsphasefinalminor = minc
+                                                break
+                                        else:
+                                            selfcaltargetbeamsphasemaskstatus[majc, minc] = False
+                                            selfcaltargetbeamsphasestatus = False
+                                            msg = 'Beam ' + self.beam + ': Mask image for cycle ' + str(majc) + '/' + str(minc) + ' not found. Stopping self-calibration!'
+                                            logger.error(msg)
+                                            raise ApercalException(msg)
+                                            stop = True
+                                            selfcaltargetbeamsphasefinalmajor = majc
+                                            selfcaltargetbeamsphasefinalminor = minc
+                                            break
+                                        mfclean = lib.miriad('mfclean')  # Clean the image down to the calculated threshold
+                                        mfclean.map = str(majc).zfill(2) + '/map_00'
+                                        mfclean.beam = str(majc).zfill(2) + '/beam_00'
+                                        mfclean.model = str(majc).zfill(2) + '/model_' + str(minc-1).zfill(2)
+                                        mfclean.out = str(majc).zfill(2) + '/model_' + str(minc).zfill(2)
+                                        mfclean.cutoff = Cc
+                                        mfclean.niters = 1000000
+                                        mfclean.region = '"' + 'mask(' + str(majc).zfill(2) + '/mask_' + str(minc).zfill(2) + ')' + '"'
+                                        mfclean.go()
+                                        # Check if clean component image is there and ok
+                                        if os.path.isdir(str(majc).zfill(2) + '/model_' + str(minc).zfill(2)):
+                                            selfcaltargetbeamsphasemodelstats[majc, minc, :] = imstats.getmodelstats(self, str(majc).zfill(2) + '/model_' + str(minc).zfill(2))
+                                            if qa.checkmodelimage(self, str(majc).zfill(2) + '/model_' + str(minc).zfill(2)):
+                                                selfcaltargetbeamsphasemodelstatus[majc, minc] = True
+                                            else:
+                                                selfcaltargetbeamsphasemodelstatus[majc, minc] = False
+                                                selfcaltargetbeamsphasestatus = False
+                                                msg = 'Beam ' + self.beam + ': Clean component image for cycle ' + str(majc) + '/' + str(minc) + ' is invalid. Stopping self-calibration!'
+                                                logger.error(msg)
+                                                raise ApercalException(msg)
+                                                stop = True
+                                                selfcaltargetbeamsphasefinalmajor = majc
+                                                selfcaltargetbeamsphasefinalminor = minc
+                                                break
+                                        else:
+                                            selfcaltargetbeamsphasemodelstatus[majc, minc] = False
+                                            selfcaltargetbeamsphasestatus = False
+                                            msg = 'Beam ' + self.beam + ': Clean component image for cycle ' + str(majc) + '/' + str(minc) + ' not found. Stopping self-calibration!'
+                                            logger.error(msg)
+                                            raise ApercalException(msg)
+                                            stop = True
+                                            selfcaltargetbeamsphasefinalmajor = majc
+                                            selfcaltargetbeamsphasefinalminor = minc
+                                            break
+                                        restor = lib.miriad('restor') # Create the restored image
+                                        restor.model = str(majc).zfill(2) + '/model_' + str(minc).zfill(2)
+                                        restor.beam = str(majc).zfill(2) + '/beam_00'
+                                        restor.map = str(majc).zfill(2) + '/map_00'
+                                        restor.out = str(majc).zfill(2) + '/image_' + str(minc).zfill(2)
+                                        restor.mode = 'clean'
+                                        restor.go()
+                                        # Check if restored image is there and ok
+                                        if os.path.isdir(str(majc).zfill(2) + '/image_' + str(minc).zfill(2)):
+                                            selfcaltargetbeamsphaseimagestats[majc, minc, :] = imstats.getimagestats(self, str(majc).zfill(2) + '/image_00')
+                                            if qa.checkrestoredimage(self, str(majc).zfill(2) + '/image_' + str(minc).zfill(2)):
+                                                selfcaltargetbeamsphaseimagestatus[majc, minc] = True
+                                            else:
+                                                selfcaltargetbeamsphaseimagestatus[majc, minc] = False
+                                                selfcaltargetbeamsphasestatus = False
+                                                logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(majc) + '/' + str(minc) + ' is invalid. Stopping self-calibration!')
+                                                stop = True
+                                                selfcaltargetbeamsphasefinalmajor = majc
+                                                selfcaltargetbeamsphasefinalminor = minc
+                                                break
+                                        else:
+                                            selfcaltargetbeamsphaseimagestatus[majc, minc] = False
+                                            selfcaltargetbeamsphasestatus = False
+                                            logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(majc) + '/' + str(minc) + ' not found. Stopping self-calibration!')
+                                            stop = True
+                                            selfcaltargetbeamsphasefinalmajor = majc
+                                            selfcaltargetbeamsphasefinalminor = minc
+                                            break
+                                        restor.mode = 'residual' # Create the residual image
+                                        restor.out = str(majc).zfill(2) + '/residual_' + str(minc).zfill(2)
+                                        restor.go()
+                                        residualstats = imstats.getimagestats(self, str(majc).zfill(2) + '/residual_' + str(minc).zfill(2)) # Min, max, rms of the residual image
+                                        selfcaltargetbeamsphaseresidualstats[majc, minc, :] = residualstats
+                                        currdr = dirtystats[1]/residualstats[1]
+                                        logger.info('Beam ' + self.beam + ': Dynamic range is ' + '%.3f' % currdr + ' for cycle ' + str(majc) + '/' + str(minc))
+                                        selfcaltargetbeamsphasefinalminor = minc
+                                        if Mth[1] == 'TN':
+                                            TNreached = True
+                                            logger.info('Beam ' + self.beam + ': Theoretical noise threshold reached. Using last model for final self-calibration!')
+                                        else:
+                                            TNreached = False
+                                else:
+                                    pass
+                            # Do the self calibration in the normal cycle
+                            selfcaltargetbeamsphasefinalmajor = majc
+                            selfcaltargetbeamsphasefinalminor = minc
+                            selfcal = lib.miriad('selfcal')
+                            selfcal.vis = self.target
+                            selfcal.select = '"' + 'uvrange(' + str(self.selfcal_phase_uvmin[majc]) + ',' + str(self.selfcal_phase_uvmax[majc]) + ')"'
+                            selfcal.model = str(majc).zfill(2) + '/model_' + str(minc).zfill(2)
+                            if self.selfcal_phase_solint == 'auto':
+                                selfcal.interval = calc_scal_interval(selfcaltargetbeamsphasemodelstats[majc, minc, 1], TN, 720, 66, self.selfcal_phase_nfbin, 2, 3.0, majc+1)
+                            else:
+                                selfcal.interval = self.selfcal_phase_solint[majc]
+                            if self.selfcal_refant == '': # Choose reference antenna if given
+                                pass
+                            else:
+                                selfcal.refant = self.selfcal_refant
+                            selfcal.options = 'phase,mfs'
+                            selfcal.nfbin = self.selfcal_phase_nfbin
+                            selfcal.go()
                         else:
-                            selfcal.interval = self.selfcal_phase_solint[-1]
-                        if self.selfcal_refant == '': # Choose reference antenna if given
-                            pass
-                        else:
-                            selfcal.refant = self.selfcal_refant
-                        selfcal.options = 'phase,mfs'
-                        selfcal.nfbin = self.selfcal_phase_nfbin
-                        selfcal.go()
-            # Check final residual image for gaussianity, we should add more metrics here to check selfcal
-            if TNreached or (self.selfcal_phase_minorcycle == selfcaltargetbeamsphasefinalminor and self.selfcal_phase_majorcycle == selfcaltargetbeamsphasefinalmajor):
-                if qa.checkimagegaussianity(self, str(selfcaltargetbeamsphasefinalmajor).zfill(2) + '/residual_' + str(selfcaltargetbeamsphasefinalminor).zfill(2), self.selfcal_phase_gaussianity):
-                    selfcaltargetbeamsphaseresidualstatus = True
-                    selfcaltargetbeamsphasestatus = True
-                    logger.info('Beam ' + self.beam + ': Iterative phase self calibration successfully done!')
+                            # When theoretical noise is reached, do a last self-calibration round
+                            selfcal = lib.miriad('selfcal')
+                            selfcal.vis = self.target
+                            selfcal.select = '"' + 'uvrange(' + str(self.selfcal_phase_uvmin[-1]) + ',' + str(self.selfcal_phase_uvmax[-1]) + ')"'
+                            selfcal.model = str(selfcaltargetbeamsphasefinalmajor).zfill(2) + '/model_' + str(selfcaltargetbeamsphasefinalminor).zfill(2) # Update model via param file
+                            if self.selfcal_phase_solint == 'auto':
+                                selfcal.interval = calc_scal_interval(selfcaltargetbeamsphasemodelstats[selfcaltargetbeamsphasefinalmajor, selfcaltargetbeamsphasefinalminor, 1], TN, 720, 66, self.selfcal_phase_nfbin, 2, 3.0, majc+1)
+                            else:
+                                selfcal.interval = self.selfcal_phase_solint[-1]
+                            if self.selfcal_refant == '': # Choose reference antenna if given
+                                pass
+                            else:
+                                selfcal.refant = self.selfcal_refant
+                            selfcal.options = 'phase,mfs'
+                            selfcal.nfbin = self.selfcal_phase_nfbin
+                            selfcal.go()
+                # Check final residual image for gaussianity, we should add more metrics here to check selfcal
+                if TNreached or (self.selfcal_phase_minorcycle == selfcaltargetbeamsphasefinalminor and self.selfcal_phase_majorcycle == selfcaltargetbeamsphasefinalmajor):
+                    if qa.checkimagegaussianity(self, str(selfcaltargetbeamsphasefinalmajor).zfill(2) + '/residual_' + str(selfcaltargetbeamsphasefinalminor).zfill(2), self.selfcal_phase_gaussianity):
+                        selfcaltargetbeamsphaseresidualstatus = True
+                        selfcaltargetbeamsphasestatus = True
+                        logger.info('Beam ' + self.beam + ': Iterative phase self calibration successfully done!')
+                    else:
+                        selfcaltargetbeamsphaseresidualstatus = False
+                        selfcaltargetbeamsphasestatus = False
+                        logger.warning('Beam ' + self.beam + ': Final residual image shows non-gaussian statistics. Phase self-calibration was not successful!')
                 else:
-                    selfcaltargetbeamsphaseresidualstatus = False
                     selfcaltargetbeamsphasestatus = False
-                    logger.warning('Beam ' + self.beam + ': Final residual image shows non-gaussian statistics. Phase self-calibration was not successful!')
+                    logger.warning('Beam ' + self.beam + ': Iterative phase self-calibration did not reach the final cycle or the theoretical noise. Calibration was not successful.')
             else:
-                selfcaltargetbeamsphasestatus = False
-                logger.warning('Beam ' + self.beam + ': Iterative phase self-calibration did not reach the final cycle or the theoretical noise. Calibration was not successful.')
+                selfcaltargetbeamsphasestatus = True
+                logger.info('Beam ' + self.beam + ': Phase self-calibration was already successfully executed!')
         else:
-            logger.warning('Beam ' + self.beam + ': Not doing iterative phase self-calibration!')
+            logger.warning('Beam ' + self.beam + ': Phase self-calibration disabled!')
 
         # Save the derived parameters to the parameter file
 
@@ -716,337 +720,343 @@ class scal(BaseModule):
             subs_setinit.setinitdirs(self)
             subs_setinit.setdatasetnamestomiriad(self)
             subs_managefiles.director(self, 'ch', self.selfcaldir)
-            # Check if phase self-calibration was successful
-            phasestatus = subs_param.get_param(self, beam + '_targetbeams_phase_status')
-            if phasestatus:
-                logger.info('Beam ' + self.beam + ': Amplitude self calibration')
-                # Apply the phase self-calibration
-                uvaver = lib.miriad('uvaver')
-                uvaver.vis = self.target
-                uvaver.out = self.target.rstrip('.mir') + '_amp.mir'
-                uvaver.go()
-                # Check if dataset was copied correctly
-                if os.path.isdir(self.target.rstrip('.mir') + '_amp.mir'):
-                    selfcaltargetbeamsampapplystatus = True
-                    subs_managefiles.director(self, 'mk', self.selfcaldir + '/amp') # Create the amplitude self-calibration directory
-                    phasemajor = subs_param.get_param(self, beam + '_targetbeams_phase_final_majorcycle') # Get the number of the last iteration during phase selfcal
-                    phaseminor = subs_param.get_param(self, beam + '_targetbeams_phase_final_minorcycle')
-                    lastphasemapmax = subs_param.get_param(self, beam + '_targetbeams_phase_mapstats')[phasemajor, 1]
-                    lastphaseresidualmax = subs_param.get_param(self, beam + '_targetbeams_phase_residualstats')[phasemajor, phaseminor, 1]
-                    lastphasedr = lastphasemapmax/lastphaseresidualmax
-                    mindr_list = masking.calc_dr_amp(lastphasedr, self.selfcal_amp_dr0, self.selfcal_amp_minorcycle, self.selfcal_amp_minorcycle_function)  # List with dynamic range dynamic range for minor cycles
-                    gaussianity, TN = masking.get_theoretical_noise(self, self.target.rstrip('.mir') + '_amp.mir')  # Gaussianity test and theoretical noise calculation using Stokes V image
-                    if gaussianity:
-                        pass
-                    else:
-                        logger.warning('Beam ' + self.beam + ': Stokes V image shows non-gaussian distribution. Your theoretical noise value might be off!')
-                    logger.info('Beam ' + self.beam + ': Theoretical noise is ' + '%.6f' % TN + ' Jy')
-                    TNreached = False  # Stop self-calibration if theoretical noise is reached
-                    stop = False
-                    for minc in range(self.selfcal_amp_minorcycle):
-                        if not TNreached:
-                            if minc == 0:  # Create a new dirty image after phase self-calibration
-                                invert = lib.miriad('invert')  # Create the dirty image
-                                invert.vis = self.target.rstrip('.mir') + '_amp.mir'
-                                invert.map = 'amp/map_00'
-                                invert.beam = 'amp/beam_00'
-                                invert.imsize = self.selfcal_image_imsize
-                                invert.cell = self.selfcal_image_cellsize
-                                invert.stokes = 'i'
-                                invert.options = 'mfs,sdb,double'
-                                invert.slop = 1
-                                invert.robust = -2
-                                invert.go()
-                                # Check if dirty image and beam is there and ok
-                                if os.path.isdir('amp/map_00') and os.path.isdir('amp/beam_00'):
-                                    selfcaltargetbeamsampbeamstatus = True
-                                    selfcaltargetbeamsampmapstats[:] = imstats.getimagestats(self, 'amp/map_00')
-                                    if qa.checkdirtyimage(self, 'amp/map_00'):
-                                        selfcaltargetbeamsampmapstatus = True
+            if not selfcaltargetbeamsampstatus:
+                # Check if phase self-calibration was successful
+                phasestatus = subs_param.get_param(self, beam + '_targetbeams_phase_status')
+                if phasestatus:
+                    logger.info('Beam ' + self.beam + ': Amplitude self calibration')
+                    # Apply the phase self-calibration
+                    uvaver = lib.miriad('uvaver')
+                    uvaver.vis = self.target
+                    uvaver.out = self.target.rstrip('.mir') + '_amp.mir'
+                    uvaver.go()
+                    # Check if dataset was copied correctly
+                    if os.path.isdir(self.target.rstrip('.mir') + '_amp.mir'):
+                        selfcaltargetbeamsampapplystatus = True
+                        subs_managefiles.director(self, 'mk', self.selfcaldir + '/amp') # Create the amplitude self-calibration directory
+                        phasemajor = subs_param.get_param(self, beam + '_targetbeams_phase_final_majorcycle') # Get the number of the last iteration during phase selfcal
+                        phaseminor = subs_param.get_param(self, beam + '_targetbeams_phase_final_minorcycle')
+                        lastphasemapmax = subs_param.get_param(self, beam + '_targetbeams_phase_mapstats')[phasemajor, 1]
+                        lastphaseresidualmax = subs_param.get_param(self, beam + '_targetbeams_phase_residualstats')[phasemajor, phaseminor, 1]
+                        lastphasedr = lastphasemapmax/lastphaseresidualmax
+                        mindr_list = masking.calc_dr_amp(lastphasedr, self.selfcal_amp_dr0, self.selfcal_amp_minorcycle, self.selfcal_amp_minorcycle_function)  # List with dynamic range dynamic range for minor cycles
+                        gaussianity, TN = masking.get_theoretical_noise(self, self.target.rstrip('.mir') + '_amp.mir')  # Gaussianity test and theoretical noise calculation using Stokes V image
+                        if gaussianity:
+                            pass
+                        else:
+                            logger.warning('Beam ' + self.beam + ': Stokes V image shows non-gaussian distribution. Your theoretical noise value might be off!')
+                        logger.info('Beam ' + self.beam + ': Theoretical noise is ' + '%.6f' % TN + ' Jy')
+                        TNreached = False  # Stop self-calibration if theoretical noise is reached
+                        stop = False
+                        for minc in range(self.selfcal_amp_minorcycle):
+                            if not TNreached:
+                                if minc == 0:  # Create a new dirty image after phase self-calibration
+                                    invert = lib.miriad('invert')  # Create the dirty image
+                                    invert.vis = self.target.rstrip('.mir') + '_amp.mir'
+                                    invert.map = 'amp/map_00'
+                                    invert.beam = 'amp/beam_00'
+                                    invert.imsize = self.selfcal_image_imsize
+                                    invert.cell = self.selfcal_image_cellsize
+                                    invert.stokes = 'i'
+                                    invert.options = 'mfs,sdb,double'
+                                    invert.slop = 1
+                                    invert.robust = -2
+                                    invert.go()
+                                    # Check if dirty image and beam is there and ok
+                                    if os.path.isdir('amp/map_00') and os.path.isdir('amp/beam_00'):
+                                        selfcaltargetbeamsampbeamstatus = True
+                                        selfcaltargetbeamsampmapstats[:] = imstats.getimagestats(self, 'amp/map_00')
+                                        if qa.checkdirtyimage(self, 'amp/map_00'):
+                                            selfcaltargetbeamsampmapstatus = True
+                                        else:
+                                            selfcaltargetbeamsampmapstatus = False
+                                            selfcaltargetbeamsampstatus = False
+                                            logger.error('Beam ' + self.beam + ': Dirty image for amplitude self-calibration is invalid. Stopping self calibration!')
+                                            stop = True
+                                            selfcaltargetbeamsampfinalminor = minc
+                                            break
                                     else:
-                                        selfcaltargetbeamsampmapstatus = False
+                                        selfcaltargetbeamsampbeamstatus = False
                                         selfcaltargetbeamsampstatus = False
-                                        logger.error('Beam ' + self.beam + ': Dirty image for amplitude self-calibration is invalid. Stopping self calibration!')
+                                        logger.error('Beam ' + self.beam + ': Dirty image or beam for amplitude self-calibration not found. Stopping self-calibration!')
                                         stop = True
                                         selfcaltargetbeamsampfinalminor = minc
                                         break
-                                else:
-                                    selfcaltargetbeamsampbeamstatus = False
-                                    selfcaltargetbeamsampstatus = False
-                                    logger.error('Beam ' + self.beam + ': Dirty image or beam for amplitude self-calibration not found. Stopping self-calibration!')
-                                    stop = True
-                                    selfcaltargetbeamsampfinalminor = minc
-                                    break
-                                dirtystats = imstats.getimagestats(self, 'amp/map_00')  # Min, max, rms of the dirty image
-                                subs_managefiles.director(self, 'cp', self.selfcaldir + '/amp/' + 'mask_00', file_=self.selfcaldir + '/' + str(phasemajor).zfill(2) + '/mask_' + str(phaseminor).zfill(2))  # Copy the last mask from the phase selfcal over
-                                # Check if mask is there and ok
-                                if os.path.isdir('amp/mask_00'):
-                                    selfcaltargetbeamsampmaskstats[minc, :] = imstats.getmaskstats(self, 'amp/mask_00', self.selfcal_image_imsize)
-                                    if qa.checkmaskimage(self, 'amp/mask_00'):
-                                        selfcaltargetbeamsampmaskstatus[minc] = True
+                                    dirtystats = imstats.getimagestats(self, 'amp/map_00')  # Min, max, rms of the dirty image
+                                    subs_managefiles.director(self, 'cp', self.selfcaldir + '/amp/' + 'mask_00', file_=self.selfcaldir + '/' + str(phasemajor).zfill(2) + '/mask_' + str(phaseminor).zfill(2))  # Copy the last mask from the phase selfcal over
+                                    # Check if mask is there and ok
+                                    if os.path.isdir('amp/mask_00'):
+                                        selfcaltargetbeamsampmaskstats[minc, :] = imstats.getmaskstats(self, 'amp/mask_00', self.selfcal_image_imsize)
+                                        if qa.checkmaskimage(self, 'amp/mask_00'):
+                                            selfcaltargetbeamsampmaskstatus[minc] = True
+                                        else:
+                                            selfcaltargetbeamsampmaskstatus[minc] = False
+                                            selfcaltargetbeamsampstatus = False
+                                            logger.error('Beam ' + self.beam + ': Mask image for amplitude self-calibration is invalid. Stopping self-calibration!')
+                                            stop = True
+                                            selfcaltargetbeamsampfinalminor = minc
+                                            break
                                     else:
                                         selfcaltargetbeamsampmaskstatus[minc] = False
                                         selfcaltargetbeamsampstatus = False
-                                        logger.error('Beam ' + self.beam + ': Mask image for amplitude self-calibration is invalid. Stopping self-calibration!')
+                                        logger.error('Beam ' + self.beam + ': Mask image for amplitude self-calibration not found. Stopping self-calibration!')
                                         stop = True
                                         selfcaltargetbeamsampfinalminor = minc
                                         break
-                                else:
-                                    selfcaltargetbeamsampmaskstatus[minc] = False
-                                    selfcaltargetbeamsampstatus = False
-                                    logger.error('Beam ' + self.beam + ': Mask image for amplitude self-calibration not found. Stopping self-calibration!')
-                                    stop = True
-                                    selfcaltargetbeamsampfinalminor = minc
-                                    break
-                                TNdr = masking.calc_theoretical_noise_dr(dirtystats[1], TN, self.selfcal_amp_nsigma)  # Theoretical noise dynamic range
-                                DRdr = masking.calc_dynamic_range_dr(mindr_list, minc, self.selfcal_amp_mindr)  # Dynamic range dynamic range
-                                Ndr = masking.calc_noise_dr(minc, phasemajor+1, self.selfcal_amp_c0)  # Noise dynamic range
-                                TNth = masking.calc_theoretical_noise_threshold(dirtystats[1], TNdr)  # Theoretical noise threshold
-                                DRth = masking.calc_dynamic_range_threshold(dirtystats[1], DRdr)  # Dynamic range threshold
-                                Nth = masking.calc_noise_threshold(dirtystats[1], Ndr)  # Noise threshold
-                                Mth = masking.calc_mask_threshold(TNth, Nth, DRth)  # Masking threshold
-                                Cc = masking.calc_clean_cutoff(Mth[0], self.selfcal_phase_c1)  # Clean cutoff
-                                selfcaltargetbeamsampmaskthreshold[minc] = Mth[0]
-                                selfcaltargetbeamsampthresholdtype[minc] = Mth[1]
-                                selfcaltargetbeamsampcleanthreshold[minc] = Cc
-                                mfclean = lib.miriad('mfclean')  # Clean the image down to the calculated threshold
-                                mfclean.map = 'amp/map_00'
-                                mfclean.beam = 'amp/beam_00'
-                                mfclean.out = 'amp/model_00'
-                                mfclean.cutoff = Cc
-                                mfclean.niters = 1000000
-                                mfclean.region = '"' + 'mask(amp/mask_00)' + '"'
-                                mfclean.go()
-                                # Check if clean component image is there and ok
-                                if os.path.isdir('amp/model_00'):
-                                    selfcaltargetbeamsampmodelstats[minc, :] = imstats.getmodelstats(self, 'amp/model_00')
-                                    if qa.checkmodelimage(self, 'amp/model_00'):
-                                        selfcaltargetbeamsampmodelstatus[minc] = True
+                                    TNdr = masking.calc_theoretical_noise_dr(dirtystats[1], TN, self.selfcal_amp_nsigma)  # Theoretical noise dynamic range
+                                    DRdr = masking.calc_dynamic_range_dr(mindr_list, minc, self.selfcal_amp_mindr)  # Dynamic range dynamic range
+                                    Ndr = masking.calc_noise_dr(minc, phasemajor+1, self.selfcal_amp_c0)  # Noise dynamic range
+                                    TNth = masking.calc_theoretical_noise_threshold(dirtystats[1], TNdr)  # Theoretical noise threshold
+                                    DRth = masking.calc_dynamic_range_threshold(dirtystats[1], DRdr)  # Dynamic range threshold
+                                    Nth = masking.calc_noise_threshold(dirtystats[1], Ndr)  # Noise threshold
+                                    Mth = masking.calc_mask_threshold(TNth, Nth, DRth)  # Masking threshold
+                                    Cc = masking.calc_clean_cutoff(Mth[0], self.selfcal_phase_c1)  # Clean cutoff
+                                    selfcaltargetbeamsampmaskthreshold[minc] = Mth[0]
+                                    selfcaltargetbeamsampthresholdtype[minc] = Mth[1]
+                                    selfcaltargetbeamsampcleanthreshold[minc] = Cc
+                                    mfclean = lib.miriad('mfclean')  # Clean the image down to the calculated threshold
+                                    mfclean.map = 'amp/map_00'
+                                    mfclean.beam = 'amp/beam_00'
+                                    mfclean.out = 'amp/model_00'
+                                    mfclean.cutoff = Cc
+                                    mfclean.niters = 1000000
+                                    mfclean.region = '"' + 'mask(amp/mask_00)' + '"'
+                                    mfclean.go()
+                                    # Check if clean component image is there and ok
+                                    if os.path.isdir('amp/model_00'):
+                                        selfcaltargetbeamsampmodelstats[minc, :] = imstats.getmodelstats(self, 'amp/model_00')
+                                        if qa.checkmodelimage(self, 'amp/model_00'):
+                                            selfcaltargetbeamsampmodelstatus[minc] = True
+                                        else:
+                                            selfcaltargetbeamsampmodelstatus[minc] = False
+                                            selfcaltargetbeamsampstatus = False
+                                            logger.error('Beam ' + self.beam + ': Clean component image for cycle ' + str(minc) + ' is invalid. Stopping self-calibration!')
+                                            stop = True
+                                            selfcaltargetbeamsampfinalminor = minc
+                                            break
                                     else:
                                         selfcaltargetbeamsampmodelstatus[minc] = False
                                         selfcaltargetbeamsampstatus = False
-                                        logger.error('Beam ' + self.beam + ': Clean component image for cycle ' + str(minc) + ' is invalid. Stopping self-calibration!')
+                                        logger.error('Beam ' + self.beam + ': Clean component image for cycle ' + str(minc) + ' not found. Stopping self-calibration!')
                                         stop = True
                                         selfcaltargetbeamsampfinalminor = minc
                                         break
-                                else:
-                                    selfcaltargetbeamsampmodelstatus[minc] = False
-                                    selfcaltargetbeamsampstatus = False
-                                    logger.error('Beam ' + self.beam + ': Clean component image for cycle ' + str(minc) + ' not found. Stopping self-calibration!')
-                                    stop = True
-                                    selfcaltargetbeamsampfinalminor = minc
-                                    break
-                                restor = lib.miriad('restor')  # Create the restored image
-                                restor.model = 'amp/model_00'
-                                restor.beam = 'amp/beam_00'
-                                restor.map = 'amp/map_00'
-                                restor.out = 'amp/image_00'
-                                restor.mode = 'clean'
-                                restor.go()
-                                # Check if restored image is there and ok
-                                if os.path.isdir('amp/image_00'):
-                                    selfcaltargetbeamsampimagestats[minc, :] = imstats.getimagestats(self, 'amp/image_00')
-                                    if qa.checkrestoredimage(self, 'amp/image_00'):
-                                        selfcaltargetbeamsampimagestatus[minc] = True
+                                    restor = lib.miriad('restor')  # Create the restored image
+                                    restor.model = 'amp/model_00'
+                                    restor.beam = 'amp/beam_00'
+                                    restor.map = 'amp/map_00'
+                                    restor.out = 'amp/image_00'
+                                    restor.mode = 'clean'
+                                    restor.go()
+                                    # Check if restored image is there and ok
+                                    if os.path.isdir('amp/image_00'):
+                                        selfcaltargetbeamsampimagestats[minc, :] = imstats.getimagestats(self, 'amp/image_00')
+                                        if qa.checkrestoredimage(self, 'amp/image_00'):
+                                            selfcaltargetbeamsampimagestatus[minc] = True
+                                        else:
+                                            selfcaltargetbeamsampimagestatus[minc] = False
+                                            selfcaltargetbeamsampstatus = False
+                                            logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(minc) + ' is invalid. Stopping self-calibration!')
+                                            stop = True
+                                            selfcaltargetbeamsampfinalminor = minc
+                                            break
                                     else:
                                         selfcaltargetbeamsampimagestatus[minc] = False
                                         selfcaltargetbeamsampstatus = False
-                                        logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(minc) + ' is invalid. Stopping self-calibration!')
+                                        logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(minc) + ' not found. Stopping self-calibration!')
                                         stop = True
                                         selfcaltargetbeamsampfinalminor = minc
                                         break
-                                else:
-                                    selfcaltargetbeamsampimagestatus[minc] = False
-                                    selfcaltargetbeamsampstatus = False
-                                    logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(minc) + ' not found. Stopping self-calibration!')
-                                    stop = True
+                                    restor.mode = 'residual'  # Create the residual image
+                                    restor.out = 'amp/residual_00'
+                                    restor.go()
+                                    residualstats = imstats.getimagestats(self, 'amp/residual_00')  # Min, max, rms of the residual image
+                                    selfcaltargetbeamsampresidualstats[minc, :] = residualstats
+                                    currdr = dirtystats[1] / residualstats[1]
+                                    logger.info('Beam ' + self.beam + ': Dynamic range is ' + '%.3f' % currdr + ' for cycle ' + str(minc))
                                     selfcaltargetbeamsampfinalminor = minc
-                                    break
-                                restor.mode = 'residual'  # Create the residual image
-                                restor.out = 'amp/residual_00'
-                                restor.go()
-                                residualstats = imstats.getimagestats(self, 'amp/residual_00')  # Min, max, rms of the residual image
-                                selfcaltargetbeamsampresidualstats[minc, :] = residualstats
-                                currdr = dirtystats[1] / residualstats[1]
-                                logger.info('Beam ' + self.beam + ': Dynamic range is ' + '%.3f' % currdr + ' for cycle ' + str(minc))
-                                selfcaltargetbeamsampfinalminor = minc
-                                if Mth[1] == 'TN':
-                                    TNreached = True
-                                    logger.info('Beam ' + self.beam + ': Theoretical noise threshold reached. Using last model for final self-calibration!')
+                                    if Mth[1] == 'TN':
+                                        TNreached = True
+                                        logger.info('Beam ' + self.beam + ': Theoretical noise threshold reached. Using last model for final self-calibration!')
+                                    else:
+                                        TNreached = False
                                 else:
-                                    TNreached = False
+                                    TNdr = masking.calc_theoretical_noise_dr(dirtystats[1], TN, self.selfcal_amp_nsigma)  # Theoretical noise dynamic range
+                                    DRdr = masking.calc_dynamic_range_dr(mindr_list, minc, self.selfcal_amp_mindr)  # Dynamic range dynamic range
+                                    Ndr = masking.calc_noise_dr(minc, phasemajor+1, self.selfcal_amp_c0)  # Noise dynamic range
+                                    TNth = masking.calc_theoretical_noise_threshold(dirtystats[1], TNdr)  # Theoretical noise threshold
+                                    DRth = masking.calc_dynamic_range_threshold(dirtystats[1], DRdr)  # Dynamic range threshold
+                                    Nth = masking.calc_noise_threshold(dirtystats[1], Ndr)  # Noise threshold
+                                    Mth = masking.calc_mask_threshold(TNth, Nth, DRth)  # Masking threshold
+                                    Cc = masking.calc_clean_cutoff(Mth[0], self.selfcal_phase_c1)  # Clean cutoff
+                                    selfcaltargetbeamsampmaskthreshold[minc] = Mth[0]
+                                    selfcaltargetbeamsampthresholdtype[minc] = Mth[1]
+                                    selfcaltargetbeamsampcleanthreshold[minc] = Cc
+                                    masking.create_mask(self, 'amp/image_' + str(minc - 1).zfill(2), 'amp/mask_' + str(minc).zfill(2), Mth[0], TN, beampars=None)
+                                    # Check if mask is there and ok
+                                    if os.path.isdir('amp/mask_' + str(minc).zfill(2)):
+                                        selfcaltargetbeamsampmaskstats[minc, :] = imstats.getmaskstats(self, 'amp/mask_' + str(minc).zfill(2), self.selfcal_image_imsize)
+                                        if qa.checkmaskimage(self, 'amp/mask_' + str(minc).zfill(2)):
+                                            selfcaltargetbeamsampmaskstatus[minc] = True
+                                        else:
+                                            selfcaltargetbeamsampmaskstatus[minc] = False
+                                            selfcaltargetbeamsampstatus = False
+                                            logger.error('Beam ' + self.beam + ': Mask image for cycle ' + str(minc) + ' is invalid. Stopping self-calibration!')
+                                            stop = True
+                                            selfcaltargetbeamsampfinalminor = minc
+                                            break
+                                    else:
+                                        selfcaltargetbeamsampmaskstatus[minc] = False
+                                        selfcaltargetbeamsampstatus = False
+                                        logger.error('Beam ' + self.beam + ': Mask image for cycle ' + str(minc) + ' not found. Stopping self-calibration!')
+                                        stop = True
+                                        selfcaltargetbeamsampfinalminor = minc
+                                        break
+                                    mfclean = lib.miriad('mfclean')  # Clean the image down to the calculated threshold
+                                    mfclean.map = 'amp/map_00'
+                                    mfclean.beam = 'amp/beam_00'
+                                    mfclean.model = 'amp/model_' + str(minc - 1).zfill(2)
+                                    mfclean.out = 'amp/model_' + str(minc).zfill(2)
+                                    mfclean.cutoff = Cc
+                                    mfclean.niters = 1000000
+                                    mfclean.region = '"' + 'mask(amp/mask_' + str(minc).zfill(2) + ')' + '"'
+                                    mfclean.go()
+                                    # Check if clean component image is there and ok
+                                    if os.path.isdir('amp/model_' + str(minc).zfill(2)):
+                                        selfcaltargetbeamsampmodelstats[minc, :] = imstats.getmodelstats(self, 'amp/model_' + str(minc).zfill(2))
+                                        if qa.checkmodelimage(self, 'amp/model_' + str(minc).zfill(2)):
+                                            selfcaltargetbeamsampmodelstatus[minc] = True
+                                        else:
+                                            selfcaltargetbeamsampmodelstatus[minc] = False
+                                            selfcaltargetbeamsampstatus = False
+                                            logger.error('Beam ' + self.beam + ': Clean component image for cycle ' + str(minc) + ' is invalid. Stopping self-calibration!')
+                                            stop = True
+                                            selfcaltargetbeamsampfinalminor = minc
+                                            break
+                                    else:
+                                        selfcaltargetbeamsampmodelstatus[minc] = False
+                                        selfcaltargetbeamsampstatus = False
+                                        logger.error('Beam ' + self.beam + ': Clean component image for cycle ' + str(minc) + ' not found. Stopping self-calibration!')
+                                        stop = True
+                                        selfcaltargetbeamsampfinalminor = minc
+                                        break
+                                    restor = lib.miriad('restor')  # Create the restored image
+                                    restor.model = 'amp/model_' + str(minc).zfill(2)
+                                    restor.beam = 'amp/beam_00'
+                                    restor.map = 'amp/map_00'
+                                    restor.out = 'amp/image_' + str(minc).zfill(2)
+                                    restor.mode = 'clean'
+                                    restor.go()
+                                    # Check if restored image is there and ok
+                                    if os.path.isdir('amp/image_' + str(minc).zfill(2)):
+                                        selfcaltargetbeamsampimagestats[minc, :] = imstats.getimagestats(self, 'amp/image_00')
+                                        if qa.checkrestoredimage(self, 'amp/image_' + str(minc).zfill(2)):
+                                            selfcaltargetbeamsampimagestatus[minc] = True
+                                        else:
+                                            selfcaltargetbeamsampimagestatus[minc] = False
+                                            selfcaltargetbeamsampstatus = False
+                                            logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(minc) + ' is invalid. Stopping self-calibration!')
+                                            stop = True
+                                            selfcaltargetbeamsampfinalminor = minc
+                                            break
+                                    else:
+                                        selfcaltargetbeamsampimagestatus[minc] = False
+                                        selfcaltargetbeamsampstatus = False
+                                        logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(minc) + ' not found. Stopping self-calibration!')
+                                        stop = True
+                                        selfcaltargetbeamsampfinalminor = minc
+                                        break
+                                    restor.mode = 'residual'  # Create the residual image
+                                    restor.out = 'amp/residual_' + str(minc).zfill(2)
+                                    restor.go()
+                                    residualstats = imstats.getimagestats(self, 'amp/residual_' + str(minc).zfill(2))  # Min, max, rms of the residual image
+                                    selfcaltargetbeamsampresidualstats[minc, :] = residualstats
+                                    currdr = dirtystats[1] / residualstats[1]
+                                    logger.info('Beam ' + self.beam + ': Dynamic range is ' + '%.3f' % currdr + ' for cycle ' + str(minc))
+                                    selfcaltargetbeamsampfinalminor = minc
+                                    if Mth[1] == 'TN':
+                                        TNreached = True
+                                        logger.info('Beam ' + self.beam + ': Theoretical noise threshold reached. Using last model for final self-calibration!')
+                                    else:
+                                        TNreached = False
+                            else: # If theoretical noise has been reached
+                                break
+                        if not stop:
+                            if not TNreached:
+                                logger.warning('Beam ' + self.beam + ': Theoretical noise limit not reached for final amplitude self-calibration model! Your model might be incomplete!')
                             else:
-                                TNdr = masking.calc_theoretical_noise_dr(dirtystats[1], TN, self.selfcal_amp_nsigma)  # Theoretical noise dynamic range
-                                DRdr = masking.calc_dynamic_range_dr(mindr_list, minc, self.selfcal_amp_mindr)  # Dynamic range dynamic range
-                                Ndr = masking.calc_noise_dr(minc, phasemajor+1, self.selfcal_amp_c0)  # Noise dynamic range
-                                TNth = masking.calc_theoretical_noise_threshold(dirtystats[1], TNdr)  # Theoretical noise threshold
-                                DRth = masking.calc_dynamic_range_threshold(dirtystats[1], DRdr)  # Dynamic range threshold
-                                Nth = masking.calc_noise_threshold(dirtystats[1], Ndr)  # Noise threshold
-                                Mth = masking.calc_mask_threshold(TNth, Nth, DRth)  # Masking threshold
-                                Cc = masking.calc_clean_cutoff(Mth[0], self.selfcal_phase_c1)  # Clean cutoff
-                                selfcaltargetbeamsampmaskthreshold[minc] = Mth[0]
-                                selfcaltargetbeamsampthresholdtype[minc] = Mth[1]
-                                selfcaltargetbeamsampcleanthreshold[minc] = Cc
-                                masking.create_mask(self, 'amp/image_' + str(minc - 1).zfill(2), 'amp/mask_' + str(minc).zfill(2), Mth[0], TN, beampars=None)
-                                # Check if mask is there and ok
-                                if os.path.isdir('amp/mask_' + str(minc).zfill(2)):
-                                    selfcaltargetbeamsampmaskstats[minc, :] = imstats.getmaskstats(self, 'amp/mask_' + str(minc).zfill(2), self.selfcal_image_imsize)
-                                    if qa.checkmaskimage(self, 'amp/mask_' + str(minc).zfill(2)):
-                                        selfcaltargetbeamsampmaskstatus[minc] = True
-                                    else:
-                                        selfcaltargetbeamsampmaskstatus[minc] = False
-                                        selfcaltargetbeamsampstatus = False
-                                        logger.error('Beam ' + self.beam + ': Mask image for cycle ' + str(minc) + ' is invalid. Stopping self-calibration!')
-                                        stop = True
-                                        selfcaltargetbeamsampfinalminor = minc
-                                        break
-                                else:
-                                    selfcaltargetbeamsampmaskstatus[minc] = False
-                                    selfcaltargetbeamsampstatus = False
-                                    logger.error('Beam ' + self.beam + ': Mask image for cycle ' + str(minc) + ' not found. Stopping self-calibration!')
-                                    stop = True
-                                    selfcaltargetbeamsampfinalminor = minc
-                                    break
-                                mfclean = lib.miriad('mfclean')  # Clean the image down to the calculated threshold
-                                mfclean.map = 'amp/map_00'
-                                mfclean.beam = 'amp/beam_00'
-                                mfclean.model = 'amp/model_' + str(minc - 1).zfill(2)
-                                mfclean.out = 'amp/model_' + str(minc).zfill(2)
-                                mfclean.cutoff = Cc
-                                mfclean.niters = 1000000
-                                mfclean.region = '"' + 'mask(amp/mask_' + str(minc).zfill(2) + ')' + '"'
-                                mfclean.go()
-                                # Check if clean component image is there and ok
-                                if os.path.isdir('amp/model_' + str(minc).zfill(2)):
-                                    selfcaltargetbeamsampmodelstats[minc, :] = imstats.getmodelstats(self, 'amp/model_' + str(minc).zfill(2))
-                                    if qa.checkmodelimage(self, 'amp/model_' + str(minc).zfill(2)):
-                                        selfcaltargetbeamsampmodelstatus[minc] = True
-                                    else:
-                                        selfcaltargetbeamsampmodelstatus[minc] = False
-                                        selfcaltargetbeamsampstatus = False
-                                        logger.error('Beam ' + self.beam + ': Clean component image for cycle ' + str(minc) + ' is invalid. Stopping self-calibration!')
-                                        stop = True
-                                        selfcaltargetbeamsampfinalminor = minc
-                                        break
-                                else:
-                                    selfcaltargetbeamsampmodelstatus[minc] = False
-                                    selfcaltargetbeamsampstatus = False
-                                    logger.error('Beam ' + self.beam + ': Clean component image for cycle ' + str(minc) + ' not found. Stopping self-calibration!')
-                                    stop = True
-                                    selfcaltargetbeamsampfinalminor = minc
-                                    break
-                                restor = lib.miriad('restor')  # Create the restored image
-                                restor.model = 'amp/model_' + str(minc).zfill(2)
-                                restor.beam = 'amp/beam_00'
-                                restor.map = 'amp/map_00'
-                                restor.out = 'amp/image_' + str(minc).zfill(2)
-                                restor.mode = 'clean'
-                                restor.go()
-                                # Check if restored image is there and ok
-                                if os.path.isdir('amp/image_' + str(minc).zfill(2)):
-                                    selfcaltargetbeamsampimagestats[minc, :] = imstats.getimagestats(self, 'amp/image_00')
-                                    if qa.checkrestoredimage(self, 'amp/image_' + str(minc).zfill(2)):
-                                        selfcaltargetbeamsampimagestatus[minc] = True
-                                    else:
-                                        selfcaltargetbeamsampimagestatus[minc] = False
-                                        selfcaltargetbeamsampstatus = False
-                                        logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(minc) + ' is invalid. Stopping self-calibration!')
-                                        stop = True
-                                        selfcaltargetbeamsampfinalminor = minc
-                                        break
-                                else:
-                                    selfcaltargetbeamsampimagestatus[minc] = False
-                                    selfcaltargetbeamsampstatus = False
-                                    logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(minc) + ' not found. Stopping self-calibration!')
-                                    stop = True
-                                    selfcaltargetbeamsampfinalminor = minc
-                                    break
-                                restor.mode = 'residual'  # Create the residual image
-                                restor.out = 'amp/residual_' + str(minc).zfill(2)
-                                restor.go()
-                                residualstats = imstats.getimagestats(self, 'amp/residual_' + str(minc).zfill(2))  # Min, max, rms of the residual image
-                                selfcaltargetbeamsampresidualstats[minc, :] = residualstats
-                                currdr = dirtystats[1] / residualstats[1]
-                                logger.info('Beam ' + self.beam + ': Dynamic range is ' + '%.3f' % currdr + ' for cycle ' + str(minc))
-                                selfcaltargetbeamsampfinalminor = minc
-                                if Mth[1] == 'TN':
-                                    TNreached = True
-                                    logger.info('Beam ' + self.beam + ': Theoretical noise threshold reached. Using last model for final self-calibration!')
-                                else:
-                                    TNreached = False
-                        else: # If theoretical noise has been reached
-                            break
-                    if not stop:
-                        if not TNreached:
-                            logger.warning('Beam ' + self.beam + ': Theoretical noise limit not reached for final amplitude self-calibration model! Your model might be incomplete!')
+                                pass
+                            # Do the amplitude self calibration if everything worked ok
+                            selfcal = lib.miriad('selfcal')
+                            selfcal.vis = self.target.rstrip('.mir') + '_amp.mir'
+                            selfcal.select = '"' + 'uvrange(' + str(self.selfcal_amp_uvmin) + ',' + str(self.selfcal_amp_uvmax) + ')"'
+                            selfcal.model = 'amp/model_' + str(selfcaltargetbeamsampfinalminor).zfill(2)
+                            if self.selfcal_amp_solint == 'auto':
+                                selfcal.interval = calc_scal_interval(selfcaltargetbeamsampmodelstats[selfcaltargetbeamsampfinalminor, 1], TN, 720, 66, self.selfcal_amp_nfbin, 2, 10.0, phasemajor + 1)
+                            else:
+                                selfcal.interval = self.selfcal_amp_solint
+                            if self.selfcal_refant == '':  # Choose reference antenna if given
+                                pass
+                            else:
+                                selfcal.refant = self.selfcal_refant
+                            selfcal.options = 'amp,mfs'
+                            selfcal.nfbin = self.selfcal_amp_nfbin
+                            selfcal.go()
+                            if qa.checkimagegaussianity(self, 'amp/residual_' + str(selfcaltargetbeamsampfinalminor).zfill(2), self.selfcal_amp_gaussianity):
+                                selfcaltargetbeamsampresidualstatus = True
+                            else:
+                                selfcaltargetbeamsampresidualstatus = False
+                                logger.error('Beam ' + self.beam + ': Final residual image shows non-gaussian statistics. Amplitude self-calibration was not successful!')
+                            invert = lib.miriad('invert')  # Create a dirty image after final calibration and compare statistics to original one for qualtiy assurance
+                            invert.vis = self.target.rstrip('.mir') + '_amp.mir'
+                            invert.map = 'amp/check_map'
+                            invert.beam = 'amp/check_beam'
+                            invert.imsize = self.selfcal_image_imsize
+                            invert.cell = self.selfcal_image_cellsize
+                            invert.stokes = 'i'
+                            invert.options = 'mfs,sdb,double'
+                            invert.slop = 1
+                            invert.robust = -2
+                            invert.go()
+                            checkstats = imstats.getimagestats(self, 'amp/check_map')
+                            subs_managefiles.director(self, 'rm', 'amp/check_map')
+                            subs_managefiles.director(self, 'rm', 'amp/check_beam')
+                            if np.abs(checkstats[0])/np.abs(dirtystats[0]) >= self.selfcal_amp_ratio or np.abs(dirtystats[0])/np.abs(checkstats[0]) >= self.selfcal_amp_ratio:
+                                minok = False
+                                logger.error('Beam ' + self.beam + ': Discrepeancy between minimum flux of dirty image before and after selfcal!')
+                            else:
+                                minok = True
+                            if np.abs(checkstats[1])/np.abs(dirtystats[1]) >= self.selfcal_amp_ratio or np.abs(dirtystats[1])/np.abs(checkstats[1]) >= self.selfcal_amp_ratio:
+                                maxok = False
+                                logger.error('Beam ' + self.beam + ': Discrepeancy between maximum flux of dirty image before and after selfcal!')
+                            else:
+                                maxok = True
+                            if np.abs(checkstats[2])/np.abs(dirtystats[2]) >= self.selfcal_amp_ratio or np.abs(dirtystats[2])/np.abs(checkstats[2]) >= self.selfcal_amp_ratio:
+                                stdok = False
+                                logger.error('Beam ' + self.beam + ': Discrepeancy between standard deviation of dirty image before and after selfcal!')
+                            else:
+                                stdok = True
+                            if minok == False or maxok == False or stdok == False:
+                                selfcaltargetbeamsampstatus = False
+                                logger.error('Beam ' + self.beam + ': Amplitude self-calibration was not successful!')
+                            else:
+                                selfcaltargetbeamsampstatus = True
+                                logger.info('Beam ' + self.beam + ': Amplitude self-calibration was successful!')
                         else:
-                            pass
-                        # Do the amplitude self calibration if everything worked ok
-                        selfcal = lib.miriad('selfcal')
-                        selfcal.vis = self.target.rstrip('.mir') + '_amp.mir'
-                        selfcal.select = '"' + 'uvrange(' + str(self.selfcal_amp_uvmin) + ',' + str(self.selfcal_amp_uvmax) + ')"'
-                        selfcal.model = 'amp/model_' + str(selfcaltargetbeamsampfinalminor).zfill(2)
-                        if self.selfcal_amp_solint == 'auto':
-                            selfcal.interval = calc_scal_interval(selfcaltargetbeamsampmodelstats[selfcaltargetbeamsampfinalminor, 1], TN, 720, 66, self.selfcal_amp_nfbin, 2, 10.0, phasemajor + 1)
-                        else:
-                            selfcal.interval = self.selfcal_amp_solint
-                        if self.selfcal_refant == '':  # Choose reference antenna if given
-                            pass
-                        else:
-                            selfcal.refant = self.selfcal_refant
-                        selfcal.options = 'amp,mfs'
-                        selfcal.nfbin = self.selfcal_amp_nfbin
-                        selfcal.go()
-                        if qa.checkimagegaussianity(self, 'amp/residual_' + str(selfcaltargetbeamsampfinalminor).zfill(2), self.selfcal_amp_gaussianity):
-                            selfcaltargetbeamsampresidualstatus = True
-                        else:
-                            selfcaltargetbeamsampresidualstatus = False
-                            logger.error('Beam ' + self.beam + ': Final residual image shows non-gaussian statistics. Amplitude self-calibration was not successful!')
-                        invert = lib.miriad('invert')  # Create a dirty image after final calibration and compare statistics to original one for qualtiy assurance
-                        invert.vis = self.target.rstrip('.mir') + '_amp.mir'
-                        invert.map = 'amp/check_map'
-                        invert.beam = 'amp/check_beam'
-                        invert.imsize = self.selfcal_image_imsize
-                        invert.cell = self.selfcal_image_cellsize
-                        invert.stokes = 'i'
-                        invert.options = 'mfs,sdb,double'
-                        invert.slop = 1
-                        invert.robust = -2
-                        invert.go()
-                        checkstats = imstats.getimagestats(self, 'amp/check_map')
-                        subs_managefiles.director(self, 'rm', 'amp/check_map')
-                        subs_managefiles.director(self, 'rm', 'amp/check_beam')
-                        if np.abs(checkstats[0])/np.abs(dirtystats[0]) >= self.selfcal_amp_ratio or np.abs(dirtystats[0])/np.abs(checkstats[0]) >= self.selfcal_amp_ratio:
-                            minok = False
-                            logger.error('Beam ' + self.beam + ': Discrepeancy between minimum flux of dirty image before and after selfcal!')
-                        else:
-                            minok = True
-                        if np.abs(checkstats[1])/np.abs(dirtystats[1]) >= self.selfcal_amp_ratio or np.abs(dirtystats[1])/np.abs(checkstats[1]) >= self.selfcal_amp_ratio:
-                            maxok = False
-                            logger.error('Beam ' + self.beam + ': Discrepeancy between maximum flux of dirty image before and after selfcal!')
-                        else:
-                            maxok = True
-                        if np.abs(checkstats[2])/np.abs(dirtystats[2]) >= self.selfcal_amp_ratio or np.abs(dirtystats[2])/np.abs(checkstats[2]) >= self.selfcal_amp_ratio:
-                            stdok = False
-                            logger.error('Beam ' + self.beam + ': Discrepeancy between standard deviation of dirty image before and after selfcal!')
-                        else:
-                            stdok = True
-                        if minok == False or maxok == False or stdok == False:
                             selfcaltargetbeamsampstatus = False
                             logger.error('Beam ' + self.beam + ': Amplitude self-calibration was not successful!')
-                        else:
-                            selfcaltargetbeamsampstatus = True
-                            logger.info('Beam ' + self.beam + ': Amplitude self-calibration was successful!')
                     else:
+                        selfcaltargetbeamsampapplystatus = False
                         selfcaltargetbeamsampstatus = False
-                        logger.error('Beam ' + self.beam + ': Amplitude self-calibration was not successful!')
+                        logger.error('Beam ' + self.beam + ': Phase self-calibration gains were not applied successfully! Stopping amplitude self-calibration!')
                 else:
-                    selfcaltargetbeamsampapplystatus = False
                     selfcaltargetbeamsampstatus = False
-                    logger.error('Beam ' + self.beam + ': Phase self-calibration gains were not applied successfully! Stopping amplitude self-calibration!')
+                    logger.error('Beam ' + self.beam + ': Phase self-calibration was not successful! Cannot do amplitude self-calibration!')
             else:
-                selfcaltargetbeamsampstatus = False
-                logger.error('Beam ' + self.beam + ': Phase self-calibration was not successful! Cannot do amplitude self-calibration!')
+                selfcaltargetbeamsampstatus = True
+                logger.info('Beam ' + self.beam + ': Amplitude self-calibration was already successfully executed!')
+        else:
+            logger.info('Beam ' + self.beam + ': Amplitude self-calibration disabled!')
 
         # Save the derived parameters to the parameter file
 
@@ -1089,15 +1099,30 @@ class scal(BaseModule):
         PH = np.full((self.NBEAMS), False)
         AM = np.full((self.NBEAMS), False)
 
-        for beam in range(self.NBEAMS):
+        for b in range(self.NBEAMS):
             subs_setinit.setinitdirs(self)
             subs_setinit.setdatasetnamestomiriad(self)
-            beam = 'selfcal_B' + str(self.beam).zfill(2)
-            AV[beam] = subs_param.get_param(self, beam + '_targetbeams_average')
-            FL[beam] = subs_param.get_param(self, beam + '_targetbeams_flagline')
-            PA[beam] = subs_param.get_param(self, beam + '_targetbeams_parametric')
-            PH[beam] = subs_param.get_param(self, beam + '_targetbeams_phase_status')
-            AM[beam] = subs_param.get_param(self, beam + '_targetbeams_amp_status')
+            beam = 'selfcal_B' + str(b).zfill(2)
+            try:
+                AV[b] = subs_param.get_param(self, beam + '_targetbeams_average')
+            except KeyError:
+                AV[b] = False
+            try:
+                FL[b] = subs_param.get_param(self, beam + '_targetbeams_flagline')
+            except KeyError:
+                FL[b] = False
+            try:
+                PA[b] = subs_param.get_param(self, beam + '_targetbeams_parametric')
+            except KeyError:
+                PA[b] = False
+            try:
+                PH[b] = subs_param.get_param(self, beam + '_targetbeams_phase_status')
+            except KeyError:
+                PH[b] = False
+            try:
+                AM[b] = subs_param.get_param(self, beam + '_targetbeams_amp_status')
+            except KeyError:
+                AM[b] = False
 
         # Create the data frame
 
@@ -1121,11 +1146,11 @@ class scal(BaseModule):
         Function to reset the current step and remove all generated selfcal data for the current beam. Be careful! Deletes all data generated in
         this step!
         """
-        subs_setinit.setinitdirs(self)
-        subs_setinit.setdatasetnamestomiriad(self)
-        beam = 'selfcal_B' + str(self.beam).zfill(2)
-        logger.warning('Beam ' + self.beam + ': Deleting all self-calibrated data.')
-        subs_managefiles.director(self, 'rm', self.selfcaldir)
+        subs_managefiles.director(self, 'ch', self.basedir)
+        b = self.beam
+        beam = 'selfcal_B' + str(b).zfill(2)
+        logger.warning('Beam ' + str(b).zfill(2) + ': Deleting all self-calibrated data.')
+        subs_managefiles.director(self, 'rm', self.basedir + str(b).zfill(2) + '/' + self.selfcalsubdir)
         subs_param.del_param(self, beam + '_targetbeams_average')
         subs_param.del_param(self, beam + '_targetbeams_flagline')
         subs_param.del_param(self, beam + '_targetbeams_flagline_channels')
@@ -1171,47 +1196,47 @@ class scal(BaseModule):
         Function to reset the current step and remove all generated selfcal data for the all beams. Be careful! Deletes all data generated in
         this step!
         """
-        for beam in range(self.NBEAMS):
-            subs_setinit.setinitdirs(self)
-            subs_setinit.setdatasetnamestomiriad(self)
-            beam = 'selfcal_B' + str(self.beam).zfill(2)
-            logger.warning('Beam ' + self.beam + ': Deleting all self-calibrated data.')
-            subs_managefiles.director(self, 'rm', self.selfcaldir)
-            subs_param.del_param(self, beam + '_targetbeams_average')
-            subs_param.del_param(self, beam + '_targetbeams_flagline')
-            subs_param.del_param(self, beam + '_targetbeams_flagline_channels')
-            subs_param.del_param(self, beam + '_targetbeams_parametric')
-            subs_param.del_param(self, beam + '_targetbeams_phase_status')
-            subs_param.del_param(self, beam + '_targetbeams_phase_mapstatus')
-            subs_param.del_param(self, beam + '_targetbeams_phase_mapstats')
-            subs_param.del_param(self, beam + '_targetbeams_phase_beamstatus')
-            subs_param.del_param(self, beam + '_targetbeams_phase_maskstatus')
-            subs_param.del_param(self, beam + '_targetbeams_phase_maskstats')
-            subs_param.del_param(self, beam + '_targetbeams_phase_modelstatus')
-            subs_param.del_param(self, beam + '_targetbeams_phase_modelstats')
-            subs_param.del_param(self, beam + '_targetbeams_phase_imagestatus')
-            subs_param.del_param(self, beam + '_targetbeams_phase_imagestats')
-            subs_param.del_param(self, beam + '_targetbeams_phase_residualstatus')
-            subs_param.del_param(self, beam + '_targetbeams_phase_residualstats')
-            subs_param.del_param(self, beam + '_targetbeams_phase_maskthreshold')
-            subs_param.del_param(self, beam + '_targetbeams_phase_cleanthreshold')
-            subs_param.del_param(self, beam + '_targetbeams_phase_thresholdtype')
-            subs_param.del_param(self, beam + '_targetbeams_phase_final_majorcycle')
-            subs_param.del_param(self, beam + '_targetbeams_phase_final_minorcycle')
-            subs_param.del_param(self, beam + '_targetbeams_amp_status')
-            subs_param.del_param(self, beam + '_targetbeams_amp_applystatus')
-            subs_param.del_param(self, beam + '_targetbeams_amp_mapstatus')
-            subs_param.del_param(self, beam + '_targetbeams_amp_mapstats')
-            subs_param.del_param(self, beam + '_targetbeams_amp_beamstatus')
-            subs_param.del_param(self, beam + '_targetbeams_amp_maskstatus')
-            subs_param.del_param(self, beam + '_targetbeams_amp_maskstats')
-            subs_param.del_param(self, beam + '_targetbeams_amp_modelstatus')
-            subs_param.del_param(self, beam + '_targetbeams_amp_modelstats')
-            subs_param.del_param(self, beam + '_targetbeams_amp_imagestatus')
-            subs_param.del_param(self, beam + '_targetbeams_amp_imagestats')
-            subs_param.del_param(self, beam + '_targetbeams_amp_residualstatus')
-            subs_param.del_param(self, beam + '_targetbeams_amp_residualstats')
-            subs_param.del_param(self, beam + '_targetbeams_amp_maskthreshold')
-            subs_param.del_param(self, beam + '_targetbeams_amp_cleanthreshold')
-            subs_param.del_param(self, beam + '_targetbeams_amp_thresholdtype')
-            subs_param.del_param(self, beam + '_targetbeams_amp_final_minorcycle')
+        subs_managefiles.director(self, 'ch', self.basedir)
+        for b in range(self.NBEAMS):
+            beam = 'selfcal_B' + str(b).zfill(2)
+            if os.path.isdir(self.basedir + str(b).zfill(2) + '/' + self.selfcalsubdir):
+                logger.warning('Beam ' + str(b).zfill(2) + ': Deleting all self-calibrated data.')
+                subs_managefiles.director(self, 'rm', self.basedir + str(b).zfill(2) + '/' + self.selfcalsubdir)
+                subs_param.del_param(self, beam + '_targetbeams_average')
+                subs_param.del_param(self, beam + '_targetbeams_flagline')
+                subs_param.del_param(self, beam + '_targetbeams_flagline_channels')
+                subs_param.del_param(self, beam + '_targetbeams_parametric')
+                subs_param.del_param(self, beam + '_targetbeams_phase_status')
+                subs_param.del_param(self, beam + '_targetbeams_phase_mapstatus')
+                subs_param.del_param(self, beam + '_targetbeams_phase_mapstats')
+                subs_param.del_param(self, beam + '_targetbeams_phase_beamstatus')
+                subs_param.del_param(self, beam + '_targetbeams_phase_maskstatus')
+                subs_param.del_param(self, beam + '_targetbeams_phase_maskstats')
+                subs_param.del_param(self, beam + '_targetbeams_phase_modelstatus')
+                subs_param.del_param(self, beam + '_targetbeams_phase_modelstats')
+                subs_param.del_param(self, beam + '_targetbeams_phase_imagestatus')
+                subs_param.del_param(self, beam + '_targetbeams_phase_imagestats')
+                subs_param.del_param(self, beam + '_targetbeams_phase_residualstatus')
+                subs_param.del_param(self, beam + '_targetbeams_phase_residualstats')
+                subs_param.del_param(self, beam + '_targetbeams_phase_maskthreshold')
+                subs_param.del_param(self, beam + '_targetbeams_phase_cleanthreshold')
+                subs_param.del_param(self, beam + '_targetbeams_phase_thresholdtype')
+                subs_param.del_param(self, beam + '_targetbeams_phase_final_majorcycle')
+                subs_param.del_param(self, beam + '_targetbeams_phase_final_minorcycle')
+                subs_param.del_param(self, beam + '_targetbeams_amp_status')
+                subs_param.del_param(self, beam + '_targetbeams_amp_applystatus')
+                subs_param.del_param(self, beam + '_targetbeams_amp_mapstatus')
+                subs_param.del_param(self, beam + '_targetbeams_amp_mapstats')
+                subs_param.del_param(self, beam + '_targetbeams_amp_beamstatus')
+                subs_param.del_param(self, beam + '_targetbeams_amp_maskstatus')
+                subs_param.del_param(self, beam + '_targetbeams_amp_maskstats')
+                subs_param.del_param(self, beam + '_targetbeams_amp_modelstatus')
+                subs_param.del_param(self, beam + '_targetbeams_amp_modelstats')
+                subs_param.del_param(self, beam + '_targetbeams_amp_imagestatus')
+                subs_param.del_param(self, beam + '_targetbeams_amp_imagestats')
+                subs_param.del_param(self, beam + '_targetbeams_amp_residualstatus')
+                subs_param.del_param(self, beam + '_targetbeams_amp_residualstats')
+                subs_param.del_param(self, beam + '_targetbeams_amp_maskthreshold')
+                subs_param.del_param(self, beam + '_targetbeams_amp_cleanthreshold')
+                subs_param.del_param(self, beam + '_targetbeams_amp_thresholdtype')
+                subs_param.del_param(self, beam + '_targetbeams_amp_final_minorcycle')
