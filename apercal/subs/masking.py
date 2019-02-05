@@ -66,7 +66,7 @@ def calc_dr_min(dr_maj, majc, minorcycles, mindr, function_):
 
 def calc_dr_amp(drstart, dr0, minorcycles, function_):
     """
-    Function to calculate the dynamci range limits during the amplitude self-calibration
+    Function to calculate the dynamic range limits during the amplitude self-calibration
     drstart (float): Dynamic range of the last phase calibration mask
     dr0 (float): Coefficient for increasing the dynamic range threshold at each major cycle
     minorcycles (int): Number of maximum minor cycles during cleaning for amplitude calibration
@@ -220,7 +220,7 @@ def calc_clean_cutoff(mask_threshold, c1):
     return clean_cutoff
 
 
-def create_mask(self, image, mask, threshold, theoretical_noise, beampars=None):
+def create_mask(self, image, mask, threshold, theoretical_noise, beampars=None, rms_map=None):
     """
     Creates a mask from an image using pybdsf
     image (string): Input image to use in MIRIAD format
@@ -231,9 +231,9 @@ def create_mask(self, image, mask, threshold, theoretical_noise, beampars=None):
     convim.mirtofits(image, image + '.fits')
     bdsf_threshold = threshold / theoretical_noise
     if beampars is not None:
-        bdsf.process_image(image + '.fits', advanced_opts=True, stop_at='isl', thresh_isl = bdsf_threshold, beam=beampars, adaptive_rms_box=True).export_image(outfile=mask + '.fits', img_format='fits', img_type='island_mask', pad_image=True)
+        bdsf.process_image(image + '.fits', advanced_opts=True, stop_at='isl', thresh_isl = bdsf_threshold, beam=beampars, adaptive_rms_box=True, rms_map=rms_map).export_image(outfile=mask + '.fits', img_format='fits', img_type='island_mask', pad_image=True)
     else:
-        bdsf.process_image(image + '.fits', advanced_opts=True, stop_at='isl', thresh_isl=bdsf_threshold, adaptive_rms_box=True).export_image(outfile=mask + '.fits', img_format='fits', img_type='island_mask', pad_image=True)
+        bdsf.process_image(image + '.fits', advanced_opts=True, stop_at='isl', thresh_isl=bdsf_threshold, adaptive_rms_box=True, rms_map=rms_map).export_image(outfile=mask + '.fits', img_format='fits', img_type='island_mask', pad_image=True)
     convim.fitstomir(mask + '.fits', mask + '_pybdsf')
     maths = lib.miriad('maths')
     maths.out = mask
