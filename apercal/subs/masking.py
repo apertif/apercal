@@ -90,10 +90,12 @@ def calc_dr_amp(drstart, dr0, minorcycles, function_):
     return dr_min
 
 
-def get_theoretical_noise(self, dataset):
+def get_theoretical_noise(self, dataset, gausslimit, startchan=None, endchan=None):
     """
     Subroutine to create a Stokes V image from a dataset and measure the noise, which should be similar to the theoretical one
     image (string): The path to the dataset file.
+    startchan(int): First channel to use for imaging, zero-based
+    endchan(int): Last channel to use for imaging, zero-based
     returns (numpy array): The rms of the image
     """
     invert = lib.miriad('invert')
@@ -106,9 +108,13 @@ def get_theoretical_noise(self, dataset):
     invert.slop = 1
     invert.robust = -2
     invert.options='mfs'
+    if (startchan and endchan) != None:
+        invert.line = 'channel,1,' + str(startchan + 1) + ',' + str(endchan - startchan + 1) + ',' + str(endchan - startchan + 1)
+    else:
+        pass
     invert.go()
     vmax, vmin, vstd = imstats.getimagestats(self, 'vrms')
-    gaussianity = qa.checkimagegaussianity(self, 'vrms', 1e-03)
+    gaussianity = qa.checkimagegaussianity(self, 'vrms', gausslimit)
     if os.path.isdir('vrms') and os.path.isdir('vbeam'):
         managefiles.director(self, 'rm', 'vrms')
         managefiles.director(self, 'rm', 'vbeam')

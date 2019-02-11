@@ -47,6 +47,7 @@ class scal(BaseModule):
     selfcal_image_imsize = None
     selfcal_image_cellsize = None
     selfcal_refant = None
+    selfcal_gaussianity = None
     selfcal_average = None
     selfcal_flagline = None
     selfcal_flagline_sigma = None
@@ -75,10 +76,20 @@ class scal(BaseModule):
     selfcal_phase_uvmax = None
     selfcal_phase_solint = None
     selfcal_phase_nfbin = None
-    selfcal_phase_gaussianity = None
     selfcal_amp = None
     selfcal_amp_auto_limit = None
+    selfcal_amp_minorcycle = None
+    selfcal_amp_minorcycle_function = None
+    selfcal_amp_c0 = None
+    selfcal_amp_c1 = None
+    selfcal_amp_drinit = None
+    selfcal_amp_mindr = None
+    selfcal_amp_nsigma = None
+    selfcal_amp_uvmin = None
+    selfcal_amp_uvmax = None
+    selfcal_amp_solint = None
     selfcal_amp_nfbin = None
+    selfcal_amp_ratio = None
 
     selfcaldir = None
     crosscaldir = None
@@ -266,7 +277,7 @@ class scal(BaseModule):
                 if self.selfcal_parametric_solint == 'auto':
                     parmodelarray = np.loadtxt('pm/model.txt', delimiter=',')
                     parflux = np.sum(parmodelarray[:,2])
-                    gaussianity, TN = masking.get_theoretical_noise(self, self.target)  # Gaussianity test and theoretical noise calculation using Stokes V image
+                    gaussianity, TN = masking.get_theoretical_noise(self, self.target, self.selfcal_gaussianity)  # Gaussianity test and theoretical noise calculation using Stokes V image
                     if self.selfcal_parametric_amp:
                         selfcal.interval = calc_scal_interval(parflux, TN, 720, 66, self.selfcal_parametric_nfbin, 2, 10.0, 1)
                     else:
@@ -344,7 +355,7 @@ class scal(BaseModule):
                     else:
                         if not TNreached:
                             if majc == 0: # Calculate theoretical noise at the beginning of the first major cycle
-                                gaussianity, TN = masking.get_theoretical_noise(self, self.target)  # Gaussianity test and theoretical noise calculation using Stokes V image
+                                gaussianity, TN = masking.get_theoretical_noise(self, self.target, self.selfcal_gaussianity)  # Gaussianity test and theoretical noise calculation using Stokes V image
                                 if gaussianity:
                                     pass
                                 else:
@@ -490,7 +501,7 @@ class scal(BaseModule):
                                         restor.go()
                                         residualstats = imstats.getimagestats(self, str(majc).zfill(2) + '/residual_00') # Min, max, rms of the residual image
                                         selfcaltargetbeamsphaseresidualstats[majc, minc, :] = residualstats
-                                        currdr = dirtystats[1]/residualstats[1]
+                                        currdr = dirtystats[1]/residualstats[2]
                                         logger.info('Beam ' + self.beam + ': Dynamic range is ' + '%.3f' % currdr + ' for cycle ' + str(majc) + '/' + str(minc))
                                         selfcaltargetbeamsphasefinalminor = minc
                                         if Mth[1] == 'TN':
@@ -521,7 +532,6 @@ class scal(BaseModule):
                                                 selfcaltargetbeamsphasestatus = False
                                                 msg = 'Beam ' + self.beam + ': Mask image for cycle ' + str(majc) + '/' + str(minc) + ' is invalid. Stopping self-calibration!'
                                                 logger.error(msg)
-                                                raise ApercalException(msg)
                                                 stop = True
                                                 selfcaltargetbeamsphasefinalmajor = majc
                                                 selfcaltargetbeamsphasefinalminor = minc
@@ -531,7 +541,6 @@ class scal(BaseModule):
                                             selfcaltargetbeamsphasestatus = False
                                             msg = 'Beam ' + self.beam + ': Mask image for cycle ' + str(majc) + '/' + str(minc) + ' not found. Stopping self-calibration!'
                                             logger.error(msg)
-                                            raise ApercalException(msg)
                                             stop = True
                                             selfcaltargetbeamsphasefinalmajor = majc
                                             selfcaltargetbeamsphasefinalminor = minc
@@ -555,7 +564,6 @@ class scal(BaseModule):
                                                 selfcaltargetbeamsphasestatus = False
                                                 msg = 'Beam ' + self.beam + ': Clean component image for cycle ' + str(majc) + '/' + str(minc) + ' is invalid. Stopping self-calibration!'
                                                 logger.error(msg)
-                                                raise ApercalException(msg)
                                                 stop = True
                                                 selfcaltargetbeamsphasefinalmajor = majc
                                                 selfcaltargetbeamsphasefinalminor = minc
@@ -565,7 +573,6 @@ class scal(BaseModule):
                                             selfcaltargetbeamsphasestatus = False
                                             msg = 'Beam ' + self.beam + ': Clean component image for cycle ' + str(majc) + '/' + str(minc) + ' not found. Stopping self-calibration!'
                                             logger.error(msg)
-                                            raise ApercalException(msg)
                                             stop = True
                                             selfcaltargetbeamsphasefinalmajor = majc
                                             selfcaltargetbeamsphasefinalminor = minc
@@ -603,7 +610,7 @@ class scal(BaseModule):
                                         restor.go()
                                         residualstats = imstats.getimagestats(self, str(majc).zfill(2) + '/residual_' + str(minc).zfill(2)) # Min, max, rms of the residual image
                                         selfcaltargetbeamsphaseresidualstats[majc, minc, :] = residualstats
-                                        currdr = dirtystats[1]/residualstats[1]
+                                        currdr = dirtystats[1]/residualstats[2]
                                         logger.info('Beam ' + self.beam + ': Dynamic range is ' + '%.3f' % currdr + ' for cycle ' + str(majc) + '/' + str(minc))
                                         selfcaltargetbeamsphasefinalminor = minc
                                         if Mth[1] == 'TN':
@@ -650,7 +657,7 @@ class scal(BaseModule):
                             selfcal.go()
                 # Check final residual image for gaussianity, we should add more metrics here to check selfcal
                 if TNreached or (self.selfcal_phase_minorcycle == selfcaltargetbeamsphasefinalminor and self.selfcal_phase_majorcycle == selfcaltargetbeamsphasefinalmajor):
-                    if qa.checkimagegaussianity(self, str(selfcaltargetbeamsphasefinalmajor).zfill(2) + '/residual_' + str(selfcaltargetbeamsphasefinalminor).zfill(2), self.selfcal_phase_gaussianity):
+                    if qa.checkimagegaussianity(self, str(selfcaltargetbeamsphasefinalmajor).zfill(2) + '/residual_' + str(selfcaltargetbeamsphasefinalminor).zfill(2), self.selfcal_gaussianity):
                         selfcaltargetbeamsphaseresidualstatus = True
                         selfcaltargetbeamsphasestatus = True
                         logger.info('Beam ' + self.beam + ': Iterative phase self calibration successfully done!')
@@ -740,7 +747,7 @@ class scal(BaseModule):
                         lastphaseresidualmax = subs_param.get_param(self, beam + '_targetbeams_phase_residualstats')[phasemajor, phaseminor, 1]
                         lastphasedr = lastphasemapmax/lastphaseresidualmax
                         mindr_list = masking.calc_dr_amp(lastphasedr, self.selfcal_amp_dr0, self.selfcal_amp_minorcycle, self.selfcal_amp_minorcycle_function)  # List with dynamic range dynamic range for minor cycles
-                        gaussianity, TN = masking.get_theoretical_noise(self, self.target.rstrip('.mir') + '_amp.mir')  # Gaussianity test and theoretical noise calculation using Stokes V image
+                        gaussianity, TN = masking.get_theoretical_noise(self, self.target.rstrip('.mir') + '_amp.mir', self.selfcal_gaussianity)  # Gaussianity test and theoretical noise calculation using Stokes V image
                         if gaussianity:
                             pass
                         else:
@@ -872,7 +879,7 @@ class scal(BaseModule):
                                     restor.go()
                                     residualstats = imstats.getimagestats(self, 'amp/residual_00')  # Min, max, rms of the residual image
                                     selfcaltargetbeamsampresidualstats[minc, :] = residualstats
-                                    currdr = dirtystats[1] / residualstats[1]
+                                    currdr = dirtystats[1] / residualstats[2]
                                     logger.info('Beam ' + self.beam + ': Dynamic range is ' + '%.3f' % currdr + ' for cycle ' + str(minc))
                                     selfcaltargetbeamsampfinalminor = minc
                                     if Mth[1] == 'TN':
@@ -971,7 +978,7 @@ class scal(BaseModule):
                                     restor.go()
                                     residualstats = imstats.getimagestats(self, 'amp/residual_' + str(minc).zfill(2))  # Min, max, rms of the residual image
                                     selfcaltargetbeamsampresidualstats[minc, :] = residualstats
-                                    currdr = dirtystats[1] / residualstats[1]
+                                    currdr = dirtystats[1] / residualstats[2]
                                     logger.info('Beam ' + self.beam + ': Dynamic range is ' + '%.3f' % currdr + ' for cycle ' + str(minc))
                                     selfcaltargetbeamsampfinalminor = minc
                                     if Mth[1] == 'TN':
@@ -1002,7 +1009,7 @@ class scal(BaseModule):
                             selfcal.options = 'amp,mfs'
                             selfcal.nfbin = self.selfcal_amp_nfbin
                             selfcal.go()
-                            if qa.checkimagegaussianity(self, 'amp/residual_' + str(selfcaltargetbeamsampfinalminor).zfill(2), self.selfcal_amp_gaussianity):
+                            if qa.checkimagegaussianity(self, 'amp/residual_' + str(selfcaltargetbeamsampfinalminor).zfill(2), self.selfcal_gaussianity):
                                 selfcaltargetbeamsampresidualstatus = True
                             else:
                                 selfcaltargetbeamsampresidualstatus = False
