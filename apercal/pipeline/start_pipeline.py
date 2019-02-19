@@ -37,7 +37,7 @@ def validate_taskid(taskid_from_autocal):
         return ''
 
 
-def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=None):
+def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=None, flip_ra=False):
     """
     Trigger the start of a fluxcal pipeline. Returns when pipeline is done.
     Example for taskid, name, beamnr: (190108926, '3C147_36', 36)
@@ -50,6 +50,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         fluxcals (List[Tuple[int, str, int]]): fluxcals: taskid, name, beamnr
         polcals (List[Tuple[int, str, int]]): polcals: taskid, name, beamnr (can be None)
         dry_run (bool): interpret arguments, do not actually run pipeline
+        flip_ra (bool): flip RA (for old measurement sets where beamweights were flipped)
 
     Returns:
         Tuple[bool, str]: True if the pipeline succeeds, informative message
@@ -82,7 +83,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
     name_target = str(name_target).strip()
 
     # Exchange polcal and fluxcal if specified in the wrong order
-    if not subs_calmodels.is_polarised(name_polcal):
+    if not subs_calmodels.is_polarised(name_polcal) and name_polcal != '':
         if subs_calmodels.is_polarised(name_fluxcal):
             logger.debug("Switching polcal and fluxcal because " + name_polcal +
                          " is not polarised")
@@ -91,7 +92,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         else:
             logger.debug("Setting polcal to '' since " + name_polcal + " is not polarised")
             name_polcal = ""
-    else:
+    elif name_polcal != '':
         logger.debug("Polcal " + name_polcal + " is polarised, all good")
 
     if name_polcal != "":
@@ -131,6 +132,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             # director(p0, 'rm', basedir+'/param.npy', ignore_nonexistent=True)
             p0 = prepare()
             p0.basedir = basedir
+            p0.prepare_flip_ra = flip_ra
             p0.fluxcal = ''
             p0.polcal = ''
             p0.target = name_to_ms(name_fluxcal)
@@ -143,6 +145,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         # Prepare target and polcal
         p0 = prepare()
         p0.basedir = basedir
+        p0.prepare_flip_ra = flip_ra
         p0.fluxcal = ''
         p0.polcal = name_to_ms(name_polcal)
         p0.target = name_to_ms(name_target)

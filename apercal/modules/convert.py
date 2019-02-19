@@ -36,6 +36,7 @@ class convert(BaseModule):
     convert_target = True  # Convert the target beam dataset
     convert_targetbeams = 'all'  # Targetbeams to convert, options: 'all' or '00,01,02'
     convert_removeuvfits = True  # Remove the UVFITS files
+    convert_removems = True  # Remove measurement sets
 
     def __init__(self, file_=None, **kwargs):
         self.default = lib.load_config(self, file_)
@@ -381,7 +382,17 @@ class convert(BaseModule):
         subs_param.add_param(self, 'convert_polcal_UVFITS2MIRIAD', convertpolcaluvfits2miriad)
         subs_param.add_param(self, 'convert_targetbeams_UVFITS2MIRIAD', converttargetbeamsuvfits2miriad)
 
-        # Remove the UVFITS files if wanted (we don't need to remove them when we in docker / no subdirification)
+        # Remove measurement sets if wanted
+        if self.convert_removems and self.subdirifcation:
+            logger.info('Removing measurement sets')
+            if self.target != '':
+                subs_managefiles.director(self, 'rm', self.get_fluxcal_path())
+            if self.polcal != '':
+                subs_managefiles.director(self, 'rm', self.get_polcal_path())
+            for vis, beam in self.get_datasets():
+                subs_managefiles.director(self, 'rm', vis)
+
+        # Remove the UVFITS files if wanted
         if self.convert_removeuvfits and self.subdirification:
             logger.info('Removing all UVFITS files')
             subs_managefiles.director(self, 'rm', mspath_to_fitspath(self.get_crosscalsubdir_path(), self.fluxcal))
