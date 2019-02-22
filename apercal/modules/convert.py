@@ -383,7 +383,7 @@ class convert(BaseModule):
         subs_param.add_param(self, 'convert_targetbeams_UVFITS2MIRIAD', converttargetbeamsuvfits2miriad)
 
         # Remove measurement sets if wanted
-        if self.convert_removems and self.subdirifcation:
+        if self.convert_removems and self.subdirification:
             logger.info('Removing measurement sets')
             if self.target != '':
                 subs_managefiles.director(self, 'rm', self.get_fluxcal_path())
