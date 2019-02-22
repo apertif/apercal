@@ -31,6 +31,11 @@ $(VENV2)/bin/cwltool: $(VENV2)
 $(VENV3)/bin/cwltool: $(VENV3)
 	$(VENV3)/bin/pip install -r cwl/requirements.txt
 
+$(VENV3)/bin/udocker: $(VENV3)
+	curl https://raw.githubusercontent.com/indigo-dc/udocker/master/udocker.py > $(VENV3)/bin/udocker
+	chmod u+rx $(VENV3)/bin/udocker
+	$(VENV3)/bin/udocker install
+
 docker:
 	docker build . -t apertif/apercal
 
@@ -43,6 +48,9 @@ data/small: data/${FILE}
 
 run: $(VENV3)/bin/cwltool data/small
 	 $(CWLTOOL) cwl/apercal.cwl cwl/job.yaml
+
+udocker: $(VENV3)/bin/cwltool data/small $(VENV3)/bin/udocker
+	 $(CWLTOOL) --user-space-docker-cmd $(VENV3)/bin/udocker cwl/apercal.cwl cwl/job.yaml
 
 test: data/small
 	docker run -v `pwd`/data:/code/data:rw apertif/apercal pytest -s test/test_preflag.py
