@@ -140,7 +140,22 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             p0.prepare_date = str(taskid_fluxcal)[:6]
             p0.prepare_obsnum_target = validate_taskid(taskid_fluxcal)
             if not dry_run:
-                p0.go()
+                try:
+                    p0.go()
+                except Exception as e:
+                    logger.warning("Prepare failed for fluxcal " + str(taskid_fluxcal) + " beam " + str(beamnr_fluxcal))
+                    logger.exception(e)
+
+        # Prepare polcal
+        p0 = prepare()
+        p0.basedir = basedir
+        p0.prepare_flip_ra = flip_ra
+        p0.fluxcal = ''
+        p0.polcal = name_to_ms(name_polcal)
+        p0.target = ''
+        p0.prepare_date = str(taskid_target)[:6]
+        if not dry_run:
+            p0.go()
 
         # Prepare target and polcal
         p0 = prepare()
@@ -150,10 +165,15 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         p0.polcal = name_to_ms(name_polcal)
         p0.target = name_to_ms(name_target)
         p0.prepare_date = str(taskid_target)[:6]
-        p0.prepare_target_beams = ','.join(['{:02d}'.format(beamnr) for beamnr in beamlist_target])
         p0.prepare_obsnum_target = validate_taskid(taskid_target)
-        if not dry_run:
-            p0.go()
+        for beamnr in beamlist_target:
+            p0.prepare_target_beams = ','.join(['{:02d}'.format(beamnr) for beamnr in beamlist_target])
+            if not dry_run:
+                try:
+                    p0.go()
+                except Exception as e:
+                    logger.warning("Prepare failed for target " + str(taskid_target) + " beam " + str(beamnr))
+                    logger.exception(e)
 
         p1 = preflag()
         p1.basedir = basedir
@@ -198,6 +218,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                 except ApercalException as e:
                     # Exception was already logged just before
                     logger.error("Failed beam {}, skipping that from crosscal".format(beamnr))
+                    logger.exception(e)
 
         p3 = convert()
         set_files(p3)
