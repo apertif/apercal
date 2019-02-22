@@ -232,7 +232,7 @@ class prepare(BaseModule):
         # Start the preparation of the target datasets #
         ################################################
 
-        if self.prepare_obsnum_target != '':
+        if self.prepare_obsnum_target and self.prepare_obsnum_target != '':
             if self.prepare_target_beams == 'all':  # if all beams are requested
                 reqbeams_int = range(self.NBEAMS)  # create a list of numbers for the beams
                 reqbeams = [str(b).zfill(2) for b in reqbeams_int]  # Add the leading zeros
