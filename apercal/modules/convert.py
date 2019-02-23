@@ -394,8 +394,10 @@ class convert(BaseModule):
         # Remove the UVFITS files if wanted #
         if self.convert_removeuvfits:
             logger.info('Removing all UVFITS files')
-            subs_managefiles.director(self, 'rm', mspath_to_fitspath(self.get_crosscalsubdir_path(), self.fluxcal))
-            subs_managefiles.director(self, 'rm', mspath_to_fitspath(self.get_crosscalsubdir_path(), self.polcal))
+            if self.fluxcal != '':
+                subs_managefiles.director(self, 'rm', mspath_to_fitspath(self.get_crosscalsubdir_path(), self.fluxcal))
+            if self.polcal != '':
+                subs_managefiles.director(self, 'rm', mspath_to_fitspath(self.get_crosscalsubdir_path(), self.polcal))
             for beam in range(self.NBEAMS):
                 basedir = self.get_crosscalsubdir_path(str(beam).zfill(2))
                 if path.isdir(basedir):
