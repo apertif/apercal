@@ -215,7 +215,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     p2.crosscal_transfer_to_target_targetbeams = "{:02d}".format(beamnr)
                     if not dry_run:
                         p2.go()
-                except ApercalException as e:
+                except Exception as e:
                     # Exception was already logged just before
                     logger.warning("Failed beam {}, skipping that from crosscal".format(beamnr))
                     logger.exception(e)
