@@ -384,9 +384,9 @@ class convert(BaseModule):
         # Remove measurement sets if wanted
         if self.convert_removems:
             logger.info('Removing measurement sets')
-            if path.exists(self.get_fluxcal_path()):
+            if fluxcal != '' and path.exists(self.get_fluxcal_path()):
                 subs_managefiles.director(self, 'rm', self.get_fluxcal_path())
-            if path.exists(self.get_polcal_path()):
+            if polcal != '' and path.exists(self.get_polcal_path()):
                 subs_managefiles.director(self, 'rm', self.get_polcal_path())
             for vis, beam in self.get_datasets():
                 if path.exists(vis):
@@ -395,9 +395,9 @@ class convert(BaseModule):
         # Remove the UVFITS files if wanted #
         if self.convert_removeuvfits:
             logger.info('Removing all UVFITS files')
-            if path.exists(mspath_to_fitspath(self.get_crosscalsubdir_path(), self.fluxcal)):
+            if fluxcal != '' and path.exists(mspath_to_fitspath(self.get_crosscalsubdir_path(), self.fluxcal)):
                 subs_managefiles.director(self, 'rm', mspath_to_fitspath(self.get_crosscalsubdir_path(), self.fluxcal))
-            if path.exists(mspath_to_fitspath(self.get_crosscalsubdir_path(), self.polcal)):
+            if polcal != '' and path.exists(mspath_to_fitspath(self.get_crosscalsubdir_path(), self.polcal)):
                 subs_managefiles.director(self, 'rm', mspath_to_fitspath(self.get_crosscalsubdir_path(), self.polcal))
             for beam in range(self.NBEAMS):
                 basedir = self.get_crosscalsubdir_path(str(beam).zfill(2))
