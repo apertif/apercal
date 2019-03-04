@@ -180,10 +180,10 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     logger.warning("Prepare failed for target " + str(taskid_target) + " beam " + str(beamnr))
                     logger.exception(e)
 
+        # Flag fluxcal (pretending it's a target)
         p1 = preflag()
         p1.basedir = basedir
         director(p0, 'rm', basedir + '/param.npy', ignore_nonexistent=True)
-        # Flag fluxcal (pretending it's a target)
         p1.fluxcal = ''
         p1.polcal = ''
         p1.target = name_to_ms(name_fluxcal)
@@ -192,6 +192,9 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             p1.go()
 
         # Flag polcal (pretending it's a target)
+        p1 = preflag()
+        p1.basedir = basedir
+        director(p0, 'rm', basedir + '/param.npy', ignore_nonexistent=True)
         if name_polcal != '':
             p1.fluxcal = ''
             p1.polcal = ''
