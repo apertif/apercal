@@ -95,9 +95,6 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
     elif name_polcal != '':
         logger.debug("Polcal " + name_polcal + " is polarised, all good")
 
-    if name_polcal != "":
-        taskid_polcal, name_polcal, beamnr_polcal = polcals[0]
-
     def name_to_ms(name):
         if not name:
             return ''
@@ -146,25 +143,31 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     logger.warning("Prepare failed for fluxcal " + str(taskid_fluxcal) + " beam " + str(beamnr_fluxcal))
                     logger.exception(e)
 
-        # Prepare polcal
+        # Prepare polcals
         if name_polcal != '':
-            p0 = prepare()
-            p0.basedir = basedir
-            p0.prepare_flip_ra = flip_ra
-            p0.fluxcal = ''
-            p0.polcal = ''
-            p0.target = name_to_ms(name_polcal)
-            p0.prepare_target_beams = str(beamnr_polcal)
-            p0.prepare_date = str(taskid_polcal)[:6]
-            if not dry_run:
-                p0.go()
+            for (taskid_polcal, name_polcal, beamnr_polcal) in polcals:
+                p0 = prepare()
+                p0.basedir = basedir
+                p0.prepare_flip_ra = flip_ra
+                p0.fluxcal = ''
+                p0.polcal = ''
+                p0.target = name_to_ms(name_polcal)
+                p0.prepare_target_beams = str(beamnr_polcal)
+                p0.prepare_date = str(taskid_polcal)[:6]
+                if not dry_run:
+                    try:
+                        p0.go()
+                    except Exception as e:
+                        logger.warning(
+                            "Prepare failed for polcal " + str(taskid_polcal) + " beam " + str(beamnr_polcal))
+                        logger.exception(e)
 
-        # Prepare target and polcal
+        # Prepare target
         p0 = prepare()
         p0.basedir = basedir
         p0.prepare_flip_ra = flip_ra
         p0.fluxcal = ''
-        p0.polcal = name_to_ms(name_polcal)
+        p0.polcal = ''
         p0.target = name_to_ms(name_target)
         p0.prepare_date = str(taskid_target)[:6]
         p0.prepare_obsnum_target = validate_taskid(taskid_target)
@@ -188,12 +191,21 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         if not dry_run:
             p1.go()
 
+        # Flag polcal (pretending it's a target)
+        if name_polcal != '':
+            p1.fluxcal = ''
+            p1.polcal = ''
+            p1.target = name_to_ms(name_polcal)
+            p1.beam = "{:02d}".format(beamlist_target[0])
+            if not dry_run:
+                p1.go()
+
         p1 = preflag()
         p1.basedir = basedir
         director(p0, 'rm', basedir + '/param.npy', ignore_nonexistent=True)
-        # Flag target and polcal
+        # Flag target
         p1.fluxcal = ''
-        p1.polcal = name_to_ms(name_polcal)
+        p1.polcal = ''
         p1.target = name_to_ms(name_target)
         p1.beam = "{:02d}".format(beamlist_target[0])
         if not dry_run:
