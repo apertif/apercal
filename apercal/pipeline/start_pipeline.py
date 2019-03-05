@@ -154,6 +154,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                 p0.target = name_to_ms(name_polcal)
                 p0.prepare_target_beams = str(beamnr_polcal)
                 p0.prepare_date = str(taskid_polcal)[:6]
+                p0.prepare_obsnum_target = validate_taskid(taskid_polcal)
                 if not dry_run:
                     try:
                         p0.go()
