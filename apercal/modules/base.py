@@ -47,7 +47,7 @@ class BaseModule:
 
     def get_polcal_path(self, beam=None):
         if not beam:
-            beam = '00'
+            beam = self.beam
         if self.subdirification:
             return path.join(self.basedir, beam, self.rawsubdir, self.polcal)
         else:
