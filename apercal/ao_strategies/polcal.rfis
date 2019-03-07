@@ -64,7 +64,7 @@ Created by AOFlagger 2.14.0 (2019-02-14)
                     <frequency-decrease-factor>175</frequency-decrease-factor>
                     <restore-revised>1</restore-revised>
                     <restore-masks>0</restore-masks>
-                    <use-mask-in-averaging>0</use-mask-in-averaging>
+                    <use-mask-in-averaging>1</use-mask-in-averaging>
                     <children>
                       <action type="HighPassFilterAction">
                         <horizontal-kernel-sigma-sq>2.5</horizontal-kernel-sigma-sq>
