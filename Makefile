@@ -1,19 +1,40 @@
 FILE=small.tgz
 URL=http://astron.nl/citt/apercal-testdata/small.tgz
-VENV=$(CURDIR)/.venv2
-CWLTOOL=$(VENV)/bin/cwltool --enable-ext  --no-compute-checksum --outdir=cwl/outdir
+
+# for running apercal locally
+VENV2=$(CURDIR)/.venv2
+# for CWL tool
+VENV3=$(CURDIR)/.venv3
+
+CWLTOOL=$(VENV3)/bin/cwltool \
+	--enable-ext  \
+	--outdir=$(CURDIR)/cwl/output/
+## scal step creates massive temp files, so you might want to set these
+#	--tmpdir-prefix=/scratch/tmp/cwl/ \
+#	--tmp-outdir-prefix=/scratch/tmp/cwl/
 
 .PHONY: run docker test
 
 all: run
 
-$(VENV):
-	virtualenv -p python2 $(VENV)
+$(VENV2):
+	virtualenv -p python2 $(VENV2)
 
-$(VENV)/bin/cwltool: $(VENV)
-	$(VENV)/bin/pip install .
-	$(VENV)/bin/pip install -r cwl/requirements.txt
-	$(VENV)/bin/pip install -r test/requirements.txt
+$(VENV3):
+	virtualenv -p python3 $(VENV3)
+
+$(VENV2)/bin/cwltool: $(VENV2)
+	$(VENV2)/bin/pip install .
+	$(VENV2)/bin/pip install -r cwl/requirements.txt
+	$(VENV2)/bin/pip install -r test/requirements.txt
+
+$(VENV3)/bin/cwltool: $(VENV3)
+	$(VENV3)/bin/pip install -r cwl/requirements.txt
+
+$(VENV3)/bin/udocker: $(VENV3)
+	curl https://raw.githubusercontent.com/indigo-dc/udocker/master/udocker.py > $(VENV3)/bin/udocker
+	chmod u+rx $(VENV3)/bin/udocker
+	$(VENV3)/bin/udocker install
 
 docker:
 	docker build . -t apertif/apercal
@@ -25,11 +46,38 @@ data/${FILE}:
 data/small: data/${FILE}
 	cd data && tar zmxvf ${FILE}
 
-run: $(VENV)/bin/cwltool data/small
+run: $(VENV3)/bin/cwltool data/small
 	 $(CWLTOOL) cwl/apercal.cwl cwl/job.yaml
 
-convert: $(VENV)/bin/cwltool data/small
-	$(CWLTOOL) cwl/steps/convert.cwl cwl/job.yaml
+udocker: $(VENV3)/bin/cwltool data/small $(VENV3)/bin/udocker
+	 $(CWLTOOL) --user-space-docker-cmd $(VENV3)/bin/udocker cwl/apercal.cwl cwl/job.yaml
 
 test: data/small
 	docker run -v `pwd`/data:/code/data:rw apertif/apercal pytest -s test/test_preflag.py
+
+clean:
+	rm -rf cwl/cache/* cwl/tmp/* cwl/output/* data/small
+
+cwl-preflag: $(VENV3)/bin/cwltool data/small
+	$(CWLTOOL) cwl/steps/preflag.cwl \
+		--fluxcal data/small/00/raw/3C295.MS \
+		--polcal data/small/00/raw/3C138.MS \
+		--target data/small/00/raw/NGC807.MS
+
+cwl-crosscal: $(VENV3)/bin/cwltool data/small
+	$(CWLTOOL) --debug cwl/steps/ccal.cwl \
+		--fluxcal data/small/00/raw/3C295.MS \
+		--polcal data/small/00/raw/3C138.MS \
+		--target data/small/00/raw/NGC807.MS
+
+cwl-convert: $(VENV3)/bin/cwltool data/small
+	$(CWLTOOL) cwl/steps/convert.cwl cwl/job.yaml \
+		--fluxcal data/small/00/raw/3C295.MS \
+		--polcal data/small/00/raw/3C138.MS \
+		--target data/small/00/raw/NGC807.MS
+
+cwl-scal: $(VENV3)/bin/cwltool data/small
+	$(CWLTOOL) cwl/steps/scal.cwl \
+		--fluxcal_mir cwl/output/3C295.mir \
+		--polcal_mir cwl/output/3C138.mir \
+		--target_mir cwl/output/NGC807.mir

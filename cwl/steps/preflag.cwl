@@ -51,6 +51,20 @@ outputs:
       glob: $(inputs.fluxcal.basename)
 
 
+# other potential interesting outputs:
+#
+# 3C138-flags-00-11.png
+# 3C138-flags-02-07.png
+# 3C138-flags-04-05.png
+# 3C295-flags-00-11.png
+# 3C295-flags-02-07.png
+# 3C295-flags-04-05.png
+# 3C295_Bpass.txt
+# NGC807-flags-00-11.png
+# NGC807-flags-02-07.png
+# NGC807-flags-04-05.png
+
+
 arguments:
   - prefix: '-c'
     valueFrom: |

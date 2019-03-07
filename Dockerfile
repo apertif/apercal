@@ -1,4 +1,4 @@
-FROM kernsuite/casa:kern-dev
+FROM kernsuite/casa:kern-5
 
 RUN docker-apt-install \
           miriad python-pip python-numpy python-notebook \
@@ -11,13 +11,14 @@ RUN docker-apt-install \
 RUN pip install aipy pymp-pypi pyephem pycodestyle \
         git+https://github.com/timstaley/drive-casa.git@casa-release-5#egg=drive-casa
 
-ADD . /code
-WORKDIR /code
-
+ENV LC_ALL C
 ENV MIR /usr/bin
 ENV MIRCAT /usr/share/miriad
 ENV MIRDEF=.
 RUN export MIRARCH=linux64
+
+ADD . /code
+WORKDIR /code
 
 RUN pip install .
 RUN pip install -r test/requirements.txt

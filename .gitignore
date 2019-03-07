@@ -8,6 +8,11 @@ casa.log
 *.egg-info/
 .eggs/
 data/
-cwl/outdir/
 dist/
-
+.pytest_cache/*
+cache/*
+tmp/*
+test/param.npy
+cwl/tmp/*
+cwl/cache/*
+cwl/output/*

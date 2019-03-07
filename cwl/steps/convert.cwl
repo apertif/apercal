@@ -13,6 +13,8 @@ hints:
     inplaceUpdate: true
 
 requirements:
+  InlineJavascriptRequirement: {}
+
   InitialWorkDirRequirement:
       listing:
       - entry: $(inputs.target)
@@ -35,20 +37,20 @@ inputs:
     type: Directory
 
 outputs:
-  target_converted:
+  target_mir:
     type: Directory
     outputBinding:
-      glob: $(inputs.target.basename)
+      glob: $(inputs.target.basename.split('.').slice(0,-1).join('.')).mir
 
-  polcal_converted:
+  polcal_mir:
     type: Directory
     outputBinding:
-      glob: $(inputs.polcal.basename)
+      glob: $(inputs.polcal.basename.split('.').slice(0,-1).join('.')).mir
 
-  fluxcal_converted:
+  fluxcal_mir:
     type: Directory
     outputBinding:
-      glob: $(inputs.fluxcal.basename)
+      glob: $(inputs.fluxcal.basename.split('.').slice(0,-1).join('.')).mir
 
 
 arguments:
@@ -57,12 +59,10 @@ arguments:
         import logging
         logging.basicConfig(level=logging.DEBUG)
         from apercal.modules.convert import convert
-        from os import getcwd
 
         p = convert()
         p.target = "$(inputs.target.path)"
         p.fluxcal = "$(inputs.fluxcal.path)"
         p.polcal = "$(inputs.polcal.path)"
         p.subdirification = False
-        p.crosscalsubdir = "/tmp"
         p.go()
