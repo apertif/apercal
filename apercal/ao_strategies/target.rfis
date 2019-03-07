@@ -104,9 +104,6 @@ Created by AOFlagger 2.14.0 (2019-02-14)
           <action type="SetFlaggingAction">
             <new-flagging>6</new-flagging>
           </action>
-          <action type="SetFlaggingAction">
-            <new-flagging>5</new-flagging>
-          </action>
           <action type="TimeSelectionAction">
             <threshold>4</threshold>
           </action>
@@ -128,6 +125,9 @@ Created by AOFlagger 2.14.0 (2019-02-14)
         <minimum-good-frequency-ratio>0.2</minimum-good-frequency-ratio>
         <minimum-good-time-ratio>0.2</minimum-good-time-ratio>
         <exclude-original-flags>1</exclude-original-flags>
+      </action>
+      <action type="SetFlaggingAction">
+        <new-flagging>5</new-flagging>
       </action>
     </children>
   </action>
