@@ -120,7 +120,7 @@ def getdata_alta(date, task_ids, beams, targetdir=".", tmpdir=".", alta_exceptio
                   "{tmpdir}WSRTA{date}{task_id:03d}_B{beam_nr:03d}-icat.lf-irods-status --retries 5 {alta_dir} " \
                   "{targetdir}".format(**locals())
             logger.debug(cmd)
-            subprocess.check_call(cmd, shell=True, stdout=FNULL, stderr=FNULL)
+            subprocess.check_call(cmd, shell=True)
 
     os.system('rm -rf {tmpdir}*irods-status'.format(**locals()))
 
@@ -142,7 +142,7 @@ def getdata_alta(date, task_ids, beams, targetdir=".", tmpdir=".", alta_exceptio
                       "{tmpdir}transfer_WSRTA{date}{task_id:03d}_to_alta_verify.log".format(
                       **locals())
 
-                subprocess.check_call(cmd, shell=True, stdout=FNULL, stderr=FNULL)
+                subprocess.check_call(cmd, shell=True)
 
         # Identify server details
         hostname = os.popen('hostname').read().strip()
