@@ -52,6 +52,9 @@ run: $(VENV3)/bin/cwltool data/small
 udocker: $(VENV3)/bin/cwltool data/small $(VENV3)/bin/udocker
 	 $(CWLTOOL) --user-space-docker-cmd $(VENV3)/bin/udocker cwl/apercal.cwl cwl/job.yaml
 
+docker-shell:
+	docker run -ti -v $(PWD):/code apertif/apercal bash
+
 test: data/small
 	docker run -v `pwd`/data:/code/data:rw apertif/apercal pytest -s test/test_preflag.py
 
@@ -81,3 +84,12 @@ cwl-scal: $(VENV3)/bin/cwltool data/small
 		--fluxcal_mir cwl/output/3C295.mir \
 		--polcal_mir cwl/output/3C138.mir \
 		--target_mir cwl/output/NGC807.mir
+
+cwl-getdata: $(VENV3)/bin/cwltool
+	$(CWLTOOL) --no-container cwl/steps/getdata.cwl \
+		--obsdate 190302 \
+		--obsnum 68 \
+		--beamnum 0 \
+		--name 3C147 \
+		--irodsA /home/dijkema/.irods/.irodsA \
+		--irodsenvironment /home/dijkema/.irods/irods_environment.json
