@@ -1,6 +1,3 @@
-$namespaces:
-  cwltool: http://commonwl.org/cwltool#
-
 class: CommandLineTool
 
 cwlVersion: v1.0
@@ -8,9 +5,6 @@ cwlVersion: v1.0
 hints:
   DockerRequirement:
       dockerPull: apertif/apercal
-
-  cwltool:InplaceUpdateRequirement:
-    inplaceUpdate: true
 
 baseCommand: [python]
 
@@ -21,7 +15,7 @@ requirements:
       ${
          return [{"class": "Directory",
                   "basename": "irodsA",
-                  "listing": inputs.irodsA }
+                  "listing": [ inputs.irodsA ] }
                ]
        }
 
