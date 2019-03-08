@@ -4,9 +4,8 @@ RUN docker-apt-install \
           miriad python-pip python-numpy python-notebook \
           python-matplotlib python-astroquery python-pandas \
           python-casacore python-ephem wget git python-astropy aoflagger \
-          pybdsf wget
+          pybdsf wget curl
 
-RUN docker-apt-install wget 
 RUN wget -qO - https://packages.irods.org/irods-signing-key.asc | apt-key add -
 RUN echo "deb [arch=amd64] https://packages.irods.org/apt/ xenial main" > /etc/apt/sources.list.d/renci-irods.list
 

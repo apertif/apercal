@@ -86,7 +86,7 @@ cwl-scal: $(VENV3)/bin/cwltool data/small
 		--target_mir cwl/output/NGC807.mir
 
 cwl-getdata: $(VENV3)/bin/cwltool
-	$(CWLTOOL) --no-container cwl/steps/getdata.cwl \
+	$(CWLTOOL) cwl/steps/getdata.cwl \
 		--obsdate 190302 \
 		--obsnum 68 \
 		--beamnum 0 \

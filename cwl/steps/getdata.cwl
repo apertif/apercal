@@ -15,10 +15,15 @@ hints:
 baseCommand: [python]
 
 requirements:
+  InlineJavascriptRequirement: {}
   InitialWorkDirRequirement:
-    listing:
-      - entry: $(inputs.irodsA)
-        entryname: .irods/.irodsA
+    listing: |
+      ${
+         return [{"class": "Directory",
+                  "basename": "irodsA",
+                  "listing": inputs.irodsA }
+               ]
+       }
 
   EnvVarRequirement:
     envDef:
