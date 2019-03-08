@@ -4,7 +4,13 @@ RUN docker-apt-install \
           miriad python-pip python-numpy python-notebook \
           python-matplotlib python-astroquery python-pandas \
           python-casacore python-ephem wget git python-astropy aoflagger \
-          pybdsf
+          pybdsf wget
+
+RUN docker-apt-install wget 
+RUN wget -qO - https://packages.irods.org/irods-signing-key.asc | apt-key add -
+RUN echo "deb [arch=amd64] https://packages.irods.org/apt/ xenial main" > /etc/apt/sources.list.d/renci-irods.list
+
+RUN docker-apt-install irods-icommands
 
 # if we install these here a rebuild trigger by a file change will go quicker
 # for now we need to install a special branch of drive-casa, otherwise casa 5 doesnt work
