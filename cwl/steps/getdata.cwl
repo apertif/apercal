@@ -14,7 +14,7 @@ requirements:
     listing: |
       ${
          return [{"class": "Directory",
-                  "basename": "irodsA",
+                  "basename": ".irodsA",
                   "listing": [ inputs.irodsA ] }
                ]
        }
