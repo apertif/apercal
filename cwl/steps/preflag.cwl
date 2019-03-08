@@ -69,7 +69,7 @@ arguments:
   - prefix: '-c'
     valueFrom: |
         import logging
-        logging.basicConfig(level=logging.INFO)
+        logging.basicConfig(level=logging.DEBUG)
         from apercal.modules.preflag import preflag
         from os import getcwd
 
