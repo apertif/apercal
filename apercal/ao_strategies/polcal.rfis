@@ -3,7 +3,7 @@
 detector by André Offringa (offringa@gmail.com).
 Created by AOFlagger 2.14.0 (2019-02-14)
 -->
-<rfi-strategy format-version="3.93" reader-version-required="3.93">
+<rfi-strategy format-version="3.91" reader-version-required="3.91">
   <action type="Strategy">
     <children>
       <action type="ApplyBandpassAction">
