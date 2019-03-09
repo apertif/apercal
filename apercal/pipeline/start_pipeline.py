@@ -215,7 +215,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         if not dry_run:
             p1.go()
 
-        if len(fluxcals) == 1:
+        if len(fluxcals) == 1 and fluxcals[0][-1] != 0:
             p2 = ccal()
             set_files(p2)
             if not dry_run:
