@@ -619,6 +619,8 @@ class scal(BaseModule):
                                         else:
                                             TNreached = False
                                 else:
+                                    # set the minc counter back by one to when it reached the noise level before completing all minor cycles
+                                    minc -= 1
                                     pass
                             # Do the self calibration in the normal cycle
                             selfcaltargetbeamsphasefinalmajor = majc
