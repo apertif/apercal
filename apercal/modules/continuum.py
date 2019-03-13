@@ -747,7 +747,7 @@ class continuum(BaseModule):
 
 
     def show(self, showall=False):
-        lib.show(self, 'SELFCAL', showall)
+        lib.show(self, 'CONTINUUM', showall)
 
 
     def summary(self):
