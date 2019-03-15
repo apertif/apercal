@@ -60,6 +60,27 @@ def get_nsols(file_):
     return nsols
 
 
+def get_ndims(file_):
+    """
+    Wrapper funtion to get the dimension of the selfcal gain file
+    file_ (str): u,v file with the gain calibration
+    returns (int, int, int): Number of antennas, number of frequency bins, number of time intervals
+    """
+    char_set = string.ascii_uppercase + string.digits  # Create a charset for random gain log file generation
+    tempdir = subs.managetmp.manage_tempdir('mirlog')
+    subs.managetmp.clean_tempdir('mirlog')
+    gains_string = ''.join(random.sample(char_set * 8, 8))
+    gpplt = lib.miriad('gpplt')
+    gpplt.vis = file_
+    gpplt.log = tempdir + '/' + gains_string
+    gpplt.yaxis = 'amp'
+    cmd = gpplt.go()
+    nants = get_nants(tempdir + '/' + gains_string)
+    nbins = get_nbins(tempdir + '/' + gains_string)
+    nsols = get_nsols(tempdir + '/' + gains_string)
+    return nants, nbins, nsols
+
+
 def reformat_table(file_):
     """
     Function to change the file format of a MIRIAD ggplt table to an ascii table compatible one
