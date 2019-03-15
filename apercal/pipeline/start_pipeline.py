@@ -2,7 +2,6 @@
 
 from __future__ import print_function
 
-import matplotlib as mpl
 from apercal.modules.prepare import prepare
 from apercal.modules.preflag import preflag
 from apercal.modules.ccal import ccal
@@ -20,8 +19,6 @@ import logging
 import sys
 from time import time
 from datetime import timedelta
-
-mpl.use('TkAgg')
 
 
 def validate_taskid(taskid_from_autocal):
