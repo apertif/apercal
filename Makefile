@@ -91,5 +91,4 @@ cwl-getdata: $(VENV3)/bin/cwltool
 		--obsnum 68 \
 		--beamnum 0 \
 		--name 3C147 \
-		--irodsA /home/dijkema/.irods/.irodsA \
-		--irodsenvironment /home/dijkema/.irods/irods_environment.json
+		--irods /home/dijkema/.irods \

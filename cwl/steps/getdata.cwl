@@ -9,36 +9,22 @@ hints:
   DockerRequirement:
       dockerPull: apertif/apercal
 
-  cwltool:InplaceUpdateRequirement:
-    inplaceUpdate: true
-
 baseCommand: [python]
 
 requirements:
   InlineJavascriptRequirement: {}
   InitialWorkDirRequirement:
-    listing: |
-      ${
-         return [{"class": "Directory",
-                  "basename": "irodsA",
-                  "listing": inputs.irodsA }
-               ]
-       }
-
-  EnvVarRequirement:
-    envDef:
-      IRODS_HOST: alta-icat.astron.nl
-      IRODS_PORT: "1247"
-      IRODS_USER_NAME: dijkema
-      IRODS_ZONE_NAME: altaZone
+    listing:
+      - entry: $(inputs.irods)
+        entryname: .irods
+        writable: true
 
 inputs:
   obsdate: string
   obsnum: int
   beamnum: int
   name: string
-  irodsA: File
-  irodsenvironment: File
+  irods: Directory
 
 outputs:
   ms:
