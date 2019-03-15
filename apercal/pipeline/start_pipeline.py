@@ -6,6 +6,7 @@ import matplotlib as mpl
 from apercal.modules.prepare import prepare
 from apercal.modules.preflag import preflag
 from apercal.modules.ccal import ccal
+from apercal.modules.scal import scal
 from apercal.subs.managefiles import director
 from apercal.modules.convert import convert
 from apercal.subs import calmodels as subs_calmodels
@@ -37,7 +38,8 @@ def validate_taskid(taskid_from_autocal):
         return ''
 
 
-def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=None, flip_ra=False):
+def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=None, flip_ra=False,
+                           steps=["prepare", "preflag", "ccal", "convert", "scal", "continuum"]):
     """
     Trigger the start of a fluxcal pipeline. Returns when pipeline is done.
     Example for taskid, name, beamnr: (190108926, '3C147_36', 36)
@@ -74,6 +76,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
 
     logger.debug("start_apercal called with arguments targets={}; fluxcals={}; polcals={}".format(
                   targets, fluxcals, polcals))
+    logger.debug("steps = {}".format(steps))
 
     name_fluxcal = str(fluxcals[0][1]).strip().split('_')[0]
     if polcals:
@@ -136,7 +139,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             p0.prepare_target_beams = str(beamnr_fluxcal)
             p0.prepare_date = str(taskid_fluxcal)[:6]
             p0.prepare_obsnum_target = validate_taskid(taskid_fluxcal)
-            if not dry_run:
+            if "prepare" in steps and not dry_run:
                 try:
                     p0.go()
                 except Exception as e:
@@ -155,7 +158,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                 p0.prepare_target_beams = str(beamnr_polcal)
                 p0.prepare_date = str(taskid_polcal)[:6]
                 p0.prepare_obsnum_target = validate_taskid(taskid_polcal)
-                if not dry_run:
+                if "prepare" in steps and not dry_run:
                     try:
                         p0.go()
                     except Exception as e:
@@ -174,7 +177,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         p0.prepare_obsnum_target = validate_taskid(taskid_target)
         for beamnr in beamlist_target:
             p0.prepare_target_beams = ','.join(['{:02d}'.format(beamnr) for beamnr in beamlist_target])
-            if not dry_run:
+            if "prepare" in steps and not dry_run:
                 try:
                     p0.go()
                 except Exception as e:
@@ -189,7 +192,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         p1.polcal = ''
         p1.target = name_to_ms(name_fluxcal)
         p1.beam = "{:02d}".format(beamlist_target[0])
-        if not dry_run:
+        if "prepare" in steps and not dry_run:
             p1.go()
 
         # Flag polcal (pretending it's a target)
@@ -201,7 +204,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             p1.polcal = ''
             p1.target = name_to_ms(name_polcal)
             p1.beam = "{:02d}".format(beamlist_target[0])
-            if not dry_run:
+            if "prepare" in steps and not dry_run:
                 p1.go()
 
         p1 = preflag()
@@ -212,13 +215,13 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         p1.polcal = ''
         p1.target = name_to_ms(name_target)
         p1.beam = "{:02d}".format(beamlist_target[0])
-        if not dry_run:
+        if "preflag" in steps and not dry_run:
             p1.go()
 
         if len(fluxcals) == 1 and fluxcals[0][-1] == 0:
             p2 = ccal()
             set_files(p2)
-            if not dry_run:
+            if "preflag" in steps and not dry_run:
                 p2.go()
         else:
             for beamnr in beamlist_target:
@@ -231,7 +234,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     p2.target = name_to_ms(name_target)
                     p2.beam = "{:02d}".format(beamnr)
                     p2.crosscal_transfer_to_target_targetbeams = "{:02d}".format(beamnr)
-                    if not dry_run:
+                    if "preflag" in steps and not dry_run:
                         p2.go()
                 except Exception as e:
                     # Exception was already logged just before
@@ -240,8 +243,22 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
 
         p3 = convert()
         set_files(p3)
-        if not dry_run:
+        if "convert" in steps and not dry_run:
             p3.go()
+
+        for beamnr in beamlist_target:
+            try:
+                p4 = scal()
+                p4.basedir = basedir
+                director(p4, 'rm', basedir + '/param.npy', ignore_nonexistent=True)
+                p4.beam = "{:02d}".format(beamnr)
+                p4.target = name_target + '.mir'
+                if "scal" in steps and not dry_run:
+                    p4.go()
+            except Exception as e:
+                # Exception was already logged just before
+                logger.warning("Failed beam {}, skipping that from scal".format(beamnr))
+                logger.exception(e)
 
         time_end = time()
         msg = "Apercal finished after " + str(timedelta(seconds=time() - time_start))
