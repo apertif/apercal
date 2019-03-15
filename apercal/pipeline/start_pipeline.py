@@ -247,11 +247,11 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         if "convert" in steps and not dry_run:
             p3.go()
 
+        director(p3, 'rm', basedir + '/param.npy', ignore_nonexistent=True)
         for beamnr in beamlist_target:
             try:
                 p4 = scal()
                 p4.basedir = basedir
-                director(p4, 'rm', basedir + '/param.npy', ignore_nonexistent=True)
                 p4.beam = "{:02d}".format(beamnr)
                 p4.target = name_target + '.mir'
                 if "scal" in steps and not dry_run:
