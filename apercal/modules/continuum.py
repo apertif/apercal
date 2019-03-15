@@ -363,6 +363,7 @@ class continuum(BaseModule):
                     if qa.checkimagegaussianity(self, 'residual_mf_' + str(continuumtargetbeamsmffinalminor).zfill(2), self.continuum_gaussianity):
                         continuumtargetbeamsmfresidualstatus = True
                         continuumtargetbeamsmfstatus = True
+                        subs_managefiles.imagetofits(self, 'image_mf_' + str(continuumtargetbeamsmffinalminor).zfill(2), 'image_mf_' + str(continuumtargetbeamsmffinalminor).zfill(2) + '.fits')
                         logger.info('Beam ' + self.beam + ': Multi-frequency continuum imaging successfully done!')
                     else:
                         continuumtargetbeamsmfresidualstatus = False
@@ -374,6 +375,7 @@ class continuum(BaseModule):
                         self.logger.warning('Beam ' + self.beam + ': Residual image seems to show Gaussian statistics. Maybe cleaning was deep enough!')
                         continuumtargetbeamsmfresidualstatus = True
                         continuumtargetbeamsmfstatus = True
+                        subs_managefiles.imagetofits(self, 'image_mf_' + str(continuumtargetbeamsmffinalminor).zfill(2), 'image_mf_' + str(continuumtargetbeamsmffinalminor).zfill(2) + '.fits')
                         logger.info('Beam ' + self.beam + ': Multi-frequency continuum imaging successfully done!')
                     else:
                         continuumtargetbeamsmfresidualstatus = False
@@ -381,7 +383,7 @@ class continuum(BaseModule):
                         logger.warning('Beam ' + self.beam + ': Final residual image shows non-gaussian statistics. Multi-frequency continuum imaging was not successful!')
                 else:
                     continuumtargetbeamsmfstatus = False
-                    logger.warning('Beam ' + self.beam + ': Something lese happened and I dont know what')
+                    logger.warning('Beam ' + self.beam + ': Something else happened and I dont know what')
             else:
                 logger.info('Beam ' + self.beam + ': Multi-frequency continuum image was already successfully created!')
         else:
@@ -709,6 +711,7 @@ class continuum(BaseModule):
                                     break
                             if TNreached and continuumtargetbeamschunkimagestatus[chunk, continuumtargetbeamschunkfinalminor[chunk]]:
                                 logger.info('Beam ' + self.beam + ': ' + cn + 'Chunk successfully imaged!')
+                                subs_managefiles.imagetofits(self, 'image_C' + str(chunk).zfill(2) + '_' + str(minc).zfill(2), 'image_C' + str(chunk).zfill(2) + '_' + str(minc).zfill(2) + '.fits')
                                 continuumtargetbeamschunkstatus[chunk] = True
                             else:
                                 logger.info('Beam ' + self.beam + ': ' + cn + 'Theoretical noise not reached or final restored image invalid! Imaging for this chunk was not successful!')
