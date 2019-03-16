@@ -21,8 +21,8 @@ def getimagestats(self, image):
     setinit.setinitdirs(self)
     char_set = string.ascii_uppercase + string.digits
     if os.path.isdir(image) or os.path.isfile(image):
+        tempdir = managetmp.manage_tempdir('images')
         if os.path.isdir(image):
-            tempdir = managetmp.manage_tempdir('images')
             temp_string = ''.join(random.sample(char_set * 8, 8))
             fits = lib.miriad('fits')
             fits.op = 'xyout'
@@ -62,8 +62,8 @@ def getmaskstats(self, image, size):
     setinit.setinitdirs(self)
     char_set = string.ascii_uppercase + string.digits
     if os.path.isdir(image) or os.path.isfile(image):
+        tempdir = managetmp.manage_tempdir('images')
         if os.path.isdir(image):
-            tempdir = managetmp.manage_tempdir('images')
             temp_string = ''.join(random.sample(char_set * 8, 8))
             fits = lib.miriad('fits')
             fits.op = 'xyout'
@@ -101,8 +101,8 @@ def getmodelstats(self, image):
     setinit.setinitdirs(self)
     char_set = string.ascii_uppercase + string.digits
     if os.path.isdir(image) or os.path.isfile(image):
+        tempdir = managetmp.manage_tempdir('images')
         if os.path.isdir(image):
-            tempdir = managetmp.manage_tempdir('images')
             temp_string = ''.join(random.sample(char_set * 8, 8))
             fits = lib.miriad('fits')
             fits.op = 'xyout'
@@ -140,8 +140,8 @@ def getcubestats(self, cube):
     setinit.setinitdirs(self)
     char_set = string.ascii_uppercase + string.digits
     if os.path.isdir(cube) or os.path.isfile(cube):
+        tempdir = managetmp.manage_tempdir('images')
         if os.path.isdir(cube):
-            tempdir = managetmp.manage_tempdir('images')
             temp_string = ''.join(random.sample(char_set * 8, 8))
             fits = lib.miriad('fits')
             fits.op = 'xyout'
