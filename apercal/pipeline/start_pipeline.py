@@ -264,7 +264,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                 p5.basedir = basedir
                 p5.beam = "{:02d}".format(beamnr)
                 p5.target = name_target + '.mir'
-                if "scal" in steps and not dry_run:
+                if "continuum" in steps and not dry_run:
                     p5.go()
             except Exception as e:
                 # Exception was already logged just before
