@@ -127,7 +127,6 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
     try:
         # Prepare fluxcals
         for (taskid_fluxcal, name_fluxcal, beamnr_fluxcal) in fluxcals:
-            # director(p0, 'rm', basedir+'/param.npy', ignore_nonexistent=True)
             p0 = prepare()
             p0.basedir = basedir
             p0.prepare_flip_ra = flip_ra
@@ -185,35 +184,35 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         # Flag fluxcal (pretending it's a target)
         p1 = preflag()
         p1.basedir = basedir
-        director(p0, 'rm', basedir + '/param.npy', ignore_nonexistent=True)
         p1.fluxcal = ''
         p1.polcal = ''
         p1.target = name_to_ms(name_fluxcal)
         p1.beam = "{:02d}".format(beamlist_target[0])
         if "prepare" in steps and not dry_run:
+            director(p1, 'rm', basedir + '/param.npy', ignore_nonexistent=True)
             p1.go()
 
         # Flag polcal (pretending it's a target)
         p1 = preflag()
         p1.basedir = basedir
-        director(p0, 'rm', basedir + '/param.npy', ignore_nonexistent=True)
         if name_polcal != '':
             p1.fluxcal = ''
             p1.polcal = ''
             p1.target = name_to_ms(name_polcal)
             p1.beam = "{:02d}".format(beamlist_target[0])
             if "prepare" in steps and not dry_run:
+                director(p1, 'rm', basedir + '/param.npy', ignore_nonexistent=True)
                 p1.go()
 
         p1 = preflag()
         p1.basedir = basedir
-        director(p0, 'rm', basedir + '/param.npy', ignore_nonexistent=True)
         # Flag target
         p1.fluxcal = ''
         p1.polcal = ''
         p1.target = name_to_ms(name_target)
         p1.beam = "{:02d}".format(beamlist_target[0])
         if "preflag" in steps and not dry_run:
+            director(p1, 'rm', basedir + '/param.npy', ignore_nonexistent=True)
             p1.go()
 
         if len(fluxcals) == 1 and fluxcals[0][-1] == 0:
@@ -226,13 +225,13 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                 try:
                     p2 = ccal()
                     p2.basedir = basedir
-                    director(p2, 'rm', basedir + '/param.npy', ignore_nonexistent=True)
                     p2.fluxcal = name_to_ms(name_fluxcal)
                     p2.polcal = name_to_ms(name_polcal)
                     p2.target = name_to_ms(name_target)
                     p2.beam = "{:02d}".format(beamnr)
                     p2.crosscal_transfer_to_target_targetbeams = "{:02d}".format(beamnr)
                     if "preflag" in steps and not dry_run:
+                        director(p2, 'rm', basedir + '/param.npy', ignore_nonexistent=True)
                         p2.go()
                 except Exception as e:
                     # Exception was already logged just before
@@ -242,9 +241,10 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         p3 = convert()
         set_files(p3)
         if "convert" in steps and not dry_run:
+            director(p3, 'rm', basedir + '/param.npy', ignore_nonexistent=True)
             p3.go()
+            director(p3, 'rm', basedir + '/param.npy', ignore_nonexistent=True)
 
-        director(p3, 'rm', basedir + '/param.npy', ignore_nonexistent=True)
         for beamnr in beamlist_target:
             try:
                 p4 = scal()
