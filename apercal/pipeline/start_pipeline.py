@@ -6,6 +6,7 @@ from apercal.modules.prepare import prepare
 from apercal.modules.preflag import preflag
 from apercal.modules.ccal import ccal
 from apercal.modules.scal import scal
+from apercal.modules.continuum import continuum
 from apercal.subs.managefiles import director
 from apercal.modules.convert import convert
 from apercal.subs import calmodels as subs_calmodels
@@ -243,11 +244,11 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         if "convert" in steps and not dry_run:
             p3.go()
 
+        director(p3, 'rm', basedir + '/param.npy', ignore_nonexistent=True)
         for beamnr in beamlist_target:
             try:
                 p4 = scal()
                 p4.basedir = basedir
-                director(p4, 'rm', basedir + '/param.npy', ignore_nonexistent=True)
                 p4.beam = "{:02d}".format(beamnr)
                 p4.target = name_target + '.mir'
                 if "scal" in steps and not dry_run:
@@ -255,6 +256,19 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             except Exception as e:
                 # Exception was already logged just before
                 logger.warning("Failed beam {}, skipping that from scal".format(beamnr))
+                logger.exception(e)
+
+        for beamnr in beamlist_target:
+            try:
+                p5 = continuum()
+                p5.basedir = basedir
+                p5.beam = "{:02d}".format(beamnr)
+                p5.target = name_target + '.mir'
+                if "scal" in steps and not dry_run:
+                    p5.go()
+            except Exception as e:
+                # Exception was already logged just before
+                logger.warning("Failed beam {}, skipping that from continuum".format(beamnr))
                 logger.exception(e)
 
         time_end = time()
