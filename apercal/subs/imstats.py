@@ -4,9 +4,10 @@ import os
 import random
 import string
 import logging
+from backports import tempfile
 
 from apercal.libs import lib
-from apercal.subs import setinit, managetmp
+from apercal.subs import setinit
 from apercal.exceptions import ApercalException
 
 logger = logging.getLogger(__name__)
@@ -21,15 +22,15 @@ def getimagestats(self, image):
     setinit.setinitdirs(self)
     char_set = string.ascii_uppercase + string.digits
     if os.path.isdir(image) or os.path.isfile(image):
-        tempdir = managetmp.manage_tempdir('images')
         if os.path.isdir(image):
             temp_string = ''.join(random.sample(char_set * 8, 8))
             fits = lib.miriad('fits')
             fits.op = 'xyout'
             fits.in_ = image
-            fits.out = tempdir + '/' + temp_string + '.fits'
-            fits.go()
-            image_data = pyfits.open(tempdir + '/' + temp_string + '.fits')
+            with tempfile.TemporaryDirectory() as tempdir:
+                fits.out = tempdir + '/' + temp_string + '.fits'
+                fits.go()
+                image_data = pyfits.open(tempdir + '/' + temp_string + '.fits')
         elif os.path.isfile(image):
             image_data = pyfits.open(image)
         else:
@@ -43,7 +44,6 @@ def getimagestats(self, image):
         imagestats[1] = np.nanmax(data)  # Get the minimum of the image
         imagestats[2] = np.nanstd(data)  # Get the standard deviation
         image_data.close()  # Close the image
-        managetmp.clean_tempdir('images')
     else:
         error = 'Image does not seem to exist!'
         logger.error(error)
@@ -62,15 +62,15 @@ def getmaskstats(self, image, size):
     setinit.setinitdirs(self)
     char_set = string.ascii_uppercase + string.digits
     if os.path.isdir(image) or os.path.isfile(image):
-        tempdir = managetmp.manage_tempdir('images')
         if os.path.isdir(image):
             temp_string = ''.join(random.sample(char_set * 8, 8))
             fits = lib.miriad('fits')
             fits.op = 'xyout'
             fits.in_ = image
-            fits.out = tempdir + '/' + temp_string + '.fits'
-            fits.go()
-            mask_data = pyfits.open(tempdir + '/' + temp_string + '.fits')
+            with tempfile.TemporaryDirectory() as tempdir:
+                fits.out = tempdir + '/' + temp_string + '.fits'
+                fits.go()
+                mask_data = pyfits.open(tempdir + '/' + temp_string + '.fits')
         elif os.path.isfile(image):
             mask_data = pyfits.open(image)
         else:
@@ -83,7 +83,6 @@ def getmaskstats(self, image, size):
         maskstats[0] = np.count_nonzero(~np.isnan(data))
         maskstats[1] = maskstats[0]/(size**2)
         mask_data.close()
-        managetmp.clean_tempdir('images')
     else:
         error = 'Image does not seem to exist!'
         logger.error(error)
@@ -101,15 +100,15 @@ def getmodelstats(self, image):
     setinit.setinitdirs(self)
     char_set = string.ascii_uppercase + string.digits
     if os.path.isdir(image) or os.path.isfile(image):
-        tempdir = managetmp.manage_tempdir('images')
         if os.path.isdir(image):
             temp_string = ''.join(random.sample(char_set * 8, 8))
             fits = lib.miriad('fits')
             fits.op = 'xyout'
             fits.in_ = image
-            fits.out = tempdir + '/' + temp_string + '.fits'
-            fits.go()
-            model_data = pyfits.open(tempdir + '/' + temp_string + '.fits')
+            with tempfile.TemporaryDirectory() as tempdir:
+                fits.out = tempdir + '/' + temp_string + '.fits'
+                fits.go()
+                model_data = pyfits.open(tempdir + '/' + temp_string + '.fits')
         elif os.path.isfile(image):
             model_data = pyfits.open(image)
         else:
@@ -122,7 +121,6 @@ def getmodelstats(self, image):
         modelstats[0] = np.count_nonzero(data)
         modelstats[1] = np.sum(data)
         model_data.close()
-        managetmp.clean_tempdir('images')
     else:
         error = 'Image does not seem to exist!'
         logger.error(error)
@@ -140,15 +138,15 @@ def getcubestats(self, cube):
     setinit.setinitdirs(self)
     char_set = string.ascii_uppercase + string.digits
     if os.path.isdir(cube) or os.path.isfile(cube):
-        tempdir = managetmp.manage_tempdir('images')
         if os.path.isdir(cube):
             temp_string = ''.join(random.sample(char_set * 8, 8))
             fits = lib.miriad('fits')
             fits.op = 'xyout'
             fits.in_ = cube
-            fits.out = tempdir + '/' + temp_string + '.fits'
-            fits.go()
-            cube_data = pyfits.open(tempdir + '/' + temp_string + '.fits')
+            with tempfile.TemporaryDirectory() as tempdir:
+                fits.out = tempdir + '/' + temp_string + '.fits'
+                fits.go()
+                cube_data = pyfits.open(tempdir + '/' + temp_string + '.fits')
         elif os.path.isfile(cube):
             cube_data = pyfits.open(cube)
         else:
@@ -162,7 +160,6 @@ def getcubestats(self, cube):
         cubestats[1] = np.nanmax(data, axis=(0, 2, 3))  # Get the minimum of the image
         cubestats[2] = np.nanstd(data, axis=(0, 2, 3))  # Get the standard deviation
         cube_data.close()  # Close the image
-        managetmp.clean_tempdir('images')
     else:
         error = 'Image does not seem to exist!'
         logger.error(error)
