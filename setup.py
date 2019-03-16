@@ -10,6 +10,7 @@ install_requires = [
     'matplotlib',
     'astropy',
     'astroquery',
+    'backports.tempfile',
     'pandas',
     'drive-casa',
     'python-casacore',
