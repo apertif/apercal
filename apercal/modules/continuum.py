@@ -81,20 +81,20 @@ class continuum(BaseModule):
 
         continuumtargetbeamsmfstatus = get_param_def(self, beam + '_targetbeams_mf_status', False)
         continuumtargetbeamsmfmapstatus = get_param_def(self, beam + '_targetbeams_mf_mapstatus', False)
-        continuumtargetbeamsmfmapstats = get_param_def(self, beam + '_targetbeams_mf_mapstats', np.full((3), np.nan))
+        continuumtargetbeamsmfmapstats = get_param_def(self, beam + '_targetbeams_mf_mapstats', np.full(3, np.nan))
         continuumtargetbeamsmfbeamstatus = get_param_def(self, beam + '_targetbeams_mf_beamstatus', False)
-        continuumtargetbeamsmfmaskstatus = get_param_def(self, beam + '_targetbeams_mf_maskstatus', np.full((self.continuum_mfimage_minorcycle), False))
+        continuumtargetbeamsmfmaskstatus = get_param_def(self, beam + '_targetbeams_mf_maskstatus', np.full(self.continuum_mfimage_minorcycle, False))
         continuumtargetbeamsmfmaskstats = get_param_def(self, beam + '_targetbeams_mf_maskstats', np.full((self.continuum_mfimage_minorcycle, 2), np.nan))
-        continuumtargetbeamsmfmodelstatus = get_param_def(self, beam + '_targetbeams_mf_modelstatus', np.full((self.continuum_mfimage_minorcycle), False))
+        continuumtargetbeamsmfmodelstatus = get_param_def(self, beam + '_targetbeams_mf_modelstatus', np.full(self.continuum_mfimage_minorcycle, False))
         continuumtargetbeamsmfmodelstats = get_param_def(self, beam + '_targetbeams_mf_modelstats', np.full((self.continuum_mfimage_minorcycle, 2), np.nan))
-        continuumtargetbeamsmfimagestatus = get_param_def(self, beam + '_targetbeams_mf_imagestatus', np.full((self.continuum_mfimage_minorcycle), False))
+        continuumtargetbeamsmfimagestatus = get_param_def(self, beam + '_targetbeams_mf_imagestatus', np.full(self.continuum_mfimage_minorcycle, False))
         continuumtargetbeamsmfimagestats = get_param_def(self, beam + '_targetbeams_mf_imagestats', np.full((self.continuum_mfimage_minorcycle, 3), np.nan))
         continuumtargetbeamsmfresidualstatus = get_param_def(self, beam + '_targetbeams_mf_residualstatus', False)
         continuumtargetbeamsmfresidualstats = get_param_def(self, beam + '_targetbeams_mf_residualstats', np.full((self.continuum_mfimage_minorcycle, 3), np.nan))
-        continuumtargetbeamsmfmaskthreshold = get_param_def(self, beam + '_targetbeams_mf_maskthreshold', np.full((self.continuum_mfimage_minorcycle), np.nan))
-        continuumtargetbeamsmfcleanthreshold = get_param_def(self, beam + '_targetbeams_mf_cleanthreshold', np.full((self.continuum_mfimage_minorcycle), np.nan))
-        continuumtargetbeamsmfthresholdtype = get_param_def(self, beam + '_targetbeams_mf_thresholdtype', np.full((self.continuum_mfimage_minorcycle), 'NA'))
-        continuumtargetbeamsmffinalminor = get_param_def(self, beam + '_targetbeams_mf_final_minorcycle', np.full((1), 0))
+        continuumtargetbeamsmfmaskthreshold = get_param_def(self, beam + '_targetbeams_mf_maskthreshold', np.full(self.continuum_mfimage_minorcycle, np.nan))
+        continuumtargetbeamsmfcleanthreshold = get_param_def(self, beam + '_targetbeams_mf_cleanthreshold', np.full(self.continuum_mfimage_minorcycle, np.nan))
+        continuumtargetbeamsmfthresholdtype = get_param_def(self, beam + '_targetbeams_mf_thresholdtype', np.full(self.continuum_mfimage_minorcycle, 'NA'))
+        continuumtargetbeamsmffinalminor = get_param_def(self, beam + '_targetbeams_mf_final_minorcycle', np.full(1, 0))
 
         if self.continuum_mfimage:
             subs_setinit.setinitdirs(self)
@@ -148,16 +148,12 @@ class continuum(BaseModule):
                                         continuumtargetbeamsmfmapstatus = True
                                     else:
                                         continuumtargetbeamsmfmapstatus = False
-                                        continuumtargetbeamsmfstatus = False
                                         logger.error('Beam ' + self.beam + ': Dirty image for continuum imaging is invalid. Stopping imaging!')
-                                        stop = True
                                         continuumtargetbeamsmffinalminor = minc
                                         break
                                 else:
                                     continuumtargetbeamsmfbeamstatus = False
-                                    continuumtargetbeamsmfstatus = False
                                     logger.error('Beam ' + self.beam + ': Dirty image or beam for continuum imaging not found. Stopping imaging!')
-                                    stop = True
                                     continuumtargetbeamsmffinalminor = minc
                                     break
                                 dirtystats = imstats.getimagestats(self, 'map_mf_00')  # Min, max, rms of the dirty image
@@ -177,16 +173,12 @@ class continuum(BaseModule):
                                         continuumtargetbeamsmfmaskstatus[minc] = True
                                     else:
                                         continuumtargetbeamsmfmaskstatus[minc] = False
-                                        continuumtargetbeamsmfstatus = False
                                         logger.error('Beam ' + self.beam + ': Mask image for cycle ' + str(minc) + ' is invalid. Stopping continuum imaging!')
-                                        stop = True
                                         continuumtargetbeamsmffinalminor = minc
                                         break
                                 else:
                                     continuumtargetbeamsmfmaskstatus[minc] = False
-                                    continuumtargetbeamsmfstatus = False
                                     logger.error('Beam ' + self.beam + ': Mask image for cycle ' + str(minc) + ' not found. Stopping continuum imaging!')
-                                    stop = True
                                     continuumtargetbeamsmffinalminor = minc
                                     break
                                 mfclean = lib.miriad('mfclean')  # Clean the image down to the calculated threshold
@@ -204,16 +196,12 @@ class continuum(BaseModule):
                                         continuumtargetbeamsmfmodelstatus[minc] = True
                                     else:
                                         continuumtargetbeamsmfmodelstatus[minc] = False
-                                        continuumtargetbeamsmfstatus = False
                                         logger.error('Beam ' + self.beam + ': Clean component image for cycle ' + str(minc) + ' is invalid. Stopping continuum imaging!')
-                                        stop = True
                                         continuumtargetbeamsmffinalminor = minc
                                         break
                                 else:
                                     continuumtargetbeamsmfmodelstatus[minc] = False
-                                    continuumtargetbeamsmfstatus = False
                                     logger.error('Beam ' + self.beam + ': Clean component image for cycle ' + str(minc) + ' not found. Stopping continuum imaging!')
-                                    stop = True
                                     continuumtargetbeamsmffinalminor = minc
                                     break
                                 restor = lib.miriad('restor')  # Create the restored image
@@ -230,16 +218,12 @@ class continuum(BaseModule):
                                         continuumtargetbeamsmfimagestatus[minc] = True
                                     else:
                                         continuumtargetbeamsmfimagestatus[minc] = False
-                                        continuumtargetbeamsmfstatus = False
                                         logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(minc) + ' is invalid. Stopping continuum imaging!')
-                                        stop = True
                                         continuumtargetbeamsmffinalminor = minc
                                         break
                                 else:
                                     continuumtargetbeamsmfimagestatus[minc] = False
-                                    continuumtargetbeamsmfstatus = False
                                     logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(minc) + ' not found. Stopping continuum imaging!')
-                                    stop = True
                                     continuumtargetbeamsmffinalminor = minc
                                     break
                                 restor.mode = 'residual'  # Create the residual image
@@ -281,10 +265,8 @@ class continuum(BaseModule):
                                         break
                                 else:
                                     continuumtargetbeamsmfmaskstatus[minc] = False
-                                    continuumtargetbeamsmfstatus = False
                                     msg = 'Beam ' + self.beam + ': Mask image for cycle ' + str(minc) + ' not found. Stopping continuum imaging!'
                                     logger.error(msg)
-                                    stop = True
                                     continuumtargetbeamsmffinalminor = minc
                                     break
                                 mfclean = lib.miriad('mfclean')  # Clean the image down to the calculated threshold
@@ -306,15 +288,12 @@ class continuum(BaseModule):
                                         continuumtargetbeamsmfstatus = False
                                         msg = 'Beam ' + self.beam + ': Clean component image for cycle ' + str(minc) + ' is invalid. Stopping continuum imaging!'
                                         logger.error(msg)
-                                        stop = True
                                         continuumtargetbeamsmffinalminor = minc
                                         break
                                 else:
                                     continuumtargetbeamsmfmodelstatus[minc] = False
-                                    continuumtargetbeamsmfstatus = False
                                     msg = 'Beam ' + self.beam + ': Clean component image for cycle ' + str(minc) + ' not found. Stopping continuum imaging!'
                                     logger.error(msg)
-                                    stop = True
                                     continuumtargetbeamsmffinalminor = minc
                                     break
                                 restor = lib.miriad('restor')  # Create the restored image
@@ -331,16 +310,12 @@ class continuum(BaseModule):
                                         continuumtargetbeamsmfimagestatus[minc] = True
                                     else:
                                         continuumtargetbeamsmfimagestatus[minc] = False
-                                        continuumtargetbeamsmfstatus = False
                                         logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(minc) + ' is invalid. Stopping continuum imaging!')
-                                        stop = True
                                         continuumtargetbeamsmffinalminor = minc
                                         break
                                 else:
                                     continuumtargetbeamsmfimagestatus[minc] = False
-                                    continuumtargetbeamsmfstatus = False
                                     logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(minc) + ' not found. Stopping continuum imaging!')
-                                    stop = True
                                     continuumtargetbeamsmffinalminor = minc
                                     break
                                 restor.mode = 'residual'  # Create the residual image
@@ -405,7 +380,6 @@ class continuum(BaseModule):
         subs_param.add_param(self, beam + '_targetbeams_mf_thresholdtype', continuumtargetbeamsmfthresholdtype)
         subs_param.add_param(self, beam + '_targetbeams_mf_final_minorcycle', continuumtargetbeamsmffinalminor)
 
-
     def chunkimage(self):
         """
         Creates the final deep mfs continuum image from the self-calibrated data
@@ -420,8 +394,8 @@ class continuum(BaseModule):
         nchunks = len(np.asarray(self.continuum_chunkimage_startchannels))
 
         continuumtargetbeamschunkallstatus = get_param_def(self, beam + '_targetbeams_chunkall_status', False)
-        continuumtargetbeamschunkstatus = get_param_def(self, beam + '_targetbeams_chunk_status', np.full((nchunks), False))
-        continuumtargetbeamschunkmapstatus = get_param_def(self, beam + '_targetbeams_chunk_mapstatus', np.full((nchunks), False))
+        continuumtargetbeamschunkstatus = get_param_def(self, beam + '_targetbeams_chunk_status', np.full(nchunks, False))
+        continuumtargetbeamschunkmapstatus = get_param_def(self, beam + '_targetbeams_chunk_mapstatus', np.full(nchunks, False))
         continuumtargetbeamschunkmapstats = get_param_def(self, beam + '_targetbeams_chunk_mapstats', np.full((nchunks, 3), np.nan))
         continuumtargetbeamschunkbeamstatus = get_param_def(self, beam + '_targetbeams_chunk_beamstatus', np.full((nchunks), False))
         continuumtargetbeamschunkmaskstatus = get_param_def(self, beam + '_targetbeams_chunk_maskstatus', np.full((nchunks, self.continuum_mfimage_minorcycle), False))
@@ -430,13 +404,12 @@ class continuum(BaseModule):
         continuumtargetbeamschunkmodelstats = get_param_def(self, beam + '_targetbeams_chunk_modelstats', np.full((nchunks, self.continuum_mfimage_minorcycle, 2), np.nan))
         continuumtargetbeamschunkimagestatus = get_param_def(self, beam + '_targetbeams_chunk_imagestatus', np.full((nchunks, self.continuum_mfimage_minorcycle), False))
         continuumtargetbeamschunkimagestats = get_param_def(self, beam + '_targetbeams_chunk_imagestats', np.full((nchunks, self.continuum_mfimage_minorcycle, 3), np.nan))
-        continuumtargetbeamschunkresidualstatus = get_param_def(self, beam + '_targetbeams_chunk_residualstatus', np.full((nchunks), False))
+        continuumtargetbeamschunkresidualstatus = get_param_def(self, beam + '_targetbeams_chunk_residualstatus', np.full(nchunks, False))
         continuumtargetbeamschunkresidualstats = get_param_def(self, beam + '_targetbeams_chunk_residualstats', np.full((nchunks, self.continuum_mfimage_minorcycle, 3), np.nan))
         continuumtargetbeamschunkmaskthreshold = get_param_def(self, beam + '_targetbeams_chunk_maskthreshold', np.full((nchunks, self.continuum_mfimage_minorcycle), np.nan))
         continuumtargetbeamschunkcleanthreshold = get_param_def(self, beam + '_targetbeams_chunk_cleanthreshold', np.full((nchunks, self.continuum_mfimage_minorcycle), np.nan))
         continuumtargetbeamschunkthresholdtype = get_param_def(self, beam + '_targetbeams_chunk_thresholdtype', np.full((nchunks, self.continuum_mfimage_minorcycle), 'NA'))
         continuumtargetbeamschunkfinalminor = get_param_def(self, beam + '_targetbeams_chunk_final_minorcycle', np.full((nchunks, 1), 0))
-
 
         if self.continuum_chunkimage:
             subs_setinit.setinitdirs(self)
@@ -501,14 +474,12 @@ class continuum(BaseModule):
                                                 continuumtargetbeamschunkmapstatus[chunk] = False
                                                 continuumtargetbeamschunkstatus[chunk] = False
                                                 logger.error('Beam ' + self.beam + ': ' + cn + 'Dirty image for continuum imaging is invalid. Stopping imaging!')
-                                                stop = True
                                                 continuumtargetbeamschunkfinalminor[chunk] = minc
                                                 break
                                         else:
                                             continuumtargetbeamschunkbeamstatus[chunk] = False
                                             continuumtargetbeamschunkstatus[chunk] = False
                                             logger.error('Beam ' + self.beam + ': ' + cn + 'Dirty image or beam for continuum imaging not found. Stopping imaging!')
-                                            stop = True
                                             continuumtargetbeamschunkfinalminor[chunk] = minc
                                             break
                                         dirtystats = imstats.getimagestats(self, 'map_C' + str(chunk).zfill(2) + '_00')  # Min, max, rms of the dirty image
@@ -530,7 +501,6 @@ class continuum(BaseModule):
                                                 continuumtargetbeamschunkmaskstatus[chunk, minc] = False
                                                 continuumtargetbeamschunkstatus[chunk] = False
                                                 logger.error('Beam ' + self.beam + ': ' + cn + 'Mask image for cycle ' + str(minc) + ' is invalid. Stopping continuum imaging!')
-                                                stop = True
                                                 continuumtargetbeamschunkfinalminor[chunk] = minc
                                                 break
                                         else:
@@ -557,14 +527,12 @@ class continuum(BaseModule):
                                                 continuumtargetbeamschunkmodelstatus[chunk, minc] = False
                                                 continuumtargetbeamschunkstatus[chunk] = False
                                                 logger.error('Beam ' + self.beam + ': ' + cn + ' Clean component image for cycle ' + str(minc) + ' is invalid. Stopping continuum imaging!')
-                                                stop = True
                                                 continuumtargetbeamschunkfinalminor[chunk] = minc
                                                 break
                                         else:
                                             continuumtargetbeamschunkmodelstatus[chunk, minc] = False
                                             continuumtargetbeamschunkstatus[chunk] = False
                                             logger.error('Beam ' + self.beam + ':  ' + cn + 'Clean component image for cycle ' + str(minc) + ' not found. Stopping continuum imaging!')
-                                            stop = True
                                             continuumtargetbeamschunkfinalminor[chunk] = minc
                                             break
                                         restor = lib.miriad('restor')  # Create the restored image
@@ -583,14 +551,12 @@ class continuum(BaseModule):
                                                 continuumtargetbeamschunkimagestatus[chunk, minc] = False
                                                 continuumtargetbeamschunkstatus[chunk] = False
                                                 logger.error('Beam ' + self.beam + ': ' + cn + 'Restored image for cycle ' + str(minc) + ' is invalid. Stopping continuum imaging!')
-                                                stop = True
                                                 continuumtargetbeamschunkfinalminor[chunk] = minc
                                                 break
                                         else:
                                             continuumtargetbeamschunkimagestatus[chunk, minc] = False
                                             continuumtargetbeamschunkstatus[chunk] = False
                                             logger.error('Beam ' + self.beam + ': ' + cn + 'Restored image for cycle ' + str(minc) + ' not found. Stopping continuum imaging!')
-                                            stop = True
                                             continuumtargetbeamschunkfinalminor[chunk] = minc
                                             break
                                         restor.mode = 'residual'  # Create the residual image
@@ -627,7 +593,6 @@ class continuum(BaseModule):
                                                 continuumtargetbeamschunkstatus[chunk] = False
                                                 msg = 'Beam ' + self.beam + ': ' + cn + 'Mask image for cycle ' + str(minc) + ' is invalid. Stopping continuum imaging!'
                                                 logger.error(msg)
-                                                stop = True
                                                 continuumtargetbeamschunkfinalminor[chunk] = minc
                                                 break
                                         else:
@@ -657,7 +622,6 @@ class continuum(BaseModule):
                                                 continuumtargetbeamschunkstatus[chunk] = False
                                                 msg = 'Beam ' + self.beam + ': ' + cn + 'Clean component image for cycle ' + str(minc) + ' is invalid. Stopping continuum imaging!'
                                                 logger.error(msg)
-                                                stop = True
                                                 continuumtargetbeamschunkfinalminor[chunk] = minc
                                                 break
                                         else:
@@ -665,7 +629,6 @@ class continuum(BaseModule):
                                             continuumtargetbeamschunkstatus[chunk] = False
                                             msg = 'Beam ' + self.beam + ': ' + cn + 'Clean component image for cycle ' + str(minc) + ' not found. Stopping continuum imaging!'
                                             logger.error(msg)
-                                            stop = True
                                             continuumtargetbeamschunkfinalminor[chunk] = minc
                                             break
                                         restor = lib.miriad('restor')  # Create the restored image
@@ -684,14 +647,12 @@ class continuum(BaseModule):
                                                 continuumtargetbeamschunkimagestatus[chunk, minc] = False
                                                 continuumtargetbeamschunkstatus[chunk] = False
                                                 logger.error('Beam ' + self.beam + ': ' + cn + 'Restored image for cycle ' + str(minc) + ' is invalid. Stopping continuum imaging!')
-                                                stop = True
                                                 continuumtargetbeamschunkfinalminor[chunk] = minc
                                                 break
                                         else:
                                             continuumtargetbeamschunkimagestatus[chunk, minc] = False
                                             continuumtargetbeamschunkstatus[chunk] = False
                                             logger.error('Beam ' + self.beam + ': ' + cn + 'Restored image for cycle ' + str(minc) + ' not found. Stopping continuum imaging!')
-                                            stop = True
                                             continuumtargetbeamschunkfinalminor[chunk] = minc
                                             break
                                         restor.mode = 'residual'  # Create the residual image
@@ -744,10 +705,8 @@ class continuum(BaseModule):
         subs_param.add_param(self, beam + '_targetbeams_chunk_thresholdtype', continuumtargetbeamschunkthresholdtype)
         subs_param.add_param(self, beam + '_targetbeams_chunk_final_minorcycle', continuumtargetbeamschunkfinalminor)
 
-
     def show(self, showall=False):
         lib.show(self, 'CONTINUUM', showall)
-
 
     def summary(self):
         """
@@ -761,7 +720,7 @@ class continuum(BaseModule):
 
         nchunks = len(np.asarray(self.continuum_chunkimage_startchannels))
 
-        MI = np.full((self.NBEAMS), False)
+        MI = np.full(self.NBEAMS, False)
         CI = np.full((self.NBEAMS, nchunks), False)
 
         for b in range(self.NBEAMS):
@@ -773,9 +732,9 @@ class continuum(BaseModule):
             except KeyError:
                 MI[b] = False
             try:
-                CI[b,:] = subs_param.get_param(self, beam + '_targetbeams_chunk_status')
+                CI[b, :] = subs_param.get_param(self, beam + '_targetbeams_chunk_status')
             except KeyError:
-                CI[b,:] = False
+                CI[b, :] = False
 
         # Create the data frame
 
@@ -785,11 +744,10 @@ class continuum(BaseModule):
 
         df = pd.DataFrame(np.ndarray.flatten(MI), index=dataset_indices, columns=['MF image'])
         for chunk in range(nchunks):
-            df_chunkimage = pd.DataFrame(np.ndarray.flatten(CI[:,chunk]), index=dataset_indices, columns=['Chunk ' + str(chunk)])
+            df_chunkimage = pd.DataFrame(np.ndarray.flatten(CI[:, chunk]), index=dataset_indices, columns=['Chunk ' + str(chunk)])
             df = pd.concat([df, df_chunkimage], axis=1)
 
         return df
-
 
     def reset(self, steps='all'):
         """
@@ -838,7 +796,6 @@ class continuum(BaseModule):
             subs_param.del_param(self, beam + '_targetbeams_chunk_cleanthreshold')
             subs_param.del_param(self, beam + '_targetbeams_chunk_thresholdtype')
             subs_param.del_param(self, beam + '_targetbeams_chunk_final_minorcycle')
-
 
     def reset_all(self, steps='all'):
         """
