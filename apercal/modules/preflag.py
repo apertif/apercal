@@ -1010,7 +1010,10 @@ class preflag(BaseModule):
                                           antenna number in the MS (typically 0 means RT2).
         """
         logger.info("Storing flagging images for " + mspath)
-        destination_path = '/'.join(mspath.rstrip('/').split('/')[:-1]) + '/'
+        beamstr = mspath.rstrip('/').split('/')[-3] # beam number as string, "29" or so
+        destination_path = self.basedir + '/qa/preflag/' + beamstr
+        if not path.exists(destination_path):
+            os.makedirs(destination_path)
         msname = mspath.rstrip('/').split('/')[-1].rstrip('.MS')
         for (ant1, ant2) in baselines:
             pngname = "{}-flags-{:02d}-{:02d}.png".format(msname, ant1, ant2)
