@@ -5,6 +5,7 @@ from __future__ import print_function
 from apercal.modules.prepare import prepare
 from apercal.modules.preflag import preflag
 from apercal.modules.ccal import ccal
+from dataqa.crosscal.crosscal_plots import make_all_ccal_plots
 from apercal.modules.scal import scal
 from apercal.modules.continuum import continuum
 from apercal.subs.managefiles import director
@@ -37,7 +38,7 @@ def validate_taskid(taskid_from_autocal):
 
 
 def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=None, flip_ra=False,
-                           steps=["prepare", "preflag", "ccal", "convert", "scal", "continuum"]):
+                           steps=["prepare", "preflag", "ccal", "ccalqa", "convert", "scal", "continuum"]):
     """
     Trigger the start of a fluxcal pipeline. Returns when pipeline is done.
     Example for taskid, name, beamnr: (190108926, '3C147_36', 36)
@@ -237,6 +238,15 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     # Exception was already logged just before
                     logger.warning("Failed beam {}, skipping that from crosscal".format(beamnr))
                     logger.exception(e)
+
+        if "ccalqa" in steps and not dry_run:
+            logger.info("Starting crosscal QA plots")
+            try:
+                make_all_ccal_plots(taskid_target, name_fluxcal)
+            except Exception as e:
+                logger.warning("Failed crosscal QA plots")
+                logger.exception(e)
+            logger.info("Done with crosscal QA plots")
 
         p3 = convert()
         set_files(p3)
