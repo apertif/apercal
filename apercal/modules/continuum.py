@@ -447,8 +447,8 @@ class continuum(BaseModule):
             if not continuumtargetbeamschunkallstatus:
                 logger.info('Beam ' + self.beam + ': Individual chunk continuum imaging')
                 # Get the status of the selfcal for the specified beam
-                phasestatus = subs_param.get_param(self, sbeam + '_targetbeams_phase_status')
-                ampstatus = subs_param.get_param(self, sbeam + '_targetbeams_amp_status')
+                phasestatus = subs_param.get_param_def(self, sbeam + '_targetbeams_phase_status', False)
+                ampstatus = subs_param.get_param_def(self, sbeam + '_targetbeams_amp_status', False)
                 if ampstatus:
                     logger.info('Beam ' + self.beam + ': Using amplitude self-calibrated dataset!')
                     dataset = '../' + self.selfcalsubdir + '/' + self.target.rstrip('.mir') + '_amp.mir'
@@ -772,11 +772,11 @@ class continuum(BaseModule):
             subs_setinit.setdatasetnamestomiriad(self)
             beam = 'continuum_B' + str(b).zfill(2)
             try:
-                MI[b] = subs_param.get_param(self, beam + '_targetbeams_mf_status')
+                MI[b] = subs_param.get_param_def(self, beam + '_targetbeams_mf_status', False)
             except KeyError:
                 MI[b] = False
             try:
-                CI[b,:] = subs_param.get_param(self, beam + '_targetbeams_chunk_status')
+                CI[b,:] = subs_param.get_param_def(self, beam + '_targetbeams_chunk_status', False)
             except KeyError:
                 CI[b,:] = False
 

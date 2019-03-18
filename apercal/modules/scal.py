@@ -619,6 +619,7 @@ class scal(BaseModule):
                                         else:
                                             selfcaltargetbeamsphaseimagestatus[majc, minc] = False
                                             selfcaltargetbeamsphasestatus = False
+                                            subs_param.add_param(self, beam + '_targetbeams_phase_status', selfcaltargetbeamsphasestatus)
                                             msg = 'Beam ' + self.beam + ': Restored image for cycle ' + str(majc) + '/' + str(minc) + ' not found. Stopping self-calibration!'
                                             logger.error(msg)
                                             stop = True
