@@ -388,18 +388,22 @@ class scal(BaseModule):
                                             else:
                                                 selfcaltargetbeamsphasemapstatus[majc] = False
                                                 selfcaltargetbeamsphasestatus = False
-                                                logger.error('Beam ' + self.beam + ': Dirty image for major cycle ' + str(majc) + ' is invalid. Stopping self calibration!')
+                                                msg = 'Beam ' + self.beam + ': Dirty image for major cycle ' + str(majc) + ' is invalid. Stopping self calibration!'
+                                                logger.error(msg)
                                                 stop = True
                                                 selfcaltargetbeamsphasefinalmajor = majc
                                                 selfcaltargetbeamsphasefinalminor = minc
+                                                raise ApercalException(msg)
                                                 break
                                         else:
                                             selfcaltargetbeamsphasebeamstatus[majc] = False
                                             selfcaltargetbeamsphasestatus = False
-                                            logger.error('Beam ' + self.beam + ': Dirty image or beam for major cycle ' + str(majc) + ' not found. Stopping self-calibration!')
+                                            msg = 'Beam ' + self.beam + ': Dirty image or beam for major cycle ' + str(majc) + ' not found. Stopping self-calibration!'
+                                            logger.error(msg)
                                             stop = True
                                             selfcaltargetbeamsphasefinalmajor = majc
                                             selfcaltargetbeamsphasefinalminor = minc
+                                            raise ApercalException(msg)
                                             break
                                         dirtystats = imstats.getimagestats(self, str(majc).zfill(2) + '/map_00') # Min, max, rms of the dirty image
                                         TNdr = masking.calc_theoretical_noise_dr(dirtystats[1], TN, self.selfcal_phase_nsigma) # Theoretical noise dynamic range
@@ -426,18 +430,22 @@ class scal(BaseModule):
                                             else:
                                                 selfcaltargetbeamsphasemaskstatus[majc, minc] = False
                                                 selfcaltargetbeamsphasestatus = False
-                                                logger.error('Beam ' + self.beam + ': Mask image for cycle ' + str(majc) + '/' + str(minc) + ' is invalid. Stopping self-calibration!')
+                                                msg = 'Beam ' + self.beam + ': Mask image for cycle ' + str(majc) + '/' + str(minc) + ' is invalid. Stopping self-calibration!'
+                                                logger.error(msg)
                                                 stop = True
                                                 selfcaltargetbeamsphasefinalmajor = majc
                                                 selfcaltargetbeamsphasefinalminor = minc
+                                                raise ApercalException(msg)
                                                 break
                                         else:
                                             selfcaltargetbeamsphasemaskstatus[majc, minc] = False
                                             selfcaltargetbeamsphasestatus = False
-                                            logger.error('Beam ' + self.beam + ': Mask image for cycle ' + str(majc) + '/' + str(minc) + ' not found. Stopping self-calibration!')
+                                            msg = 'Beam ' + self.beam + ': Mask image for cycle ' + str(majc) + '/' + str(minc) + ' not found. Stopping self-calibration!'
+                                            logger.error(msg)
                                             stop = True
                                             selfcaltargetbeamsphasefinalmajor = majc
                                             selfcaltargetbeamsphasefinalminor = minc
+                                            raise ApercalException(msg)
                                             break
                                         mfclean = lib.miriad('mfclean')  # Clean the image down to the calculated threshold
                                         mfclean.map = str(majc).zfill(2) + '/map_00'
@@ -455,18 +463,22 @@ class scal(BaseModule):
                                             else:
                                                 selfcaltargetbeamsphasemodelstatus[majc, minc] = False
                                                 selfcaltargetbeamsphasestatus = False
-                                                logger.error('Beam ' + self.beam + ': Clean component image for cycle ' + str(majc) + '/' + str(minc) + ' is invalid. Stopping self-calibration!')
+                                                msg = 'Beam ' + self.beam + ': Clean component image for cycle ' + str(majc) + '/' + str(minc) + ' is invalid. Stopping self-calibration!'
+                                                logger.error(msg)
                                                 stop = True
                                                 selfcaltargetbeamsphasefinalmajor = majc
                                                 selfcaltargetbeamsphasefinalminor = minc
+                                                raise ApercalException(msg)
                                                 break
                                         else:
                                             selfcaltargetbeamsphasemodelstatus[majc, minc] = False
                                             selfcaltargetbeamsphasestatus = False
-                                            logger.error('Beam ' + self.beam + ': Clean component image for cycle ' + str(majc) + '/' + str(minc) + ' not found. Stopping self-calibration!')
+                                            msg = 'Beam ' + self.beam + ': Clean component image for cycle ' + str(majc) + '/' + str(minc) + ' not found. Stopping self-calibration!'
+                                            logger.error(msg)
                                             stop = True
                                             selfcaltargetbeamsphasefinalmajor = majc
                                             selfcaltargetbeamsphasefinalminor = minc
+                                            raise ApercalException(msg)
                                             break
                                         restor = lib.miriad('restor') # Create the restored image
                                         restor.model = str(majc).zfill(2) + '/model_00'
@@ -491,10 +503,12 @@ class scal(BaseModule):
                                         else:
                                             selfcaltargetbeamsphaseimagestatus[majc, minc] = False
                                             selfcaltargetbeamsphasestatus = False
-                                            logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(majc) + '/' + str(minc) + ' not found. Stopping self-calibration!')
+                                            msg = 'Beam ' + self.beam + ': Restored image for cycle ' + str(majc) + '/' + str(minc) + ' not found. Stopping self-calibration!'
+                                            logger.error(msg)
                                             stop = True
                                             selfcaltargetbeamsphasefinalmajor = majc
                                             selfcaltargetbeamsphasefinalminor = minc
+                                            raise ApercalException(msg)
                                             break
                                         restor.mode = 'residual' # Create the residual image
                                         restor.out = str(majc).zfill(2) + '/residual_00'
@@ -544,6 +558,7 @@ class scal(BaseModule):
                                             stop = True
                                             selfcaltargetbeamsphasefinalmajor = majc
                                             selfcaltargetbeamsphasefinalminor = minc
+                                            raise ApercalException(msg)
                                             break
                                         mfclean = lib.miriad('mfclean')  # Clean the image down to the calculated threshold
                                         mfclean.map = str(majc).zfill(2) + '/map_00'
@@ -567,6 +582,7 @@ class scal(BaseModule):
                                                 stop = True
                                                 selfcaltargetbeamsphasefinalmajor = majc
                                                 selfcaltargetbeamsphasefinalminor = minc
+                                                raise ApercalException(msg)
                                                 break
                                         else:
                                             selfcaltargetbeamsphasemodelstatus[majc, minc] = False
@@ -576,6 +592,7 @@ class scal(BaseModule):
                                             stop = True
                                             selfcaltargetbeamsphasefinalmajor = majc
                                             selfcaltargetbeamsphasefinalminor = minc
+                                            raise ApercalException(msg)
                                             break
                                         restor = lib.miriad('restor') # Create the restored image
                                         restor.model = str(majc).zfill(2) + '/model_' + str(minc).zfill(2)
@@ -592,18 +609,22 @@ class scal(BaseModule):
                                             else:
                                                 selfcaltargetbeamsphaseimagestatus[majc, minc] = False
                                                 selfcaltargetbeamsphasestatus = False
-                                                logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(majc) + '/' + str(minc) + ' is invalid. Stopping self-calibration!')
+                                                msg = 'Beam ' + self.beam + ': Restored image for cycle ' + str(majc) + '/' + str(minc) + ' is invalid. Stopping self-calibration!'
+                                                logger.error(msg)
                                                 stop = True
                                                 selfcaltargetbeamsphasefinalmajor = majc
                                                 selfcaltargetbeamsphasefinalminor = minc
+                                                raise ApercalException(msg)
                                                 break
                                         else:
                                             selfcaltargetbeamsphaseimagestatus[majc, minc] = False
                                             selfcaltargetbeamsphasestatus = False
-                                            logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(majc) + '/' + str(minc) + ' not found. Stopping self-calibration!')
+                                            msg = 'Beam ' + self.beam + ': Restored image for cycle ' + str(majc) + '/' + str(minc) + ' not found. Stopping self-calibration!'
+                                            logger.error(msg)
                                             stop = True
                                             selfcaltargetbeamsphasefinalmajor = majc
                                             selfcaltargetbeamsphasefinalminor = minc
+                                            raise ApercalException(msg)
                                             break
                                         restor.mode = 'residual' # Create the residual image
                                         restor.out = str(majc).zfill(2) + '/residual_' + str(minc).zfill(2)
@@ -780,16 +801,20 @@ class scal(BaseModule):
                                         else:
                                             selfcaltargetbeamsampmapstatus = False
                                             selfcaltargetbeamsampstatus = False
-                                            logger.error('Beam ' + self.beam + ': Dirty image for amplitude self-calibration is invalid. Stopping self calibration!')
+                                            msg = 'Beam ' + self.beam + ': Dirty image for amplitude self-calibration is invalid. Stopping self calibration!'
+                                            logger.error(msg)
                                             stop = True
                                             selfcaltargetbeamsampfinalminor = minc
+                                            raise ApercalException(msg)
                                             break
                                     else:
                                         selfcaltargetbeamsampbeamstatus = False
                                         selfcaltargetbeamsampstatus = False
-                                        logger.error('Beam ' + self.beam + ': Dirty image or beam for amplitude self-calibration not found. Stopping self-calibration!')
+                                        msg = 'Beam ' + self.beam + ': Dirty image or beam for amplitude self-calibration not found. Stopping self-calibration!'
+                                        logger.error(msg)
                                         stop = True
                                         selfcaltargetbeamsampfinalminor = minc
+                                        raise ApercalException(msg)
                                         break
                                     dirtystats = imstats.getimagestats(self, 'amp/map_00')  # Min, max, rms of the dirty image
                                     subs_managefiles.director(self, 'cp', self.selfcaldir + '/amp/' + 'mask_00', file_=self.selfcaldir + '/' + str(phasemajor).zfill(2) + '/mask_' + str(phaseminor).zfill(2))  # Copy the last mask from the phase selfcal over
@@ -801,16 +826,20 @@ class scal(BaseModule):
                                         else:
                                             selfcaltargetbeamsampmaskstatus[minc] = False
                                             selfcaltargetbeamsampstatus = False
-                                            logger.error('Beam ' + self.beam + ': Mask image for amplitude self-calibration is invalid. Stopping self-calibration!')
+                                            msg = 'Beam ' + self.beam + ': Mask image for amplitude self-calibration is invalid. Stopping self-calibration!'
+                                            logger.error(msg)
                                             stop = True
                                             selfcaltargetbeamsampfinalminor = minc
+                                            raise ApercalException(msg)
                                             break
                                     else:
                                         selfcaltargetbeamsampmaskstatus[minc] = False
                                         selfcaltargetbeamsampstatus = False
-                                        logger.error('Beam ' + self.beam + ': Mask image for amplitude self-calibration not found. Stopping self-calibration!')
+                                        msg = 'Beam ' + self.beam + ': Mask image for amplitude self-calibration not found. Stopping self-calibration!'
+                                        logger.error(msg)
                                         stop = True
                                         selfcaltargetbeamsampfinalminor = minc
+                                        raise ApercalException(msg)
                                         break
                                     TNdr = masking.calc_theoretical_noise_dr(dirtystats[1], TN, self.selfcal_amp_nsigma)  # Theoretical noise dynamic range
                                     DRdr = masking.calc_dynamic_range_dr(mindr_list, minc, self.selfcal_amp_mindr)  # Dynamic range dynamic range
@@ -839,16 +868,20 @@ class scal(BaseModule):
                                         else:
                                             selfcaltargetbeamsampmodelstatus[minc] = False
                                             selfcaltargetbeamsampstatus = False
-                                            logger.error('Beam ' + self.beam + ': Clean component image for cycle ' + str(minc) + ' is invalid. Stopping self-calibration!')
+                                            msg = 'Beam ' + self.beam + ': Clean component image for cycle ' + str(minc) + ' is invalid. Stopping self-calibration!'
+                                            logger.error(msg)
                                             stop = True
                                             selfcaltargetbeamsampfinalminor = minc
+                                            raise ApercalException(msg)
                                             break
                                     else:
                                         selfcaltargetbeamsampmodelstatus[minc] = False
                                         selfcaltargetbeamsampstatus = False
-                                        logger.error('Beam ' + self.beam + ': Clean component image for cycle ' + str(minc) + ' not found. Stopping self-calibration!')
+                                        msg = 'Beam ' + self.beam + ': Clean component image for cycle ' + str(minc) + ' not found. Stopping self-calibration!'
+                                        logger.error(msg)
                                         stop = True
                                         selfcaltargetbeamsampfinalminor = minc
+                                        raise ApercalException(msg)
                                         break
                                     restor = lib.miriad('restor')  # Create the restored image
                                     restor.model = 'amp/model_00'
@@ -865,16 +898,20 @@ class scal(BaseModule):
                                         else:
                                             selfcaltargetbeamsampimagestatus[minc] = False
                                             selfcaltargetbeamsampstatus = False
-                                            logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(minc) + ' is invalid. Stopping self-calibration!')
+                                            msg = 'Beam ' + self.beam + ': Restored image for cycle ' + str(minc) + ' is invalid. Stopping self-calibration!'
+                                            logger.error(msg)
                                             stop = True
                                             selfcaltargetbeamsampfinalminor = minc
+                                            raise ApercalException(msg)
                                             break
                                     else:
                                         selfcaltargetbeamsampimagestatus[minc] = False
                                         selfcaltargetbeamsampstatus = False
-                                        logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(minc) + ' not found. Stopping self-calibration!')
+                                        msg = 'Beam ' + self.beam + ': Restored image for cycle ' + str(minc) + ' not found. Stopping self-calibration!'
+                                        logger.error(msg)
                                         stop = True
                                         selfcaltargetbeamsampfinalminor = minc
+                                        raise ApercalException(msg)
                                         break
                                     restor.mode = 'residual'  # Create the residual image
                                     restor.out = 'amp/residual_00'
@@ -910,16 +947,20 @@ class scal(BaseModule):
                                         else:
                                             selfcaltargetbeamsampmaskstatus[minc] = False
                                             selfcaltargetbeamsampstatus = False
-                                            logger.error('Beam ' + self.beam + ': Mask image for cycle ' + str(minc) + ' is invalid. Stopping self-calibration!')
+                                            msg = 'Beam ' + self.beam + ': Mask image for cycle ' + str(minc) + ' is invalid. Stopping self-calibration!'
+                                            logger.error(msg)
                                             stop = True
                                             selfcaltargetbeamsampfinalminor = minc
+                                            raise ApercalException(msg)
                                             break
                                     else:
                                         selfcaltargetbeamsampmaskstatus[minc] = False
                                         selfcaltargetbeamsampstatus = False
-                                        logger.error('Beam ' + self.beam + ': Mask image for cycle ' + str(minc) + ' not found. Stopping self-calibration!')
+                                        msg = 'Beam ' + self.beam + ': Mask image for cycle ' + str(minc) + ' not found. Stopping self-calibration!'
+                                        logger.error(msg)
                                         stop = True
                                         selfcaltargetbeamsampfinalminor = minc
+                                        raise ApercalException(msg)
                                         break
                                     mfclean = lib.miriad('mfclean')  # Clean the image down to the calculated threshold
                                     mfclean.map = 'amp/map_00'
@@ -938,16 +979,20 @@ class scal(BaseModule):
                                         else:
                                             selfcaltargetbeamsampmodelstatus[minc] = False
                                             selfcaltargetbeamsampstatus = False
-                                            logger.error('Beam ' + self.beam + ': Clean component image for cycle ' + str(minc) + ' is invalid. Stopping self-calibration!')
+                                            msg = 'Beam ' + self.beam + ': Clean component image for cycle ' + str(minc) + ' is invalid. Stopping self-calibration!'
+                                            logger.error(msg)
                                             stop = True
                                             selfcaltargetbeamsampfinalminor = minc
+                                            raise ApercalException(msg)
                                             break
                                     else:
                                         selfcaltargetbeamsampmodelstatus[minc] = False
                                         selfcaltargetbeamsampstatus = False
-                                        logger.error('Beam ' + self.beam + ': Clean component image for cycle ' + str(minc) + ' not found. Stopping self-calibration!')
+                                        msg = 'Beam ' + self.beam + ': Clean component image for cycle ' + str(minc) + ' not found. Stopping self-calibration!'
+                                        logger.error(msg)
                                         stop = True
                                         selfcaltargetbeamsampfinalminor = minc
+                                        raise ApercalException(msg)
                                         break
                                     restor = lib.miriad('restor')  # Create the restored image
                                     restor.model = 'amp/model_' + str(minc).zfill(2)
@@ -964,16 +1009,20 @@ class scal(BaseModule):
                                         else:
                                             selfcaltargetbeamsampimagestatus[minc] = False
                                             selfcaltargetbeamsampstatus = False
-                                            logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(minc) + ' is invalid. Stopping self-calibration!')
+                                            msg = 'Beam ' + self.beam + ': Restored image for cycle ' + str(minc) + ' is invalid. Stopping self-calibration!'
+                                            logger.error(msg)
                                             stop = True
                                             selfcaltargetbeamsampfinalminor = minc
+                                            raise ApercalException(msg)
                                             break
                                     else:
                                         selfcaltargetbeamsampimagestatus[minc] = False
                                         selfcaltargetbeamsampstatus = False
-                                        logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(minc) + ' not found. Stopping self-calibration!')
+                                        msg = 'Beam ' + self.beam + ': Restored image for cycle ' + str(minc) + ' not found. Stopping self-calibration!'
+                                        logger.error(msg)
                                         stop = True
                                         selfcaltargetbeamsampfinalminor = minc
+                                        raise ApercalException(msg)
                                         break
                                     restor.mode = 'residual'  # Create the residual image
                                     restor.out = 'amp/residual_' + str(minc).zfill(2)
