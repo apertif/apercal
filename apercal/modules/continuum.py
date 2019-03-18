@@ -105,12 +105,14 @@ class continuum(BaseModule):
                 # Get the status of the selfcal for the specified beam
                 phasestatus = subs_param.get_param(self, sbeam + '_targetbeams_phase_status')
                 ampstatus = subs_param.get_param(self, sbeam + '_targetbeams_amp_status')
-                if ampstatus:
+                datasetname_amp = '../' + self.selfcalsubdir + '/' + self.target.rstrip('.mir') + '_amp.mir'
+                datasetname_phase = '../' + self.selfcalsubdir + '/' + self.target
+                if ampstatus or os.path.isdir(datasetname_amp):
                     logger.info('Beam ' + self.beam + ': Using amplitude self-calibrated dataset!')
-                    dataset = '../' + self.selfcalsubdir + '/' + self.target.rstrip('.mir') + '_amp.mir'
-                elif phasestatus:
+                    dataset = datasetname_amp
+                elif phasestatus or os.path.isdir(datasetname_phase):
                     logger.info('Beam ' + self.beam + ': Using phase self-calibrated dataset. Amplitude calibration was not successful or not wanted!')
-                    dataset = '../' + self.selfcalsubdir + '/' + self.target
+                    dataset = datasetname_phase
                 else:
                     msg = 'Beam ' + self.beam + ': Self-calibration was not successful. No continuum imaging possible!'
                     logger.error(msg)
