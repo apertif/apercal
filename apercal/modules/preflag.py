@@ -1017,7 +1017,7 @@ class preflag(BaseModule):
         msname = mspath.rstrip('/').split('/')[-1].rstrip('.MS')
         for (ant1, ant2) in baselines:
             pngname = "{}-flags-{:02d}-{:02d}.png".format(msname, ant1, ant2)
-            lib.basher("rfigui -save-baseline {} {} {} 0 0 {}".format(destination_path + pngname, ant1, ant2, mspath))
+            lib.basher("rfigui -save-baseline {} {} {} 0 0 {}".format(destination_path + "/" + pngname, ant1, ant2, mspath))
         logger.info("Done storing flagging images for " + mspath)
 
     def aoflagger_flag(self):
