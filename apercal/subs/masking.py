@@ -237,7 +237,7 @@ def create_mask(self, image, mask, threshold, theoretical_noise, beampars=None, 
     convim.mirtofits(image, image + '.fits')
     bdsf_threshold = threshold / theoretical_noise
     if bdsf_threshold > 5:
-        logger.error("BDSF should not be called with threshold above 5 (so not" + str(bdsf_threshold) + "), changing it to 3 instead")
+        logger.error("BDSF should not be called with threshold above 5 (so not " + str(bdsf_threshold) + "), changing it to 3 instead")
         bdsf_threshold = 3
     if beampars:
         bdsf.process_image(image + '.fits', stop_at='isl', thresh_isl=bdsf_threshold, beam=beampars, adaptive_rms_box=True, rms_map=rms_map).export_image(outfile=mask + '.fits', img_format='fits', img_type='island_mask', pad_image=True)
