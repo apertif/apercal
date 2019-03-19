@@ -236,20 +236,32 @@ def create_mask(self, image, mask, threshold, theoretical_noise, beampars=None, 
     """
     convim.mirtofits(image, image + '.fits')
     bdsf_threshold = threshold / theoretical_noise
-    if beampars is not None:
-        bdsf.process_image(image + '.fits', advanced_opts=True, stop_at='isl', thresh_isl = bdsf_threshold, beam=beampars, adaptive_rms_box=True, rms_map=rms_map).export_image(outfile=mask + '.fits', img_format='fits', img_type='island_mask', pad_image=True)
+    if beampars:
+#        bdsf.process_image(image + '.fits', stop_at='isl', thresh_isl=bdsf_threshold, beam=beampars, adaptive_rms_box=True, rms_map=rms_map).export_image(outfile=mask + '.fits', img_format='fits', img_type='island_mask', pad_image=True)
+        bdsf.process_image(image + '.fits', stop_at='isl', thresh_isl=bdsf_threshold, beam=beampars, adaptive_rms_box=True, rms_map=False, rms_value=theoretical_noise).export_image(outfile=mask + '.fits', img_format='fits', img_type='island_mask', pad_image=True)
     else:
-        bdsf.process_image(image + '.fits', advanced_opts=True, stop_at='isl', thresh_isl=bdsf_threshold, adaptive_rms_box=True, rms_map=rms_map).export_image(outfile=mask + '.fits', img_format='fits', img_type='island_mask', pad_image=True)
-    convim.fitstomir(mask + '.fits', mask + '_pybdsf')
-    maths = lib.miriad('maths')
-    maths.out = mask
-    maths.exp = '"<' + mask + '_pybdsf>"'
-    maths.mask = '"<' + mask + '_pybdsf>.gt.0' + '"'
-    maths.go()
-    managefiles.director(self, 'rm', image + '.fits.pybdsf.log')
-    managefiles.director(self, 'rm', image + '.fits')
-    managefiles.director(self, 'rm', mask + '.fits')
-    managefiles.director(self, 'rm', mask + '_pybdsf')
+        bdsf.process_image(image + '.fits', stop_at='isl', thresh_isl=bdsf_threshold, adaptive_rms_box=True, rms_map=False, rms_value=theoretical_noise).export_image(outfile=mask + '.fits', img_format='fits', img_type='island_mask', pad_image=True)
+    if os.path.isfile(mask + '.fits'):
+        # Add a random number to the masks to make it viewable in kvis
+        fitsmask = pyfits.open(mask + '.fits')
+        fitsmask_data = fitsmask[0].data
+        fitsmask_hdr = fitsmask[0].header
+        rand_array = np.random.rand(int(fitsmask_hdr['NAXIS1']), int(fitsmask_hdr['NAXIS2']))
+        fitsmask[0].data = np.multiply(rand_array, fitsmask_data)
+        fitsmask.writeto(mask + '.fits', clobber=True)
+        # Convert mask to MIRIAD and generate a usable one for MIRIAD
+        convim.fitstomir(mask + '.fits', mask + '_pybdsf')
+        maths = lib.miriad('maths')
+        maths.out = mask
+        maths.exp = '"<' + mask + '_pybdsf>"'
+        maths.mask = '"<' + mask + '_pybdsf>.gt.0' + '"'
+        maths.go()
+        managefiles.director(self, 'rm', image + '.fits.pybdsf.log')
+        managefiles.director(self, 'rm', image + '.fits')
+        managefiles.director(self, 'rm', mask + '.fits')
+        managefiles.director(self, 'rm', mask + '_pybdsf')
+    else:
+        pass
 
 
 def get_beam(self, image, beam):

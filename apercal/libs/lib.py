@@ -5,6 +5,8 @@ import sys
 from ConfigParser import SafeConfigParser, ConfigParser
 
 import astropy.io.fits as pyfits
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 import drivecasa

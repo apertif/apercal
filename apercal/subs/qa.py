@@ -7,8 +7,10 @@ import astropy.io.fits as pyfits
 import numpy as np
 import scipy.stats
 
+from backports import tempfile
+
 from apercal.libs import lib
-from apercal.subs import setinit, managetmp
+from apercal.subs import setinit
 from apercal.exceptions import ApercalException
 from apercal.subs import imstats
 
@@ -24,30 +26,30 @@ def checkimagegaussianity(self, image, alpha):
     setinit.setinitdirs(self)
     char_set = string.ascii_uppercase + string.digits
     if os.path.isdir(image) or os.path.isfile(image):
-        if os.path.isdir(image):
-            tempdir = managetmp.manage_tempdir('images')
-            temp_string = ''.join(random.sample(char_set * 8, 8))
-            fits = lib.miriad('fits')
-            fits.op = 'xyout'
-            fits.in_ = image
-            fits.out = tempdir + '/' + temp_string + '.fits'
-            fits.go()
-            pyfile = pyfits.open(tempdir + '/' + temp_string + '.fits')
-        elif os.path.isfile(image):
-            pyfile = pyfits.open(image)
-        else:
-            error = 'Image format not supported. Only MIRIAD and FITS formats are supported!'
-            logger.error(error)
-            raise ApercalException(error)
-        image = pyfile[0].data[0][0]
-        pyfile.close()
-        k2, p = scipy.stats.normaltest(image, nan_policy='omit', axis=None)
-        if p < alpha:
-            return True
-        else:
-            return False
+        with tempfile.TemporaryDirectory() as tempdir:
+            if os.path.isdir(image):
+                temp_string = ''.join(random.sample(char_set * 8, 8))
+                fits = lib.miriad('fits')
+                fits.op = 'xyout'
+                fits.in_ = image
+                fits.out = tempdir + '/' + temp_string + '.fits'
+                fits.go()
+                pyfile = pyfits.open(tempdir + '/' + temp_string + '.fits')
+            elif os.path.isfile(image):
+                pyfile = pyfits.open(image)
+            else:
+                error = 'Image format not supported. Only MIRIAD and FITS formats are supported!'
+                logger.error(error)
+                raise ApercalException(error)
+            image = pyfile[0].data[0][0]
+            pyfile.close()
+            k2, p = scipy.stats.normaltest(image, nan_policy='omit', axis=None)
+            if p < alpha:
+                return True
+            else:
+                return False
     else:
-        error = 'Image does not seem to exist!'
+        error = 'Image {} does not seem to exist!'.format(image)
         logger.error(error)
         raise ApercalException(error)
 

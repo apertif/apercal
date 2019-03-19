@@ -55,7 +55,7 @@ def get_param(step, parameter):
     """
     subs_setinit.setinitdirs(step)
     if not os.path.isfile(step.basedir + 'param.npy'):
-        logger('Parameter file not found! Cannot load parameter ' + str(parameter))
+        logger.error('Parameter file not found! Cannot load parameter ' + str(parameter))
     else:
         d = np.load(step.basedir + 'param.npy').item()
         values = d[parameter]

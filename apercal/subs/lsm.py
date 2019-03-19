@@ -5,6 +5,8 @@ pointing centre in a certain radius
 import logging
 import re
 
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.mlab as mplab
 import numpy as np
 from astropy import units as u
