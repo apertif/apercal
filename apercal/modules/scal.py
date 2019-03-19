@@ -680,7 +680,7 @@ class scal(BaseModule):
                             selfcal.nfbin = self.selfcal_phase_nfbin
                             selfcal.go()
                 # Check final residual image for gaussianity, we should add more metrics here to check selfcal
-                if TNreached or (self.selfcal_phase_minorcycle == selfcaltargetbeamsphasefinalminor and self.selfcal_phase_majorcycle == selfcaltargetbeamsphasefinalmajor):
+                if TNreached or ((self.selfcal_phase_minorcycle-1) == selfcaltargetbeamsphasefinalminor and (self.selfcal_phase_majorcycle-1) == selfcaltargetbeamsphasefinalmajor):
                     if qa.checkimagegaussianity(self, str(selfcaltargetbeamsphasefinalmajor).zfill(2) + '/residual_' + str(selfcaltargetbeamsphasefinalminor).zfill(2), self.selfcal_gaussianity):
                         selfcaltargetbeamsphaseresidualstatus = True
                         selfcaltargetbeamsphasestatus = True
