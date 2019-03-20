@@ -31,6 +31,7 @@ class line(BaseModule):
     line_splitdata = None
     line_splitdata_chunkbandwidth = None
     line_splitdata_channelbandwidth = None
+    line_channelbinning = None
     line_transfergains = None  #remove, is now obsolete
     line_subtract = None
     line_subtract_mode = None
@@ -205,6 +206,7 @@ class line(BaseModule):
                     start = 1 + chunk * chan_per_chunk
                     width = int(binchan)
                     step = int(width)
+                    self.line_channelbinning = binchan
                     subs_managefiles.director(self, 'mk', self.linedir + '/' + str(counter).zfill(2))
                     uvaver = lib.miriad('uvaver')
                     uvaver.vis = self.linedir + '/' + self.target
@@ -587,8 +589,8 @@ class line(BaseModule):
                     str(self.line_image_channels).split(',')[0])
             else:
                 nchans = nchunks * nchannel
-            startfreq = get_freqstart(self.crosscaldir + '/' + self.target,
-                                           int(str(self.line_image_channels).split(',')[0]))
+            startfreq = get_freqstart(self.crosscaldir + '/' + self.target, self.line_channelbinning *
+                                      int(str(self.line_image_channels).split(',')[0]))
             self.create_linecube(self.linedir + '/cubes/cube_image_*.fits', 'HI_image_cube.fits', nchans,
                                  int(str(self.line_image_channels).split(',')[0]), startfreq)
             logger.info('(LINE) Created HI-image cube #')
