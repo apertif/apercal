@@ -261,7 +261,7 @@ class continuum(BaseModule):
                                     TNreached = True
                                     continuumtargetbeamsmfthresholdtype[minc] = 'TN'
                                     continuumtargetbeamsmfmaskthreshold[minc] = maskth
-                                    logger.info('Beam ' + self.beam + ': Theoretical noise threshold reaached in cycle ' + str(minc) + '. Stopping iterations and creating final image!')
+                                    logger.info('Beam ' + self.beam + ': Theoretical noise threshold reached in cycle ' + str(minc) + '. Stopping iterations and creating final image!')
                                 else:
                                     TNreached = False
                                     continuumtargetbeamsmfthresholdtype[minc] = 'DR'
@@ -614,7 +614,7 @@ class continuum(BaseModule):
                                             TNreached = True
                                             continuumtargetbeamschunkthresholdtype[chunk, minc] = 'TN'
                                             continuumtargetbeamschunkmaskthreshold[chunk, minc] = maskth
-                                            logger.info('Beam ' + self.beam + ': ' + cn + 'Theoretical noise threshold reaached in cycle ' + str(minc) + '. Stopping iterations and creating final image!')
+                                            logger.info('Beam ' + self.beam + ': ' + cn + 'Theoretical noise threshold reached in cycle ' + str(minc) + '. Stopping iterations and creating final image!')
                                         else:
                                             TNreached = False
                                             continuumtargetbeamschunkthresholdtype[chunk, minc] = 'DR'
