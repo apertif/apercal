@@ -44,14 +44,16 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
     Example for taskid, name, beamnr: (190108926, '3C147_36', 36)
     Fluxcals and polcals can be specified in the wrong order, if the polcal is not polarised
     they will be flipped.
-    Only one polcal beam is supported for now.
+    If both polcals and fluxcals are set, they should both be the same length.
 
     Args:
         targets (Tuple[int, str, List[int]]): taskid, name, list of beamnrs
         fluxcals (List[Tuple[int, str, int]]): fluxcals: taskid, name, beamnr
         polcals (List[Tuple[int, str, int]]): polcals: taskid, name, beamnr (can be None)
         dry_run (bool): interpret arguments, do not actually run pipeline
+        basedir (str): base directory; if not specified will be /data/apertif/{target_taskid}
         flip_ra (bool): flip RA (for old measurement sets where beamweights were flipped)
+        steps (List[str]): list of steps to perform
 
     Returns:
         Tuple[bool, str]: True if the pipeline succeeds, informative message
