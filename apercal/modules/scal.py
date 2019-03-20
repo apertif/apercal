@@ -452,7 +452,7 @@ class scal(BaseModule):
                                         mfclean.beam = str(majc).zfill(2) + '/beam_00'
                                         mfclean.out = str(majc).zfill(2) + '/model_00'
                                         mfclean.cutoff = Cc
-                                        mfclean.niters = 1000000
+                                        mfclean.niters = 50000
                                         mfclean.region = '"' + 'mask(' + str(majc).zfill(2) + '/mask_00)' + '"'
                                         mfclean.go()
                                         # Check if clean component image is there and ok
@@ -566,7 +566,7 @@ class scal(BaseModule):
                                         mfclean.model = str(majc).zfill(2) + '/model_' + str(minc-1).zfill(2)
                                         mfclean.out = str(majc).zfill(2) + '/model_' + str(minc).zfill(2)
                                         mfclean.cutoff = Cc
-                                        mfclean.niters = 1000000
+                                        mfclean.niters = 50000
                                         mfclean.region = '"' + 'mask(' + str(majc).zfill(2) + '/mask_' + str(minc).zfill(2) + ')' + '"'
                                         mfclean.go()
                                         # Check if clean component image is there and ok
@@ -858,7 +858,7 @@ class scal(BaseModule):
                                     mfclean.beam = 'amp/beam_00'
                                     mfclean.out = 'amp/model_00'
                                     mfclean.cutoff = Cc
-                                    mfclean.niters = 1000000
+                                    mfclean.niters = 50000
                                     mfclean.region = '"' + 'mask(amp/mask_00)' + '"'
                                     mfclean.go()
                                     # Check if clean component image is there and ok
@@ -969,7 +969,7 @@ class scal(BaseModule):
                                     mfclean.model = 'amp/model_' + str(minc - 1).zfill(2)
                                     mfclean.out = 'amp/model_' + str(minc).zfill(2)
                                     mfclean.cutoff = Cc
-                                    mfclean.niters = 1000000
+                                    mfclean.niters = 50000
                                     mfclean.region = '"' + 'mask(amp/mask_' + str(minc).zfill(2) + ')' + '"'
                                     mfclean.go()
                                     # Check if clean component image is there and ok
