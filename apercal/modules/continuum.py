@@ -7,6 +7,7 @@ import os
 from apercal.modules.base import BaseModule
 from apercal.subs import setinit as subs_setinit
 from apercal.subs import managefiles as subs_managefiles
+import glob
 
 from apercal.libs import lib
 from apercal.subs import imstats
@@ -712,7 +713,6 @@ class continuum(BaseModule):
                                 break
                         if TNreached and continuumtargetbeamschunkimagestatus[chunk, continuumtargetbeamschunkfinalminor[chunk]]:
                             logger.info('Beam ' + self.beam + ': ' + cn + 'Chunk successfully imaged!')
-                            subs_managefiles.imagetofits(self, 'image_C' + str(chunk).zfill(2) + '_' + str(minc).zfill(2), 'image_C' + str(chunk).zfill(2) + '_' + str(minc).zfill(2) + '.fits')
                             continuumtargetbeamschunkstatus[chunk] = True
                         else:
                             logger.info('Beam ' + self.beam + ': ' + cn + 'Theoretical noise not reached or final restored image invalid! Imaging for this chunk was not successful!')
@@ -728,6 +728,9 @@ class continuum(BaseModule):
                     continuumtargetbeamschunkallstatus = False
             else:
                 logger.info('Beam ' + self.beam + ': All chunks were already successfully imaged!')
+
+            for mirimagename in glob.glob("image_C*"):
+                subs_managefiles.imagetofits(self, mirimagename, mirimagename + '.fits')
 
         # Save the derived parameters to the parameter file
 
