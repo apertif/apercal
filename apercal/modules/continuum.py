@@ -103,8 +103,8 @@ class continuum(BaseModule):
             if not continuumtargetbeamsmfstatus:
                 logger.info('Beam ' + self.beam + ': Multi-frequency continuum imaging')
                 # Get the status of the selfcal for the specified beam
-                phasestatus = subs_param.get_param(self, sbeam + '_targetbeams_phase_status')
-                ampstatus = subs_param.get_param(self, sbeam + '_targetbeams_amp_status')
+                phasestatus = subs_param.get_param_def(self, sbeam + '_targetbeams_phase_status', True)
+                ampstatus = subs_param.get_param_def(self, sbeam + '_targetbeams_amp_status', True)
                 datasetname_amp = '../' + self.selfcalsubdir + '/' + self.target.rstrip('.mir') + '_amp.mir'
                 datasetname_phase = '../' + self.selfcalsubdir + '/' + self.target
                 if ampstatus or os.path.isdir(datasetname_amp):
