@@ -248,15 +248,6 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     logger.warning("Failed beam {}, skipping that from crosscal".format(beamnr))
                     logger.exception(e)
 
-        if "ccalqa" in steps and not dry_run:
-            logger.info("Starting crosscal QA plots")
-            try:
-                make_all_ccal_plots(taskid_target, name_fluxcal)
-            except Exception as e:
-                logger.warning("Failed crosscal QA plots")
-                logger.exception(e)
-            logger.info("Done with crosscal QA plots")
-
         p3 = convert()
         set_files(p3)
         if "convert" in steps and not dry_run:
@@ -276,6 +267,15 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                 # Exception was already logged just before
                 logger.warning("Failed beam {}, skipping that from scal".format(beamnr))
                 logger.exception(e)
+
+        if "ccalqa" in steps and not dry_run:
+            logger.info("Starting crosscal QA plots")
+            try:
+                make_all_ccal_plots(taskid_target, name_fluxcal)
+            except Exception as e:
+                logger.warning("Failed crosscal QA plots")
+                logger.exception(e)
+            logger.info("Done with crosscal QA plots")
 
         for beamnr in beamlist_target:
             try:
