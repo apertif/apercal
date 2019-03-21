@@ -382,13 +382,18 @@ class convert(BaseModule):
         subs_param.add_param(self, 'convert_polcal_UVFITS2MIRIAD', convertpolcaluvfits2miriad)
         subs_param.add_param(self, 'convert_targetbeams_UVFITS2MIRIAD', converttargetbeamsuvfits2miriad)
 
+        # Create averaged measurementsets
+        if self.convert_averagems and self.subdirification:
+            logger.info("Averaging down target measurement sets")
+            average_cmd = 'mstransform(vis="{vis}", outputvis="{outputvis}", chanaverage=True, chanbin=64)'
+            for vis, beam in self.get_datasets():
+                logger.info("Averaging down measurementset " + vis)
+                outputvis = vis.replace(".MS", "_avg.MS")
+                lib.run_casa([average_cmd.format(vis=vis, outputvis=outputvis)])
+
         # Remove measurement sets if wanted
         if self.convert_removems and self.subdirification:
             logger.info('Removing measurement sets')
-            if self.fluxcal != '' and path.exists(self.get_fluxcal_path()):
-                subs_managefiles.director(self, 'rm', self.get_fluxcal_path())
-            if self.polcal != '' and path.exists(self.get_polcal_path()):
-                subs_managefiles.director(self, 'rm', self.get_polcal_path())
             for vis, beam in self.get_datasets():
                 if path.exists(vis):
                     subs_managefiles.director(self, 'rm', vis)
