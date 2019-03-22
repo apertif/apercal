@@ -71,7 +71,7 @@ class continuum(BaseModule):
 
     def get_target_path(self, beam=None):
         if self.subdirification:
-            '../' + self.selfcalsubdir + '/' + self.target
+            return '../' + self.selfcalsubdir + '/' + self.target
         else:
             return self.target
 
