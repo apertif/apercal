@@ -757,10 +757,9 @@ def load_config(config_object, file_=None):
     config = ConfigParser()  # Initialise the config parser
     if file_:
         config.readfp(open(file_))
-        logger.info(' Configuration file ' + file_ + ' successfully read!')
+        logger.info(' Non-default configuration file ' + file_ + ' successfully read!')
     else:
         config.readfp(open(default_cfg))
-        logger.info(' No configuration file given or file not found, using default values.')
 
     for s in config.sections():
 

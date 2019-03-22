@@ -21,6 +21,7 @@ import logging
 import sys
 from time import time
 from datetime import timedelta
+import pymp
 
 
 def validate_taskid(taskid_from_autocal):
@@ -255,18 +256,21 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             p3.go()
             director(p3, 'rm', basedir + '/param.npy', ignore_nonexistent=True)
 
-        for beamnr in beamlist_target:
-            try:
-                p4 = scal()
-                p4.basedir = basedir
-                p4.beam = "{:02d}".format(beamnr)
-                p4.target = name_target + '.mir'
-                if "scal" in steps and not dry_run:
-                    p4.go()
-            except Exception as e:
-                # Exception was already logged just before
-                logger.warning("Failed beam {}, skipping that from scal".format(beamnr))
-                logger.exception(e)
+        with pymp.Parallel(10) as p:
+            for beam_index in p.range(len(beamlist_target)):
+                beamnr = beamlist_target[beam_index]
+                print(beamnr)
+                try:
+                    p4 = scal()
+                    p4.basedir = basedir
+                    p4.beam = "{:02d}".format(beamnr)
+                    p4.target = name_target + '.mir'
+                    if "scal" in steps and not dry_run:
+                        p4.go()
+                except Exception as e:
+                    # Exception was already logged just before
+                    logger.warning("Failed beam {}, skipping that from scal".format(beamnr))
+                    logger.exception(e)
 
         if "ccalqa" in steps and not dry_run:
             logger.info("Starting crosscal QA plots")
