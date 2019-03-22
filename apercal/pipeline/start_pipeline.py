@@ -261,6 +261,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             for beam_index in p.range(len(beamlist_target)):
                 beamnr = beamlist_target[beam_index]
 
+                logger.handlers = []
                 logfilepath = os.path.join(basedir, 'apercal{:02d}.log'.format(beamnr))
 
                 lib.setup_logger('debug', logfile=logfilepath)
@@ -294,6 +295,8 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     logger.warning("Failed beam {}, skipping that from continuum".format(beamnr))
                     logger.exception(e)
 
+        logger.handlers = []
+        logfilepath = os.path.join(basedir, 'apercal.log'.format(beamnr))
         for beamnr in beamlist_target:
             try:
                 p6 = line()
