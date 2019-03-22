@@ -111,14 +111,12 @@ class continuum(BaseModule):
             if not continuumtargetbeamsmfstatus:
                 logger.info('Beam ' + self.beam + ': Multi-frequency continuum imaging')
                 # Get the status of the selfcal for the specified beam
-                phasestatus = subs_param.get_param_def(self, sbeam + '_targetbeams_phase_status', True)
-                ampstatus = subs_param.get_param_def(self, sbeam + '_targetbeams_amp_status', True)
                 datasetname_amp = self.get_target_path().rstrip('.mir') + '_amp.mir'
                 datasetname_phase = self.get_target_path()
-                if ampstatus or os.path.isdir(datasetname_amp):
+                if os.path.isdir(datasetname_amp):
                     logger.info('Beam ' + self.beam + ': Using amplitude self-calibrated dataset!')
                     dataset = datasetname_amp
-                elif phasestatus or os.path.isdir(datasetname_phase):
+                elif os.path.isdir(datasetname_phase):
                     logger.info('Beam ' + self.beam + ': Using phase self-calibrated dataset. Amplitude calibration was not successful or not wanted!')
                     dataset = datasetname_phase
                 else:
@@ -457,12 +455,12 @@ class continuum(BaseModule):
             if not continuumtargetbeamschunkallstatus:
                 logger.info('Beam ' + self.beam + ': Individual chunk continuum imaging')
                 # Get the status of the selfcal for the specified beam
-                phasestatus = subs_param.get_param_def(self, sbeam + '_targetbeams_phase_status', False)
-                ampstatus = subs_param.get_param_def(self, sbeam + '_targetbeams_amp_status', False)
-                if ampstatus:
+                datasetname_amp = self.get_target_path().rstrip('.mir') + '_amp.mir'
+                datasetname_phase = self.get_target_path()
+                if os.path.isdir(datasetname_amp):
                     logger.info('Beam ' + self.beam + ': Using amplitude self-calibrated dataset!')
                     dataset = self.get_target_path().rstrip('.mir') + '_amp.mir'
-                elif phasestatus:
+                elif os.path.isdir(datasetname_phase):
                     logger.info('Beam ' + self.beam + ': Using phase self-calibrated dataset. Amplitude calibration was not successful or not wanted!')
                     dataset = self.get_target_path()
                 else:
