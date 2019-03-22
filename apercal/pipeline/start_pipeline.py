@@ -87,7 +87,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         name_polcal = str(polcals[0][1]).strip().split('_')[0]
     else:
         name_polcal = ''
-    name_target = str(name_target).strip()
+    name_target = str(name_target).strip().upper()
 
     # If both fluxcal and polcal polarized, remove polcal
     if subs_calmodels.is_polarised(name_polcal) and subs_calmodels.is_polarised(name_fluxcal):
