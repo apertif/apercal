@@ -263,6 +263,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                 print(beamnr)
                 try:
                     p4 = scal()
+                    p4.paramfilename = 'param_{:02d}.npy'.format(beamnr)
                     p4.basedir = basedir
                     p4.beam = "{:02d}".format(beamnr)
                     p4.target = name_target + '.mir'
@@ -282,18 +283,21 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                 logger.exception(e)
             logger.info("Done with crosscal QA plots")
 
-        for beamnr in beamlist_target:
-            try:
-                p5 = continuum()
-                p5.basedir = basedir
-                p5.beam = "{:02d}".format(beamnr)
-                p5.target = name_target + '.mir'
-                if "continuum" in steps and not dry_run:
-                    p5.go()
-            except Exception as e:
-                # Exception was already logged just before
-                logger.warning("Failed beam {}, skipping that from continuum".format(beamnr))
-                logger.exception(e)
+        with pymp.Parallel(10) as p:
+            for beam_index in p.range(len(beamlist_target)):
+                beamnr = beamlist_target[beam_index]
+                try:
+                    p5 = continuum()
+                    p5.paramfilename = 'param_{:02d}.npy'.format(beamnr)
+                    p5.basedir = basedir
+                    p5.beam = "{:02d}".format(beamnr)
+                    p5.target = name_target + '.mir'
+                    if "continuum" in steps and not dry_run:
+                        p5.go()
+                except Exception as e:
+                    # Exception was already logged just before
+                    logger.warning("Failed beam {}, skipping that from continuum".format(beamnr))
+                    logger.exception(e)
 
         for beamnr in beamlist_target:
             try:
