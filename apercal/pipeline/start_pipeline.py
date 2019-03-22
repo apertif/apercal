@@ -260,7 +260,14 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         with pymp.Parallel(10) as p:
             for beam_index in p.range(len(beamlist_target)):
                 beamnr = beamlist_target[beam_index]
-                print(beamnr)
+
+                logfilepath = os.path.join(basedir, 'apercal{:02d}.log'.format(beamnr))
+
+                lib.setup_logger('debug', logfile=logfilepath)
+                logger = logging.getLogger(__name__)
+
+                logger.debug("Starting logfile for beam " + str(beamnr))
+
                 try:
                     p4 = scal()
                     p4.paramfilename = 'param_{:02d}.npy'.format(beamnr)
