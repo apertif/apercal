@@ -1,6 +1,7 @@
 import os
 import logging
 
+import glob
 from apercal.libs import lib
 from apercal.subs import setinit as subs_setinit
 
@@ -66,7 +67,7 @@ def director(self, option, dest, file_=None, verbose=True,
     elif option == 'cp':  # Copy
         lib.basher("cp -r " + str(file_) + " " + str(dest))
     elif option == 'rm':  # Remove
-        if ignore_nonexistent and not os.path.exists(str(dest)):
+        if ignore_nonexistent and not glob.glob(str(dest)):
             return
         lib.basher("rm -r " + str(dest))
     else:
