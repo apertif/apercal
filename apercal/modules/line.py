@@ -590,17 +590,16 @@ class line(BaseModule):
             logger.info('(LINE) Created HI-beam cube #')
             logger.info('(LINE) Removing obsolete files #')
             subs_managefiles.director(self, 'ch', self.linedir)
-            subs_managefiles.director(self, 'rm', self.linedir + '/??')
-            subs_managefiles.director(self, 'rm', self.linedir + '/' + self.target)
-            subs_managefiles.director(self, 'rm', self.linedir + '/cubes/' + 'image*')
-            subs_managefiles.director(self, 'rm', self.linedir + '/cubes/' + 'beam*')
-            subs_managefiles.director(self, 'rm', self.linedir + '/cubes/' + 'model*')
-            subs_managefiles.director(self, 'rm', self.linedir + '/cubes/' + 'map*')
-            subs_managefiles.director(self, 'rm', self.linedir + '/cubes/' + 'cube_*')
-#  not yet activated as crash occurs when file is not there, create test and warning
-#            subs_managefiles.director(self, 'rm', self.linedir + '/cubes/' + 'mask*')
-#            subs_managefiles.director(self, 'rm', self.linedir + '/cubes/' + 'convol*')
-#            subs_managefiles.director(self, 'rm', self.linedir + '/cubes/' + 'residual*')
+            subs_managefiles.director(self, 'rm', self.linedir + '/??', ignore_nonexistent=True)
+            subs_managefiles.director(self, 'rm', self.linedir + '/' + self.target, ignore_nonexistent=True)
+            subs_managefiles.director(self, 'rm', self.linedir + '/cubes/' + 'image*', ignore_nonexistent=True)
+            subs_managefiles.director(self, 'rm', self.linedir + '/cubes/' + 'beam*', ignore_nonexistent=True)
+            subs_managefiles.director(self, 'rm', self.linedir + '/cubes/' + 'model*', ignore_nonexistent=True)
+            subs_managefiles.director(self, 'rm', self.linedir + '/cubes/' + 'map*', ignore_nonexistent=True)
+            subs_managefiles.director(self, 'rm', self.linedir + '/cubes/' + 'cube_*', ignore_nonexistent=True)
+            subs_managefiles.director(self, 'rm', self.linedir + '/cubes/' + 'mask*', ignore_nonexistent=True)
+            subs_managefiles.director(self, 'rm', self.linedir + '/cubes/' + 'convol*', ignore_nonexistent=True)
+            subs_managefiles.director(self, 'rm', self.linedir + '/cubes/' + 'residual*', ignore_nonexistent=True)
             logger.info('(LINE) Cleaned up the cubes directory #')
             
     def create_uvmodel(self, chunk):
@@ -830,7 +829,7 @@ class line(BaseModule):
         data = image_data[0].data
         imax = np.nanstd(data)  # Get the standard deviation
         image_data.close()  # Close the image
-        subs_managefiles.director(self, 'rm', image + '.fits')
+        subs_managefiles.director(self, 'rm', image + '.fits', ignore_nonexistent=True)
         return imax
 
     def calc_imax(self, image):
@@ -848,7 +847,7 @@ class line(BaseModule):
         data = image_data[0].data
         imax = np.nanmax(data)  # Get the maximum
         image_data.close()  # Close the image
-        subs_managefiles.director(self, 'rm', image + '.fits')
+        subs_managefiles.director(self, 'rm', image + '.fits', ignore_nonexistent=True)
         return imax
 
     def calc_max_min_ratio(self, image):
@@ -870,7 +869,7 @@ class line(BaseModule):
         min_max = np.abs(imin / imax)
         ratio = np.nanmax([max_min, min_max])  # Take the maximum of both ratios and return it
         image_data.close()  # Close the image
-        subs_managefiles.director(self, 'rm', image + '.fits')
+        subs_managefiles.director(self, 'rm', image + '.fits', ignore_nonexistent=True)
         return ratio
 
     def calc_isum(self, image):
@@ -888,7 +887,7 @@ class line(BaseModule):
         data = image_data[0].data
         isum = np.nansum(data)  # Get the maximum
         image_data.close()  # Close the image
-        subs_managefiles.director(self, 'rm', image + '.fits')
+        subs_managefiles.director(self, 'rm', image + '.fits', ignore_nonexistent=True)
         return isum
 
     def list_chunks(self):
@@ -927,7 +926,7 @@ class line(BaseModule):
         logger.warning(' Deleting all line data.')
         subs_setinit.setdatasetnamestomiriad(self)
         subs_managefiles.director(self, 'ch', self.linedir)
-        subs_managefiles.director(self, 'rm', self.linedir + '/*')
+        subs_managefiles.director(self, 'rm', self.linedir + '/*', ignore_nonexistent=True)
 
     def cleanup(self):
         """"
