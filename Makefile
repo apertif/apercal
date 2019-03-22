@@ -92,6 +92,10 @@ cwl-scal: $(VENV3)/bin/cwltool data/small
 		--polcal_mir cwl/output/3C138.mir \
 		--target_mir cwl/output/NGC807.mir
 
+cwl-continuum: $(VENV3)/bin/cwltool data/small
+	$(CWLTOOL) cwl/steps/continuum.cwl \
+		--target_mir cwl/output/NGC807.mir
+
 cwl-getdata: $(VENV3)/bin/cwltool
 	$(CWLTOOL) cwl/steps/getdata.cwl \
 		--obsdate 190302 \

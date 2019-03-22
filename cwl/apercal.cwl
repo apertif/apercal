@@ -74,6 +74,13 @@ steps:
       polcal_mir: convert/polcal_mir
     out:
       - target_selfcalibrated
+      - target_amp
+
+  continuum:
+    run: steps/scal.cwl
+    in:
+      target_mir: scal/target_selfcalibrated
+      target_amp: scal/target_amp
 
 
 # next steps:
