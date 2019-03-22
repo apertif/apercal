@@ -22,6 +22,7 @@ import logging
 import sys
 from time import time
 from datetime import timedelta
+import pymp
 
 
 def validate_taskid(taskid_from_autocal):
@@ -256,41 +257,42 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             p3.go()
             director(p3, 'rm', basedir + '/param.npy', ignore_nonexistent=True)
 
-        for beamnr in beamlist_target:
-            try:
-                p4 = scal()
-                p4.paramfilename = "param.npy"
-                p4.basedir = basedir
-                p4.beam = "{:02d}".format(beamnr)
-                p4.target = name_target + '.mir'
-                if "scal" in steps and not dry_run:
-                    p4.go()
-            except Exception as e:
-                # Exception was already logged just before
-                logger.warning("Failed beam {}, skipping that from scal".format(beamnr))
-                logger.exception(e)
+        with pymp.Parallel(10) as p:
+            for beam_index in p.range(len(beamlist_target)):
+                beamnr = beamlist_target[beam_index]
 
-        if "ccalqa" in steps and not dry_run:
-            logger.info("Starting crosscal QA plots")
-            try:
-                make_all_ccal_plots(taskid_target, name_fluxcal)
-            except Exception as e:
-                logger.warning("Failed crosscal QA plots")
-                logger.exception(e)
-            logger.info("Done with crosscal QA plots")
+                logfilepath = os.path.join(basedir, 'apercal{:02d}.log'.format(beamnr))
 
-        for beamnr in beamlist_target:
-            try:
-                p5 = continuum()
-                p5.basedir = basedir
-                p5.beam = "{:02d}".format(beamnr)
-                p5.target = name_target + '.mir'
-                if "continuum" in steps and not dry_run:
-                    p5.go()
-            except Exception as e:
-                # Exception was already logged just before
-                logger.warning("Failed beam {}, skipping that from continuum".format(beamnr))
-                logger.exception(e)
+                lib.setup_logger('debug', logfile=logfilepath)
+                logger = logging.getLogger(__name__)
+
+                logger.debug("Starting logfile for beam " + str(beamnr))
+
+                try:
+                    p4 = scal()
+                    p4.paramfilename = 'param_{:02d}.npy'.format(beamnr)
+                    p4.basedir = basedir
+                    p4.beam = "{:02d}".format(beamnr)
+                    p4.target = name_target + '.mir'
+                    if "scal" in steps and not dry_run:
+                        p4.go()
+                except Exception as e:
+                    # Exception was already logged just before
+                    logger.warning("Failed beam {}, skipping that from scal".format(beamnr))
+                    logger.exception(e)
+
+                try:
+                    p5 = continuum()
+                    p5.paramfilename = 'param_{:02d}.npy'.format(beamnr)
+                    p5.basedir = basedir
+                    p5.beam = "{:02d}".format(beamnr)
+                    p5.target = name_target + '.mir'
+                    if "continuum" in steps and not dry_run:
+                        p5.go()
+                except Exception as e:
+                    # Exception was already logged just before
+                    logger.warning("Failed beam {}, skipping that from continuum".format(beamnr))
+                    logger.exception(e)
 
         for beamnr in beamlist_target:
             try:
@@ -304,6 +306,15 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                 # Exception was already logged just before
                 logger.warning("Failed beam {}, skipping that from line".format(beamnr))
                 logger.exception(e)
+
+        if "ccalqa" in steps and not dry_run:
+            logger.info("Starting crosscal QA plots")
+            try:
+                make_all_ccal_plots(taskid_target, name_fluxcal)
+            except Exception as e:
+                logger.warning("Failed crosscal QA plots")
+                logger.exception(e)
+            logger.info("Done with crosscal QA plots")
 
         time_end = time()
         msg = "Apercal finished after " + str(timedelta(seconds=time() - time_start))

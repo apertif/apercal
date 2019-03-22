@@ -13,6 +13,7 @@ class BaseModule:
     def module_name(self):
         pass
 
+    paramfilename = 'param.npy'
     fluxcal = None
     polcal = None
     target = None
