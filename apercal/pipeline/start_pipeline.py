@@ -8,6 +8,7 @@ from apercal.modules.ccal import ccal
 from dataqa.crosscal.crosscal_plots import make_all_ccal_plots
 from apercal.modules.scal import scal
 from apercal.modules.continuum import continuum
+from apercal.modules.line import line
 from apercal.subs.managefiles import director
 from apercal.modules.convert import convert
 from apercal.subs import calmodels as subs_calmodels
@@ -38,7 +39,7 @@ def validate_taskid(taskid_from_autocal):
 
 
 def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=None, flip_ra=False,
-                           steps=["prepare", "preflag", "ccal", "ccalqa", "convert", "scal", "continuum"]):
+                           steps=["prepare", "preflag", "ccal", "ccalqa", "convert", "scal", "continuum", "line"]):
     """
     Trigger the start of a fluxcal pipeline. Returns when pipeline is done.
     Example for taskid, name, beamnr: (190108926, '3C147_36', 36)
@@ -258,6 +259,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         for beamnr in beamlist_target:
             try:
                 p4 = scal()
+                p4.paramfilename = "param.npy"
                 p4.basedir = basedir
                 p4.beam = "{:02d}".format(beamnr)
                 p4.target = name_target + '.mir'
@@ -288,6 +290,19 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             except Exception as e:
                 # Exception was already logged just before
                 logger.warning("Failed beam {}, skipping that from continuum".format(beamnr))
+                logger.exception(e)
+
+        for beamnr in beamlist_target:
+            try:
+                p6 = line()
+                p6.basedir = basedir
+                p6.beam = "{:02d}".format(beamnr)
+                p6.target = name_target + '.mir'
+                if "line" in steps and not dry_run:
+                    p6.go()
+            except Exception as e:
+                # Exception was already logged just before
+                logger.warning("Failed beam {}, skipping that from line".format(beamnr))
                 logger.exception(e)
 
         time_end = time()
