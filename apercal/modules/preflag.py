@@ -1011,9 +1011,13 @@ class preflag(BaseModule):
         """
         logger.info("Storing flagging images for " + mspath)
         beamstr = mspath.rstrip('/').split('/')[-3] # beam number as string, "29" or so
-        destination_path = self.basedir + '/qa/preflag/' + beamstr
-        if not path.exists(destination_path):
-            os.makedirs(destination_path)
+
+        if self.subdirification:
+            destination_path = self.basedir + '/qa/preflag/' + beamstr
+            if not path.exists(destination_path):
+                os.makedirs(destination_path)
+        else:
+            destination_path = "."
         msname = mspath.rstrip('/').split('/')[-1].rstrip('.MS')
         for (ant1, ant2) in baselines:
             pngname = "{}-flags-{:02d}-{:02d}.png".format(msname, ant1, ant2)
