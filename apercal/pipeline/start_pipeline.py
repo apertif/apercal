@@ -40,7 +40,8 @@ def validate_taskid(taskid_from_autocal):
 
 
 def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=None, flip_ra=False,
-                           steps=["prepare", "preflag", "ccal", "ccalqa", "convert", "scal", "continuum", "line"]):
+                           steps=["prepare", "preflag", "ccal", "ccalqa", "convert", "scal", "continuum", "line"],
+                           configfilename=None):
     """
     Trigger the start of a fluxcal pipeline. Returns when pipeline is done.
     Example for taskid, name, beamnr: (190108926, '3C147_36', 36)
@@ -139,7 +140,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
     try:
         # Prepare fluxcals
         for (taskid_fluxcal, name_fluxcal, beamnr_fluxcal) in fluxcals:
-            p0 = prepare()
+            p0 = prepare(filename=configfilename)
             p0.basedir = basedir
             p0.prepare_flip_ra = flip_ra
             p0.fluxcal = ''
@@ -158,7 +159,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         # Prepare polcals
         if name_polcal != '':
             for (taskid_polcal, name_polcal, beamnr_polcal) in polcals:
-                p0 = prepare()
+                p0 = prepare(filename=configfilename)
                 p0.basedir = basedir
                 p0.prepare_flip_ra = flip_ra
                 p0.fluxcal = ''
@@ -176,7 +177,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                         logger.exception(e)
 
         # Prepare target
-        p0 = prepare()
+        p0 = prepare(filename=configfilename)
         p0.basedir = basedir
         p0.prepare_flip_ra = flip_ra
         p0.fluxcal = ''
@@ -194,7 +195,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     logger.exception(e)
 
         # Flag fluxcal (pretending it's a target)
-        p1 = preflag()
+        p1 = preflag(filename=configfilename)
         p1.basedir = basedir
         p1.fluxcal = ''
         p1.polcal = ''
@@ -205,7 +206,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             p1.go()
 
         # Flag polcal (pretending it's a target)
-        p1 = preflag()
+        p1 = preflag(filename=configfilename)
         p1.basedir = basedir
         if name_polcal != '':
             p1.fluxcal = ''
@@ -216,7 +217,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                 director(p1, 'rm', basedir + '/param.npy', ignore_nonexistent=True)
                 p1.go()
 
-        p1 = preflag()
+        p1 = preflag(filename=configfilename)
         p1.basedir = basedir
         # Flag target
         p1.fluxcal = ''
@@ -228,14 +229,14 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             p1.go()
 
         if len(fluxcals) == 1 and fluxcals[0][-1] == 0:
-            p2 = ccal()
+            p2 = ccal(filename=configfilename)
             set_files(p2)
             if "ccal" in steps and not dry_run:
                 p2.go()
         else:
             for beamnr in beamlist_target:
                 try:
-                    p2 = ccal()
+                    p2 = ccal(filename=configfilename)
                     p2.basedir = basedir
                     p2.fluxcal = name_to_ms(name_fluxcal)
                     p2.polcal = name_to_ms(name_polcal)
@@ -250,7 +251,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     logger.warning("Failed beam {}, skipping that from crosscal".format(beamnr))
                     logger.exception(e)
 
-        p3 = convert()
+        p3 = convert(filename=configfilename)
         set_files(p3)
         if "convert" in steps and not dry_run:
             director(p3, 'rm', basedir + '/param.npy', ignore_nonexistent=True)
@@ -270,7 +271,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                 logger.debug("Starting logfile for beam " + str(beamnr))
 
                 try:
-                    p4 = scal()
+                    p4 = scal(filename=configfilename)
                     p4.paramfilename = 'param_{:02d}.npy'.format(beamnr)
                     p4.basedir = basedir
                     p4.beam = "{:02d}".format(beamnr)
@@ -283,7 +284,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     logger.exception(e)
 
                 try:
-                    p5 = continuum()
+                    p5 = continuum(filename=configfilename)
                     p5.paramfilename = 'param_{:02d}.npy'.format(beamnr)
                     p5.basedir = basedir
                     p5.beam = "{:02d}".format(beamnr)
@@ -299,7 +300,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         logfilepath = os.path.join(basedir, 'apercal.log'.format(beamnr))
         for beamnr in beamlist_target:
             try:
-                p6 = line()
+                p6 = line(filename=configfilename)
                 p6.basedir = basedir
                 p6.beam = "{:02d}".format(beamnr)
                 p6.target = name_target + '.mir'
