@@ -2,19 +2,9 @@ cwlVersion: v1.0
 class: Workflow
 
 inputs:
-  target_obsdate: string
-  target_obsnum: int
-  target_beamnum: int
-  target_name: string
-  fluxcal_obsdate: string
-  fluxcal_obsnum: int
-  fluxcal_beamnum: int
-  fluxcal_name: string
-  polcal_obsdate: string
-  polcal_obsnum: int
-  polcal_beamnum: int
-  polcal_name: string
-  irods: Directory
+  target: Directory
+  polcal: Directory
+  fluxcal: Directory
 
 
 outputs:
@@ -23,57 +13,34 @@ outputs:
     outputSource: scal/target_selfcalibrated
 
 steps:
-  getdata_target:
-    run: steps/getdata.cwl
-    in:
-      obsdate: target_obsdate
-      obsnum: target_obsnum
-      beamnum: target_beamnum
-      name: target_name
-      irods: irods
-    out:
-      - ms
 
-  getdata_fluxcal:
-    run: steps/getdata.cwl
-    in:
-      obsdate: fluxcal_obsdate
-      obsnum: fluxcal_obsnum
-      beamnum: fluxcal_beamnum
-      name: fluxcal_name
-      irods: irods
-    out:
-      - ms
-
-  getdata_polcal:
-    run: steps/getdata.cwl
-    in:
-      obsdate: polcal_obsdate
-      obsnum: polcal_obsnum
-      beamnum: polcal_beamnum
-      name: polcal_name
-      irods: irods
-    out:
-      - ms
-
-
-  preflag:
+  preflag_target:
     run: steps/preflag.cwl
     in:
-      target: getdata_target/ms
-      fluxcal: getdata_fluxcal/ms
-      polcal: getdata_polcal/ms
+      ms: target
     out:
-      - target_preflagged
-      - fluxcal_preflagged
-      - polcal_preflagged
+      - preflagged
+
+  preflag_fluxcal:
+    run: steps/preflag.cwl
+    in:
+      ms: fluxcal
+    out:
+      - preflagged
+
+  preflag_polcal:
+    run: steps/preflag.cwl
+    in:
+      ms: polcal
+    out:
+      - preflagged
 
   ccal:
     run: steps/ccal.cwl
     in:
-      target_preflagged: preflag/target_preflagged
-      fluxcal_preflagged: preflag/fluxcal_preflagged
-      polcal_preflagged: preflag/polcal_preflagged
+      target_preflagged: preflag_target/preflagged
+      fluxcal_preflagged: preflag_fluxcal/preflagged
+      polcal_preflagged: preflag_polcal/preflagged
     out:
       - fluxcal_Bscan
       - fluxcal_Df

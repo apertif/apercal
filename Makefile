@@ -47,7 +47,14 @@ data/small: data/${FILE}
 	cd data && tar zmxvf ${FILE}
 
 run: $(VENV3)/bin/cwltool data/small
-	 $(CWLTOOL) cwl/apercal.cwl cwl/job.yaml
+	 $(CWLTOOL) cwl/apercal.cwl \
+		--fluxcal data/small/00/raw/3C295.MS \
+		--polcal data/small/00/raw/3C138.MS \
+		--target data/small/00/raw/NGC807.MS
+
+archive: $(VENV3)/bin/cwltool data/small
+	 $(CWLTOOL) cwl/apercal.cwl \
+	 	cwl/job.yaml
 
 udocker: $(VENV3)/bin/cwltool data/small $(VENV3)/bin/udocker
 	 $(CWLTOOL) --user-space-docker-cmd $(VENV3)/bin/udocker cwl/apercal.cwl cwl/job.yaml
@@ -74,7 +81,7 @@ cwl-crosscal: $(VENV3)/bin/cwltool data/small
 		--target data/small/00/raw/NGC807.MS
 
 cwl-convert: $(VENV3)/bin/cwltool data/small
-	$(CWLTOOL) cwl/steps/convert.cwl cwl/job.yaml \
+	$(CWLTOOL) cwl/steps/convert.cwl \
 		--fluxcal data/small/00/raw/3C295.MS \
 		--polcal data/small/00/raw/3C138.MS \
 		--target data/small/00/raw/NGC807.MS
