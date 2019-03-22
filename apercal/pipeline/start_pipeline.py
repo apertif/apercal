@@ -274,18 +274,6 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     logger.warning("Failed beam {}, skipping that from scal".format(beamnr))
                     logger.exception(e)
 
-        if "ccalqa" in steps and not dry_run:
-            logger.info("Starting crosscal QA plots")
-            try:
-                make_all_ccal_plots(taskid_target, name_fluxcal)
-            except Exception as e:
-                logger.warning("Failed crosscal QA plots")
-                logger.exception(e)
-            logger.info("Done with crosscal QA plots")
-
-        with pymp.Parallel(10) as p:
-            for beam_index in p.range(len(beamlist_target)):
-                beamnr = beamlist_target[beam_index]
                 try:
                     p5 = continuum()
                     p5.paramfilename = 'param_{:02d}.npy'.format(beamnr)
@@ -299,6 +287,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     logger.warning("Failed beam {}, skipping that from continuum".format(beamnr))
                     logger.exception(e)
 
+<<<<<<< fb52d40b5b16b1c60bdd7e75b0bbaccf6b342b69
         for beamnr in beamlist_target:
             try:
                 p6 = line()
@@ -311,6 +300,16 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                 # Exception was already logged just before
                 logger.warning("Failed beam {}, skipping that from line".format(beamnr))
                 logger.exception(e)
+=======
+        if "ccalqa" in steps and not dry_run:
+            logger.info("Starting crosscal QA plots")
+            try:
+                make_all_ccal_plots(taskid_target, name_fluxcal)
+            except Exception as e:
+                logger.warning("Failed crosscal QA plots")
+                logger.exception(e)
+            logger.info("Done with crosscal QA plots")
+>>>>>>> Remove sync after parallel selfcal
 
         time_end = time()
         msg = "Apercal finished after " + str(timedelta(seconds=time() - time_start))
