@@ -69,6 +69,13 @@ class continuum(BaseModule):
         logger.info("CONTINUUM IMAGING done ")
 
 
+    def get_target_path(self, beam=None):
+        if self.subdirification:
+            '../' + self.selfcalsubdir + '/' + self.target
+        else:
+            return self.target
+
+
     def mfimage(self):
         """
         Creates the final deep mfs continuum image from the self-calibrated data
@@ -106,8 +113,8 @@ class continuum(BaseModule):
                 # Get the status of the selfcal for the specified beam
                 phasestatus = subs_param.get_param_def(self, sbeam + '_targetbeams_phase_status', True)
                 ampstatus = subs_param.get_param_def(self, sbeam + '_targetbeams_amp_status', True)
-                datasetname_amp = '../' + self.selfcalsubdir + '/' + self.target.rstrip('.mir') + '_amp.mir'
-                datasetname_phase = '../' + self.selfcalsubdir + '/' + self.target
+                datasetname_amp = self.get_target_path().rstrip('.mir') + '_amp.mir'
+                datasetname_phase = self.get_target_path()
                 if ampstatus or os.path.isdir(datasetname_amp):
                     logger.info('Beam ' + self.beam + ': Using amplitude self-calibrated dataset!')
                     dataset = datasetname_amp
@@ -454,10 +461,10 @@ class continuum(BaseModule):
                 ampstatus = subs_param.get_param_def(self, sbeam + '_targetbeams_amp_status', False)
                 if ampstatus:
                     logger.info('Beam ' + self.beam + ': Using amplitude self-calibrated dataset!')
-                    dataset = '../' + self.selfcalsubdir + '/' + self.target.rstrip('.mir') + '_amp.mir'
+                    dataset = self.get_target_path().rstrip('.mir') + '_amp.mir'
                 elif phasestatus:
                     logger.info('Beam ' + self.beam + ': Using phase self-calibrated dataset. Amplitude calibration was not successful or not wanted!')
-                    dataset = '../' + self.selfcalsubdir + '/' + self.target
+                    dataset = self.get_target_path()
                 else:
                     msg = 'Beam ' + self.beam + ': Self-calibration was not successful. No continuum imaging possible!'
                     logger.error(msg)

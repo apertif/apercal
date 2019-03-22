@@ -17,21 +17,13 @@ requirements:
       listing:
       - entry: $(inputs.target_mir)
         writable: true
-      - entry: $(inputs.fluxcal_mir)
-        writable: true
-      - entry: $(inputs.polcal_mir)
-        writable: true
 
 baseCommand: [python]
 
 inputs:
   target_mir:
     type: Directory
-
-  polcal_mir:
-    type: Directory
-
-  fluxcal_mir:
+  target_amp:
     type: Directory
 
 outputs:
@@ -40,21 +32,14 @@ outputs:
     outputBinding:
       glob: $(inputs.target_mir.basename)
 
-  target_amp:
-    type: Directory
-    outputBinding:
-      glob: $(inputs.target_mir.basename.split('.').slice(0,-1).join('.'))_amp.mir
-
 arguments:
   - prefix: '-c'
     valueFrom: |
         import logging
         logging.basicConfig(level=logging.DEBUG)
-        from apercal.modules.scal import scal
+        from apercal.modules.continuum import continuum
 
-        p = scal()
+        p = continuum()
         p.target = "$(inputs.target_mir.path)"
-        p.fluxcal = "$(inputs.fluxcal_mir.path)"
-        p.polcal = "$(inputs.polcal_mir.path)"
         p.subdirification = False
         p.go()
