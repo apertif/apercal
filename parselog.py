@@ -6,11 +6,13 @@ Parse apercal.log to extract timing info per step
 Usage: ./parselog.py apercal.log
 """
 
+from __future__ import print_function
+
 from datetime import datetime
 import sys
 
 useful_lines = []
-useful_lines += ["apercal.pipeline.start_pipeline"]
+useful_lines += ["apercal.pipeline.start_pipeline - INFO : Apercal version"]
 useful_lines += ["apercal.modules.prepare"]
 useful_lines += ["apercal.modules.preflag"]
 useful_lines += ["apercal.modules.ccal"]
@@ -18,6 +20,8 @@ useful_lines += ["apercal.pipeline.start_pipeline - INFO : Starting crosscal QA 
 useful_lines += ["apercal.modules.convert"]
 useful_lines += ["apercal.modules.scal"]
 useful_lines += ["apercal.modules.continuum"]
+
+original_useful_lines = list(useful_lines)
 
 past_first = False
 prev_time = None
@@ -49,12 +53,19 @@ with open(logfilename, "r") as logfile:
         for pos, useful_line in enumerate(useful_lines):
             if useful_line in logline:
                 cur_time = parse_and_subtract(logline, prev_time, prev_step)
-                if not past_first:
-                    past_first = True
 
                 prev_time = cur_time
                 prev_step = useful_line
-                del useful_lines[pos]
+                if past_first and useful_line == useful_lines[0]:
+                    # Restart with new pipeline run
+                    useful_lines = list(original_useful_lines)
+                    print('---- restart', logline[:23])
+                    break
+                else:
+                    del useful_lines[pos]
+
+                if not past_first:
+                    past_first = True
                 break
 
     parse_and_subtract(logline, prev_time, prev_step)
