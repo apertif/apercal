@@ -25,3 +25,5 @@ import subs.combim
 import subs.irods
 import subs.msutils
 import subs.calmodels
+
+from parselog import parselog

@@ -11,8 +11,6 @@ from __future__ import print_function
 from datetime import datetime
 import sys
 
-logfilename = sys.argv[1]
-
 
 def parse_and_subtract(logline, prev_time, prev_step):
     """
