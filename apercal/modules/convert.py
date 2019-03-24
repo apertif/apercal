@@ -234,7 +234,7 @@ class convert(BaseModule):
                             cmd = exportuvfits_cmd.format(vis=target_ms, fits=target_fits, beam=beam,
                                                           datacolumn=datacolumn)
 
-                            lib.run_casa([cmd], timeout=7200)
+                            lib.run_casa([cmd], timeout=10000)
                             if path.isfile(target_fits):
                                 converttargetbeamsms2uvfits[int(beam)] = True
                                 logger.debug('Converted dataset of target beam '
@@ -391,7 +391,7 @@ class convert(BaseModule):
             for vis, beam in self.get_datasets():
                 logger.info("Averaging down measurementset " + vis)
                 outputvis = vis.replace(".MS", "_avg.MS")
-                lib.run_casa([average_cmd.format(vis=vis, outputvis=outputvis)])
+                lib.run_casa([average_cmd.format(vis=vis, outputvis=outputvis)], timeout=10000)
 
         # Remove measurement sets if wanted
         if self.convert_removems and self.subdirification:
