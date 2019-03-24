@@ -318,6 +318,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
 
         logger.handlers = []
         logfilepath = os.path.join(basedir, 'apercal.log')
+        lib.setup_logger('debug', logfile=logfilepath)
         for beamnr in beamlist_target:
             try:
                 p6 = line(file_=configfilename)
