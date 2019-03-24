@@ -246,6 +246,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     logger.debug("Starting logfile for beam " + str(beamnr))
                     try:
                         p2 = ccal(file_=configfilename)
+                        p2.paramfilename = 'param_{:02d}.npy'.format(beamnr)
                         p2.basedir = basedir
                         p2.fluxcal = name_to_ms(name_fluxcal)
                         p2.polcal = name_to_ms(name_polcal)
