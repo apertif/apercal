@@ -42,7 +42,9 @@ class convert(BaseModule):
         self.default = lib.load_config(self, file_)
         subs_setinit.setinitdirs(self)
 
-    def get_crosscalsubdir_path(self, beam='00'):
+    def get_crosscalsubdir_path(self, beam=None):
+        if not beam:
+            beam = self.beam
         if self.subdirification:
             return path.join(self.basedir, beam, self.crosscalsubdir)
         else:
