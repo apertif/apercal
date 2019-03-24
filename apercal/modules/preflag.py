@@ -328,8 +328,8 @@ class preflag(BaseModule):
                     # Get the number of channels of the polarised calibrator data set
                     nchannel = get_nchan(self.get_polcal_path())
                     # Calculate the subband edges of the polarised calibrator data set
-                    a = range(0, nchannel, 64)
-                    b = range(1, nchannel, 64)
+                    a = range(16, nchannel, 64)
+                    b = range(48, nchannel, 64)
                     l = a + b
                     m = ';'.join(str(ch) for ch in l)
                     pc_ghosts_flagcmd = 'flagdata(vis="' + self.get_polcal_path() + '", spw="0:' + m + '", flagbackup=False)'
@@ -349,8 +349,8 @@ class preflag(BaseModule):
                         logger.debug('Flagging ghost channels for target beam ' + beam)
                         nchannel = get_nchan(vis)
                         # Calculate the ghost channels for each target beam data set
-                        a = range(0, nchannel, 64)
-                        b = range(1, nchannel, 64)
+                        a = range(16, nchannel, 64)
+                        b = range(48, nchannel, 64)
                         l = a + b
                         m = ';'.join(str(ch) for ch in l)
                         tg_ghosts_flagcmd = 'flagdata(vis="' + vis + '", spw="0:' + m + '", flagbackup=False)'
