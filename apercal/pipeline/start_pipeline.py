@@ -12,6 +12,7 @@ from apercal.modules.line import line
 from apercal.subs.managefiles import director
 from apercal.modules.convert import convert
 from apercal.subs import calmodels as subs_calmodels
+from apercal.exceptions import ApercalException
 import socket
 import apercal
 import os
@@ -19,7 +20,6 @@ import subprocess
 import apercal.libs.lib as lib
 from apercal.subs.msutils import get_source_name
 import logging
-import sys
 from time import time
 from datetime import timedelta
 import pymp
@@ -40,8 +40,7 @@ def validate_taskid(taskid_from_autocal):
 
 
 def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=None, flip_ra=False,
-                           steps=["prepare", "preflag", "ccal", "ccalqa", "convert", "scal", "continuum", "line"],
-                           configfilename=None):
+                           steps=None, configfilename=None):
     """
     Trigger the start of a fluxcal pipeline. Returns when pipeline is done.
     Example for taskid, name, beamnr: (190108926, '3C147_36', 36)
@@ -57,10 +56,14 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         basedir (str): base directory; if not specified will be /data/apertif/{target_taskid}
         flip_ra (bool): flip RA (for old measurement sets where beamweights were flipped)
         steps (List[str]): list of steps to perform
+        configfilename (str): Custom configfile (should be full path for now)
 
     Returns:
         Tuple[bool, str]: True if the pipeline succeeds, informative message
     """
+    if steps is None:
+        steps = ["prepare", "preflag", "ccal", "ccalqa", "convert", "scal", "continuum", "line"]
+
     (taskid_target, name_target, beamlist_target) = targets
 
     if not basedir:
@@ -229,46 +232,45 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             p1.go()
 
         if len(fluxcals) == 1 and fluxcals[0][-1] == 0:
-            p2 = ccal(file_=configfilename)
-            set_files(p2)
-            if "ccal" in steps and not dry_run:
-                p2.go()
-        else:
-            with pymp.Parallel(10) as p:
-                for beam_index in p.range(len(beamlist_target)):
-                    beamnr = beamlist_target[beam_index]
-                    logger.handlers = []
-                    logfilepath = os.path.join(basedir, 'apercal{:02d}.log'.format(beamnr))
+            raise ApercalException("Sorry, one fluxcal is not supported anymore at the moment")
 
-                    lib.setup_logger('debug', logfile=logfilepath)
-                    logger = logging.getLogger(__name__)
+        with pymp.Parallel(10) as p:
+            for beam_index in p.range(len(beamlist_target)):
+                beamnr = beamlist_target[beam_index]
+                logger.handlers = []
+                logfilepath = os.path.join(basedir, 'apercal{:02d}.log'.format(beamnr))
 
-                    logger.debug("Starting logfile for beam " + str(beamnr))
-                    try:
-                        p2 = ccal(file_=configfilename)
-                        p2.paramfilename = 'param_{:02d}.npy'.format(beamnr)
-                        p2.basedir = basedir
-                        p2.fluxcal = name_to_ms(name_fluxcal)
-                        p2.polcal = name_to_ms(name_polcal)
-                        p2.target = name_to_ms(name_target)
-                        p2.beam = "{:02d}".format(beamnr)
-                        p2.crosscal_transfer_to_target_targetbeams = "{:02d}".format(beamnr)
-                        if "ccal" in steps and not dry_run:
-                            director(p2, 'rm', basedir + '/param.npy', ignore_nonexistent=True)
-                            p2.go()
-                    except Exception as e:
-                        # Exception was already logged just before
-                        logger.warning("Failed beam {}, skipping that from crosscal".format(beamnr))
-                        logger.exception(e)
+                lib.setup_logger('debug', logfile=logfilepath)
+                logger = logging.getLogger(__name__)
 
-        logger.handlers = []
-        logfilepath = os.path.join(basedir, 'apercal.log')
-        p3 = convert(file_=configfilename)
-        set_files(p3)
-        if "convert" in steps and not dry_run:
-            director(p3, 'rm', basedir + '/param.npy', ignore_nonexistent=True)
-            p3.go()
-            director(p3, 'rm', basedir + '/param.npy', ignore_nonexistent=True)
+                logger.debug("Starting logfile for beam " + str(beamnr))
+                try:
+                    p2 = ccal(file_=configfilename)
+                    p2.paramfilename = 'param_{:02d}.npy'.format(beamnr)
+                    set_files(p2)
+                    p2.beam = "{:02d}".format(beamnr)
+                    p2.crosscal_transfer_to_target_targetbeams = "{:02d}".format(beamnr)
+                    if "ccal" in steps and not dry_run:
+                        director(p2, 'rm', basedir + '/param.npy', ignore_nonexistent=True)
+                        p2.go()
+                except Exception as e:
+                    # Exception was already logged just before
+                    logger.warning("Failed beam {}, skipping that from crosscal".format(beamnr))
+                    logger.exception(e)
+
+                try:
+                    p3 = convert(file_=configfilename)
+                    p3.paramfilename = 'param_{:02d}.npy'.format(beamnr)
+                    set_files(p3)
+                    p3.beam = "{:02d}".format(beamnr)
+                    p3.convert_targetbeams = "{:02d}".format(beamnr)
+                    if "convert" in steps and not dry_run:
+                        director(p3, 'rm', basedir + '/param_{:02d}.npy'.format(beamnr), ignore_nonexistent=True)
+                        p3.go()
+                        director(p3, 'rm', basedir + '/param_{:02d}.npy'.format(beamnr), ignore_nonexistent=True)
+                except Exception as e:
+                    logger.warning("Failed beam {}, skipping that from convert".format(beamnr))
+                    logger.exception(e)
 
         with pymp.Parallel(10) as p:
             for beam_index in p.range(len(beamlist_target)):
