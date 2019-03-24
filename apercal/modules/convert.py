@@ -385,10 +385,15 @@ class convert(BaseModule):
         subs_param.add_param(self, 'convert_targetbeams_UVFITS2MIRIAD', converttargetbeamsuvfits2miriad)
 
         # Create averaged measurementsets
+        datasets = self.get_datasets()
+        if self.convert_targetbeams != 'all':
+            beams = self.convert_targetbeams.split(",")
+            datasets = self.get_datasets(beams)
+
         if self.convert_averagems and self.subdirification:
             logger.info("Averaging down target measurement sets")
             average_cmd = 'mstransform(vis="{vis}", outputvis="{outputvis}", chanaverage=True, chanbin=64)'
-            for vis, beam in self.get_datasets():
+            for vis, beam in datasets:
                 logger.info("Averaging down measurementset " + vis)
                 outputvis = vis.replace(".MS", "_avg.MS")
                 lib.run_casa([average_cmd.format(vis=vis, outputvis=outputvis)], timeout=10000)
@@ -396,7 +401,7 @@ class convert(BaseModule):
         # Remove measurement sets if wanted
         if self.convert_removems and self.subdirification:
             logger.info('Removing measurement sets')
-            for vis, beam in self.get_datasets():
+            for vis, beam in datasets:
                 if path.exists(vis):
                     subs_managefiles.director(self, 'rm', vis)
 
