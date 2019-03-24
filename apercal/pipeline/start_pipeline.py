@@ -62,7 +62,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         Tuple[bool, str]: True if the pipeline succeeds, informative message
     """
     if steps is None:
-        steps = ["prepare", "preflag", "ccal", "ccalqa", "convert", "scal", "continuum", "line"]
+        steps = ["prepare", "preflag", "ccal", "ccalqa", "convert", "scal", "continuum"]#, "line"]
 
     (taskid_target, name_target, beamlist_target) = targets
 
