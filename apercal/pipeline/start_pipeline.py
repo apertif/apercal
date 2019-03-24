@@ -272,18 +272,6 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     logger.warning("Failed beam {}, skipping that from convert".format(beamnr))
                     logger.exception(e)
 
-        with pymp.Parallel(10) as p:
-            for beam_index in p.range(len(beamlist_target)):
-                beamnr = beamlist_target[beam_index]
-
-                logger.handlers = []
-                logfilepath = os.path.join(basedir, 'apercal{:02d}.log'.format(beamnr))
-
-                lib.setup_logger('debug', logfile=logfilepath)
-                logger = logging.getLogger(__name__)
-
-                logger.debug("Starting logfile for beam " + str(beamnr))
-
                 try:
                     p4 = scal(file_=configfilename)
                     p4.paramfilename = 'param_{:02d}.npy'.format(beamnr)
