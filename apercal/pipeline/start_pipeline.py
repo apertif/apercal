@@ -59,7 +59,8 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         configfilename (str): Custom configfile (should be full path for now)
 
     Returns:
-        Tuple[Dict[int, List[str]], str]: Tuple of a dict and the formatted runtime. The dict
+        Tuple[Dict[int, List[str]], str], str: Tuple of a dict, the formatted runtime, and possibly
+                                          an exception. The dict
                                           contains beam numbers (ints) as keys, a list of failed
                                           steps as values. Failed is defined here as 'threw an
                                           exception', only for target steps. Please also read logs.
@@ -357,8 +358,8 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         status = status.copy()  # Convert pymp shared dict to a normal one
         msg = "Apercal finished after " + str(timedelta(seconds=time() - time_start))
         logger.info(msg)
-        return status, str(timedelta(seconds=time() - time_start))
+        return status, str(timedelta(seconds=time() - time_start)), None
     except Exception as e:
         msg = "Apercal threw an error after " + str(timedelta(seconds=time() - time_start))
         logger.exception(msg)
-        return status, str(timedelta(seconds=time() - time_start))
+        return status, str(timedelta(seconds=time() - time_start)), str(e)
