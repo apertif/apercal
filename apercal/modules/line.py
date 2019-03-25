@@ -28,6 +28,7 @@ class line(BaseModule):
     """
     module_name = 'LINE'
 
+    line_beams = 'all'
     line_splitdata = None
     line_splitdata_chunkbandwidth = None
     line_splitdata_channelbandwidth = None
@@ -69,6 +70,10 @@ class line(BaseModule):
 
     def __init__(self, file_=None, **kwargs):
         self.default = lib.load_config(self, file_)
+
+        if self.line_beams == 'all':
+            self.line_beams = list(range(0, self.NBEAMS))
+
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
 
@@ -80,6 +85,11 @@ class line(BaseModule):
         subtract
         image line data
         """
+        if int(self.beam) not in self.line_beams:
+            msg = "Line imaging requested on a beam not in line_beams"
+            logger.error(msg)
+            raise ApercalException(msg)
+
         logger.info("Starting LINE IMAGING ")
         # build in check on number of threads to prevent excessive demands? (here?)
         original_nested = pymp.config.nested
