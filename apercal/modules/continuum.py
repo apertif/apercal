@@ -203,7 +203,7 @@ class continuum(BaseModule):
                                 mfclean.beam = 'beam_mf_00'
                                 mfclean.out = 'model_mf_00'
                                 mfclean.cutoff = Cc
-                                mfclean.niters = 100000
+                                mfclean.niters = 25000
                                 mfclean.region = '"' + 'mask(mask_mf_00)' + '"'
                                 mfclean.go()
                                 # Check if clean component image is there and ok
@@ -302,7 +302,7 @@ class continuum(BaseModule):
                                 mfclean.model = 'model_mf_' + str(minc - 1).zfill(2)
                                 mfclean.out = 'model_mf_' + str(minc).zfill(2)
                                 mfclean.cutoff = Cc
-                                mfclean.niters = 100000
+                                mfclean.niters = 25000
                                 mfclean.region = '"' + 'mask(mask_mf_' + str(minc).zfill(2) + ')' + '"'
                                 mfclean.go()
                                 # Check if clean component image is there and ok
@@ -556,7 +556,7 @@ class continuum(BaseModule):
                                         clean.beam = 'beam_C' + str(chunk).zfill(2) + '_00'
                                         clean.out = 'model_C' + str(chunk).zfill(2) + '_00'
                                         clean.cutoff = Cc
-                                        clean.niters = 100000
+                                        clean.niters = 10000
                                         clean.region = '"' + 'mask(mask_C' + str(chunk).zfill(2) + '_00)' + '"'
                                         clean.go()
                                         # Check if clean component image is there and ok
@@ -655,7 +655,7 @@ class continuum(BaseModule):
                                         clean.model = 'model_C' + str(chunk).zfill(2) + '_' + str(minc - 1).zfill(2)
                                         clean.out = 'model_C' + str(chunk).zfill(2) + '_' + str(minc).zfill(2)
                                         clean.cutoff = Cc
-                                        clean.niters = 100000
+                                        clean.niters = 10000
                                         clean.region = '"' + 'mask(mask_C' + str(chunk).zfill(2) + '_' + str(minc).zfill(2) + ')' + '"'
                                         clean.go()
                                         # Check if clean component image is there and ok
