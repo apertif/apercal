@@ -323,7 +323,7 @@ class line(BaseModule):
             for chunk in self.list_chunks():
                 # new:
                 nchannel = 0
-                if os.path.exists(self.linedir + '/' + chunk + '/' + chunk + '_line.mir'):
+                if os.path.exists(self.linedir + '/' + chunk + '/' + chunk + '_line.mir/visdata'):
                     uv = aipy.miriad.UV(self.linedir + '/' + chunk + '/' + chunk + '_line.mir')
                     nchannel = uv['nschan']  # Number of channels in the dataset
                 chunk_channels.append(nchannel)
