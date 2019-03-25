@@ -369,8 +369,14 @@ class line(BaseModule):
                                         invert.options = 'mfs,double,mosaic,sdb'
                                     else:
                                         invert.options = 'mfs,double,sdb'
-                                    invertcmd = invert.go()
-                                    if invertcmd[5].split(' ')[2] == '0':
+                                    try:
+                                        invertcmd = invert.go()
+                                        invert_succeeded = True
+                                    except RuntimeError as e:
+                                        logger.error("Invert crashed")
+                                        invertcmd = ''
+                                        invert_succeeded = False
+                                    if (not invert_succeeded) or invertcmd[5].split(' ')[2] == '0':
                                         logger.info(
                                             '(LINE) 0 visibilities in channel ' + str(channel_counter).zfill(
                                                 5) + '! Skipping channel! (threads [' + str(
