@@ -556,7 +556,7 @@ class continuum(BaseModule):
                                         clean.beam = 'beam_C' + str(chunk).zfill(2) + '_00'
                                         clean.out = 'model_C' + str(chunk).zfill(2) + '_00'
                                         clean.cutoff = Cc
-                                        clean.niters = 100000
+                                        clean.niters = 10000
                                         clean.region = '"' + 'mask(mask_C' + str(chunk).zfill(2) + '_00)' + '"'
                                         clean.go()
                                         # Check if clean component image is there and ok
@@ -655,7 +655,7 @@ class continuum(BaseModule):
                                         clean.model = 'model_C' + str(chunk).zfill(2) + '_' + str(minc - 1).zfill(2)
                                         clean.out = 'model_C' + str(chunk).zfill(2) + '_' + str(minc).zfill(2)
                                         clean.cutoff = Cc
-                                        clean.niters = 100000
+                                        clean.niters = 10000
                                         clean.region = '"' + 'mask(mask_C' + str(chunk).zfill(2) + '_' + str(minc).zfill(2) + ')' + '"'
                                         clean.go()
                                         # Check if clean component image is there and ok
