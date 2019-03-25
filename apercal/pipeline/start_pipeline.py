@@ -231,7 +231,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             director(p1, 'rm', basedir + '/param.npy', ignore_nonexistent=True)
             p1.go()
 
-        if len(fluxcals) == 1 and fluxcals[0][-1] == 0:
+        if len(fluxcals) == 1 and fluxcals[0][-1] == 0 and len(beamlist_target) > 1:
             raise ApercalException("Sorry, one fluxcal is not supported anymore at the moment")
 
         logger.handlers = []
