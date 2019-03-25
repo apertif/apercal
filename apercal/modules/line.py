@@ -323,7 +323,7 @@ class line(BaseModule):
             for chunk in self.list_chunks():
                 # new:
                 nchannel = 0
-                if os.path.exists(self.linedir + '/' + chunk + '/' + chunk + '_line.mir'):
+                if os.path.exists(self.linedir + '/' + chunk + '/' + chunk + '_line.mir/visdata'):
                     uv = aipy.miriad.UV(self.linedir + '/' + chunk + '/' + chunk + '_line.mir')
                     nchannel = uv['nschan']  # Number of channels in the dataset
                 chunk_channels.append(nchannel)
@@ -369,8 +369,14 @@ class line(BaseModule):
                                         invert.options = 'mfs,double,mosaic,sdb'
                                     else:
                                         invert.options = 'mfs,double,sdb'
-                                    invertcmd = invert.go()
-                                    if invertcmd[5].split(' ')[2] == '0':
+                                    try:
+                                        invertcmd = invert.go()
+                                        invert_succeeded = True
+                                    except RuntimeError as e:
+                                        logger.error("Invert crashed")
+                                        invertcmd = ''
+                                        invert_succeeded = False
+                                    if (not invert_succeeded) or invertcmd[5].split(' ')[2] == '0':
                                         logger.info(
                                             '(LINE) 0 visibilities in channel ' + str(channel_counter).zfill(
                                                 5) + '! Skipping channel! (threads [' + str(
