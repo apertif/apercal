@@ -12,6 +12,24 @@ from datetime import datetime
 import sys
 
 
+def parse_time(logline):
+    """
+    Extract time from log line, returns None if it doesn't start with a time.
+    Ignores pymp lines
+
+    Args:
+        logline (str): log line, starting with a time (or not)
+
+    Returns:
+        datetime: Time of the log line, or None if it didn't start with one
+     """
+    try:
+        logtime = datetime.strptime(logline.strip()[:22], "%m/%d/%Y %I:%M:%S %p")
+    except ValueError:
+        logtime = None
+
+    return logtime
+
 def parse_and_subtract(logline, prev_time, prev_step):
     """
     Print time since previous step (or nothing for the first event)
@@ -24,7 +42,7 @@ def parse_and_subtract(logline, prev_time, prev_step):
     Returns:
         tuple[datetime, msg]: time parsed from logline, step name, duration
     """
-    cur_time = datetime.strptime(logline.strip()[:22], "%m/%d/%Y %I:%M:%S %p")
+    cur_time = parse_time(logline)
     stepname = None
     duration = None
     if prev_time:
@@ -63,6 +81,9 @@ def parselog(logfilename):
     with open(logfilename, "r") as logfile:
         for logline in logfile:
             for pos, useful_line in enumerate(useful_lines):
+                this_time = parse_time(logline)
+                if this_time:
+                    last_time = this_time
                 if useful_line in logline:
                     prev_time, stepname, duration = parse_and_subtract(logline, prev_time, prev_step)
                     if stepname:
@@ -81,8 +102,8 @@ def parselog(logfilename):
                         past_first = True
                     break
 
-        _, stepname, duration = parse_and_subtract(logline, prev_time, prev_step)
-        result += [(stepname, duration)]
+        delta_t = last_time - prev_time
+        result += [(prev_step.split(" ")[0].split(".")[-1], ":".join(str(delta_t).split(":")[:2]))]
 
     return result
 
