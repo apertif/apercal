@@ -231,7 +231,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             director(p1, 'rm', basedir + '/param.npy', ignore_nonexistent=True)
             p1.go()
 
-        if len(fluxcals) == 1 and fluxcals[0][-1] == 0:
+        if len(fluxcals) == 1 and fluxcals[0][-1] == 0 and len(beamlist_target) > 1:
             raise ApercalException("Sorry, one fluxcal is not supported anymore at the moment")
 
         logger.handlers = []
@@ -320,10 +320,11 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         logfilepath = os.path.join(basedir, 'apercal.log')
         lib.setup_logger('debug', logfile=logfilepath)
         for beamnr in beamlist_target:
-            if int(beamnr)%10 not in (0, 7):
-                continue
             try:
                 p6 = line(file_=configfilename)
+                if beamnr not in p6.line_beams:
+                    logger.debug("Skipping line imaging for beam {}".format(beamnr))
+                    continue
                 p6.basedir = basedir
                 p6.beam = "{:02d}".format(beamnr)
                 p6.target = name_target + '.mir'
