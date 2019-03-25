@@ -323,6 +323,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             try:
                 p6 = line(file_=configfilename)
                 if beamnr not in p6.line_beams:
+                    logger.debug("Skipping line imaging for beam {}".format(beamnr))
                     continue
                 p6.basedir = basedir
                 p6.beam = "{:02d}".format(beamnr)
