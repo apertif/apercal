@@ -210,7 +210,7 @@ class scal(BaseModule):
                             uvflag = lib.miriad('uvflag')
                             uvflag.vis = self.target
                             uvflag.flagval = 'flag'
-                            uvflag.line = "'" + 'channel,1,' + str(d) + "'"
+                            uvflag.line = "'" + 'channel,1,' + str(d+1) + "'"
                             uvflag.go()
                     else:
                         logger.debug('Beam ' + self.beam + ': No HI-line/RFI found!')
