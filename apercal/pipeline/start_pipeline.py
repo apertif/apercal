@@ -320,6 +320,8 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         logfilepath = os.path.join(basedir, 'apercal.log')
         lib.setup_logger('debug', logfile=logfilepath)
         for beamnr in beamlist_target:
+            if int(beamnr)%10 not in (0, 7):
+                continue
             try:
                 p6 = line(file_=configfilename)
                 p6.basedir = basedir
