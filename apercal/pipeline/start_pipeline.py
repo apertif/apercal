@@ -251,7 +251,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     p2.beam = "{:02d}".format(beamnr)
                     p2.crosscal_transfer_to_target_targetbeams = "{:02d}".format(beamnr)
                     if "ccal" in steps and not dry_run:
-                        director(p2, 'rm', basedir + '/param.npy', ignore_nonexistent=True)
+                        director(p2, 'rm', basedir + '/param_{:02d}.npy'.format(beamnr), ignore_nonexistent=True)
                         p2.go()
                 except Exception as e:
                     # Exception was already logged just before
