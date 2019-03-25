@@ -59,7 +59,10 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         configfilename (str): Custom configfile (should be full path for now)
 
     Returns:
-        Tuple[bool, str]: True if the pipeline succeeds, informative message
+        Tuple[Dict[int, List[str]], str]: Tuple of a dict and the formatted runtime. The dict
+                                          contains beam numbers (ints) as keys, a list of failed
+                                          steps as values. Failed is defined here as 'threw an
+                                          exception', only for target steps. Please also read logs.
     """
     if steps is None:
         steps = ["prepare", "preflag", "ccal", "ccalqa", "convert", "scal", "continuum", "line"]
@@ -84,6 +87,8 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
     logger.debug("start_apercal called with arguments targets={}; fluxcals={}; polcals={}".format(
                   targets, fluxcals, polcals))
     logger.debug("steps = {}".format(steps))
+
+    status = pymp.shared.dict({beamnr: [] for beamnr in beamlist_target})
 
     name_fluxcal = str(fluxcals[0][1]).strip().split('_')[0]
     if polcals:
@@ -196,6 +201,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                 except Exception as e:
                     logger.warning("Prepare failed for target " + str(taskid_target) + " beam " + str(beamnr))
                     logger.exception(e)
+                    status[beamnr] += ['prepare']
 
         # Flag fluxcal (pretending it's a target)
         p1 = preflag(filename=configfilename)
@@ -257,6 +263,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     # Exception was already logged just before
                     logger.warning("Failed beam {}, skipping that from crosscal".format(beamnr))
                     logger.exception(e)
+                    status[beamnr] += ['crosscal']
 
         logger.handlers = []
         with pymp.Parallel(5) as p:  # 5 threads to not hammer the disks too much, convert is only IO
@@ -280,6 +287,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                 except Exception as e:
                     logger.warning("Failed beam {}, skipping that from convert".format(beamnr))
                     logger.exception(e)
+                    status[beamnr] += ['convert']
 
         logger.handlers = []
         with pymp.Parallel(10) as p:
@@ -302,6 +310,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     # Exception was already logged just before
                     logger.warning("Failed beam {}, skipping that from scal".format(beamnr))
                     logger.exception(e)
+                    status[beamnr] += ['scal']
 
                 try:
                     p5 = continuum(file_=configfilename)
@@ -315,6 +324,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     # Exception was already logged just before
                     logger.warning("Failed beam {}, skipping that from continuum".format(beamnr))
                     logger.exception(e)
+                    status[beamnr] += ['continuum']
 
         logger.handlers = []
         logfilepath = os.path.join(basedir, 'apercal.log')
@@ -333,6 +343,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                 # Exception was already logged just before
                 logger.warning("Failed beam {}, skipping that from line".format(beamnr))
                 logger.exception(e)
+                status[beamnr] += ['line']
 
         if "ccalqa" in steps and not dry_run:
             logger.info("Starting crosscal QA plots")
@@ -343,10 +354,11 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                 logger.exception(e)
             logger.info("Done with crosscal QA plots")
 
+        status = status.copy()  # Convert pymp shared dict to a normal one
         msg = "Apercal finished after " + str(timedelta(seconds=time() - time_start))
         logger.info(msg)
-        return True, msg
+        return status, str(timedelta(seconds=time() - time_start))
     except Exception as e:
         msg = "Apercal threw an error after " + str(timedelta(seconds=time() - time_start))
         logger.exception(msg)
-        return False, msg + '\n' + str(e) + '\n' + "Check log at " + socket.gethostname() + ':' + logfilepath
+        return status, str(timedelta(seconds=time() - time_start))
