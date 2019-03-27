@@ -70,6 +70,7 @@ def parselog(logfilename):
     useful_lines += ["apercal.modules.convert"]
     useful_lines += ["apercal.modules.scal"]
     useful_lines += ["apercal.modules.continuum"]
+    useful_lines += ["apercal.modules.line"]
 
     original_useful_lines = list(useful_lines)
 
