@@ -266,6 +266,15 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     logger.exception(e)
                     status[beamnr] += ['crosscal']
 
+        if "ccalqa" in steps and not dry_run and os.uname()[1] == 'happili-01':
+            logger.info("Starting crosscal QA plots")
+            try:
+                make_all_ccal_plots(taskid_target, name_fluxcal.upper().strip().split('_')[0])
+            except Exception as e:
+                logger.warning("Failed crosscal QA plots")
+                logger.exception(e)
+            logger.info("Done with crosscal QA plots")
+
         logger.handlers = []
         with pymp.Parallel(5) as p:  # 5 threads to not hammer the disks too much, convert is only IO
             for beam_index in p.range(len(beamlist_target)):
@@ -346,15 +355,6 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                 logger.warning("Failed beam {}, skipping that from line".format(beamnr))
                 logger.exception(e)
                 status[beamnr] += ['line']
-
-        if "ccalqa" in steps and not dry_run:
-            logger.info("Starting crosscal QA plots")
-            try:
-                make_all_ccal_plots(taskid_target, name_fluxcal.upper().strip().split('_')[0])
-            except Exception as e:
-                logger.warning("Failed crosscal QA plots")
-                logger.exception(e)
-            logger.info("Done with crosscal QA plots")
 
         status = status.copy()  # Convert pymp shared dict to a normal one
         msg = "Apercal finished after " + str(timedelta(seconds=time() - time_start))
