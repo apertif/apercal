@@ -164,7 +164,7 @@ def get_phases(file_):
                                        seconds=int(times[step][6:8])) for step in range(nsols)]
     gain_array = np.zeros([nants, nbins, nsols])
     for ant in range(nants):
-        gain_array[ant, :, :] = np.reshape(np.unwrap(s['col' + str(ant + 3)][nsols:], discont=90), (1, nbins, nsols))
+        gain_array[ant, :, :] = np.reshape(s['col' + str(ant + 3)][nsols:], (1, nbins, nsols))
     return gain_array, time_array
 
 
