@@ -71,6 +71,7 @@ def parselog(logfilename):
     useful_lines += ["apercal.modules.scal"]
     useful_lines += ["apercal.modules.continuum"]
     useful_lines += ["apercal.modules.line"]
+    useful_lines += ["dataqa.crosscal"]
 
     original_useful_lines = list(useful_lines)
 
