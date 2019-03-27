@@ -478,7 +478,11 @@ class continuum(BaseModule):
                     if not continuumtargetbeamschunkstatus[chunk]:
                         cn = 'Chunk ' + str(chunk).zfill(2) + ': '
                         # Calculate the theoretical noise and check Stokes V for gaussianity parameter for each chunk
-                        gaussianity, TN = masking.get_theoretical_noise(self, dataset, self.continuum_gaussianity, startchan=startchanarray[chunk], endchan=endchanarray[chunk])
+                        try:
+                            gaussianity, TN = masking.get_theoretical_noise(self, dataset, self.continuum_gaussianity, startchan=startchanarray[chunk], endchan=endchanarray[chunk])
+                        except Exception as e:
+                            logger.info("Imaging chunk " + str(chunk) + " failed, probably all flagged.")
+                            continue
                         if gaussianity:
                             pass
                         else:
