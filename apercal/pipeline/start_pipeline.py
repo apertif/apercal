@@ -350,7 +350,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         if "ccalqa" in steps and not dry_run:
             logger.info("Starting crosscal QA plots")
             try:
-                make_all_ccal_plots(taskid_target, name_fluxcal)
+                make_all_ccal_plots(taskid_target, name_fluxcal.upper().strip().split('_')[0])
             except Exception as e:
                 logger.warning("Failed crosscal QA plots")
                 logger.exception(e)
