@@ -196,7 +196,10 @@ class scal(BaseModule):
                 invert.cell = 5
                 invert.stokes = 'i'
                 invert.slop = 1
-                invert.go()
+                try:
+                    invert.go()
+                except:
+                    pass
                 if os.path.exists('map'):
                     min, max, std = imstats.getcubestats(self, 'map')
                     median = np.median(std)
@@ -378,7 +381,10 @@ class scal(BaseModule):
                                         invert.options = 'mfs,sdb,double'
                                         invert.slop = 1
                                         invert.robust = -2
-                                        invert.go()
+                                        try:
+                                            invert.go()
+                                        except:
+                                            pass
                                         # Check if dirty image and beam is there and ok
                                         if os.path.isdir(str(majc).zfill(2) + '/map_00') and os.path.isdir(str(majc).zfill(2) + '/beam_00'):
                                             selfcaltargetbeamsphasebeamstatus[majc] = True
@@ -792,7 +798,10 @@ class scal(BaseModule):
                                     invert.options = 'mfs,sdb,double'
                                     invert.slop = 1
                                     invert.robust = -2
-                                    invert.go()
+                                    try:
+                                        invert.go()
+                                    except:
+                                        pass
                                     # Check if dirty image and beam is there and ok
                                     if os.path.isdir('amp/map_00') and os.path.isdir('amp/beam_00'):
                                         selfcaltargetbeamsampbeamstatus = True
@@ -1076,7 +1085,10 @@ class scal(BaseModule):
                             invert.options = 'mfs,sdb,double'
                             invert.slop = 1
                             invert.robust = -2
-                            invert.go()
+                            try:
+                                invert.go()
+                            except:
+                                pass
                             checkstats = imstats.getimagestats(self, 'amp/check_map')
                             subs_managefiles.director(self, 'rm', 'amp/check_map')
                             subs_managefiles.director(self, 'rm', 'amp/check_beam')
