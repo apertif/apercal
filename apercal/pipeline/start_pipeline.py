@@ -90,8 +90,11 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
     logger.debug("steps = {}".format(steps))
 
     status = pymp.shared.dict({beamnr: [] for beamnr in beamlist_target})
-
-    name_fluxcal = str(fluxcals[0][1]).strip().split('_')[0]
+    
+    if fluxcals:
+        name_fluxcal = str(fluxcals[0][1]).strip().split('_')[0]
+    else:
+        name_fluxcal = ''
     if polcals:
         name_polcal = str(polcals[0][1]).strip().split('_')[0]
     else:
