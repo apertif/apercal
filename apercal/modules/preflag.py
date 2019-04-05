@@ -165,7 +165,7 @@ class preflag(BaseModule):
                         logger.info('Shadowed antenna(s) for beam ' + beam + ' were already flagged')
                     else:
                         logger.debug('Flagging shadowed antennas for beam ' + beam)
-                        tg_shadow = 'flagdata(vis="' + str(vis) + '", autocorr=True, flagbackup=False)'
+                        tg_shadow = 'flagdata(vis="' + str(vis) + '", mode="shadow", flagbackup=False)'
                         lib.run_casa([tg_shadow])
                         preflagtargetbeamsshadow[int(beam)] = True
             else:
