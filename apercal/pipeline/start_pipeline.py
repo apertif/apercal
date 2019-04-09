@@ -244,7 +244,6 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         if len(fluxcals) == 1 and fluxcals[0][-1] == 0 and len(beamlist_target) > 1:
             raise ApercalException("Sorry, one fluxcal is not supported anymore at the moment")
 
-        logger.handlers = []
         with pymp.Parallel(10) as p:
             for beam_index in p.range(len(beamlist_target)):
                 beamnr = beamlist_target[beam_index]
@@ -269,7 +268,6 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     logger.exception(e)
                     status[beamnr] += ['crosscal']
 
-        logger.handlers = []
         with pymp.Parallel(5) as p:  # 5 threads to not hammer the disks too much, convert is only IO
             for beam_index in p.range(len(beamlist_target)):
                 beamnr = beamlist_target[beam_index]
@@ -293,7 +291,6 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     logger.exception(e)
                     status[beamnr] += ['convert']
 
-        logger.handlers = []
         with pymp.Parallel(10) as p:
             for beam_index in p.range(len(beamlist_target)):
                 beamnr = beamlist_target[beam_index]
@@ -330,7 +327,6 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     logger.exception(e)
                     status[beamnr] += ['continuum']
 
-        logger.handlers = []
         logfilepath = os.path.join(basedir, 'apercal.log')
         lib.setup_logger('debug', logfile=logfilepath)
         for beamnr in beamlist_target:

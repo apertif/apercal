@@ -89,6 +89,7 @@ def setup_logger(level='info', logfile=None, quiet=False):
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
     logger.propagate = False
+    logger.handlers = []
     fh_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s : %(message)s',
                                      datefmt='%m/%d/%Y %I:%M:%S %p')
     if logfile is None:
