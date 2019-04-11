@@ -335,9 +335,10 @@ class continuum(BaseModule):
                                 restor.go()
                                 # Check if restored image is there and ok
                                 if os.path.isdir('image_mf_' + str(minc).zfill(2)):
-                                    continuumtargetbeamsmfimagestats[minc, :] = imstats.getimagestats(self, 'image_mf_00')
+                                    continuumtargetbeamsmfimagestats[minc, :] = imstats.getimagestats(self, 'image_mf_' + str(minc).zfill(2))
                                     if qa.checkrestoredimage(self, 'image_mf_' + str(minc).zfill(2)):
                                         continuumtargetbeamsmfimagestatus[minc] = True
+                                        continuumtargetbeamsmffinalminor = minc
                                     else:
                                         continuumtargetbeamsmfimagestatus[minc] = False
                                         continuumtargetbeamsmfstatus = False
@@ -695,6 +696,7 @@ class continuum(BaseModule):
                                             continuumtargetbeamschunkimagestats[chunk, minc, :] = imstats.getimagestats(self, 'image_C' + str(chunk).zfill(2) + '_' + str(minc).zfill(2))
                                             if qa.checkrestoredimage(self, 'image_C' + str(chunk).zfill(2) + '_' + str(minc).zfill(2)):
                                                 continuumtargetbeamschunkimagestatus[chunk, minc] = True
+                                                continuumtargetbeamschunkfinalminor[chunk] = minc
                                             else:
                                                 continuumtargetbeamschunkimagestatus[chunk, minc] = False
                                                 continuumtargetbeamschunkstatus[chunk] = False
@@ -722,6 +724,7 @@ class continuum(BaseModule):
                                 break
                         if TNreached and continuumtargetbeamschunkimagestatus[chunk, continuumtargetbeamschunkfinalminor[chunk]]:
                             logger.info('Beam ' + self.beam + ': ' + cn + 'Chunk successfully imaged!')
+                            subs_managefiles.imagetofits(self, 'image_C' + str(chunk).zfill(2) + '_' + str(continuumtargetbeamschunkfinalminor[chunk]).zfill(2), 'image_C' + str(chunk).zfill(2) + '_' + str(continuumtargetbeamschunkfinalminor[chunk]).zfill(2) + '.fits')
                             continuumtargetbeamschunkstatus[chunk] = True
                         else:
                             logger.info('Beam ' + self.beam + ': ' + cn + 'Theoretical noise not reached or final restored image invalid! Imaging for this chunk was not successful!')
@@ -737,9 +740,6 @@ class continuum(BaseModule):
                     continuumtargetbeamschunkallstatus = False
             else:
                 logger.info('Beam ' + self.beam + ': All chunks were already successfully imaged!')
-
-            for mirimagename in glob.glob("image_C*"):
-                subs_managefiles.imagetofits(self, mirimagename, mirimagename + '.fits')
 
         # Save the derived parameters to the parameter file
 
