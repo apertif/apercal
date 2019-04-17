@@ -111,12 +111,15 @@ class continuum(BaseModule):
             if not continuumtargetbeamsmfstatus:
                 logger.info('Beam ' + self.beam + ': Multi-frequency continuum imaging')
                 # Get the status of the selfcal for the specified beam
+                selfcaltargetbeamsphasestatus = get_param_def(self, sbeam + '_targetbeams_phase_status', False)
+                selfcaltargetbeamsampstatus = get_param_def(self, sbeam + '_targetbeams_amp_status', False)
+#                selfcaltargetbeamsphasestatus = True # Remove after fix
                 datasetname_amp = self.get_target_path().rstrip('.mir') + '_amp.mir'
                 datasetname_phase = self.get_target_path()
-                if os.path.isdir(datasetname_amp):
+                if os.path.isdir(datasetname_amp) and selfcaltargetbeamsampstatus:
                     logger.info('Beam ' + self.beam + ': Using amplitude self-calibrated dataset!')
                     dataset = datasetname_amp
-                elif os.path.isdir(datasetname_phase):
+                elif os.path.isdir(datasetname_phase) and selfcaltargetbeamsphasestatus:
                     logger.info('Beam ' + self.beam + ': Using phase self-calibrated dataset. Amplitude calibration was not successful or not wanted!')
                     dataset = datasetname_phase
                 else:
@@ -416,7 +419,6 @@ class continuum(BaseModule):
         subs_param.add_param(self, beam + '_targetbeams_mf_thresholdtype', continuumtargetbeamsmfthresholdtype)
         subs_param.add_param(self, beam + '_targetbeams_mf_final_minorcycle', continuumtargetbeamsmffinalminor)
 
-
     def chunkimage(self):
         """
         Creates the final deep mfs continuum image from the self-calibrated data
@@ -446,7 +448,7 @@ class continuum(BaseModule):
         continuumtargetbeamschunkmaskthreshold = get_param_def(self, beam + '_targetbeams_chunk_maskthreshold', np.full((nchunks, self.continuum_mfimage_minorcycle), np.nan))
         continuumtargetbeamschunkcleanthreshold = get_param_def(self, beam + '_targetbeams_chunk_cleanthreshold', np.full((nchunks, self.continuum_mfimage_minorcycle), np.nan))
         continuumtargetbeamschunkthresholdtype = get_param_def(self, beam + '_targetbeams_chunk_thresholdtype', np.full((nchunks, self.continuum_mfimage_minorcycle), 'NA'))
-        continuumtargetbeamschunkfinalminor = get_param_def(self, beam + '_targetbeams_chunk_final_minorcycle', np.full((nchunks, 1), 0))
+        continuumtargetbeamschunkfinalminor = get_param_def(self, beam + '_targetbeams_chunk_final_minorcycle', np.full((nchunks), 0))
 
 
         if self.continuum_chunkimage:
@@ -456,14 +458,17 @@ class continuum(BaseModule):
             if not continuumtargetbeamschunkallstatus:
                 logger.info('Beam ' + self.beam + ': Individual chunk continuum imaging')
                 # Get the status of the selfcal for the specified beam
+                selfcaltargetbeamsphasestatus = get_param_def(self, sbeam + '_targetbeams_phase_status', False)
+                selfcaltargetbeamsampstatus = get_param_def(self, sbeam + '_targetbeams_amp_status', False)
+#                selfcaltargetbeamsphasestatus = True  # Remove after fix
                 datasetname_amp = self.get_target_path().rstrip('.mir') + '_amp.mir'
                 datasetname_phase = self.get_target_path()
-                if os.path.isdir(datasetname_amp):
+                if os.path.isdir(datasetname_amp) and selfcaltargetbeamsampstatus:
                     logger.info('Beam ' + self.beam + ': Using amplitude self-calibrated dataset!')
-                    dataset = self.get_target_path().rstrip('.mir') + '_amp.mir'
-                elif os.path.isdir(datasetname_phase):
+                    dataset = datasetname_amp
+                elif os.path.isdir(datasetname_phase) and selfcaltargetbeamsphasestatus:
                     logger.info('Beam ' + self.beam + ': Using phase self-calibrated dataset. Amplitude calibration was not successful or not wanted!')
-                    dataset = self.get_target_path()
+                    dataset = datasetname_phase
                 else:
                     msg = 'Beam ' + self.beam + ': Self-calibration was not successful. No continuum imaging possible!'
                     logger.error(msg)
