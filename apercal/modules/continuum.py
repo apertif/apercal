@@ -111,9 +111,9 @@ class continuum(BaseModule):
             if not continuumtargetbeamsmfstatus:
                 logger.info('Beam ' + self.beam + ': Multi-frequency continuum imaging')
                 # Get the status of the selfcal for the specified beam
-                selfcaltargetbeamsphasestatus = get_param_def(self, sbeam + '_targetbeams_phase_status', False)
+#                selfcaltargetbeamsphasestatus = get_param_def(self, sbeam + '_targetbeams_phase_status', False)
                 selfcaltargetbeamsampstatus = get_param_def(self, sbeam + '_targetbeams_amp_status', False)
-#                selfcaltargetbeamsphasestatus = True # Remove after fix
+                selfcaltargetbeamsphasestatus = True # Remove after fix
                 datasetname_amp = self.get_target_path().rstrip('.mir') + '_amp.mir'
                 datasetname_phase = self.get_target_path()
                 if os.path.isdir(datasetname_amp) and selfcaltargetbeamsampstatus:
@@ -286,18 +286,18 @@ class continuum(BaseModule):
                                     else:
                                         continuumtargetbeamsmfmaskstatus[minc] = False
                                         continuumtargetbeamsmfstatus = False
-                                        msg = 'Beam ' + self.beam + ': Mask image for cycle ' + str(minc) + ' is invalid. Stopping continuum imaging!'
+                                        msg = 'Beam ' + self.beam + ': Mask image for cycle ' + str(minc) + ' is invalid. Stopping continuum imaging and using last valid iteration!'
                                         logger.error(msg)
                                         stop = True
-                                        continuumtargetbeamsmffinalminor = minc
+                                        continuumtargetbeamsmffinalminor = minc - 1
                                         break
                                 else:
                                     continuumtargetbeamsmfmaskstatus[minc] = False
                                     continuumtargetbeamsmfstatus = False
-                                    msg = 'Beam ' + self.beam + ': Mask image for cycle ' + str(minc) + ' not found. Stopping continuum imaging!'
+                                    msg = 'Beam ' + self.beam + ': Mask image for cycle ' + str(minc) + ' not found. Stopping continuum imaging and using last valid iteration!'
                                     logger.error(msg)
                                     stop = True
-                                    continuumtargetbeamsmffinalminor = minc
+                                    continuumtargetbeamsmffinalminor = minc - 1
                                     break
                                 mfclean = lib.miriad('mfclean')  # Clean the image down to the calculated threshold
                                 mfclean.map = 'map_mf_00'
@@ -316,18 +316,18 @@ class continuum(BaseModule):
                                     else:
                                         continuumtargetbeamsmfmodelstatus[minc] = False
                                         continuumtargetbeamsmfstatus = False
-                                        msg = 'Beam ' + self.beam + ': Clean component image for cycle ' + str(minc) + ' is invalid. Stopping continuum imaging!'
+                                        msg = 'Beam ' + self.beam + ': Clean component image for cycle ' + str(minc) + ' is invalid. Stopping continuum imaging and using last valid iteration!'
                                         logger.error(msg)
                                         stop = True
-                                        continuumtargetbeamsmffinalminor = minc
+                                        continuumtargetbeamsmffinalminor = minc - 1
                                         break
                                 else:
                                     continuumtargetbeamsmfmodelstatus[minc] = False
                                     continuumtargetbeamsmfstatus = False
-                                    msg = 'Beam ' + self.beam + ': Clean component image for cycle ' + str(minc) + ' not found. Stopping continuum imaging!'
+                                    msg = 'Beam ' + self.beam + ': Clean component image for cycle ' + str(minc) + ' not found. Stopping continuum imaging and using last valid iteration!'
                                     logger.error(msg)
                                     stop = True
-                                    continuumtargetbeamsmffinalminor = minc
+                                    continuumtargetbeamsmffinalminor = minc - 1
                                     break
                                 restor = lib.miriad('restor')  # Create the restored image
                                 restor.model = 'model_mf_' + str(minc).zfill(2)
@@ -345,16 +345,16 @@ class continuum(BaseModule):
                                     else:
                                         continuumtargetbeamsmfimagestatus[minc] = False
                                         continuumtargetbeamsmfstatus = False
-                                        logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(minc) + ' is invalid. Stopping continuum imaging!')
+                                        logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(minc) + ' is invalid. Stopping continuum imaging and using last valid iteration!')
                                         stop = True
-                                        continuumtargetbeamsmffinalminor = minc
+                                        continuumtargetbeamsmffinalminor = minc - 1
                                         break
                                 else:
                                     continuumtargetbeamsmfimagestatus[minc] = False
                                     continuumtargetbeamsmfstatus = False
-                                    logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(minc) + ' not found. Stopping continuum imaging!')
+                                    logger.error('Beam ' + self.beam + ': Restored image for cycle ' + str(minc) + ' not found. Stopping continuum imaging and using last valid iteration!')
                                     stop = True
-                                    continuumtargetbeamsmffinalminor = minc
+                                    continuumtargetbeamsmffinalminor = minc -1
                                     break
                                 restor.mode = 'residual'  # Create the residual image
                                 restor.out = 'residual_mf_' + str(minc).zfill(2)
@@ -370,29 +370,28 @@ class continuum(BaseModule):
                 else:
                     continuumtargetbeamsmfstatus = False
                 # Final checks if continuum mf imaging was successful
-                if continuumtargetbeamsmfstatus:
-                    if TNreached:
-                        if qa.checkimagegaussianity(self, 'residual_mf_' + str(continuumtargetbeamsmffinalminor).zfill(2), self.continuum_gaussianity):
-                            continuumtargetbeamsmfresidualstatus = True
-                            continuumtargetbeamsmfstatus = True
-                            subs_managefiles.imagetofits(self, 'image_mf_' + str(continuumtargetbeamsmffinalminor).zfill(2), 'image_mf_' + str(continuumtargetbeamsmffinalminor).zfill(2) + '.fits')
-                            logger.info('Beam ' + self.beam + ': Multi-frequency continuum imaging successfully done!')
-                        else:
-                            continuumtargetbeamsmfresidualstatus = False
-                            continuumtargetbeamsmfstatus = False
-                            logger.warning('Beam ' + self.beam + ': Final residual image shows non-gaussian statistics. Multi-frequency continuum imaging was not successful!')
-                    elif minc == continuumtargetbeamsmffinalminor:
-                        logger.warning('Beam ' + self.beam + ': Multi-frequency continuum imaging did not reach theoretical noise!')
-                        if qa.checkimagegaussianity(self, 'residual_mf_' + str(continuumtargetbeamsmffinalminor).zfill(2), self.continuum_gaussianity):
-                            self.logger.warning('Beam ' + self.beam + ': Residual image seems to show Gaussian statistics. Maybe cleaning was deep enough!')
-                            continuumtargetbeamsmfresidualstatus = True
-                            continuumtargetbeamsmfstatus = True
-                            subs_managefiles.imagetofits(self, 'image_mf_' + str(continuumtargetbeamsmffinalminor).zfill(2), 'image_mf_' + str(continuumtargetbeamsmffinalminor).zfill(2) + '.fits')
-                            logger.info('Beam ' + self.beam + ': Multi-frequency continuum imaging successfully done!')
-                        else:
-                            continuumtargetbeamsmfresidualstatus = False
-                            continuumtargetbeamsmfstatus = False
-                            logger.warning('Beam ' + self.beam + ': Final residual image shows non-gaussian statistics. Multi-frequency continuum imaging was not successful!')
+                if TNreached:
+                    if qa.checkimagegaussianity(self, 'residual_mf_' + str(continuumtargetbeamsmffinalminor).zfill(2), self.continuum_gaussianity):
+                        continuumtargetbeamsmfresidualstatus = True
+                        continuumtargetbeamsmfstatus = True
+                        subs_managefiles.imagetofits(self, 'image_mf_' + str(continuumtargetbeamsmffinalminor).zfill(2), 'image_mf_' + str(continuumtargetbeamsmffinalminor).zfill(2) + '.fits')
+                        logger.info('Beam ' + self.beam + ': Multi-frequency continuum imaging successfully done!')
+                    else:
+                        continuumtargetbeamsmfresidualstatus = False
+                        continuumtargetbeamsmfstatus = False
+                        logger.warning('Beam ' + self.beam + ': Final residual image shows non-gaussian statistics. Multi-frequency continuum imaging was not successful!')
+                elif minc == continuumtargetbeamsmffinalminor:
+                    logger.warning('Beam ' + self.beam + ': Multi-frequency continuum imaging did not reach theoretical noise!')
+                    if qa.checkimagegaussianity(self, 'residual_mf_' + str(continuumtargetbeamsmffinalminor).zfill(2), self.continuum_gaussianity):
+                        self.logger.warning('Beam ' + self.beam + ': Residual image seems to show Gaussian statistics. Maybe cleaning was deep enough!')
+                        continuumtargetbeamsmfresidualstatus = True
+                        continuumtargetbeamsmfstatus = True
+                        subs_managefiles.imagetofits(self, 'image_mf_' + str(continuumtargetbeamsmffinalminor).zfill(2), 'image_mf_' + str(continuumtargetbeamsmffinalminor).zfill(2) + '.fits')
+                        logger.info('Beam ' + self.beam + ': Multi-frequency continuum imaging successfully done!')
+                    else:
+                        continuumtargetbeamsmfresidualstatus = False
+                        continuumtargetbeamsmfstatus = False
+                        logger.warning('Beam ' + self.beam + ': Final residual image shows non-gaussian statistics. Multi-frequency continuum imaging was not successful!')
                 else:
                     continuumtargetbeamsmfstatus = False
                     logger.warning('Beam ' + self.beam + ': Something else happened and I dont know what')
