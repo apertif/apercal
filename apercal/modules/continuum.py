@@ -113,7 +113,7 @@ class continuum(BaseModule):
                 # Get the status of the selfcal for the specified beam
                 selfcaltargetbeamsphasestatus = get_param_def(self, sbeam + '_targetbeams_phase_status', False)
                 selfcaltargetbeamsampstatus = get_param_def(self, sbeam + '_targetbeams_amp_status', False)
-#                selfcaltargetbeamsphasestatus = True # Remove after fix
+                selfcaltargetbeamsphasestatus = True # Remove after fix
                 datasetname_amp = self.get_target_path().rstrip('.mir') + '_amp.mir'
                 datasetname_phase = self.get_target_path()
                 if os.path.isdir(datasetname_amp) and selfcaltargetbeamsampstatus:
@@ -370,28 +370,29 @@ class continuum(BaseModule):
                 else:
                     continuumtargetbeamsmfstatus = False
                 # Final checks if continuum mf imaging was successful
-                if TNreached:
-                    if qa.checkimagegaussianity(self, 'residual_mf_' + str(continuumtargetbeamsmffinalminor).zfill(2), self.continuum_gaussianity):
-                        continuumtargetbeamsmfresidualstatus = True
-                        continuumtargetbeamsmfstatus = True
-                        subs_managefiles.imagetofits(self, 'image_mf_' + str(continuumtargetbeamsmffinalminor).zfill(2), 'image_mf_' + str(continuumtargetbeamsmffinalminor).zfill(2) + '.fits')
-                        logger.info('Beam ' + self.beam + ': Multi-frequency continuum imaging successfully done!')
-                    else:
-                        continuumtargetbeamsmfresidualstatus = False
-                        continuumtargetbeamsmfstatus = False
-                        logger.warning('Beam ' + self.beam + ': Final residual image shows non-gaussian statistics. Multi-frequency continuum imaging was not successful!')
-                elif minc == continuumtargetbeamsmffinalminor:
-                    logger.warning('Beam ' + self.beam + ': Multi-frequency continuum imaging did not reach theoretical noise!')
-                    if qa.checkimagegaussianity(self, 'residual_mf_' + str(continuumtargetbeamsmffinalminor).zfill(2), self.continuum_gaussianity):
-                        self.logger.warning('Beam ' + self.beam + ': Residual image seems to show Gaussian statistics. Maybe cleaning was deep enough!')
-                        continuumtargetbeamsmfresidualstatus = True
-                        continuumtargetbeamsmfstatus = True
-                        subs_managefiles.imagetofits(self, 'image_mf_' + str(continuumtargetbeamsmffinalminor).zfill(2), 'image_mf_' + str(continuumtargetbeamsmffinalminor).zfill(2) + '.fits')
-                        logger.info('Beam ' + self.beam + ': Multi-frequency continuum imaging successfully done!')
-                    else:
-                        continuumtargetbeamsmfresidualstatus = False
-                        continuumtargetbeamsmfstatus = False
-                        logger.warning('Beam ' + self.beam + ': Final residual image shows non-gaussian statistics. Multi-frequency continuum imaging was not successful!')
+                if continuumtargetbeamsmfstatus:
+                    if TNreached:
+                        if qa.checkimagegaussianity(self, 'residual_mf_' + str(continuumtargetbeamsmffinalminor).zfill(2), self.continuum_gaussianity):
+                            continuumtargetbeamsmfresidualstatus = True
+                            continuumtargetbeamsmfstatus = True
+                            subs_managefiles.imagetofits(self, 'image_mf_' + str(continuumtargetbeamsmffinalminor).zfill(2), 'image_mf_' + str(continuumtargetbeamsmffinalminor).zfill(2) + '.fits')
+                            logger.info('Beam ' + self.beam + ': Multi-frequency continuum imaging successfully done!')
+                        else:
+                            continuumtargetbeamsmfresidualstatus = False
+                            continuumtargetbeamsmfstatus = False
+                            logger.warning('Beam ' + self.beam + ': Final residual image shows non-gaussian statistics. Multi-frequency continuum imaging was not successful!')
+                    elif minc == continuumtargetbeamsmffinalminor:
+                        logger.warning('Beam ' + self.beam + ': Multi-frequency continuum imaging did not reach theoretical noise!')
+                        if qa.checkimagegaussianity(self, 'residual_mf_' + str(continuumtargetbeamsmffinalminor).zfill(2), self.continuum_gaussianity):
+                            self.logger.warning('Beam ' + self.beam + ': Residual image seems to show Gaussian statistics. Maybe cleaning was deep enough!')
+                            continuumtargetbeamsmfresidualstatus = True
+                            continuumtargetbeamsmfstatus = True
+                            subs_managefiles.imagetofits(self, 'image_mf_' + str(continuumtargetbeamsmffinalminor).zfill(2), 'image_mf_' + str(continuumtargetbeamsmffinalminor).zfill(2) + '.fits')
+                            logger.info('Beam ' + self.beam + ': Multi-frequency continuum imaging successfully done!')
+                        else:
+                            continuumtargetbeamsmfresidualstatus = False
+                            continuumtargetbeamsmfstatus = False
+                            logger.warning('Beam ' + self.beam + ': Final residual image shows non-gaussian statistics. Multi-frequency continuum imaging was not successful!')
                 else:
                     continuumtargetbeamsmfstatus = False
                     logger.warning('Beam ' + self.beam + ': Something else happened and I dont know what')
