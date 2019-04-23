@@ -111,9 +111,9 @@ class continuum(BaseModule):
             if not continuumtargetbeamsmfstatus:
                 logger.info('Beam ' + self.beam + ': Multi-frequency continuum imaging')
                 # Get the status of the selfcal for the specified beam
-#                selfcaltargetbeamsphasestatus = get_param_def(self, sbeam + '_targetbeams_phase_status', False)
+                selfcaltargetbeamsphasestatus = get_param_def(self, sbeam + '_targetbeams_phase_status', False)
                 selfcaltargetbeamsampstatus = get_param_def(self, sbeam + '_targetbeams_amp_status', False)
-                selfcaltargetbeamsphasestatus = True # Remove after fix
+#                selfcaltargetbeamsphasestatus = True # Remove after fix
                 datasetname_amp = self.get_target_path().rstrip('.mir') + '_amp.mir'
                 datasetname_phase = self.get_target_path()
                 if os.path.isdir(datasetname_amp) and selfcaltargetbeamsampstatus:
@@ -187,6 +187,7 @@ class continuum(BaseModule):
                                     continuumtargetbeamsmfmaskstats[minc, :] = imstats.getmaskstats(self, 'mask_mf_00', self.continuum_mfimage_imsize)
                                     if qa.checkmaskimage(self, 'mask_mf_00'):
                                         continuumtargetbeamsmfmaskstatus[minc] = True
+                                        masking.blank_corners(self, 'mask_mf_00', self.continuum_mfimage_imsize)
                                     else:
                                         continuumtargetbeamsmfmaskstatus[minc] = False
                                         continuumtargetbeamsmfstatus = False
@@ -283,6 +284,7 @@ class continuum(BaseModule):
                                     continuumtargetbeamsmfmaskstats[minc, :] = imstats.getmaskstats(self, 'mask_mf_' + str(minc).zfill(2), self.continuum_mfimage_imsize)
                                     if qa.checkmaskimage(self, 'mask_mf_' + str(minc).zfill(2)):
                                         continuumtargetbeamsmfmaskstatus[minc] = True
+                                        masking.blank_corners(self, 'mask_mf_' + str(minc).zfill(2), self.continuum_mfimage_imsize)
                                     else:
                                         continuumtargetbeamsmfmaskstatus[minc] = False
                                         continuumtargetbeamsmfstatus = False
@@ -392,9 +394,20 @@ class continuum(BaseModule):
                         continuumtargetbeamsmfresidualstatus = False
                         continuumtargetbeamsmfstatus = False
                         logger.warning('Beam ' + self.beam + ': Final residual image shows non-gaussian statistics. Multi-frequency continuum imaging was not successful!')
+                elif stop:
+                    try:
+                        subs_managefiles.imagetofits(self, 'image_mf_' + str(continuumtargetbeamsmffinalminor).zfill(2), 'image_mf_' + str(continuumtargetbeamsmffinalminor).zfill(2) + '.fits')
+                        continuumtargetbeamsmfresidualstatus = True
+                        continuumtargetbeamsmfstatus = True
+                        logger.info('Beam ' + self.beam + ': Recreated final multi-frequency continuum image from last valid iteration!')
+                    except:
+                        continuumtargetbeamsmfresidualstatus = False
+                        continuumtargetbeamsmfstatus = False
+                        logger.info('Beam ' + self.beam + ': Could not recreate final multi-frequency continuum image from last valid iteration!')
                 else:
+                    logger.warning('Beam ' + self.beam + ': Multi-frequency continuum imaging was not successful!')
+                    continuumtargetbeamsmfresidualstatus = False
                     continuumtargetbeamsmfstatus = False
-                    logger.warning('Beam ' + self.beam + ': Something else happened and I dont know what')
             else:
                 logger.info('Beam ' + self.beam + ': Multi-frequency continuum image was already successfully created!')
         else:
@@ -547,6 +560,7 @@ class continuum(BaseModule):
                                             continuumtargetbeamschunkmaskstats[chunk, minc, :] = imstats.getmaskstats(self, 'mask_C' + str(chunk).zfill(2) + '_00', self.continuum_chunkimage_imsize)
                                             if qa.checkmaskimage(self, 'mask_C' + str(chunk).zfill(2) + '_00'):
                                                  continuumtargetbeamschunkmaskstatus[chunk, minc] = True
+                                                 masking.blank_corners(self, 'mask_C' + str(chunk).zfill(2) + '_00', self.continuum_chunkimage_imsize)
                                             else:
                                                 continuumtargetbeamschunkmaskstatus[chunk, minc] = False
                                                 continuumtargetbeamschunkstatus[chunk] = False
@@ -643,13 +657,14 @@ class continuum(BaseModule):
                                             continuumtargetbeamschunkmaskstats[chunk, minc, :] = imstats.getmaskstats(self, 'mask_C' + str(chunk).zfill(2) + '_' + str(minc).zfill(2), self.continuum_chunkimage_imsize)
                                             if qa.checkmaskimage(self, 'mask_C' + str(chunk).zfill(2) + '_' + str(minc).zfill(2)):
                                                 continuumtargetbeamschunkmaskstatus[chunk, minc] = True
+                                                masking.blank_corners(self, 'mask_C' + str(chunk).zfill(2) + '_' + str(minc).zfill(2), self.continuum_chunkimage_imsize)
                                             else:
                                                 continuumtargetbeamschunkmaskstatus[chunk, minc] = False
                                                 continuumtargetbeamschunkstatus[chunk] = False
                                                 msg = 'Beam ' + self.beam + ': ' + cn + 'Mask image for cycle ' + str(minc) + ' is invalid. Stopping continuum imaging!'
                                                 logger.error(msg)
                                                 stop = True
-                                                continuumtargetbeamschunkfinalminor[chunk] = minc
+                                                continuumtargetbeamschunkfinalminor[chunk] = minc - 1
                                                 break
                                         else:
                                             continuumtargetbeamschunkmaskstatus[chunk, minc] = False
@@ -657,7 +672,7 @@ class continuum(BaseModule):
                                             msg = 'Beam ' + self.beam + ': ' + cn + 'Mask image for cycle ' + str(minc) + ' not found. Stopping continuum imaging!'
                                             logger.error(msg)
                                             stop = True
-                                            continuumtargetbeamschunkfinalminor[chunk] = minc
+                                            continuumtargetbeamschunkfinalminor[chunk] = minc - 1
                                             break
                                         clean = lib.miriad('clean')  # Clean the image down to the calculated threshold
                                         clean.map = 'map_C' + str(chunk).zfill(2) + '_00'
@@ -679,7 +694,7 @@ class continuum(BaseModule):
                                                 msg = 'Beam ' + self.beam + ': ' + cn + 'Clean component image for cycle ' + str(minc) + ' is invalid. Stopping continuum imaging!'
                                                 logger.error(msg)
                                                 stop = True
-                                                continuumtargetbeamschunkfinalminor[chunk] = minc
+                                                continuumtargetbeamschunkfinalminor[chunk] = minc - 1
                                                 break
                                         else:
                                             continuumtargetbeamschunkmodelstatus[chunk, minc] = False
@@ -687,7 +702,7 @@ class continuum(BaseModule):
                                             msg = 'Beam ' + self.beam + ': ' + cn + 'Clean component image for cycle ' + str(minc) + ' not found. Stopping continuum imaging!'
                                             logger.error(msg)
                                             stop = True
-                                            continuumtargetbeamschunkfinalminor[chunk] = minc
+                                            continuumtargetbeamschunkfinalminor[chunk] = minc - 1
                                             break
                                         restor = lib.miriad('restor')  # Create the restored image
                                         restor.model = 'model_C' + str(chunk).zfill(2) + '_' + str(minc).zfill(2)
