@@ -1,9 +1,7 @@
 import logging
 
 import numpy as np
-import pandas as pd
 import os
-import glob
 
 from apercal.modules.base import BaseModule
 from apercal.subs import setinit as subs_setinit
@@ -153,6 +151,32 @@ class mosaic(BaseModule):
         subs_param.add_param(self, 'mosaic_continuum_mf_convolstatus', mosaiccontinuummfconvolstatus)
         subs_param.add_param(self, 'mosaic_continuum_mf_continuumbeamparams', mosaiccontinuummfcontinuumbeamparams)
         subs_param.add_param(self, 'mosaic_continuum_mf_continuumimagestats', mosaiccontinuummfcontinuumimagestats)
+
+
+    def show(self, showall=False):
+        lib.show(self, 'MOSAIC', showall)
+
+
+    def reset(self):
+        """
+        Function to reset the current step and remove all generated data. Be careful! Deletes all data generated in
+        this step!
+        """
+        subs_setinit.setinitdirs(self)
+        subs_setinit.setdatasetnamestomiriad(self)
+        if os.path.isdir(self.mosdir):
+            logger.warning('Deleting all mosaicked data products.')
+            subs_managefiles.director(self, 'ch', self.basedir)
+            subs_managefiles.director(self, 'rm', self.mosdir)
+            logger.warning('Deleting all parameter file entries for MOSAIC module')
+            subs_param.del_param(self, 'mosaic_continuum_mf_status')
+            subs_param.del_param(self, 'mosaic_continuum_mf_continuumstatus')
+            subs_param.del_param(self, 'mosaic_continuum_mf_copystatus')
+            subs_param.del_param(self, 'mosaic_continuum_mf_convolstatus')
+            subs_param.del_param(self, 'mosaic_continuum_mf_continuumbeamparams')
+            subs_param.del_param(self, 'mosaic_continuum_mf_continuumimagestats')
+        else:
+            logger.warning('Mosaicked data products are not present!')
 
 
     # Continuum mosaicing of the individual chunk images
