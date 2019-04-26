@@ -13,7 +13,6 @@ outputs:
     outputSource: scal/target_selfcalibrated
 
 steps:
-
   preflag_target:
     run: steps/preflag.cwl
     in:
@@ -77,15 +76,16 @@ steps:
       - target_amp
 
   continuum:
-    run: steps/scal.cwl
+    run: steps/continuum.cwl
     in:
-      target_mir: scal/target_selfcalibrated
+      target_selfcalibrated: scal/target_selfcalibrated
       target_amp: scal/target_amp
+    out:
+      - continuumed
 
 
-# next steps:
-#continuum
-#line
-#polarisation
-#mosaic
-#transfer
+# steps to do:
+#  line
+#  polarisation
+#  mosaic
+#  transfer

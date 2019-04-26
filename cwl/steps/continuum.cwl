@@ -21,16 +21,16 @@ requirements:
 baseCommand: [python]
 
 inputs:
-  target_mir:
+  target_selfcalibrated:
     type: Directory
   target_amp:
     type: Directory
 
 outputs:
-  target_selfcalibrated:
+  continuumed:
     type: Directory
     outputBinding:
-      glob: $(inputs.target_mir.basename)
+      glob: $(inputs.target_selfcalibrated.basename)
 
 arguments:
   - prefix: '-c'
@@ -40,6 +40,6 @@ arguments:
         from apercal.modules.continuum import continuum
 
         p = continuum()
-        p.target = "$(inputs.target_mir.path)"
+        p.target = "$(inputs.target_selfcalibrated.path)"
         p.subdirification = False
         p.go()
