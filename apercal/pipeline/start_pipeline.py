@@ -5,7 +5,7 @@ from __future__ import print_function
 from apercal.modules.prepare import prepare
 from apercal.modules.preflag import preflag
 from apercal.modules.ccal import ccal
-from dataqa.crosscal.crosscal_plots import make_all_ccal_plots
+#from dataqa.crosscal.crosscal_plots import make_all_ccal_plots
 from apercal.modules.scal import scal
 from apercal.modules.continuum import continuum
 from apercal.modules.line import line
@@ -92,14 +92,14 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
     status = pymp.shared.dict({beamnr: [] for beamnr in beamlist_target})
     
     if fluxcals:
-        name_fluxcal = str(fluxcals[0][1]).strip().split('_')[0]
+        name_fluxcal = str(fluxcals[0][1]).strip().split('_')[0].upper()
     else:
         name_fluxcal = ''
     if polcals:
-        name_polcal = str(polcals[0][1]).strip().split('_')[0]
+        name_polcal = str(polcals[0][1]).strip().split('_')[0].upper()
     else:
         name_polcal = ''
-    name_target = str(name_target).strip().upper()
+    name_target = str(name_target).strip()#.upper()
 
     # If both fluxcal and polcal polarized, remove polcal
     if subs_calmodels.is_polarised(name_polcal) and subs_calmodels.is_polarised(name_fluxcal):
@@ -125,7 +125,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         if not name:
             return ''
         else:
-            return name.upper().strip().split('_')[0] + '.MS'
+            return name + '.MS'
 
     def set_files(p):
         """
