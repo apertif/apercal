@@ -124,6 +124,8 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
     def name_to_ms(name):
         if not name:
             return ''
+        elif '3C' in name:
+            return name.upper().strip().split('_')[0] + '.MS'
         else:
             return name + '.MS'
 
