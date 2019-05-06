@@ -84,7 +84,7 @@ class preflag(BaseModule):
         aoflagger
         """
         logger.info('Starting Pre-flagging step')
-        self.shadow()
+        self.manualflag()
         if self.fluxcal != '':
             query = "SELECT GNFALSE(FLAG) == 0 AS all_flagged, " + \
                     "GNTRUE(FLAG) == 0 AS all_unflagged FROM " + self.get_fluxcal_path()
@@ -98,9 +98,9 @@ class preflag(BaseModule):
             query_result = pt.taql(query)
             logger.debug("All visibilities     flagged after aoflag: " + str(query_result[0]["all_flagged"]))
             logger.debug("All visibilities not flagged after aoflag: " + str(query_result[0]["all_unflagged"]))
+        self.shadow()
         self.edges()
         self.ghosts()
-        self.manualflag()
         logger.info('Pre-flagging step done')
 
     def get_bandpass_path(self):
