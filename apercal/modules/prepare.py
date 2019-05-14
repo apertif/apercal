@@ -30,6 +30,9 @@ class prepare(BaseModule):
     prepare_target_beams = None
     prepare_bypass_alta = None
     prepare_flip_ra = False
+    prepare_split = None
+    prepare_split_startchannel = None
+    prepare_split_endchannel = None
 
     def __init__(self, file_=None, **kwargs):
         self.default = lib.load_config(self, file_)
@@ -42,6 +45,7 @@ class prepare(BaseModule):
         """
         logger.info('Preparing data for calibration')
         self.copyobs()
+        self.split()
         logger.info('Data prepared for calibration')
 
     ##############################################
@@ -305,6 +309,50 @@ class prepare(BaseModule):
         subs_param.add_param(self, 'prepare_targetbeams_copystatus', preparetargetbeamscopystatus)
         subs_param.add_param(self, 'prepare_targetbeams_rejreason', preparetargetbeamsrejreason)
 
+
+    def split(self):
+        """
+        Splits out a certain frequency range from the datasets for the quicklook pipeline
+        """
+        if self.prepare_split:
+            logger.info('Splitting channel ' + str(self.prepare_split_startchannel) + ' until ' + str(self.prepare_split_endchannel))
+            # split the flux calibrator dataset
+            if self.fluxcal != '' and os.path.isdir(self.get_fluxcal_path()):
+                fluxcal_split = 'split(vis = "' + self.get_fluxcal_path() + '", outputvis = "' + self.get_fluxcal_path().rstrip('.MS') + '_split.MS"' + ', spw = "0:' + str(self.prepare_split_startchannel) + '~' + str(self.prepare_split_endchannel) + '", datacolumn = "data")'
+                lib.run_casa([fluxcal_split], log_output=True, timeout=3600)
+                if os.path.isdir(self.get_fluxcal_path().rstrip('.MS') + '_split.MS'):
+                    subs_managefiles.director(self, 'rm', self.get_fluxcal_path())
+                    subs_managefiles.director(self, 'rn', self.get_fluxcal_path(), file_=self.get_fluxcal_path().rstrip('.MS') + '_split.MS')
+                else:
+                    logger.warning('Splitting of flux calibrator dataset not successful!')
+            else:
+                logger.warning('Fluxcal not set or dataset not available! Cannot split flux calibrator dataset!')
+            # Split the polarised calibrator dataset
+            if self.polcal != '' and os.path.isdir(self.get_polcal_path()):
+                polcal_split = 'split(vis = "' + self.get_polcal_path() + '", outputvis = "' + self.get_polcal_path().rstrip('.MS') + '_split.MS"' + ', spw = "0:' + str(self.prepare_split_startchannel) + '~' + str(self.prepare_split_endchannel) + '", datacolumn = "data")'
+                lib.run_casa([polcal_split], log_output=True, timeout=3600)
+                if os.path.isdir(self.get_polcal_path().rstrip('.MS') + '_split.MS'):
+                    subs_managefiles.director(self, 'rm', self.get_polcal_path())
+                    subs_managefiles.director(self, 'rn', self.get_polcal_path(), file_=self.get_polcal_path().rstrip('.MS') + '_split.MS')
+                else:
+                    logger.warning('Splitting of polarised calibrator dataset not successful!')
+            else:
+                logger.warning('Polcal not set or dataset not available! Cannot split polarised calibrator dataset!')
+            # Split the target dataset
+            if self.target != '' and os.path.isdir(self.get_target_path()):
+                target_split = 'split(vis = "' + self.get_target_path() + '", outputvis = "' + self.get_target_path().rstrip('.MS') + '_split.MS"' + ', spw = "0:' + str(self.prepare_split_startchannel) + '~' + str(self.prepare_split_endchannel) + '", datacolumn = "data")'
+                lib.run_casa([target_split], log_output=True, timeout=3600)
+                if os.path.isdir(self.get_target_path().rstrip('.MS') + '_split.MS'):
+                    subs_managefiles.director(self, 'rm', self.get_target_path())
+                    subs_managefiles.director(self, 'rn', self.get_target_path(), file_=self.get_target_path().rstrip('.MS') + '_split.MS')
+                else:
+                    logger.warning('Splitting of target dataset not successful!')
+            else:
+                logger.warning('Target not set or dataset not available! Cannot split target dataset!')
+        else:
+            pass
+
+
     def summary(self):
         """
         Creates a general summary of the parameters in the parameter file generated during PREPARE. No detailed summary
@@ -337,22 +385,22 @@ class prepare(BaseModule):
         dataset_beams = [self.target[:-3] + ' Beam ' + str(b).zfill(2) for b in beam_range]
         dataset_indices = ['Flux calibrator (' + self.fluxcal[:-3] + ')', 'Polarised calibrator (' + self.polcal[:-3] + ')'] + dataset_beams
 
-        all_r = np.full(39, False)
+        all_r = np.full(self.NBEAMS + 2, False)
         all_r[0] = FR
         all_r[1] = PR
         all_r[2:] = TR
 
-        all_d = np.full(39, False)
+        all_d = np.full(self.NBEAMS + 2, False)
         all_d[0] = FD
         all_d[1] = PD
         all_d[2:] = TD
 
-        all_a = np.full(39, False)
+        all_a = np.full(self.NBEAMS + 2, False)
         all_a[0] = FA
         all_a[1] = PA
         all_a[2:] = TA
 
-        all_c = np.full(39, False)
+        all_c = np.full(self.NBEAMS + 2, False)
         all_c[0] = FC
         all_c[1] = PC
         all_c[2:] = TC

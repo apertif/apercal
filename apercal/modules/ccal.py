@@ -941,32 +941,32 @@ class ccal(BaseModule):
         dataset_indices = ['Flux calibrator (' + self.fluxcal[:-3] + ')',
                            'Polarised calibrator (' + self.polcal[:-3] + ')'] + dataset_beams
 
-        all_MOD = np.full(39, '   NA')
+        all_MOD = np.full(self.NBEAMS + 2, '   NA')
         all_MOD[0] = str(FMOD)
         all_MOD[1] = str(PMOD)
 
-        all_IPH = np.full(39, '   NA')
+        all_IPH = np.full(self.NBEAMS + 2, '   NA')
         all_IPH[0] = str(FIPH)
 
-        all_GD = np.full(39, '   NA')
+        all_GD = np.full(self.NBEAMS + 2, '   NA')
         all_GD[0] = str(FGD)
 
-        all_BP = np.full(39, '   NA')
+        all_BP = np.full(self.NBEAMS + 2, '   NA')
         all_BP[0] = str(FBP)
 
-        all_G = np.full(39, '   NA')
+        all_G = np.full(self.NBEAMS + 2, '   NA')
         all_G[0] = str(FG)
 
-        all_CD = np.full(39, '   NA')
+        all_CD = np.full(self.NBEAMS + 2, '   NA')
         all_CD[1] = str(PCD)
 
-        all_L = np.full(39, '   NA')
+        all_L = np.full(self.NBEAMS + 2, '   NA')
         all_L[0] = str(FL)
 
-        all_PA = np.full(39, '   NA')
+        all_PA = np.full(self.NBEAMS + 2, '   NA')
         all_PA[1] = str(PPA)
 
-        all_T = np.full(39, False)
+        all_T = np.full(self.NBEAMS + 2, False)
         all_T[0] = FT
         all_T[1] = PT
         all_T[2:] = TT
