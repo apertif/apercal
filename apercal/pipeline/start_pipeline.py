@@ -198,7 +198,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         # Prepare target
         p0 = prepare(file_=configfilename)
         #p0.basedir = basedir
-        set_files(p2)
+        set_files(p0)
         p0.prepare_flip_ra = flip_ra
         p0.fluxcal = ''
         p0.polcal = ''
