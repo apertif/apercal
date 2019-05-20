@@ -45,7 +45,7 @@ class prepare(BaseModule):
         """
         logger.info('Preparing data for calibration')
         self.copyobs()
-        self.split()
+        #self.split()
         logger.info('Data prepared for calibration')
 
     ##############################################
