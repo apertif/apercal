@@ -317,6 +317,9 @@ class prepare(BaseModule):
         if self.prepare_split:
             logger.info('Splitting channel ' + str(self.prepare_split_startchannel) + ' until ' + str(self.prepare_split_endchannel))
             # split the flux calibrator dataset
+            logger.debug("self.fluxcal = {}".format(self.fluxcal))
+            logger.debug("os.path.isdir(self.get_fluxcal_path()) = {}".format(
+                os.path.isdir(self.get_fluxcal_path())))
             if self.fluxcal != '' and os.path.isdir(self.get_fluxcal_path()):
                 fluxcal_split = 'split(vis = "' + self.get_fluxcal_path() + '", outputvis = "' + self.get_fluxcal_path().rstrip('.MS') + '_split.MS"' + ', spw = "0:' + str(self.prepare_split_startchannel) + '~' + str(self.prepare_split_endchannel) + '", datacolumn = "data")'
                 lib.run_casa([fluxcal_split], log_output=True, timeout=3600)
@@ -328,6 +331,9 @@ class prepare(BaseModule):
             else:
                 logger.warning('Fluxcal not set or dataset not available! Cannot split flux calibrator dataset!')
             # Split the polarised calibrator dataset
+            logger.debug("self.polcal = {}".format(self.polcal))
+            logger.debug("os.path.isdir(self.get_polcal_path()) = {}".format(
+                os.path.isdir(self.get_polcal_path())))
             if self.polcal != '' and os.path.isdir(self.get_polcal_path()):
                 polcal_split = 'split(vis = "' + self.get_polcal_path() + '", outputvis = "' + self.get_polcal_path().rstrip('.MS') + '_split.MS"' + ', spw = "0:' + str(self.prepare_split_startchannel) + '~' + str(self.prepare_split_endchannel) + '", datacolumn = "data")'
                 lib.run_casa([polcal_split], log_output=True, timeout=3600)
@@ -339,6 +345,9 @@ class prepare(BaseModule):
             else:
                 logger.warning('Polcal not set or dataset not available! Cannot split polarised calibrator dataset!')
             # Split the target dataset
+            logger.debug("self.target = {}".format(self.target))
+            logger.debug("os.path.isdir(self.get_target_path()) = {}".format(
+                os.path.isdir(self.get_target_path())))
             if self.target != '' and os.path.isdir(self.get_target_path()):
                 target_split = 'split(vis = "' + self.get_target_path() + '", outputvis = "' + self.get_target_path().rstrip('.MS') + '_split.MS"' + ', spw = "0:' + str(self.prepare_split_startchannel) + '~' + str(self.prepare_split_endchannel) + '", datacolumn = "data")'
                 lib.run_casa([target_split], log_output=True, timeout=3600)
