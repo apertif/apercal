@@ -232,7 +232,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         # Splitting a small chunk of data for quicklook pipeline
         # at the moment it all relies on the target beams
         # what if there are more calibrator than target beams-> realistic?
-        s0 = split(filename=configfilename)
+        s0 = split(file_=configfilename)
         set_files(s0)
         for beamnr in beamlist_target:
             s0.beam = "{:02d}".format(beamnr)
