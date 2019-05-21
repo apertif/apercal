@@ -3,6 +3,7 @@
 from __future__ import print_function
 
 from apercal.modules.prepare import prepare
+from apercal.modules.split import split
 from apercal.modules.preflag import preflag
 from apercal.modules.ccal import ccal
 #from dataqa.crosscal.crosscal_plots import make_all_ccal_plots
@@ -168,6 +169,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             #p0.basedir = basedir
             set_files(p0)
             p0.prepare_flip_ra = flip_ra
+            # the following two need to be empty strings for prepare
             p0.fluxcal = ''
             p0.polcal = ''
             p0.target = name_to_ms(name_fluxcal)
@@ -189,6 +191,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                 #p0.basedir = basedir
                 set_files(p0)
                 p0.prepare_flip_ra = flip_ra
+                # the following two need to be empty strings for prepare
                 p0.fluxcal = ''
                 p0.polcal = ''
                 p0.target = name_to_ms(name_polcal)
@@ -208,6 +211,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         #p0.basedir = basedir
         set_files(p0)
         p0.prepare_flip_ra = flip_ra
+        # the following two need to be empty strings for prepare
         p0.fluxcal = ''
         p0.polcal = ''
         #p0.target = name_to_ms(name_target)
@@ -224,6 +228,30 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                                    str(taskid_target) + " beam " + str(beamnr))
                     logger.exception(e)
                     status[beamnr] += ['prepare']
+
+        # Splitting a small chunk of data for quicklook pipeline
+        # at the moment it all relies on the target beams
+        # what if there are more calibrator than target beams-> realistic?
+        s0 = split(filename=configfilename)
+        set_files(s0)
+        for beamnr in beamlist_target:
+            s0.beam = "{:02d}".format(beamnr)
+            if "split" in steps and not dry_run:
+                try:
+                    s0.go()
+                except Exception as e:
+                    logger.warning("Split failed for {0} beam {1}".format(
+                        str(taskid_target), str(beamnr)))
+                    logger.exception(e)
+                    # not sure if following line is necessary
+                    status[beamnr] += ['split']
+        # Need to rename files probably
+        # maybe the name of the continuum image should be different
+        if "split" in steps and not dry_run:
+            name_fluxcal += "_split"
+            name_polcal += "_split"
+            name_target += "_split"
+        set_files(s0)
 
         # Flag fluxcal (pretending it's a target)
         p1 = preflag(filename=configfilename)
@@ -244,7 +272,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             p1.polcal = ''
             p1.target = name_to_ms(name_polcal)
             p1.beam = "{:02d}".format(beamlist_target[0])
-            if "prepare" in steps and not dry_run:
+            if "preflag" in steps and not dry_run:
                 director(p1, 'rm', basedir + '/param.npy',
                          ignore_nonexistent=True)
                 p1.go()
