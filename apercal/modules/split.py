@@ -113,4 +113,4 @@ class split(BaseModule):
                 logger.warning(
                     'Target not set or dataset not available! Cannot split target dataset!')
         else:
-            pass
+            logger.warning("No splitting done")
