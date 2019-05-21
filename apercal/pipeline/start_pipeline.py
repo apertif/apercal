@@ -245,13 +245,6 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     logger.exception(e)
                     # not sure if following line is necessary
                     status[beamnr] += ['split']
-        # Need to rename files probably
-        # maybe the name of the continuum image should be different
-        if "split" in steps and not dry_run:
-            name_fluxcal += "_split"
-            name_polcal += "_split"
-            name_target += "_split"
-        set_files(s0)
 
         # Flag fluxcal (pretending it's a target)
         p1 = preflag(filename=configfilename)
