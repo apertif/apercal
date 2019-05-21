@@ -1,15 +1,15 @@
 import glob
 import logging
-import pandas as pd
+# import pandas as pd
 import os
 import numpy as np
 
 from apercal.modules.base import BaseModule
-from apercal.subs import irods as subs_irods
+# from apercal.subs import irods as subs_irods
 from apercal.subs import setinit as subs_setinit
 from apercal.subs import managefiles as subs_managefiles
-from apercal.subs.param import get_param_def
-from apercal.subs import param as subs_param
+# from apercal.subs.param import get_param_def
+# from apercal.subs import param as subs_param
 from apercal.libs import lib
 
 logger = logging.getLogger(__name__)
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 class split(BaseModule):
 
     """
-    Split class. For the quicklook pipeline, a small chunk of bandwidth will be split
+    Split class. For the quicklook pipeline, a small chunk of bandwidth will be split to be processed by pipeline
     """
     module_name = 'SPLIT'
 
@@ -39,12 +39,11 @@ class split(BaseModule):
 
     def go(self):
         """
-        Executes the complete prepare step with the parameters indicated in the config-file in the following order:
-        copyobs
+        Executes the split step with the parameters indicated in the config-file
         """
-        logger.info('Preparing data for calibration')
+        logger.info('Splitting data for quicklook')
         self.split_data()
-        logger.info('Data prepared for calibration')
+        logger.info('Data splitted for quicklook')
 
     def split_data(self):
         """
