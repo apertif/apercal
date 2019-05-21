@@ -29,7 +29,7 @@ class split(BaseModule):
     # split_target_beams = None
     # split_bypass_alta = None
     # split_flip_ra = False
-    split = None
+    #split = None
     split_startchannel = None
     split_endchannel = None
 
@@ -49,68 +49,68 @@ class split(BaseModule):
         """
         Splits out a certain frequency range from the datasets for the quicklook pipeline
         """
-        if self.split:
-            logger.info('Splitting channel ' + str(self.split_startchannel) +
-                        ' until ' + str(self.split_endchannel))
-            # split the flux calibrator dataset
-            logger.debug("self.fluxcal = {}".format(self.fluxcal))
-            logger.debug("os.path.isdir(self.get_fluxcal_path()) = {}".format(
-                os.path.isdir(self.get_fluxcal_path())))
-            if self.fluxcal != '' and os.path.isdir(self.get_fluxcal_path()):
-                fluxcal_split = 'split(vis = "' + self.get_fluxcal_path() + '", outputvis = "' + self.get_fluxcal_path().rstrip('.MS') + '_split.MS"' + \
-                    ', spw = "0:' + str(self.split_startchannel) + '~' + str(
-                    self.split_endchannel) + '", datacolumn = "data")'
-                lib.run_casa([fluxcal_split], log_output=True, timeout=3600)
-                if os.path.isdir(self.get_fluxcal_path().rstrip('.MS') + '_split.MS'):
-                    subs_managefiles.director(
-                        self, 'rm', self.get_fluxcal_path())
-                    subs_managefiles.director(self, 'rn', self.get_fluxcal_path(
-                    ), file_=self.get_fluxcal_path().rstrip('.MS') + '_split.MS')
-                else:
-                    logger.warning(
-                        'Splitting of flux calibrator dataset not successful!')
+        # if self.split:
+        logger.info('Splitting channel ' + str(self.split_startchannel) +
+                    ' until ' + str(self.split_endchannel))
+        # split the flux calibrator dataset
+        logger.debug("self.fluxcal = {}".format(self.fluxcal))
+        logger.debug("os.path.isdir(self.get_fluxcal_path()) = {}".format(
+            os.path.isdir(self.get_fluxcal_path())))
+        if self.fluxcal != '' and os.path.isdir(self.get_fluxcal_path()):
+            fluxcal_split = 'split(vis = "' + self.get_fluxcal_path() + '", outputvis = "' + self.get_fluxcal_path().rstrip('.MS') + '_split.MS"' + \
+                ', spw = "0:' + str(self.split_startchannel) + '~' + str(
+                self.split_endchannel) + '", datacolumn = "data")'
+            lib.run_casa([fluxcal_split], log_output=True, timeout=3600)
+            if os.path.isdir(self.get_fluxcal_path().rstrip('.MS') + '_split.MS'):
+                subs_managefiles.director(
+                    self, 'rm', self.get_fluxcal_path())
+                subs_managefiles.director(self, 'rn', self.get_fluxcal_path(
+                ), file_=self.get_fluxcal_path().rstrip('.MS') + '_split.MS')
             else:
                 logger.warning(
-                    'Fluxcal not set or dataset not available! Cannot split flux calibrator dataset!')
-            # Split the polarised calibrator dataset
-            logger.debug("self.polcal = {}".format(self.polcal))
-            logger.debug("os.path.isdir(self.get_polcal_path()) = {}".format(
-                os.path.isdir(self.get_polcal_path())))
-            if self.polcal != '' and os.path.isdir(self.get_polcal_path()):
-                polcal_split = 'split(vis = "' + self.get_polcal_path() + '", outputvis = "' + self.get_polcal_path().rstrip('.MS') + '_split.MS"' + \
-                    ', spw = "0:' + str(self.split_startchannel) + '~' + str(
-                    self.split_endchannel) + '", datacolumn = "data")'
-                lib.run_casa([polcal_split], log_output=True, timeout=3600)
-                if os.path.isdir(self.get_polcal_path().rstrip('.MS') + '_split.MS'):
-                    subs_managefiles.director(
-                        self, 'rm', self.get_polcal_path())
-                    subs_managefiles.director(self, 'rn', self.get_polcal_path(
-                    ), file_=self.get_polcal_path().rstrip('.MS') + '_split.MS')
-                else:
-                    logger.warning(
-                        'Splitting of polarised calibrator dataset not successful!')
-            else:
-                logger.warning(
-                    'Polcal not set or dataset not available! Cannot split polarised calibrator dataset!')
-            # Split the target dataset
-            logger.debug("self.target = {}".format(self.target))
-            logger.debug("os.path.isdir(self.get_target_path()) = {}".format(
-                os.path.isdir(self.get_target_path())))
-            if self.target != '' and os.path.isdir(self.get_target_path()):
-                target_split = 'split(vis = "' + self.get_target_path() + '", outputvis = "' + self.get_target_path().rstrip('.MS') + '_split.MS"' + \
-                    ', spw = "0:' + str(self.split_startchannel) + '~' + str(
-                    self.split_endchannel) + '", datacolumn = "data")'
-                lib.run_casa([target_split], log_output=True, timeout=3600)
-                if os.path.isdir(self.get_target_path().rstrip('.MS') + '_split.MS'):
-                    subs_managefiles.director(
-                        self, 'rm', self.get_target_path())
-                    subs_managefiles.director(self, 'rn', self.get_target_path(
-                    ), file_=self.get_target_path().rstrip('.MS') + '_split.MS')
-                else:
-                    logger.warning(
-                        'Splitting of target dataset not successful!')
-            else:
-                logger.warning(
-                    'Target not set or dataset not available! Cannot split target dataset!')
+                    'Splitting of flux calibrator dataset not successful!')
         else:
-            logger.warning("No splitting done")
+            logger.warning(
+                'Fluxcal not set or dataset not available! Cannot split flux calibrator dataset!')
+        # Split the polarised calibrator dataset
+        logger.debug("self.polcal = {}".format(self.polcal))
+        logger.debug("os.path.isdir(self.get_polcal_path()) = {}".format(
+            os.path.isdir(self.get_polcal_path())))
+        if self.polcal != '' and os.path.isdir(self.get_polcal_path()):
+            polcal_split = 'split(vis = "' + self.get_polcal_path() + '", outputvis = "' + self.get_polcal_path().rstrip('.MS') + '_split.MS"' + \
+                ', spw = "0:' + str(self.split_startchannel) + '~' + str(
+                self.split_endchannel) + '", datacolumn = "data")'
+            lib.run_casa([polcal_split], log_output=True, timeout=3600)
+            if os.path.isdir(self.get_polcal_path().rstrip('.MS') + '_split.MS'):
+                subs_managefiles.director(
+                    self, 'rm', self.get_polcal_path())
+                subs_managefiles.director(self, 'rn', self.get_polcal_path(
+                ), file_=self.get_polcal_path().rstrip('.MS') + '_split.MS')
+            else:
+                logger.warning(
+                    'Splitting of polarised calibrator dataset not successful!')
+        else:
+            logger.warning(
+                'Polcal not set or dataset not available! Cannot split polarised calibrator dataset!')
+        # Split the target dataset
+        logger.debug("self.target = {}".format(self.target))
+        logger.debug("os.path.isdir(self.get_target_path()) = {}".format(
+            os.path.isdir(self.get_target_path())))
+        if self.target != '' and os.path.isdir(self.get_target_path()):
+            target_split = 'split(vis = "' + self.get_target_path() + '", outputvis = "' + self.get_target_path().rstrip('.MS') + '_split.MS"' + \
+                ', spw = "0:' + str(self.split_startchannel) + '~' + str(
+                self.split_endchannel) + '", datacolumn = "data")'
+            lib.run_casa([target_split], log_output=True, timeout=3600)
+            if os.path.isdir(self.get_target_path().rstrip('.MS') + '_split.MS'):
+                subs_managefiles.director(
+                    self, 'rm', self.get_target_path())
+                subs_managefiles.director(self, 'rn', self.get_target_path(
+                ), file_=self.get_target_path().rstrip('.MS') + '_split.MS')
+            else:
+                logger.warning(
+                    'Splitting of target dataset not successful!')
+        else:
+            logger.warning(
+                'Target not set or dataset not available! Cannot split target dataset!')
+        # else:
+        #     logger.warning("No splitting done")
