@@ -147,13 +147,13 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         p.polcal = name_to_ms(name_polcal)
         p.target = name_to_ms(name_target)
 
-        debug_msg = """
-        p.basedir = basedir = {0};
-        p.fluxcal = name_to_ms(name_fluxcal) = {1};
-        p.polcal = name_to_ms(name_polcal) = {2};
-        p.target = name_to_ms(name_target) = {3};
-        """.format(basedir, name_to_ms(name_fluxcal), name_to_ms(name_polcal), name_to_ms(name_target))
-        logger.debug(debug_msg)
+        # debug_msg = """
+        # p.basedir = basedir = {0};
+        # p.fluxcal = name_to_ms(name_fluxcal) = {1};
+        # p.polcal = name_to_ms(name_polcal) = {2};
+        # p.target = name_to_ms(name_target) = {3};
+        # """.format(basedir, name_to_ms(name_fluxcal), name_to_ms(name_polcal), name_to_ms(name_target))
+        # logger.debug(debug_msg)
 
     beamnrs_fluxcal = [f[2] for f in fluxcals]
     if len(fluxcals) > 1:
