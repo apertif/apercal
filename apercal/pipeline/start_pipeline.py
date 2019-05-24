@@ -3,6 +3,7 @@
 from __future__ import print_function
 
 from apercal.modules.prepare import prepare
+from apercal.modules.split import split
 from apercal.modules.preflag import preflag
 from apercal.modules.ccal import ccal
 #from dataqa.crosscal.crosscal_plots import make_all_ccal_plots
@@ -66,7 +67,8 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                                           exception', only for target steps. Please also read logs.
     """
     if steps is None:
-        steps = ["prepare", "preflag", "ccal", "convert", "scal", "continuum", "line"]
+        steps = ["prepare", "preflag", "ccal",
+                 "convert", "scal", "continuum", "line"]
 
     (taskid_target, name_target, beamlist_target) = targets
 
@@ -86,11 +88,11 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
     logger.info("Apercal version: " + gitinfo)
 
     logger.debug("start_apercal called with arguments targets={}; fluxcals={}; polcals={}".format(
-                  targets, fluxcals, polcals))
+        targets, fluxcals, polcals))
     logger.debug("steps = {}".format(steps))
 
     status = pymp.shared.dict({beamnr: [] for beamnr in beamlist_target})
-    
+
     if fluxcals:
         name_fluxcal = str(fluxcals[0][1]).strip().split('_')[0].upper()
     else:
@@ -99,7 +101,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         name_polcal = str(polcals[0][1]).strip().split('_')[0].upper()
     else:
         name_polcal = ''
-    name_target = str(name_target).strip()#.upper()
+    name_target = str(name_target).strip()  # .upper()
 
     # If both fluxcal and polcal polarized, remove polcal
     if subs_calmodels.is_polarised(name_polcal) and subs_calmodels.is_polarised(name_fluxcal):
@@ -116,7 +118,8 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             fluxcals, polcals = polcals, fluxcals
             name_polcal = str(polcals[0][1]).strip()
         else:
-            logger.debug("Setting polcal to '' since " + name_polcal + " is not polarised")
+            logger.debug("Setting polcal to '' since " +
+                         name_polcal + " is not polarised")
             name_polcal = ""
     elif name_polcal != '':
         logger.debug("Polcal " + name_polcal + " is polarised, all good")
@@ -144,6 +147,14 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         p.polcal = name_to_ms(name_polcal)
         p.target = name_to_ms(name_target)
 
+        # debug_msg = """
+        # p.basedir = basedir = {0};
+        # p.fluxcal = name_to_ms(name_fluxcal) = {1};
+        # p.polcal = name_to_ms(name_polcal) = {2};
+        # p.target = name_to_ms(name_target) = {3};
+        # """.format(basedir, name_to_ms(name_fluxcal), name_to_ms(name_polcal), name_to_ms(name_target))
+        # logger.debug(debug_msg)
+
     beamnrs_fluxcal = [f[2] for f in fluxcals]
     if len(fluxcals) > 1:
         # Check every target beam has a fluxcal beam
@@ -155,8 +166,10 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         # Prepare fluxcals
         for (taskid_fluxcal, name_fluxcal, beamnr_fluxcal) in fluxcals:
             p0 = prepare(file_=configfilename)
-            p0.basedir = basedir
+            #p0.basedir = basedir
+            set_files(p0)
             p0.prepare_flip_ra = flip_ra
+            # the following two need to be empty strings for prepare
             p0.fluxcal = ''
             p0.polcal = ''
             p0.target = name_to_ms(name_fluxcal)
@@ -167,15 +180,18 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                 try:
                     p0.go()
                 except Exception as e:
-                    logger.warning("Prepare failed for fluxcal " + str(taskid_fluxcal) + " beam " + str(beamnr_fluxcal))
+                    logger.warning("Prepare failed for fluxcal " +
+                                   str(taskid_fluxcal) + " beam " + str(beamnr_fluxcal))
                     logger.exception(e)
 
         # Prepare polcals
         if name_polcal != '':
             for (taskid_polcal, name_polcal, beamnr_polcal) in polcals:
                 p0 = prepare(file_=configfilename)
-                p0.basedir = basedir
+                #p0.basedir = basedir
+                set_files(p0)
                 p0.prepare_flip_ra = flip_ra
+                # the following two need to be empty strings for prepare
                 p0.fluxcal = ''
                 p0.polcal = ''
                 p0.target = name_to_ms(name_polcal)
@@ -192,22 +208,43 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
 
         # Prepare target
         p0 = prepare(file_=configfilename)
-        p0.basedir = basedir
+        #p0.basedir = basedir
+        set_files(p0)
         p0.prepare_flip_ra = flip_ra
+        # the following two need to be empty strings for prepare
         p0.fluxcal = ''
         p0.polcal = ''
-        p0.target = name_to_ms(name_target)
+        #p0.target = name_to_ms(name_target)
         p0.prepare_date = str(taskid_target)[:6]
         p0.prepare_obsnum_target = validate_taskid(taskid_target)
         for beamnr in beamlist_target:
-            p0.prepare_target_beams = ','.join(['{:02d}'.format(beamnr) for beamnr in beamlist_target])
+            p0.prepare_target_beams = ','.join(
+                ['{:02d}'.format(beamnr) for beamnr in beamlist_target])
             if "prepare" in steps and not dry_run:
                 try:
                     p0.go()
                 except Exception as e:
-                    logger.warning("Prepare failed for target " + str(taskid_target) + " beam " + str(beamnr))
+                    logger.warning("Prepare failed for target " +
+                                   str(taskid_target) + " beam " + str(beamnr))
                     logger.exception(e)
                     status[beamnr] += ['prepare']
+
+        # Splitting a small chunk of data for quicklook pipeline
+        # at the moment it all relies on the target beams
+        # what if there are more calibrator than target beams-> realistic?
+        s0 = split(file_=configfilename)
+        set_files(s0)
+        for beamnr in beamlist_target:
+            s0.beam = "{:02d}".format(beamnr)
+            if "split" in steps and not dry_run:
+                try:
+                    s0.go()
+                except Exception as e:
+                    logger.warning("Split failed for {0} beam {1}".format(
+                        str(taskid_target), str(beamnr)))
+                    logger.exception(e)
+                    # not sure if following line is necessary
+                    status[beamnr] += ['split']
 
         # Flag fluxcal (pretending it's a target)
         p1 = preflag(filename=configfilename)
@@ -244,13 +281,15 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             p1.go()
 
         if len(fluxcals) == 1 and fluxcals[0][-1] == 0 and len(beamlist_target) > 1:
-            raise ApercalException("Sorry, one fluxcal is not supported anymore at the moment")
+            raise ApercalException(
+                "Sorry, one fluxcal is not supported anymore at the moment")
 
         with pymp.Parallel(10) as p:
             for beam_index in p.range(len(beamlist_target)):
                 beamnr = beamlist_target[beam_index]
 
-                logfilepath = os.path.join(basedir, 'apercal{:02d}.log'.format(beamnr))
+                logfilepath = os.path.join(
+                    basedir, 'apercal{:02d}.log'.format(beamnr))
                 lib.setup_logger('debug', logfile=logfilepath)
                 logger = logging.getLogger(__name__)
 
@@ -260,21 +299,26 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     p2.paramfilename = 'param_{:02d}.npy'.format(beamnr)
                     set_files(p2)
                     p2.beam = "{:02d}".format(beamnr)
-                    p2.crosscal_transfer_to_target_targetbeams = "{:02d}".format(beamnr)
+                    p2.crosscal_transfer_to_target_targetbeams = "{:02d}".format(
+                        beamnr)
                     if "ccal" in steps and not dry_run:
-                        director(p2, 'rm', basedir + '/param_{:02d}.npy'.format(beamnr), ignore_nonexistent=True)
+                        director(
+                            p2, 'rm', basedir + '/param_{:02d}.npy'.format(beamnr), ignore_nonexistent=True)
                         p2.go()
                 except Exception as e:
                     # Exception was already logged just before
-                    logger.warning("Failed beam {}, skipping that from crosscal".format(beamnr))
+                    logger.warning(
+                        "Failed beam {}, skipping that from crosscal".format(beamnr))
                     logger.exception(e)
                     status[beamnr] += ['crosscal']
 
-        with pymp.Parallel(5) as p:  # 5 threads to not hammer the disks too much, convert is only IO
+        # 5 threads to not hammer the disks too much, convert is only IO
+        with pymp.Parallel(5) as p:
             for beam_index in p.range(len(beamlist_target)):
                 beamnr = beamlist_target[beam_index]
 
-                logfilepath = os.path.join(basedir, 'apercal{:02d}.log'.format(beamnr))
+                logfilepath = os.path.join(
+                    basedir, 'apercal{:02d}.log'.format(beamnr))
                 lib.setup_logger('debug', logfile=logfilepath)
                 logger = logging.getLogger(__name__)
 
@@ -285,11 +329,14 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     p3.beam = "{:02d}".format(beamnr)
                     p3.convert_targetbeams = "{:02d}".format(beamnr)
                     if "convert" in steps and not dry_run:
-                        director(p3, 'rm', basedir + '/param_{:02d}.npy'.format(beamnr), ignore_nonexistent=True)
+                        director(
+                            p3, 'rm', basedir + '/param_{:02d}.npy'.format(beamnr), ignore_nonexistent=True)
                         p3.go()
-                        director(p3, 'rm', basedir + '/param_{:02d}.npy'.format(beamnr), ignore_nonexistent=True)
+                        director(
+                            p3, 'rm', basedir + '/param_{:02d}.npy'.format(beamnr), ignore_nonexistent=True)
                 except Exception as e:
-                    logger.warning("Failed beam {}, skipping that from convert".format(beamnr))
+                    logger.warning(
+                        "Failed beam {}, skipping that from convert".format(beamnr))
                     logger.exception(e)
                     status[beamnr] += ['convert']
 
@@ -297,7 +344,8 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             for beam_index in p.range(len(beamlist_target)):
                 beamnr = beamlist_target[beam_index]
 
-                logfilepath = os.path.join(basedir, 'apercal{:02d}.log'.format(beamnr))
+                logfilepath = os.path.join(
+                    basedir, 'apercal{:02d}.log'.format(beamnr))
                 lib.setup_logger('debug', logfile=logfilepath)
                 logger = logging.getLogger(__name__)
 
@@ -311,7 +359,8 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                         p4.go()
                 except Exception as e:
                     # Exception was already logged just before
-                    logger.warning("Failed beam {}, skipping that from scal".format(beamnr))
+                    logger.warning(
+                        "Failed beam {}, skipping that from scal".format(beamnr))
                     logger.exception(e)
                     status[beamnr] += ['scal']
 
@@ -325,7 +374,8 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                         p5.go()
                 except Exception as e:
                     # Exception was already logged just before
-                    logger.warning("Failed beam {}, skipping that from continuum".format(beamnr))
+                    logger.warning(
+                        "Failed beam {}, skipping that from continuum".format(beamnr))
                     logger.exception(e)
                     status[beamnr] += ['continuum']
 
@@ -335,7 +385,8 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             try:
                 p6 = line(file_=configfilename)
                 if beamnr not in p6.line_beams:
-                    logger.debug("Skipping line imaging for beam {}".format(beamnr))
+                    logger.debug(
+                        "Skipping line imaging for beam {}".format(beamnr))
                     continue
                 p6.basedir = basedir
                 p6.beam = "{:02d}".format(beamnr)
@@ -344,24 +395,28 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     p6.go()
             except Exception as e:
                 # Exception was already logged just before
-                logger.warning("Failed beam {}, skipping that from line".format(beamnr))
+                logger.warning(
+                    "Failed beam {}, skipping that from line".format(beamnr))
                 logger.exception(e)
                 status[beamnr] += ['line']
 
         if "ccalqa" in steps and not dry_run:
             logger.info("Starting crosscal QA plots")
             try:
-                make_all_ccal_plots(taskid_target, name_fluxcal.upper().strip().split('_')[0])
+                make_all_ccal_plots(
+                    taskid_target, name_fluxcal.upper().strip().split('_')[0])
             except Exception as e:
                 logger.warning("Failed crosscal QA plots")
                 logger.exception(e)
             logger.info("Done with crosscal QA plots")
 
         status = status.copy()  # Convert pymp shared dict to a normal one
-        msg = "Apercal finished after " + str(timedelta(seconds=time() - time_start))
+        msg = "Apercal finished after " + \
+            str(timedelta(seconds=time() - time_start))
         logger.info(msg)
         return status, str(timedelta(seconds=time() - time_start)), None
     except Exception as e:
-        msg = "Apercal threw an error after " + str(timedelta(seconds=time() - time_start))
+        msg = "Apercal threw an error after " + \
+            str(timedelta(seconds=time() - time_start))
         logger.exception(msg)
         return status, str(timedelta(seconds=time() - time_start)), str(e)
