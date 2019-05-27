@@ -254,8 +254,13 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         p1.target = name_to_ms(name_fluxcal)
         p1.beam = "{:02d}".format(beamlist_target[0])
         if "preflag" in steps and not dry_run:
+            logging.info("Running preflag for flux calibrator {0} in beam {1}".format(
+                p1.target, p1.beam))
+            preflag_flux_cal_start_time = time()
             director(p1, 'rm', basedir + '/param.npy', ignore_nonexistent=True)
             p1.go()
+            logging.info("Running preflag for flux calibrator {0} in beam {1} ... Done ({2:.0f}s)".format(
+                p1.target, p1.beam), time() - preflag_flux_cal_start_time)
 
         # Flag polcal (pretending it's a target)
         p1 = preflag(filename=configfilename)
@@ -266,19 +271,30 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             p1.target = name_to_ms(name_polcal)
             p1.beam = "{:02d}".format(beamlist_target[0])
             if "preflag" in steps and not dry_run:
-                director(p1, 'rm', basedir + '/param.npy', ignore_nonexistent=True)
+                logging.info("Running preflag for pol calibrator {0} in beam {1}".format(
+                    p1.target, p1.beam))
+                preflag_pol_cal_start_time = time()
+                director(p1, 'rm', basedir + '/param.npy',
+                         ignore_nonexistent=True)
                 p1.go()
+                logging.info("Running preflag for pol calibrator {0} in beam {1} ... Done ({2:.0f}s)".format(
+                    p1.target, p1.beam), time() - preflag_pol_cal_start_time)
 
+        # Flag target
         p1 = preflag(filename=configfilename)
         p1.basedir = basedir
-        # Flag target
         p1.fluxcal = ''
         p1.polcal = ''
         p1.target = name_to_ms(name_target)
         p1.beam = "{:02d}".format(beamlist_target[0])
         if "preflag" in steps and not dry_run:
+            logging.info("Running preflag for target {0} in beam {1}".format(
+                p1.target, p1.beam))
+            preflag_target_start_time = time()
             director(p1, 'rm', basedir + '/param.npy', ignore_nonexistent=True)
             p1.go()
+            logging.info("Running preflag for target {0} in beam {1} ... Done ({2:.0f}s)".format(
+                p1.target, p1.beam), time() - preflag_target_start_time)
 
         if len(fluxcals) == 1 and fluxcals[0][-1] == 0 and len(beamlist_target) > 1:
             raise ApercalException(

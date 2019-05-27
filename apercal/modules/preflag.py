@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import os
 from os import path
+from time import time
 
 import casacore.tables as pt
 
@@ -84,23 +85,46 @@ class preflag(BaseModule):
         aoflagger
         """
         logger.info('Starting Pre-flagging step')
+
+        logger.info("Running manualflag for {0} in beam {1}".format(self.target, self.beam))
+        start_time = time()
         self.manualflag()
+        logger.info("Running manualflag for {0} in beam {1} ... Done ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
+        
         if self.fluxcal != '':
             query = "SELECT GNFALSE(FLAG) == 0 AS all_flagged, " + \
                     "GNTRUE(FLAG) == 0 AS all_unflagged FROM " + self.get_fluxcal_path()
             query_result = pt.taql(query)
             logger.debug("All visibilities     flagged before aoflag: " + str(query_result[0]["all_flagged"]))
             logger.debug("All visibilities not flagged before aoflag: " + str(query_result[0]["all_unflagged"]))
+        
+        logger.info("Running aoflagger tasks for {0} in beam {1}".format(self.target, self.beam))
+        start_time = time()
         self.aoflagger()
+        logger.info("Running aoflagger tasks for {0} in beam {1} ... Done ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
+
         if self.fluxcal != '':
             query = "SELECT GNFALSE(FLAG) == 0 AS all_flagged, " + \
                     "GNTRUE(FLAG) == 0 AS all_unflagged FROM " + self.get_fluxcal_path()
             query_result = pt.taql(query)
             logger.debug("All visibilities     flagged after aoflag: " + str(query_result[0]["all_flagged"]))
             logger.debug("All visibilities not flagged after aoflag: " + str(query_result[0]["all_unflagged"]))
+        
+        logger.info("Running shadow for {0} in beam {1}".format(self.target, self.beam))
+        start_time = time()
         self.shadow()
+        logger.info("Running shadow for {0} in beam {1} ... Done ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
+        
+        logger.info("Running edge for {0} in beam {1}".format(self.target, self.beam))
+        start_time = time()
         self.edges()
+        logger.info("Running edge for {0} in beam {1} ... Done ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
+
+        logger.info("Running ghosts for {0} in beam {1}".format(self.target, self.beam))
+        start_time = time()
         self.ghosts()
+        logger.info("Running ghosts for {0} in beam {1} ... Done ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
+
         logger.info('Pre-flagging step done')
 
     def get_bandpass_path(self):
@@ -374,7 +398,7 @@ class preflag(BaseModule):
         any other calibration.
         """
         if self.preflag_manualflag:
-            logger.debug('Manual flagging step started')
+            logger.info('Manual flagging step started')
             self.manualflag_auto()
             self.manualflag_antenna()
             self.manualflag_corr()
@@ -382,7 +406,7 @@ class preflag(BaseModule):
             self.manualflag_channel()
             self.manualflag_time()
             self.manualflag_clipzeros()
-            logger.debug('Manual flagging step done')
+            logger.info('Manual flagging step done')
 
     def aoflagger(self):
         """
@@ -391,10 +415,22 @@ class preflag(BaseModule):
         calibrators and target fields normally differ.
         """
         if self.preflag_aoflagger:
-            logger.debug('Pre-flagging with AOFlagger started')
+            logger.info('Pre-flagging with AOFlagger started')
+
+            logger.info("Running aoflagger bandpass for {0} in beam {1}".format(
+                self.target, self.beam
+            start_time = time()
             self.aoflagger_bandpass()
+            logger.info("Running manualflag for {0} in beam {1} ... Done ({2:.0f}s)".format(
+                self.target, self.beam, time() - start_time))
+
+            logger.info("Running aoflagger flagging for {0} in beam {1}".format(
+                self.target, self.beam, time() - start_time))
             self.aoflagger_flag()
-            logger.debug('Pre-flagging with AOFlagger done')
+            logger.info("Running aoflagger flagging for {0} in beam {1} ... Done ({2:.0f}s)".format(
+                self.target, self.beam, time() - start_time))
+
+            logger.info('Pre-flagging with AOFlagger done')
         else:
             logger.warning('No flagging with AOflagger done! Your data might be contaminated by RFI!')
 
