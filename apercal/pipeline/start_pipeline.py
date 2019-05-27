@@ -248,6 +248,8 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
 
         # Flag fluxcal (pretending it's a target)
         p1 = preflag(filename=configfilename)
+        # remove next line in final version
+        p1.preflag_aoflagger_version = 'local'
         p1.basedir = basedir
         p1.fluxcal = ''
         p1.polcal = ''
@@ -274,6 +276,8 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
 
         # Flag polcal (pretending it's a target)
         p1 = preflag(filename=configfilename)
+        # remove next line in final version
+        p1.preflag_aoflagger_version = 'local'
         p1.basedir = basedir
         if name_polcal != '':
             p1.fluxcal = ''
@@ -302,6 +306,8 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
 
         # Flag target
         p1 = preflag(filename=configfilename)
+        # remove next line in final version
+        p1.preflag_aoflagger_version = 'local'
         p1.basedir = basedir
         p1.fluxcal = ''
         p1.polcal = ''
