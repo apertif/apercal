@@ -196,7 +196,7 @@ class preflag(BaseModule):
                         'Flagging shadowed data for all target beams')
                 else:
                     beams = self.preflag_targetbeams.split(",")
-                    datasets = [self.get_datasets(beams=beams)]
+                    datasets = self.get_datasets(beams=beams)
                     logger.debug(
                         'Flagging shadowed data for selected target beams')
                 for vis, beam in datasets:
@@ -294,7 +294,7 @@ class preflag(BaseModule):
                         'Flagging subband edges for all target beams')
                 else:
                     beams = self.preflag_targetbeams.split(",")
-                    datasets = [self.get_datasets(beams=beams)]
+                    datasets = self.get_datasets(beams=beams)
                     logger.debug(
                         'Flagging subband edges for selected target beams')
                 for vis, beam in datasets:
@@ -396,7 +396,7 @@ class preflag(BaseModule):
                         'Flagging ghosts for all target beams')
                 else:
                     beams = self.preflag_targetbeams.split(",")
-                    datasets = [self.get_datasets(beams=beams)]
+                    datasets = self.get_datasets(beams=beams)
                     logger.debug(
                         'Flagging ghosts for selected target beams')
                 for vis, beam in datasets:
