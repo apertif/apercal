@@ -1052,7 +1052,8 @@ class preflag(BaseModule):
                 elif self.polcal != '':
                     create_bandpass(self.get_polcal_path(), self.get_bandpass_path())
                 else:
-                    create_bandpass(self.get_target_path(self.beam), self.get_bandpass_path())
+                    logger.debug("self.get_target_path(str(self.beam).zfill(2))= {0}".format(str(self.get_target_path(str(self.beam).zfill(2)))))
+                    create_bandpass(self.get_target_path(str(self.beam).zfill(2)), self.get_bandpass_path())
                 if os.path.isfile(self.get_bandpass_path()):
                     preflagaoflaggerbandpassstatus = True
                     logger.info('Derived preliminary bandpass table for AOFlagging')
