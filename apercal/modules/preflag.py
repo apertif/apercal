@@ -421,7 +421,7 @@ class preflag(BaseModule):
                 self.target, self.beam))
             start_time = time()
             self.aoflagger_bandpass()
-            logger.info("Running manualflag for {0} in beam {1} ... Done ({2:.0f}s)".format(
+            logger.info("Running aoflagger bandpass for {0} in beam {1} ... Done ({2:.0f}s)".format(
                 self.target, self.beam, time() - start_time))
 
             logger.info("Running aoflagger flagging for {0} in beam {1}".format(
