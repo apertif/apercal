@@ -1114,6 +1114,7 @@ class preflag(BaseModule):
                                                         np.full(self.NBEAMS, False))
 
         base_cmd = 'aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_fluxcalstrat
+        
         # Suppress logging of lines that start with this (to prevent 1000s of lines of logging)
         strip_prefixes = ['Channel ']
         if self.preflag_aoflagger:
@@ -1200,7 +1201,11 @@ class preflag(BaseModule):
                         datasets = self.get_datasets(beams=beams)
                         logger.info('AOFlagging all selected target beam(s)')
                     for vis, beam in datasets:
-                        base_cmd = 'aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_targetstrat
+                        # Remove this in final parallelised version !!!!!!!!!!!!!
+                        if self.preflag_aoflagger_version == 'local':
+                            base_cmd = '/home/offringa/aoflagger-code/build/src/aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_targetstrat + " -interval {0} {1}".format(self.preflag_aoflagger_min_interval, self.preflag_aoflagger_max_interval) + " -j {0}".format(self.preflag_aoflagger_threads)
+                        else:
+                            base_cmd = 'aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_targetstrat
                         if not preflagaoflaggertargetbeamsflag[int(beam)]:
                             if self.preflag_aoflagger_bandpass and preflagaoflaggerbandpassstatus:
                                 lib.basher(base_cmd + ' -bandpass ' + self.get_bandpass_path() + ' ' + vis,
@@ -1220,7 +1225,9 @@ class preflag(BaseModule):
                                                'applied. Better results are usually obtained with a preliminary '
                                                'bandpass applied.'.format(beam))
                                 preflagaoflaggertargetbeamsflag[int(beam)] = True
-                            self.aoflagger_plot(vis)
+                            # Remove this if statement in final parallelised version !!!!!!!!!!!!!
+                            if not self.preflag_aoflagger_version == 'local':
+                                self.aoflagger_plot(vis)
                         else:
                             logger.info('Target beam ' + beam + ' was already flagged with AOFlagger!')
                 else:
