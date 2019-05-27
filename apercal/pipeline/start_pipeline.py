@@ -283,11 +283,9 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             p1.fluxcal = ''
             p1.polcal = ''
             p1.target = name_to_ms(name_polcal)
-            p1.beam = "{:02d}".format(beamlist_target[0])
-            p1.preflag_targetbeams = "{:02d}".format(beamnr)
             for beamnr in beamlist_target:
                 p1.beam = "{:02d}".format(beamnr)
-                p1.preflag_targetbeams = p1.beam
+                p1.preflag_targetbeams = "{:02d}".format(beamnr)
                 if "preflag" in steps and not dry_run:
                     logging.info("Running preflag for pol calibrator {0} in beam {1}".format(
                         p1.target, p1.beam))
