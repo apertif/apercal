@@ -47,6 +47,7 @@ class preflag(BaseModule):
     preflag_shadow = None
     preflag_edges = None
     preflag_ghosts = None
+    preflag_targetbeams = None
     preflag_manualflag = None
     preflag_manualflag_fluxcal = None
     preflag_manualflag_polcal = None
@@ -68,6 +69,11 @@ class preflag(BaseModule):
     preflag_aoflagger_fluxcalstrat = None
     preflag_aoflagger_polcalstrat = None
     preflag_aoflagger_targetstrat = None
+    preflag_aoflagger_threads = None
+    preflag_aoflagger_use_interval = None
+    preflag_aoflagger_min_interval = None
+    preflag_aoflagger_max_interval = None
+    preflag_aoflagger_version = ''
 
     subdirification = None
 
@@ -184,7 +190,16 @@ class preflag(BaseModule):
                     preflagpolcalshadow = False
             # Flag the target beams
             if self.target != '':
-                for vis, beam in self.get_datasets():
+                if self.preflag_targetbeams == 'all':
+                    datasets = self.get_datasets()
+                    logger.debug(
+                        'Flagging shadowed data for all target beams')
+                else:
+                    beams = self.preflag_targetbeams.split(",")
+                    datasets = [self.get_datasets(beams=beams)]
+                    logger.debug(
+                        'Flagging shadowed data for selected target beams')
+                for vis, beam in datasets:
                     if preflagtargetbeamsshadow[int(beam)]:
                         logger.info('Shadowed antenna(s) for beam ' + beam + ' were already flagged')
                     else:
@@ -273,7 +288,16 @@ class preflag(BaseModule):
             if self.target != '':
                 # Flag the subband edges of the the target beam datasets
                 # Collect all the available target beam datasets
-                for vis, beam in self.get_datasets():
+                if self.preflag_targetbeams == 'all':
+                    datasets = self.get_datasets()
+                    logger.debug(
+                        'Flagging subband edges for all target beams')
+                else:
+                    beams = self.preflag_targetbeams.split(",")
+                    datasets = [self.get_datasets(beams=beams)]
+                    logger.debug(
+                        'Flagging subband edges for selected target beams')
+                for vis, beam in datasets:
                     if preflagtargetbeamsedges[int(beam)]:
                         logger.info('Subband edges for target beam ' + beam + ' were already flagged')
                     else:
@@ -366,7 +390,16 @@ class preflag(BaseModule):
             if self.target != '':
                 # Flag the ghosts in the target beam datasets
                 # Collect all the available target beam datasets
-                for vis, beam in self.get_datasets():
+                if self.preflag_targetbeams == 'all':
+                    datasets = self.get_datasets()
+                    logger.debug(
+                        'Flagging ghosts for all target beams')
+                else:
+                    beams = self.preflag_targetbeams.split(",")
+                    datasets = [self.get_datasets(beams=beams)]
+                    logger.debug(
+                        'Flagging ghosts for selected target beams')
+                for vis, beam in datasets:
                     if preflagtargetbeamsghosts[int(beam)]:
                         logger.info('Ghost channels for target beam ' + beam + ' were already flagged')
                     else:
@@ -482,11 +515,11 @@ class preflag(BaseModule):
                                    'calibrator dataset will not be flagged!')
             # Flag the auto-correlations for the target beams
             if self.preflag_manualflag_target:
-                if self.preflag_manualflag_targetbeams == 'all':
+                if self.preflag_targetbeams == 'all':
                     datasets = self.get_datasets()
                     logger.debug('Flagging auto-correlations for all target beams')
                 else:
-                    beams = self.preflag_manualflag_targetbeams.split(",")
+                    beams = self.preflag_targetbeams.split(",")
                     datasets = self.get_datasets(beams=beams)
                     logger.debug('Flagging auto-correlations for selected target beams')
                 for vis, beam in datasets:
@@ -563,11 +596,11 @@ class preflag(BaseModule):
                     logger.warning('No polarised calibrator dataset specified. Specified antenna(s) for polarised calibrator dataset will not be flagged!')
             # Flag antenna(s) for target beams
             if self.preflag_manualflag_target:
-                if self.preflag_manualflag_targetbeams == 'all':
+                if self.preflag_targetbeams == 'all':
                     datasets = self.get_datasets()
                     logger.debug('Flagging antenna(s) ' + self.preflag_manualflag_antenna + ' for all target beams')
                 else:
-                    beams = self.preflag_manualflag_targetbeams.split(",")
+                    beams = self.preflag_targetbeams.split(",")
                     datasets = [self.get_datasets(beams=beams)]
                     logger.debug('Flagging antenna(s) ' + self.preflag_manualflag_antenna + ' for selected target beams')
                 for vis, beam in datasets:
@@ -646,11 +679,11 @@ class preflag(BaseModule):
                     logger.warning('No polarised calibrator dataset specified. Specified correlation(s) for polarised calibrator dataset will not be flagged!')
             # Flag correlation(s) for target beams
             if self.preflag_manualflag_target:
-                if self.preflag_manualflag_targetbeams == 'all':
+                if self.preflag_targetbeams == 'all':
                     datasets = self.get_datasets()
                     logger.debug('Flagging correlation(s) ' + self.preflag_manualflag_corr + ' for all target beams')
                 else:
-                    beams = self.preflag_manualflag_targetbeams.split(",")
+                    beams = self.preflag_targetbeams.split(",")
                     datasets = [self.get_datasets(beams=beams)]
                     logger.debug('Flagging correlation(s) ' + self.preflag_manualflag_corr + ' for selected target beams')
                 for vis, beam in datasets:
@@ -730,11 +763,11 @@ class preflag(BaseModule):
                     logger.warning('No polarised calibrator dataset specified. Specified baselines(s) for polarised calibrator dataset will not be flagged!')
             # Flag correlation(s) for the target beams
             if self.preflag_manualflag_target:
-                if self.preflag_manualflag_targetbeams == 'all':
+                if self.preflag_targetbeams == 'all':
                     datasets = self.get_datasets()
                     logger.debug('Flagging baseline(s) ' + self.preflag_manualflag_baseline + ' for all target beams')
                 else:
-                    beams = self.preflag_manualflag_targetbeams.split(",")
+                    beams = self.preflag_targetbeams.split(",")
                     datasets = [self.get_datasets(beams=beams)]
                     logger.debug('Flagging baseline(s) ' + self.preflag_manualflag_baseline + ' for selected target beams')
                 for vis, beam in datasets:
@@ -811,11 +844,11 @@ class preflag(BaseModule):
                     logger.warning('No polarised calibrator dataset specified. Specified channel range(s) for polarised calibrator dataset will not be flagged!')
             # Flag channel(s) for the target beams
             if self.preflag_manualflag_target:
-                if self.preflag_manualflag_targetbeams == 'all':
+                if self.preflag_targetbeams == 'all':
                     datasets = self.get_datasets()
                     logger.debug('Flagging channel(s) ' + self.preflag_manualflag_channel + ' for all target beams')
                 else:
-                    beams = self.preflag_manualflag_targetbeams.split(",")
+                    beams = self.preflag_targetbeams.split(",")
                     datasets = [self.get_datasets(beams=beams)]
                     logger.debug('Flagging channel(s) ' + self.preflag_manualflag_channel + ' for selected target beams')
                 for vis, beam in datasets:
@@ -894,11 +927,11 @@ class preflag(BaseModule):
                                    'for polarised calibrator dataset will not be flagged!')
             # Flag time range for the target beams
             if self.preflag_manualflag_target:
-                if self.preflag_manualflag_targetbeams == 'all':
+                if self.preflag_targetbeams == 'all':
                     datasets = self.get_datasets()
                     logger.debug('Flagging time range ' + self.preflag_manualflag_time + ' for all target beams')
                 else:
-                    beams = self.preflag_manualflag_targetbeams.split(",")
+                    beams = self.preflag_targetbeams.split(",")
                     datasets = [self.get_datasets(beams=beams)]
                     logger.debug('Flagging time range ' + self.preflag_manualflag_time + ' for selected target beams')
                 for vis, beam in datasets:
@@ -970,11 +1003,11 @@ class preflag(BaseModule):
                                    'calibrator dataset will not be flagged!')
             # Flag the Zero-valued for the target beams
             if self.preflag_manualflag_target:
-                if self.preflag_manualflag_targetbeams == 'all':
+                if self.preflag_targetbeams == 'all':
                     datasets = self.get_datasets()
                     logger.debug('Flagging Zero-valued data for all target beams')
                 else:
-                    beams = self.preflag_manualflag_targetbeams.split(",")
+                    beams = self.preflag_targetbeams.split(",")
                     datasets = [self.get_datasets(beams=beams)]
                     logger.debug('Flagging Zero-valued data for selected target beams')
                 for vis, beam in datasets:
@@ -1159,11 +1192,11 @@ class preflag(BaseModule):
                     # Check if parameter exists already and bandpass was applied successfully
                     # Check if bandpass table was derived successfully
                     preflagaoflaggerbandpassstatus = get_param_def(self, 'preflag_aoflagger_bandpass_status', False)
-                    if self.preflag_aoflagger_targetbeams == 'all':  # Create a list of target beams
+                    if self.preflag_targetbeams == 'all':  # Create a list of target beams
                         datasets = self.get_datasets()
                         logger.info('AOFlagging all target beams')
                     else:
-                        beams = self.preflag_aoflagger_targetbeams.split(",")
+                        beams = self.preflag_targetbeams.split(",")
                         datasets = self.get_datasets(beams=beams)
                         logger.info('AOFlagging all selected target beam(s)')
                     for vis, beam in datasets:
