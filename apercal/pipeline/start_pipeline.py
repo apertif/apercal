@@ -258,6 +258,57 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         # Preflag
         # =======
 
+        # In order to run in parallel, the bandpass table needs to exists
+        # first for fluxcal
+        p1 = preflag(filename=configfilename)
+        p1.preflag_aoflagger_version = 'local'
+        p1.basedir = basedir
+        p1.fluxcal = ''
+        p1.polcal = ''
+        p1.target = name_to_ms(name_fluxcal)
+        for beamnr in beamlist_target:
+            p1.beam = "{:02d}".format(beamnr)
+            p1.preflag_targetbeams = "{:02d}".format(beamnr)
+            if "preflag" in steps and not dry_run:
+                try:
+                    logger.info("Running aoflagger bandpass for flux calibrator {0} in beam {1}".format(
+                        p1.target, p1.beam))
+                    bandpass_start_time = time()
+                    director(p1, 'rm', basedir + '/param.npy',
+                             ignore_nonexistent=True)
+                    p1.aoflagger_bandpass()
+                    logger.info("Running aoflagger bandpass for flux calibrator {0} in beam {1} ... Done ({2:.0f}s)".format(
+                        p1.target, p1.beam, time() - bandpass_start_time))
+                except Exception as e:
+                    logger.warning("Running aoflagger bandpass for flux calibrator {0} in beam {1} ... Failed ({2:.0f}s)".format(
+                        p1.target, p1.beam, time() - bandpass_start_time))
+                    logger.exception(e)
+        
+        # Second, just in case, run it on target
+        p1 = preflag(filename=configfilename)
+        p1.preflag_aoflagger_version = 'local'
+        p1.basedir = basedir
+        p1.fluxcal = ''
+        p1.polcal = ''
+        p1.target = name_to_ms(name_fluxcal)
+        for beamnr in beamlist_target:
+            p1.beam = "{:02d}".format(beamnr)
+            p1.preflag_targetbeams = "{:02d}".format(beamnr)
+            if "preflag" in steps and not dry_run:
+                try:
+                    logger.info("Running aoflagger bandpass for target {0} in beam {1}".format(
+                        p1.target, p1.beam))
+                    bandpass_start_time = time()
+                    director(p1, 'rm', basedir + '/param.npy',
+                             ignore_nonexistent=True)
+                    p1.aoflagger_bandpass()
+                    logger.info("Running aoflagger bandpass for target {0} in beam {1} ... Done ({2:.0f}s)".format(
+                        p1.target, p1.beam, time() - bandpass_start_time))
+                except Exception as e:
+                    logger.warning("Running aoflagger bandpass for target {0} in beam {1} ... Failed ({2:.0f}s)".format(
+                        p1.target, p1.beam, time() - bandpass_start_time))
+                    logger.exception(e)
+        
         # # Flag fluxcal (pretending it's a target)
         # p1 = preflag(filename=configfilename)
         # # remove next line in final version
