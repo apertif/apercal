@@ -92,11 +92,15 @@ class preflag(BaseModule):
         """
         logger.info('Starting Pre-flagging step')
 
-        logger.info("Running manualflag for {0} in beam {1}".format(self.target, self.beam))
-        start_time = time()
-        self.manualflag()
-        logger.info("Running manualflag for {0} in beam {1} ... Done ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
-        
+        try: 
+            logger.info("Running manualflag for {0} in beam {1}".format(self.target, self.beam))
+            start_time = time()
+            self.manualflag()
+            logger.info("Running manualflag for {0} in beam {1} ... Done ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
+        except Exception as e:
+            logger.warning("Running manualflag for {0} in beam {1} ... Failed ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
+            logger.exception(e)
+            
         if self.fluxcal != '':
             query = "SELECT GNFALSE(FLAG) == 0 AS all_flagged, " + \
                     "GNTRUE(FLAG) == 0 AS all_unflagged FROM " + self.get_fluxcal_path()
@@ -104,10 +108,14 @@ class preflag(BaseModule):
             logger.debug("All visibilities     flagged before aoflag: " + str(query_result[0]["all_flagged"]))
             logger.debug("All visibilities not flagged before aoflag: " + str(query_result[0]["all_unflagged"]))
         
-        logger.info("Running aoflagger tasks for {0} in beam {1}".format(self.target, self.beam))
-        start_time = time()
-        self.aoflagger()
-        logger.info("Running aoflagger tasks for {0} in beam {1} ... Done ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
+        try:
+            logger.info("Running aoflagger tasks for {0} in beam {1}".format(self.target, self.beam))
+            start_time = time()
+            self.aoflagger()
+            logger.info("Running aoflagger tasks for {0} in beam {1} ... Done ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
+        except Exception as e:
+            logger.warning("Running aoflagger tasks for {0} in beam {1} ... Failed ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
+            logger.exception(e)
 
         if self.fluxcal != '':
             query = "SELECT GNFALSE(FLAG) == 0 AS all_flagged, " + \
@@ -116,20 +124,33 @@ class preflag(BaseModule):
             logger.debug("All visibilities     flagged after aoflag: " + str(query_result[0]["all_flagged"]))
             logger.debug("All visibilities not flagged after aoflag: " + str(query_result[0]["all_unflagged"]))
         
-        logger.info("Running shadow for {0} in beam {1}".format(self.target, self.beam))
-        start_time = time()
-        self.shadow()
-        logger.info("Running shadow for {0} in beam {1} ... Done ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
+        try:
+            logger.info("Running shadow for {0} in beam {1}".format(self.target, self.beam))
+            start_time = time()
+            self.shadow()
+            logger.info("Running shadow for {0} in beam {1} ... Done ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
+        except Exception as e:
+            logger.warning("Running shadow for {0} in beam {1} ... Failed ({2:.0f}s)".format(
+                self.target, self.beam, time() - start_time))
         
-        logger.info("Running edge for {0} in beam {1}".format(self.target, self.beam))
-        start_time = time()
-        self.edges()
-        logger.info("Running edge for {0} in beam {1} ... Done ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
+        try:
+            logger.info("Running edge for {0} in beam {1}".format(self.target, self.beam))
+            start_time = time()
+            self.edges()
+            logger.info("Running edge for {0} in beam {1} ... Done ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
+        except Exception as e:
+            logger.warning("Running edge for {0} in beam {1} ... Failed ({2:.0f}s)".format(
+                self.target, self.beam, time() - start_time))
+            logger.exception(e)
 
-        logger.info("Running ghosts for {0} in beam {1}".format(self.target, self.beam))
-        start_time = time()
-        self.ghosts()
-        logger.info("Running ghosts for {0} in beam {1} ... Done ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
+        try:
+            logger.info("Running ghosts for {0} in beam {1}".format(self.target, self.beam))
+            start_time = time()
+            self.ghosts()
+            logger.info("Running ghosts for {0} in beam {1} ... Done ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
+        except Exception as e:
+            logger.warning("Running ghosts for {0} in beam {1} ... Failed ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
+            logger.exception(e)
 
         logger.info('Pre-flagging step done')
 
