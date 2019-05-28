@@ -1230,28 +1230,28 @@ class preflag(BaseModule):
                                                     'bandpass applied.'.format(beam))
                                         preflagaoflaggertargetbeamsflag[int(beam)] = True
                                     self.aoflagger_plot(vis)
-                        else:
-                            base_cmd = 'aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_targetstrat
-                            if not preflagaoflaggertargetbeamsflag[int(beam)]:
-                                if self.preflag_aoflagger_bandpass and preflagaoflaggerbandpassstatus:
-                                    lib.basher(base_cmd + ' -bandpass ' + self.get_bandpass_path() + ' ' + vis,
-                                            prefixes_to_strip=strip_prefixes)
-                                    logger.debug('Used AOFlagger to flag target beam {} with preliminary '
-                                                'bandpass applied'.format(beam))
-                                    preflagaoflaggertargetbeamsflag[int(beam)] = True
-                                elif self.preflag_aoflagger_bandpass and not preflagaoflaggerbandpassstatus:
-                                    lib.basher(base_cmd + ' ' + vis, prefixes_to_strip=strip_prefixes)
-                                    logger.warning('Used AOFlagger to flag target beam {} without preliminary bandpass '
-                                                'applied. Better results are usually obtained with a preliminary '
-                                                'bandpass applied.'.format(beam))
-                                    preflagaoflaggertargetbeamsflag[int(beam)] = True
-                                elif not self.preflag_aoflagger_bandpass:
-                                    lib.basher(base_cmd + ' ' + vis, prefixes_to_strip=strip_prefixes)
-                                    logger.warning('Used AOFlagger to flag target beam {} without preliminary bandpass '
-                                                'applied. Better results are usually obtained with a preliminary '
-                                                'bandpass applied.'.format(beam))
-                                    preflagaoflaggertargetbeamsflag[int(beam)] = True
-                                self.aoflagger_plot(vis)
+                            else:
+                                base_cmd = 'aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_targetstrat
+                                if not preflagaoflaggertargetbeamsflag[int(beam)]:
+                                    if self.preflag_aoflagger_bandpass and preflagaoflaggerbandpassstatus:
+                                        lib.basher(base_cmd + ' -bandpass ' + self.get_bandpass_path() + ' ' + vis,
+                                                prefixes_to_strip=strip_prefixes)
+                                        logger.debug('Used AOFlagger to flag target beam {} with preliminary '
+                                                    'bandpass applied'.format(beam))
+                                        preflagaoflaggertargetbeamsflag[int(beam)] = True
+                                    elif self.preflag_aoflagger_bandpass and not preflagaoflaggerbandpassstatus:
+                                        lib.basher(base_cmd + ' ' + vis, prefixes_to_strip=strip_prefixes)
+                                        logger.warning('Used AOFlagger to flag target beam {} without preliminary bandpass '
+                                                    'applied. Better results are usually obtained with a preliminary '
+                                                    'bandpass applied.'.format(beam))
+                                        preflagaoflaggertargetbeamsflag[int(beam)] = True
+                                    elif not self.preflag_aoflagger_bandpass:
+                                        lib.basher(base_cmd + ' ' + vis, prefixes_to_strip=strip_prefixes)
+                                        logger.warning('Used AOFlagger to flag target beam {} without preliminary bandpass '
+                                                    'applied. Better results are usually obtained with a preliminary '
+                                                    'bandpass applied.'.format(beam))
+                                        preflagaoflaggertargetbeamsflag[int(beam)] = True
+                                    self.aoflagger_plot(vis)
                         else:
                             logger.info('Target beam ' + beam + ' was already flagged with AOFlagger!')
                 else:
