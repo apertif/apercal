@@ -283,7 +283,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     logger.warning("Running aoflagger bandpass for flux calibrator {0} in beam {1} ... Failed ({2:.0f}s)".format(
                         p1.target, p1.beam, time() - bandpass_start_time))
                     logger.exception(e)
-        
+
         # Second, just in case, run it on target
         p1 = preflag(filename=configfilename)
         p1.preflag_aoflagger_version = 'local'
@@ -308,7 +308,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     logger.warning("Running aoflagger bandpass for target {0} in beam {1} ... Failed ({2:.0f}s)".format(
                         p1.target, p1.beam, time() - bandpass_start_time))
                     logger.exception(e)
-        
+
         # # Flag fluxcal (pretending it's a target)
         # p1 = preflag(filename=configfilename)
         # # remove next line in final version
@@ -362,18 +362,21 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     p1.target = name_to_ms(name_fluxcal)
                     p1.beam = "{:02d}".format(beamnr)
                     p1.preflag_targetbeams = "{:02d}".format(beamnr)
-                    p1.preflag_aoflagger_threads = 9
+                    if beam_index < 2:
+                        p1.preflag_aoflagger_threads = 9
+                    else:
+                        p1.preflag_aoflagger_threads = 10
                     if "preflag" in steps and not dry_run:
-                        logging.info("Running preflag for flux calibrator {0} in beam {1}".format(
+                        logger.info("Running preflag for flux calibrator {0} in beam {1}".format(
                             p1.target, p1.beam))
                         preflag_flux_cal_start_time = time()
                         director(
                             p1, 'rm', basedir + '/param_{:02d}.npy'.format(beamnr), ignore_nonexistent=True)
                         p1.go()
-                        logging.info("Running preflag for flux calibrator {0} in beam {1} ... Done ({2:.0f}s)".format(
+                        logger.info("Running preflag for flux calibrator {0} in beam {1} ... Done ({2:.0f}s)".format(
                             p1.target, p1.beam, time() - preflag_flux_cal_start_time))
                 except Exception as e:
-                    logging.warning("Running preflag for flux calibrator {0} in beam {1} ... Failed, but probably because of maximum interval ({2:.0f}s)".format(
+                    logger.warning("Running preflag for flux calibrator {0} in beam {1} ... Failed, but probably because of maximum interval ({2:.0f}s)".format(
                         p1.target, p1.beam, time() - preflag_flux_cal_start_time))
                     logger.exception(e)
                     status[beamnr] += ['preflag']
@@ -433,18 +436,21 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                         p1.target = name_to_ms(name_polcal)
                         p1.beam = "{:02d}".format(beamnr)
                         p1.preflag_targetbeams = "{:02d}".format(beamnr)
-                        p1.preflag_aoflagger_threads = 9
+                        if beam_index < 2:
+                            p1.preflag_aoflagger_threads = 9
+                        else:
+                            p1.preflag_aoflagger_threads = 10
                         if "preflag" in steps and not dry_run:
-                            logging.info("Running preflag for pol calibrator {0} in beam {1}".format(
+                            logger.info("Running preflag for pol calibrator {0} in beam {1}".format(
                                 p1.target, p1.beam))
                             preflag_pol_cal_start_time = time()
                             director(
                                 p1, 'rm', basedir + '/param_{:02d}.npy'.format(beamnr), ignore_nonexistent=True)
                             p1.go()
-                            logging.info("Running preflag for pol calibrator {0} in beam {1} ... Done ({2:.0f}s)".format(
+                            logger.info("Running preflag for pol calibrator {0} in beam {1} ... Done ({2:.0f}s)".format(
                                 p1.target, p1.beam, time() - preflag_pol_cal_start_time))
                 except Exception as e:
-                    logging.warning("Running preflag for pol calibrator {0} in beam {1} ... Failed, but probably because of maximum interval ({2:.0f}s)".format(
+                    logger.warning("Running preflag for pol calibrator {0} in beam {1} ... Failed, but probably because of maximum interval ({2:.0f}s)".format(
                         p1.target, p1.beam, time() - preflag_pol_cal_start_time))
                     logger.exception(e)
                     status[beamnr] += ['preflag']
@@ -501,18 +507,21 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     p1.target = name_to_ms(name_target)
                     p1.beam = "{:02d}".format(beamnr)
                     p1.preflag_targetbeams = "{:02d}".format(beamnr)
-                    p1.preflag_aoflagger_threads = 9
+                    if beam_index < 2:
+                        p1.preflag_aoflagger_threads = 9
+                    else:
+                        p1.preflag_aoflagger_threads = 10
                     if "preflag" in steps and not dry_run:
-                        logging.info("Running preflag for target {0} in beam {1}".format(
+                        logger.info("Running preflag for target {0} in beam {1}".format(
                             p1.target, p1.beam))
                         preflag_target_start_time = time()
                         director(
                             p1, 'rm', basedir + '/param_{:02d}.npy'.format(beamnr), ignore_nonexistent=True)
                         p1.go()
-                        logging.info("Running preflag for target {0} in beam {1} ... Done ({2:.0f}s)".format(
+                        logger.info("Running preflag for target {0} in beam {1} ... Done ({2:.0f}s)".format(
                             p1.target, p1.beam, time() - preflag_target_start_time))
                 except Exception as e:
-                    logging.info("Running preflag for target {0} in beam {1} ... Failed ({2:.0f}s)".format(
+                    logger.info("Running preflag for target {0} in beam {1} ... Failed ({2:.0f}s)".format(
                         p1.target, p1.beam, time() - preflag_target_start_time))
                     logger.exception(e)
                     status[beamnr] += ['preflag']
