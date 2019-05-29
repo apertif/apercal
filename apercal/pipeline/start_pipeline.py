@@ -338,9 +338,8 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         #                 p1.target, p1.beam, time() - preflag_flux_cal_start_time))
 
         # Flag fluxcal (pretending it's a target, parallelised version)
-        # Only 5 in parallel at the moment, though more may be possible
-        # testing 10 beams
-        with pymp.Parallel(10) as p:
+        # 5 in parallel
+        with pymp.Parallel(5) as p:
             for beam_index in p.range(len(beamlist_target)):
                 beamnr = beamlist_target[beam_index]
 
@@ -364,9 +363,9 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     p1.beam = "{:02d}".format(beamnr)
                     p1.preflag_targetbeams = "{:02d}".format(beamnr)
                     if beam_index < 2:
-                        p1.preflag_aoflagger_threads = 4
+                        p1.preflag_aoflagger_threads = 9
                     else:
-                        p1.preflag_aoflagger_threads = 5
+                        p1.preflag_aoflagger_threads = 10
                     if "preflag" in steps and not dry_run:
                         logger.info("Running preflag for flux calibrator {0} in beam {1}".format(
                             p1.target, p1.beam))
@@ -411,9 +410,8 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         #                     p1.target, p1.beam, time() - preflag_pol_cal_start_time))
 
         # Flag polcal (pretending it's a target, parallel version)
-        # Only 5 in parallel at the moment, though more may be possible
-        # testing 10 beams
-        with pymp.Parallel(10) as p:
+        # 5 in parallel
+        with pymp.Parallel(5) as p:
             for beam_index in p.range(len(beamlist_target)):
                 beamnr = beamlist_target[beam_index]
 
@@ -439,9 +437,9 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                         p1.beam = "{:02d}".format(beamnr)
                         p1.preflag_targetbeams = "{:02d}".format(beamnr)
                         if beam_index < 2:
-                            p1.preflag_aoflagger_threads = 4
+                            p1.preflag_aoflagger_threads = 9
                         else:
-                            p1.preflag_aoflagger_threads = 5
+                            p1.preflag_aoflagger_threads = 10
                         if "preflag" in steps and not dry_run:
                             logger.info("Running preflag for pol calibrator {0} in beam {1}".format(
                                 p1.target, p1.beam))
@@ -485,9 +483,8 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         #                 p1.target, p1.beam, time() - preflag_target_start_time))
 
         # Flag target
-        # Only 5 in parallel at the moment, though more may be possible
-        # testing 10 beams
-        with pymp.Parallel(10) as p:
+        # 5 in parallel
+        with pymp.Parallel(5) as p:
             for beam_index in p.range(len(beamlist_target)):
                 beamnr = beamlist_target[beam_index]
 
@@ -511,9 +508,9 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     p1.beam = "{:02d}".format(beamnr)
                     p1.preflag_targetbeams = "{:02d}".format(beamnr)
                     if beam_index < 2:
-                        p1.preflag_aoflagger_threads = 4
+                        p1.preflag_aoflagger_threads = 9
                     else:
-                        p1.preflag_aoflagger_threads = 5
+                        p1.preflag_aoflagger_threads = 10
                     if "preflag" in steps and not dry_run:
                         logger.info("Running preflag for target {0} in beam {1}".format(
                             p1.target, p1.beam))
