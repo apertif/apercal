@@ -87,7 +87,7 @@ def checkmodelimage(self, image):
     returns (boolean): True if image is ok, False otherwise
     """
     modelstats = imstats.getimagestats(self, image)
-    if modelstats[2] != np.nan and modelstats[1] <= 1000 and modelstats[0] >= -10.0:
+    if modelstats[2] != np.nan and modelstats[1] <= 1000 and modelstats[0] >= -100.0:
         return True
     else:
         return False
