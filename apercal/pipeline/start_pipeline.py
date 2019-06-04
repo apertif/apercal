@@ -261,7 +261,6 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         # In order to run in parallel, the bandpass table needs to exists
         # first for fluxcal
         p1 = preflag(filename=configfilename)
-        p1.preflag_aoflagger_version = 'local'
         p1.basedir = basedir
         p1.fluxcal = ''
         p1.polcal = ''
@@ -286,7 +285,6 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
 
         # Second, just in case, run it on target
         p1 = preflag(filename=configfilename)
-        p1.preflag_aoflagger_version = 'local'
         p1.basedir = basedir
         p1.fluxcal = ''
         p1.polcal = ''
@@ -353,8 +351,6 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
 
                 try:
                     p1 = preflag(filename=configfilename)
-                    # remove next line in final version
-                    p1.preflag_aoflagger_version = 'local'
                     p1.paramfilename = 'param_{:02d}.npy'.format(beamnr)
                     p1.basedir = basedir
                     p1.fluxcal = ''
