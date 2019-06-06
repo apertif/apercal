@@ -576,7 +576,7 @@ class scal(BaseModule):
                                             selfcaltargetbeamsphasemaskstats[majc, minc, :] = imstats.getmaskstats(self, str(majc).zfill(2) + '/mask_' + str(minc).zfill(2), self.selfcal_image_imsize)
                                             if qa.checkmaskimage(self, str(majc).zfill(2) + '/mask_' + str(minc).zfill(2)):
                                                 selfcaltargetbeamsphasemaskstatus[majc, minc] = True
-                                                masking.blank_corners(self, 'mask_' + str(minc).zfill(2), self.selfcal_image_imsize)
+                                                masking.blank_corners(self, str(majc).zfill(2) + '/mask_' + str(minc).zfill(2), self.selfcal_image_imsize)
                                             else:
                                                 selfcaltargetbeamsphasemaskstatus[majc, minc] = False
                                                 selfcaltargetbeamsphasestatus = False
