@@ -3,6 +3,7 @@ __version__ = '2.3'
 import libs.lib
 
 from modules.prepare import prepare
+from modules.split import split
 from modules.preflag import preflag
 from modules.convert import convert
 from modules.ccal import ccal
