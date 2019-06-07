@@ -5,7 +5,7 @@ from __future__ import print_function
 from apercal.modules.prepare import prepare
 from apercal.modules.preflag import preflag
 from apercal.modules.ccal import ccal
-from dataqa.crosscal.crosscal_plots import make_all_ccal_plots
+#from dataqa.crosscal.crosscal_plots import make_all_ccal_plots
 from apercal.modules.scal import scal
 from apercal.modules.continuum import continuum
 from apercal.modules.line import line
