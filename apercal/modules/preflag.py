@@ -1224,11 +1224,9 @@ class preflag(BaseModule):
                         datasets = self.get_datasets(beams=beams)
                         logger.info('AOFlagging all selected target beam(s)')
                     for vis, beam in datasets:
-                        # Remove this in final parallelised version !!!!!!!!!!!!!
-                        # Looping will not be necessary in final version as it will be done by aoflagger, just for testing here
                         if self.preflag_aoflagger_use_interval:
                             if not preflagaoflaggertargetbeamsflag[int(beam)]:
-                                base_cmd = '/home/offringa/aoflagger-code/build/src/aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_targetstrat + " -interval {0}".format(self.preflag_aoflagger_delta_interval) + " -j {0}".format(
+                                base_cmd = 'aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_targetstrat + " -interval {0}".format(self.preflag_aoflagger_delta_interval) + " -j {0}".format(
                                 self.preflag_aoflagger_threads)
                                 if self.preflag_aoflagger_bandpass and preflagaoflaggerbandpassstatus:
                                     lib.basher(base_cmd + ' -bandpass ' + self.get_bandpass_path() + ' ' + vis,
