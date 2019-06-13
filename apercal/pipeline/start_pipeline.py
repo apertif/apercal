@@ -141,11 +141,11 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
 
         Returns:
             None
-        """
         p.basedir = basedir
         p.fluxcal = name_to_ms(name_fluxcal)
         p.polcal = name_to_ms(name_polcal)
         p.target = name_to_ms(name_target)
+        """
 
         # debug_msg = """
         # p.basedir = basedir = {0};
@@ -258,55 +258,52 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         # Preflag
         # =======
 
+        # keep a record of the parallalised step in the main log file
+        logger.info("Running preflag")
+        start_time = time()
+
         # In order to run in parallel, the bandpass table needs to exists
-        # first for fluxcal
-        p1 = preflag(filename=configfilename)
-        p1.basedir = basedir
-        p1.fluxcal = ''
-        p1.polcal = ''
-        p1.target = name_to_ms(name_fluxcal)
-        for beamnr in beamlist_target:
-            p1.beam = "{:02d}".format(beamnr)
-            p1.preflag_targetbeams = "{:02d}".format(beamnr)
-            if "preflag" in steps and not dry_run:
-                try:
-                    logger.info("Running aoflagger bandpass for flux calibrator {0} in beam {1}".format(
-                        p1.target, p1.beam))
-                    bandpass_start_time = time()
-                    director(p1, 'rm', basedir + '/param.npy',
-                             ignore_nonexistent=True)
-                    p1.aoflagger_bandpass()
-                    logger.info("Running aoflagger bandpass for flux calibrator {0} in beam {1} ... Done ({2:.0f}s)".format(
-                        p1.target, p1.beam, time() - bandpass_start_time))
-                except Exception as e:
-                    logger.warning("Running aoflagger bandpass for flux calibrator {0} in beam {1} ... Failed ({2:.0f}s)".format(
-                        p1.target, p1.beam, time() - bandpass_start_time))
-                    logger.exception(e)
+        # doing it here is not elegant but requires the least amount of changes
+        # to preflage
+        with pymp.Parallel(10) as p:
+            for beam_index in p.range(len(beamlist_target)):
+                beamnr = beamlist_target[beam_index]
+                # individual logfiles for each process
+                logfilepath = os.path.join(
+                    basedir, 'apercal{:02d}.log'.format(beamnr))
+                lib.setup_logger('debug', logfile=logfilepath)
+                logger = logging.getLogger(__name__)
 
-        # Second, just in case, run it on target
-        p1 = preflag(filename=configfilename)
-        p1.basedir = basedir
-        p1.fluxcal = ''
-        p1.polcal = ''
-        p1.target = name_to_ms(name_fluxcal)
-        for beamnr in beamlist_target:
-            p1.beam = "{:02d}".format(beamnr)
-            p1.preflag_targetbeams = "{:02d}".format(beamnr)
-            if "preflag" in steps and not dry_run:
-                try:
-                    logger.info("Running aoflagger bandpass for target {0} in beam {1}".format(
-                        p1.target, p1.beam))
-                    bandpass_start_time = time()
-                    director(p1, 'rm', basedir + '/param.npy',
-                             ignore_nonexistent=True)
-                    p1.aoflagger_bandpass()
-                    logger.info("Running aoflagger bandpass for target {0} in beam {1} ... Done ({2:.0f}s)".format(
-                        p1.target, p1.beam, time() - bandpass_start_time))
-                except Exception as e:
-                    logger.warning("Running aoflagger bandpass for target {0} in beam {1} ... Failed ({2:.0f}s)".format(
-                        p1.target, p1.beam, time() - bandpass_start_time))
-                    logger.exception(e)
+                logger.debug("Starting logfile for beam " + str(beamnr))
+                p1 = preflag(filename=configfilename)
+                p1.paramfilename = 'param_{:02d}.npy'.format(beamnr)
+                p1.basedir = basedir
+                p1.fluxcal = ''
+                p1.polcal = ''
+                p1.target = name_to_ms(name_fluxcal)
 
+                p1.beam = "{:02d}".format(beamnr)
+                p1.preflag_targetbeams = "{:02d}".format(beamnr)
+                if "preflag" in steps and not dry_run:
+                    try:
+                        bandpass_start_time = time()
+                        logger.info("Running aoflagger bandpass for flux calibrator {0} in beam {1}".format(
+                            p1.target, p1.beam))
+                        director(
+                            p1, 'rm', basedir + '/param_{:02d}.npy'.format(beamnr), ignore_nonexistent=True)
+                        p1.go()
+                        # director(p1, 'rm', basedir + '/param.npy',
+                        #         ignore_nonexistent=True)
+                        p1.aoflagger_bandpass()
+                    except Exception as e:
+                        logger.warning("Running aoflagger bandpass for flux calibrator {0} in beam {1} ... Failed ({2:.0f}s)".format(
+                            p1.target, p1.beam, time() - bandpass_start_time))
+                        logger.exception(e)
+                        status[beamnr] += ['preflag_bandpass']
+                    else:
+                        logger.info("Running aoflagger bandpass for flux calibrator {0} in beam {1} ... Done ({2:.0f}s)".format(
+                            p1.target, p1.beam, time() - bandpass_start_time))
+        
         # # Flag fluxcal (pretending it's a target)
         # p1 = preflag(filename=configfilename)
         # # remove next line in final version
@@ -522,9 +519,21 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     logger.exception(e)
                     status[beamnr] += ['preflag']
 
+        # keep a record of the parallalised step in the main log file
+        logfilepath = os.path.join(basedir, 'apercal.log'.format(beamnr))
+        lib.setup_logger('debug', logfile=logfilepath)
+        logger = logging.getLogger(__name__)
+
+        logger.info("Running preflag ... Done ({0:.0f}s)".format(
+            time() - start_time))
+
         # ===============
         # Crosscal
         # ===============
+
+        # keep a record of the parallalised step in the main log file
+        logger.info("Running crosscal")
+        start_time = time()
 
         if len(fluxcals) == 1 and fluxcals[0][-1] == 0 and len(beamlist_target) > 1:
             raise ApercalException(
@@ -557,10 +566,23 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                         "Failed beam {}, skipping that from crosscal".format(beamnr))
                     logger.exception(e)
                     status[beamnr] += ['crosscal']
+        
+        # keep a record of the parallalised step in the main log file
+        logfilepath = os.path.join(basedir, 'apercal.log'.format(beamnr))
+        lib.setup_logger('debug', logfile=logfilepath)
+        logger = logging.getLogger(__name__)
+
+        logger.info("Running crosscal ... Done ({0:.0f}s)".format(
+            time() - start_time))
+
 
         # =======
         # Convert
         # =======
+
+        # keep a record of the parallalised step in the main log file
+        logger.info("Running convert")
+        start_time = time()
 
         # 5 threads to not hammer the disks too much, convert is only IO
         with pymp.Parallel(5) as p:
@@ -590,9 +612,22 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     logger.exception(e)
                     status[beamnr] += ['convert']
 
-        # =======
-        # Selfcal
-        # =======
+        # keep a record of the parallalised step in the main log file
+        logfilepath = os.path.join(basedir, 'apercal.log'.format(beamnr))
+        lib.setup_logger('debug', logfile=logfilepath)
+        logger = logging.getLogger(__name__)
+
+        logger.info("Running convert ... Done ({0:.0f}s)".format(
+            time() - start_time))
+
+
+        # ===================
+        # Selfcal + Continuum
+        # ===================
+
+        # keep a record of the parallalised step in the main log file
+        logger.info("Running selfcal and continuum")
+        start_time = time()
 
         with pymp.Parallel(10) as p:
             for beam_index in p.range(len(beamlist_target)):
@@ -632,6 +667,15 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                         "Failed beam {}, skipping that from continuum".format(beamnr))
                     logger.exception(e)
                     status[beamnr] += ['continuum']
+        
+        # keep a record of the parallalised step in the main log file
+        logfilepath = os.path.join(basedir, 'apercal.log'.format(beamnr))
+        lib.setup_logger('debug', logfile=logfilepath)
+        logger = logging.getLogger(__name__)
+
+        logger.info("Running selfcal and continuum ... Done ({0:.0f}s)".format(
+            time() - start_time))
+
 
         # ====
         # Line
@@ -639,6 +683,10 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
 
         logfilepath = os.path.join(basedir, 'apercal.log')
         lib.setup_logger('debug', logfile=logfilepath)
+        # keep a record of the parallalised step in the main log file
+        logger.info("Running line")
+        start_time = time()
+
         for beamnr in beamlist_target:
             try:
                 p6 = line(file_=configfilename)
@@ -658,6 +706,15 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                 logger.exception(e)
                 status[beamnr] += ['line']
 
+        # keep a record of the parallalised step in the main log file
+        logfilepath = os.path.join(basedir, 'apercal.log'.format(beamnr))
+        lib.setup_logger('debug', logfile=logfilepath)
+        logger = logging.getLogger(__name__)
+
+        logger.info("Running line ... Done ({0:.0f}s)".format(
+            time() - start_time))
+
+
         if "ccalqa" in steps and not dry_run:
             logger.info("Starting crosscal QA plots")
             try:
@@ -675,6 +732,6 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         return status, str(timedelta(seconds=time() - time_start)), None
     except Exception as e:
         msg = "Apercal threw an error after " + \
-            str(timedelta(seconds=time() - time_start))
         logger.exception(msg)
+            str(timedelta(seconds=time() - time_start))
         return status, str(timedelta(seconds=time() - time_start)), str(e)
