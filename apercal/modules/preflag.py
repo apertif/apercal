@@ -1226,7 +1226,7 @@ class preflag(BaseModule):
                     for vis, beam in datasets:
                         if self.preflag_aoflagger_use_interval:
                             if not preflagaoflaggertargetbeamsflag[int(beam)]:
-                                base_cmd = 'aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_targetstrat + " -interval {0}".format(self.preflag_aoflagger_delta_interval) + " -j {0}".format(
+                                base_cmd = 'aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_targetstrat + " --max-interval-size {0}".format(self.preflag_aoflagger_delta_interval) + " -j {0}".format(
                                 self.preflag_aoflagger_threads)
                                 if self.preflag_aoflagger_bandpass and preflagaoflaggerbandpassstatus:
                                     lib.basher(base_cmd + ' -bandpass ' + self.get_bandpass_path() + ' ' + vis,
