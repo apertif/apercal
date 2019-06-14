@@ -732,6 +732,6 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         return status, str(timedelta(seconds=time() - time_start)), None
     except Exception as e:
         msg = "Apercal threw an error after " + \
-        logger.exception(msg)
             str(timedelta(seconds=time() - time_start))
+        logger.exception(msg)
         return status, str(timedelta(seconds=time() - time_start)), str(e)
