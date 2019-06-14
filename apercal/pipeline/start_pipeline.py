@@ -260,7 +260,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
 
         # keep a record of the parallalised step in the main log file
         logger.info("Running preflag")
-        start_time = time()
+        start_time_preflag = time()
 
         # In order to run in parallel, the bandpass table needs to exists
         # doing it here is not elegant but requires the least amount of changes
@@ -525,7 +525,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         logger = logging.getLogger(__name__)
 
         logger.info("Running preflag ... Done ({0:.0f}s)".format(
-            time() - start_time))
+            time() - start_time_preflag))
 
         # ===============
         # Crosscal
@@ -533,7 +533,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
 
         # keep a record of the parallalised step in the main log file
         logger.info("Running crosscal")
-        start_time = time()
+        start_time_crosscal = time()
 
         if len(fluxcals) == 1 and fluxcals[0][-1] == 0 and len(beamlist_target) > 1:
             raise ApercalException(
@@ -573,7 +573,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         logger = logging.getLogger(__name__)
 
         logger.info("Running crosscal ... Done ({0:.0f}s)".format(
-            time() - start_time))
+            time() - start_time_crosscal))
 
 
         # =======
@@ -582,7 +582,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
 
         # keep a record of the parallalised step in the main log file
         logger.info("Running convert")
-        start_time = time()
+        start_time_convert = time()
 
         # 5 threads to not hammer the disks too much, convert is only IO
         with pymp.Parallel(5) as p:
@@ -618,7 +618,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         logger = logging.getLogger(__name__)
 
         logger.info("Running convert ... Done ({0:.0f}s)".format(
-            time() - start_time))
+            time() - start_time_convert))
 
 
         # ===================
@@ -627,7 +627,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
 
         # keep a record of the parallalised step in the main log file
         logger.info("Running selfcal and continuum")
-        start_time = time()
+        start_time_selfcal_continuum = time()
 
         with pymp.Parallel(10) as p:
             for beam_index in p.range(len(beamlist_target)):
@@ -674,7 +674,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         logger = logging.getLogger(__name__)
 
         logger.info("Running selfcal and continuum ... Done ({0:.0f}s)".format(
-            time() - start_time))
+            time() - start_time_selfcal_continuum))
 
 
         # ====
@@ -685,7 +685,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         lib.setup_logger('debug', logfile=logfilepath)
         # keep a record of the parallalised step in the main log file
         logger.info("Running line")
-        start_time = time()
+        start_time_line = time()
 
         for beamnr in beamlist_target:
             try:
@@ -712,7 +712,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         logger = logging.getLogger(__name__)
 
         logger.info("Running line ... Done ({0:.0f}s)".format(
-            time() - start_time))
+            time() - start_time_line))
 
 
         if "ccalqa" in steps and not dry_run:
