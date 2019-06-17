@@ -737,7 +737,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             lib.setup_logger('debug', logfile=logfilepath)
             logger = logging.getLogger(__name__)
 
-            logger.info("Running selfcal and continuum ... Done ({0:.0f}s)".format(
+            logger.info("Running selfcal and/or continuum ... Done ({0:.0f}s)".format(
                 time() - start_time_selfcal_continuum))
 
 
