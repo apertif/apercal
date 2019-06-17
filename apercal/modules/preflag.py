@@ -92,15 +92,11 @@ class preflag(BaseModule):
         """
         logger.info('Starting Pre-flagging step')
 
-        try: 
-            logger.info("Running manualflag for {0} in beam {1}".format(self.target, self.beam))
-            start_time = time()
-            self.manualflag()
-            logger.info("Running manualflag for {0} in beam {1} ... Done ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
-        except Exception as e:
-            logger.warning("Running manualflag for {0} in beam {1} ... Failed ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
-            logger.exception(e)
-            
+        logger.info("Running manualflag for {0} in beam {1}".format(self.target, self.beam))
+        start_time = time()
+        self.manualflag()
+        logger.info("Running manualflag for {0} in beam {1} ... Done ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
+        
         if self.fluxcal != '':
             query = "SELECT GNFALSE(FLAG) == 0 AS all_flagged, " + \
                     "GNTRUE(FLAG) == 0 AS all_unflagged FROM " + self.get_fluxcal_path()
@@ -108,15 +104,11 @@ class preflag(BaseModule):
             logger.debug("All visibilities     flagged before aoflag: " + str(query_result[0]["all_flagged"]))
             logger.debug("All visibilities not flagged before aoflag: " + str(query_result[0]["all_unflagged"]))
         
-        try:
-            logger.info("Running aoflagger tasks for {0} in beam {1}".format(self.target, self.beam))
-            start_time = time()
-            self.aoflagger()
-            logger.info("Running aoflagger tasks for {0} in beam {1} ... Done ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
-        except Exception as e:
-            logger.warning("Running aoflagger tasks for {0} in beam {1} ... Failed ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
-            logger.exception(e)
-
+        logger.info("Running aoflagger tasks for {0} in beam {1}".format(self.target, self.beam))
+        start_time = time()
+        self.aoflagger()
+        logger.info("Running aoflagger tasks for {0} in beam {1} ... Done ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
+    
         if self.fluxcal != '':
             query = "SELECT GNFALSE(FLAG) == 0 AS all_flagged, " + \
                     "GNTRUE(FLAG) == 0 AS all_unflagged FROM " + self.get_fluxcal_path()
@@ -124,33 +116,20 @@ class preflag(BaseModule):
             logger.debug("All visibilities     flagged after aoflag: " + str(query_result[0]["all_flagged"]))
             logger.debug("All visibilities not flagged after aoflag: " + str(query_result[0]["all_unflagged"]))
         
-        try:
-            logger.info("Running shadow for {0} in beam {1}".format(self.target, self.beam))
-            start_time = time()
-            self.shadow()
-            logger.info("Running shadow for {0} in beam {1} ... Done ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
-        except Exception as e:
-            logger.warning("Running shadow for {0} in beam {1} ... Failed ({2:.0f}s)".format(
-                self.target, self.beam, time() - start_time))
+        logger.info("Running shadow for {0} in beam {1}".format(self.target, self.beam))
+        start_time = time()
+        self.shadow()
+        logger.info("Running shadow for {0} in beam {1} ... Done ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
         
-        try:
-            logger.info("Running edge for {0} in beam {1}".format(self.target, self.beam))
-            start_time = time()
-            self.edges()
-            logger.info("Running edge for {0} in beam {1} ... Done ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
-        except Exception as e:
-            logger.warning("Running edge for {0} in beam {1} ... Failed ({2:.0f}s)".format(
-                self.target, self.beam, time() - start_time))
-            logger.exception(e)
+        logger.info("Running edge for {0} in beam {1}".format(self.target, self.beam))
+        start_time = time()
+        self.edges()
+        logger.info("Running edge for {0} in beam {1} ... Done ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
 
-        try:
-            logger.info("Running ghosts for {0} in beam {1}".format(self.target, self.beam))
-            start_time = time()
-            self.ghosts()
-            logger.info("Running ghosts for {0} in beam {1} ... Done ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
-        except Exception as e:
-            logger.warning("Running ghosts for {0} in beam {1} ... Failed ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
-            logger.exception(e)
+        logger.info("Running ghosts for {0} in beam {1}".format(self.target, self.beam))
+        start_time = time()
+        self.ghosts()
+        logger.info("Running ghosts for {0} in beam {1} ... Done ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
 
         logger.info('Pre-flagging step done')
 
@@ -1164,7 +1143,12 @@ class preflag(BaseModule):
                             logger.warning('Used AOFlagger to flag flux calibrator without preliminary bandpass '
                                            'applied. Better results are usually obtained with a preliminary bandpass applied.')
                             preflagaoflaggerfluxcalflag = True
-                        self.aoflagger_plot(self.get_fluxcal_path())
+                        # it is not critical if plotting fails
+                        try:
+                            self.aoflagger_plot(self.get_fluxcal_path())
+                        except Exception as e:
+                            logger.warning("Aoflagger plotting failed")
+                            logger.exception(e)
                     else:
                         error = 'Flux calibrator dataset or strategy not defined properly or dataset' \
                                 'not available. Not AOFlagging flux calibrator.'
@@ -1205,7 +1189,12 @@ class preflag(BaseModule):
                         logger.info('Used AOFlagger to flag polarised calibrator without preliminary bandpass '
                                     'applied. Better results are usually obtained with a preliminary bandpass applied.')
                         preflagaoflaggerpolcalflag = True
-                    self.aoflagger_plot(self.get_polcal_path())
+                    # it is not critical if plotting fails
+                    try:
+                        self.aoflagger_plot(self.get_polcal_path())
+                    except Exception as e:
+                        logger.warning("Aoflagger plotting failed")
+                        logger.exception(e)
                 else:
                     logger.info('Polarised calibrator was already flagged with AOFlagger!')
 
@@ -1246,7 +1235,12 @@ class preflag(BaseModule):
                                                 'applied. Better results are usually obtained with a preliminary '
                                                 'bandpass applied.'.format(beam))
                                     preflagaoflaggertargetbeamsflag[int(beam)] = True
-                                self.aoflagger_plot(vis)
+                                # it is not critical if plotting fails
+                                try:
+                                    self.aoflagger_plot(vis)
+                                except Exception as e:
+                                    logger.warning("Aoflagger plotting failed")
+                                    logger.exception(e)
                             else:
                                 logger.info(
                                     'Target beam ' + beam + ' was already flagged with AOFlagger!')
@@ -1271,7 +1265,12 @@ class preflag(BaseModule):
                                                 'applied. Better results are usually obtained with a preliminary '
                                                 'bandpass applied.'.format(beam))
                                     preflagaoflaggertargetbeamsflag[int(beam)] = True
-                                self.aoflagger_plot(vis)
+                                # it is not critical if plotting fails
+                                try:
+                                    self.aoflagger_plot(vis)
+                                except Exception as e:
+                                    logger.warning("Aoflagger plotting failed")
+                                    logger.exception(e)
                             else:
                                 logger.info('Target beam ' + beam + ' was already flagged with AOFlagger!')
                 else:
