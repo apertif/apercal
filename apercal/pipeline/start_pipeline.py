@@ -141,12 +141,13 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
 
         Returns:
             None
+        """
+
         p.basedir = basedir
         p.fluxcal = name_to_ms(name_fluxcal)
         p.polcal = name_to_ms(name_polcal)
         p.target = name_to_ms(name_target)
-        """
-
+        
         # debug_msg = """
         # p.basedir = basedir = {0};
         # p.fluxcal = name_to_ms(name_fluxcal) = {1};
@@ -170,8 +171,8 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         # Prepare fluxcals
         for (taskid_fluxcal, name_fluxcal, beamnr_fluxcal) in fluxcals:
             p0 = prepare(file_=configfilename)
-            #p0.basedir = basedir
-            set_files(p0)
+            p0.basedir = basedir
+            #set_files(p0)
             p0.prepare_flip_ra = flip_ra
             # the following two need to be empty strings for prepare
             p0.fluxcal = ''
@@ -192,8 +193,8 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         if name_polcal != '':
             for (taskid_polcal, name_polcal, beamnr_polcal) in polcals:
                 p0 = prepare(file_=configfilename)
-                #p0.basedir = basedir
-                set_files(p0)
+                p0.basedir = basedir
+                #set_files(p0)
                 p0.prepare_flip_ra = flip_ra
                 # the following two need to be empty strings for prepare
                 p0.fluxcal = ''
@@ -212,13 +213,13 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
 
         # Prepare target
         p0 = prepare(file_=configfilename)
-        #p0.basedir = basedir
-        set_files(p0)
+        p0.basedir = basedir
+        #set_files(p0)
         p0.prepare_flip_ra = flip_ra
         # the following two need to be empty strings for prepare
         p0.fluxcal = ''
         p0.polcal = ''
-        #p0.target = name_to_ms(name_target)
+        p0.target = name_to_ms(name_target)
         p0.prepare_date = str(taskid_target)[:6]
         p0.prepare_obsnum_target = validate_taskid(taskid_target)
         for beamnr in beamlist_target:
