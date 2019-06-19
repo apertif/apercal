@@ -293,44 +293,51 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         # In order to run in parallel, the bandpass table needs to exists
         # doing it here is not elegant but requires the least amount of changes
         # to preflage
-        with pymp.Parallel(10) as p:
-            for beam_index in p.range(len(beamlist_target)):
-                beamnr = beamlist_target[beam_index]
-                # individual logfiles for each process
-                logfilepath = os.path.join(
-                    basedir, 'apercal{:02d}.log'.format(beamnr))
-                lib.setup_logger('debug', logfile=logfilepath)
-                logger = logging.getLogger(__name__)
+        # with pymp.Parallel(10) as p:
+        #     for beam_index in p.range(len(beamlist_target)):
+        #         beamnr = beamlist_target[beam_index]
+        #         # individual logfiles for each process
+        #         logfilepath = os.path.join(
+        #             basedir, 'apercal{:02d}.log'.format(beamnr))
+        #         lib.setup_logger('debug', logfile=logfilepath)
+        #         logger = logging.getLogger(__name__)
 
-                logger.debug("Starting logfile for beam " + str(beamnr))
-                p1 = preflag(filename=configfilename)
-                p1.paramfilename = 'param_{:02d}.npy'.format(beamnr)
-                p1.basedir = basedir
-                p1.fluxcal = ''
-                p1.polcal = ''
-                p1.target = name_to_ms(name_fluxcal)
+        #         logger.debug("Starting logfile for beam " + str(beamnr))
+        #         p1 = preflag(filename=configfilename)
+        #         p1.paramfilename = 'param_{:02d}.npy'.format(beamnr)
+        #         p1.basedir = basedir
+        #         p1.fluxcal = ''
+        #         p1.polcal = ''
+        #         p1.target = name_to_ms(name_fluxcal)
 
-                p1.beam = "{:02d}".format(beamnr)
-                p1.preflag_targetbeams = "{:02d}".format(beamnr)
-                if "preflag" in steps and not dry_run:
-                    try:
-                        bandpass_start_time = time()
-                        logger.info("Running aoflagger bandpass for flux calibrator {0} in beam {1}".format(
-                            p1.target, p1.beam))
-                        # director(
-                        #     p1, 'rm', basedir + '/param_{:02d}.npy'.format(beamnr), ignore_nonexistent=True)
-                        p1.go()
-                        # director(p1, 'rm', basedir + '/param.npy',
-                        #         ignore_nonexistent=True)
-                        p1.aoflagger_bandpass()
-                    except Exception as e:
-                        logger.warning("Running aoflagger bandpass for flux calibrator {0} in beam {1} ... Failed ({2:.0f}s)".format(
-                            p1.target, p1.beam, time() - bandpass_start_time))
-                        logger.exception(e)
-                        status[beamnr] += ['preflag_bandpass']
-                    else:
-                        logger.info("Running aoflagger bandpass for flux calibrator {0} in beam {1} ... Done ({2:.0f}s)".format(
-                            p1.target, p1.beam, time() - bandpass_start_time))
+        #         p1.beam = "{:02d}".format(beamnr)
+        #         p1.preflag_targetbeams = "{:02d}".format(beamnr)
+        #         if "preflag" in steps and not dry_run:
+        #             try:
+        #                 bandpass_start_time = time()
+        #                 logger.info("Running aoflagger bandpass for flux calibrator {0} in beam {1}".format(
+        #                     p1.target, p1.beam))
+        #                 # director(
+        #                 #     p1, 'rm', basedir + '/param_{:02d}.npy'.format(beamnr), ignore_nonexistent=True)
+        #                 p1.go()
+        #                 # director(p1, 'rm', basedir + '/param.npy',
+        #                 #         ignore_nonexistent=True)
+
+        #                 # it is necessary to move the param files in order to keep them
+        #                 param_file = basedir + \
+        #                     '/param_{:02d}.npy'.format(beamnr)
+        #                 director(
+        #                     p1, 'mv', param_file, file_=param_file.replace(".npy", "_preflag_{0}.npy".format(name_fluxcal)), ignore_nonexistent=True)
+
+        #                 p1.aoflagger_bandpass()
+        #             except Exception as e:
+        #                 logger.warning("Running aoflagger bandpass for flux calibrator {0} in beam {1} ... Failed ({2:.0f}s)".format(
+        #                     p1.target, p1.beam, time() - bandpass_start_time))
+        #                 logger.exception(e)
+        #                 status[beamnr] += ['preflag_bandpass']
+        #             else:
+        #                 logger.info("Running aoflagger bandpass for flux calibrator {0} in beam {1} ... Done ({2:.0f}s)".format(
+        #                     p1.target, p1.beam, time() - bandpass_start_time))
 
         # Flag fluxcal (pretending it's a target, parallelised version)
         # 5 in parallel
@@ -363,6 +370,8 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                         logger.info("Running preflag for flux calibrator {0} in beam {1}".format(
                             p1.target, p1.beam))
                         preflag_flux_cal_start_time = time()
+
+
                         # director(
                         #     p1, 'rm', basedir + '/param_{:02d}.npy'.format(beamnr), ignore_nonexistent=True)
                         p1.go()
