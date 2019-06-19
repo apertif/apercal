@@ -317,8 +317,8 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                         bandpass_start_time = time()
                         logger.info("Running aoflagger bandpass for flux calibrator {0} in beam {1}".format(
                             p1.target, p1.beam))
-                        director(
-                            p1, 'rm', basedir + '/param_{:02d}.npy'.format(beamnr), ignore_nonexistent=True)
+                        # director(
+                        #     p1, 'rm', basedir + '/param_{:02d}.npy'.format(beamnr), ignore_nonexistent=True)
                         p1.go()
                         # director(p1, 'rm', basedir + '/param.npy',
                         #         ignore_nonexistent=True)
@@ -363,8 +363,8 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                         logger.info("Running preflag for flux calibrator {0} in beam {1}".format(
                             p1.target, p1.beam))
                         preflag_flux_cal_start_time = time()
-                        director(
-                            p1, 'rm', basedir + '/param_{:02d}.npy'.format(beamnr), ignore_nonexistent=True)
+                        # director(
+                        #     p1, 'rm', basedir + '/param_{:02d}.npy'.format(beamnr), ignore_nonexistent=True)
                         p1.go()
                         logger.info("Running preflag for flux calibrator {0} in beam {1} ... Done ({2:.0f}s)".format(
                             p1.target, p1.beam, time() - preflag_flux_cal_start_time))
@@ -409,9 +409,9 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                             logger.info("Running preflag for pol calibrator {0} in beam {1}".format(
                                 p1.target, p1.beam))
                             preflag_pol_cal_start_time = time()
-                            director(
-                                p1, 'rm', basedir + '/param_{:02d}.npy'.format(beamnr), ignore_nonexistent=True)
-                            p1.go()
+                            # director(
+                            #     p1, 'rm', basedir + '/param_{:02d}.npy'.format(beamnr), ignore_nonexistent=True)
+                            # p1.go()
                             logger.info("Running preflag for pol calibrator {0} in beam {1} ... Done ({2:.0f}s)".format(
                                 p1.target, p1.beam, time() - preflag_pol_cal_start_time))
                 except Exception as e:
@@ -453,9 +453,9 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                         logger.info("Running preflag for target {0} in beam {1}".format(
                             p1.target, p1.beam))
                         preflag_target_start_time = time()
-                        director(
-                            p1, 'rm', basedir + '/param_{:02d}.npy'.format(beamnr), ignore_nonexistent=True)
-                        p1.go()
+                        # director(
+                        #     p1, 'rm', basedir + '/param_{:02d}.npy'.format(beamnr), ignore_nonexistent=True)
+                        # p1.go()
                         logger.info("Running preflag for target {0} in beam {1} ... Done ({2:.0f}s)".format(
                             p1.target, p1.beam, time() - preflag_target_start_time))
                 except Exception as e:
@@ -498,8 +498,8 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
 
         with pymp.Parallel(10) as p:
             for beam_index in p.range(len(beamlist_target)):
-                beamnr = beamlist_target[beam_index]
 
+                beamnr = beamlist_target[beam_index]
                 logfilepath = os.path.join(
                     basedir, 'apercal{:02d}.log'.format(beamnr))
                 lib.setup_logger('debug', logfile=logfilepath)
@@ -514,8 +514,8 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     p2.crosscal_transfer_to_target_targetbeams = "{:02d}".format(
                         beamnr)
                     if "ccal" in steps and not dry_run:
-                        director(
-                            p2, 'rm', basedir + '/param_{:02d}.npy'.format(beamnr), ignore_nonexistent=True)
+                        # director(
+                        #     p2, 'rm', basedir + '/param_{:02d}.npy'.format(beamnr), ignore_nonexistent=True)
                         p2.go()
                 except Exception as e:
                     # Exception was already logged just before
@@ -570,11 +570,11 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     p3.beam = "{:02d}".format(beamnr)
                     p3.convert_targetbeams = "{:02d}".format(beamnr)
                     if "convert" in steps and not dry_run:
-                        director(
-                            p3, 'rm', basedir + '/param_{:02d}.npy'.format(beamnr), ignore_nonexistent=True)
+                        # director(
+                        #     p3, 'rm', basedir + '/param_{:02d}.npy'.format(beamnr), ignore_nonexistent=True)
                         p3.go()
-                        director(
-                            p3, 'rm', basedir + '/param_{:02d}.npy'.format(beamnr), ignore_nonexistent=True)
+                        # director(
+                        #     p3, 'rm', basedir + '/param_{:02d}.npy'.format(beamnr), ignore_nonexistent=True)
                 except Exception as e:
                     logger.warning(
                         "Failed beam {}, skipping that from convert".format(beamnr))
