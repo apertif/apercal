@@ -122,7 +122,7 @@ Created by AOFlagger 2.14.0 (2019-02-14)
         <min-available-frequencies-ratio>0</min-available-frequencies-ratio>
         <min-available-times-ratio>0</min-available-times-ratio>
         <min-available-tf-ratio>0</min-available-tf-ratio>
-        <minimum-good-frequency-ratio>0.1</minimum-good-frequency-ratio>
+        <minimum-good-frequency-ratio>0.2</minimum-good-frequency-ratio>
         <minimum-good-time-ratio>0.2</minimum-good-time-ratio>
         <exclude-original-flags>1</exclude-original-flags>
       </action>
