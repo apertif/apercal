@@ -40,9 +40,14 @@ def getimagestats(self, image):
 
         data = image_data[0].data
         imagestats = np.full(3, np.nan)
-        imagestats[0] = np.nanmin(data)  # Get the maxmimum of the image
-        imagestats[1] = np.nanmax(data)  # Get the minimum of the image
-        imagestats[2] = np.nanstd(data)  # Get the standard deviation
+        if data.shape[-3] == 2:
+            imagestats[0] = np.nanmin(data[0,0,:,:])  # Get the maxmimum of the image
+            imagestats[1] = np.nanmax(data[0,0,:,:])  # Get the minimum of the image
+            imagestats[2] = np.nanstd(data[0,0,:,:])  # Get the standard deviation
+        else:
+            imagestats[0] = np.nanmin(data)  # Get the maxmimum of the image
+            imagestats[1] = np.nanmax(data)  # Get the minimum of the image
+            imagestats[2] = np.nanstd(data)  # Get the standard deviation
         image_data.close()  # Close the image
     else:
         error = 'Image does not seem to exist!'

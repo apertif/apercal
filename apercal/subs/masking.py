@@ -296,3 +296,30 @@ def get_beam(self, image, beam):
     managefiles.director(self, 'rm', 'tmp_beampars.rstr')
     managefiles.director(self, 'rm', 'tmp_beampars.fits')
     return beampars
+
+
+def blank_corners(self, mask, imsize):
+    """
+    Blanks the outer edges of a mask to make it always work with mfclean
+    mask (string): Input mask in MIRIAD format
+    imsize (int): image size in pixels
+    """
+    # Calculate the borders for the mask
+    lowborder = 0.1 * imsize
+    highborder = 0.9 * imsize
+    # Do the masking and regrid
+    maths = lib.miriad('maths')
+    maths.out = mask + '_cut'
+    maths.exp = '"<' + mask + '>"'
+    maths.region = 'box"(' + str(lowborder) + ',' + str(lowborder) + ',' + str(highborder) + ',' + str(highborder) + ')"'
+    maths.go()
+    regrid = lib.miriad('regrid')
+    regrid.in_ = mask + '_cut'
+    regrid.out = mask + '_cut_regrid'
+    regrid.axes = '1,2'
+    regrid.tin = mask
+    regrid.go()
+    managefiles.director(self, 'rm', mask + '_cut')
+    managefiles.director(self, 'rm', mask)
+    managefiles.director(self, 'rn', mask, file_ = mask + '_cut_regrid')
+
