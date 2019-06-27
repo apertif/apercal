@@ -82,11 +82,8 @@ def getradec(infile):
     inputs: infile (name of file)
     returns: coords, an instance of the astropy.coordinates SkyCoord class which has a few convenient attributes.
     """
-    prthd = lib.basher('prthd in=' + infile)
-    regex = re.compile(".*(J2000).*")
-    coordline = [m.group(0) for l in prthd for m in [regex.search(l)] if m][0].split()
-    rastr = coordline[3]
-    decstr = coordline[5]
+    rastr = getraimage(infile)
+    decstr = getdecimage(infile)
     rastr = fixra(rastr)
     coords = SkyCoord(FK5, ra=rastr, dec=decstr, unit=(u.deg, u.deg))
     return coords
