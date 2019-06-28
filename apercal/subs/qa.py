@@ -87,6 +87,19 @@ def checkmodelimage(self, image):
     returns (boolean): True if image is ok, False otherwise
     """
     modelstats = imstats.getimagestats(self, image)
+    if modelstats[2] != np.nan and modelstats[1] <= 10 and modelstats[0] >= -10.0:
+        return True
+    else:
+        return False
+
+
+def checkmodelpolimage(self, image):
+    """
+    Subroutine to check if a model image is valid
+    image (string): The path/name of the image to check
+    returns (boolean): True if image is ok, False otherwise
+    """
+    modelstats = imstats.getimagestats(self, image)
     if modelstats[2] != np.nan and modelstats[1] <= 1000 and modelstats[0] >= -10.0:
         return True
     else:
@@ -101,6 +114,18 @@ def checkrestoredimage(self, image):
     """
     restoredstats = imstats.getimagestats(self, image)
     if restoredstats[2] != np.nan and restoredstats[1] <= 1000 and restoredstats[0] >= -1.0:
+        return True
+    else:
+        return False
+
+def checkrestoredpolimage(self, image):
+    """
+    Subroutine to check if a restored image is valid
+    image (string): The path/name of the image to check
+    returns (boolean): True if image is ok, False otherwise
+    """
+    restoredstats = imstats.getimagestats(self, image)
+    if restoredstats[2] != np.nan and restoredstats[1] <= 10 and restoredstats[0] >= -10.0:
         return True
     else:
         return False

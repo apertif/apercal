@@ -170,7 +170,7 @@ class polarisation(BaseModule):
                                 clean.region = '"' + 'mask(mask_QU)' + '"'
                                 clean.go()
                                 if os.path.isdir('model_Q_' + str(s).zfill(3)):
-                                    if qa.checkmodelimage(self, 'model_Q_' + str(s).zfill(3)):
+                                    if qa.checkmodelpolimage(self, 'model_Q_' + str(s).zfill(3)):
                                         polarisationtargetbeamsqumodelstatus[s, 0] = True
                                     else:
                                         polarisationtargetbeamsqumodelstatus[s, 0] = False
@@ -184,7 +184,7 @@ class polarisation(BaseModule):
                                     restor.mode = 'clean'
                                     restor.go()
                                     if os.path.isdir('image_Q_' + str(s).zfill(3)):
-                                        if qa.checkrestoredimage(self, 'image_Q_' + str(s).zfill(3)):
+                                        if qa.checkrestoredpolimage(self, 'image_Q_' + str(s).zfill(3)):
                                             polarisationtargetbeamsquimagestatus[s, 0] = True
                                         else:
                                             polarisationtargetbeamsquimagestatus[s, 0] = False
@@ -204,6 +204,7 @@ class polarisation(BaseModule):
                             polarisationtargetbeamsqubeamparams[s, :, 0] = [np.nan, np.nan, np.nan]
                             logger.warning('Beam ' + self.beam + ': No Stokes Q data for image ' + str(s).zfill(3) + '!')
                         # Do the same for Stokes U
+                    for s, subband in enumerate(range(self.polarisation_qu_startsubband, self.polarisation_qu_endsubband + 1, self.polarisation_qu_nsubband)):
                         try:
                             invert = lib.miriad('invert')  # Create the dirty image
                             invert.vis = datasetname
@@ -258,7 +259,7 @@ class polarisation(BaseModule):
                                 clean.region = '"' + 'mask(mask_QU)' + '"'
                                 clean.go()
                                 if os.path.isdir('model_U_' + str(s).zfill(3)):
-                                    if qa.checkmodelimage(self, 'model_U_' + str(s).zfill(3)):
+                                    if qa.checkmodelpolimage(self, 'model_U_' + str(s).zfill(3)):
                                         polarisationtargetbeamsqumodelstatus[s, 1] = True
                                     else:
                                         polarisationtargetbeamsqumodelstatus[s, 1] = False
@@ -272,7 +273,7 @@ class polarisation(BaseModule):
                                     restor.mode = 'clean'
                                     restor.go()
                                     if os.path.isdir('image_U_' + str(s).zfill(3)):
-                                        if qa.checkrestoredimage(self, 'image_U_' + str(s).zfill(3)):
+                                        if qa.checkrestoredpolimage(self, 'image_U_' + str(s).zfill(3)):
                                             polarisationtargetbeamsquimagestatus[s, 1] = True
                                         else:
                                             polarisationtargetbeamsquimagestatus[s, 1] = False
@@ -339,8 +340,9 @@ class polarisation(BaseModule):
                 # Create a three dimensional array with NaNs for the Q cube
                 qcube = np.full((384/self.polarisation_qu_nsubband, self.polarisation_qu_imsize, self.polarisation_qu_imsize), np.nan)
                 # Insert the images into the cube
+                polarisationtargetbeamsquimagestatus = get_param_def(self, pbeam + '_targetbeams_qu_imagestatus', np.full((384 / self.polarisation_qu_nsubband, 2), False))
                 for q in range(384/self.polarisation_qu_nsubband):
-                    if os.path.isdir('image_Q_' + str(q).zfill(3)):
+                    if os.path.isdir('image_Q_' + str(q).zfill(3)) and polarisationtargetbeamsquimagestatus[q, 0]:
                         subs_managefiles.imagetofits(self, 'image_Q_' + str(q).zfill(3), 'image_Q_' + str(q).zfill(3) + '.fits', remove=False)
                         qimage = pyfits.open('image_Q_' + str(q).zfill(3) + '.fits')
                         qdata = qimage[0].data
@@ -378,8 +380,9 @@ class polarisation(BaseModule):
                 # Create a three dimensional array with NaNs for the U cube
                 ucube = np.full((384 / self.polarisation_qu_nsubband, self.polarisation_qu_imsize, self.polarisation_qu_imsize), np.nan)
                 # Insert the images into the cube
+                polarisationtargetbeamsquimagestatus = get_param_def(self, pbeam + '_targetbeams_qu_imagestatus', np.full((384 / self.polarisation_qu_nsubband, 2), False))
                 for u in range(384 / self.polarisation_qu_nsubband):
-                    if os.path.isdir('image_U_' + str(u).zfill(3)):
+                    if os.path.isdir('image_U_' + str(u).zfill(3)) and polarisationtargetbeamsquimagestatus[u, 1]:
                         subs_managefiles.imagetofits(self, 'image_U_' + str(u).zfill(3), 'image_U_' + str(u).zfill(3) + '.fits', remove=False)
                         uimage = pyfits.open('image_U_' + str(u).zfill(3) + '.fits')
                         udata = uimage[0].data
@@ -534,7 +537,7 @@ class polarisation(BaseModule):
                         mfclean.region = '"' + 'mask(mask_mf_V)' + '"'
                         mfclean.go()
                         if os.path.isdir('model_mf_V'):
-                            if qa.checkmodelimage(self, 'model_mf_V'):
+                            if qa.checkmodelpolimage(self, 'model_mf_V'):
                                 polarisationtargetbeamsvmodelstatus = True
                             else:
                                 polarisationtargetbeamsvmodelstatus = False
@@ -548,10 +551,8 @@ class polarisation(BaseModule):
                             restor.mode = 'clean'
                             restor.go()
                             if os.path.isdir('image_mf_V'):
-                                if qa.checkrestoredimage(self, 'image_mf_V'):
+                                if qa.checkrestoredpolimage(self, 'image_mf_V'):
                                     polarisationtargetbeamsvimagestatus = True
-                                    subs_managefiles.imagetofits(self, 'image_mf_V', 'image_mf_V.fits')
-                                    logger.info('Beam ' + self.beam + ': V-imaging successful!')
                                 else:
                                     polarisationtargetbeamsvimagestatus = False
                         else:
@@ -559,6 +560,8 @@ class polarisation(BaseModule):
                     if polarisationtargetbeamsvimagestatus:
                         polarisationtargetbeamsvimagestats[:] = imstats.getimagestats(self, 'image_mf_V')
                         polarisationtargetbeamsvbeamparams[:] = readmirhead.getbeamimage('image_mf_V')
+                        subs_managefiles.imagetofits(self, 'image_mf_V', 'image_mf_V.fits')
+                        logger.info('Beam ' + self.beam + ': Stokes V-imaging successful!')
                 else:
                     logger.error('Beam ' + self.beam + ': Stokes V imaging not possible. Continuum imaging was not successful or not executed!')
             else:
