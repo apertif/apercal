@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def calc_synbeam(beamnumbers, sbeams):
+def calc_synbeam(sbeams):
     """
     Calculates the mimimum major and minor axis as well as the pa of a synthesised beam giving multiple input beams
     beamnumbers (list): Beam numbers referring to the beam parameters
@@ -9,6 +9,7 @@ def calc_synbeam(beamnumbers, sbeams):
     returns (numpy array, list of strings): The major and minor axis and pa of the beam to convolve to, list of the
                           rejected chunks
     """
+    beamnumbers = list(np.arange(0,40,1))
     bmaj_rej = reject_outliers(sbeams[:, 0], 20.0)
     bmin_rej = reject_outliers(sbeams[:, 1], 20.0)
     bpa_rej = reject_outliers(sbeams[:, 2], 20.0)

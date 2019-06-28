@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import os
 from os import path
+from time import time
 
 import casacore.tables as pt
 
@@ -46,6 +47,7 @@ class preflag(BaseModule):
     preflag_shadow = None
     preflag_edges = None
     preflag_ghosts = None
+    preflag_targetbeams = None
     preflag_manualflag = None
     preflag_manualflag_fluxcal = None
     preflag_manualflag_polcal = None
@@ -67,6 +69,11 @@ class preflag(BaseModule):
     preflag_aoflagger_fluxcalstrat = None
     preflag_aoflagger_polcalstrat = None
     preflag_aoflagger_targetstrat = None
+    preflag_aoflagger_threads = None
+    preflag_aoflagger_use_interval = None
+    preflag_aoflagger_delta_interval = None
+    preflag_aoflagger_max_interval = None
+    preflag_aoflagger_version = ''
 
     subdirification = None
 
@@ -84,23 +91,46 @@ class preflag(BaseModule):
         aoflagger
         """
         logger.info('Starting Pre-flagging step')
+
+        logger.info("Running manualflag for {0} in beam {1}".format(self.target, self.beam))
+        start_time = time()
         self.manualflag()
+        logger.info("Running manualflag for {0} in beam {1} ... Done ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
+        
         if self.fluxcal != '':
             query = "SELECT GNFALSE(FLAG) == 0 AS all_flagged, " + \
                     "GNTRUE(FLAG) == 0 AS all_unflagged FROM " + self.get_fluxcal_path()
             query_result = pt.taql(query)
             logger.debug("All visibilities     flagged before aoflag: " + str(query_result[0]["all_flagged"]))
             logger.debug("All visibilities not flagged before aoflag: " + str(query_result[0]["all_unflagged"]))
+        
+        logger.info("Running aoflagger tasks for {0} in beam {1}".format(self.target, self.beam))
+        start_time = time()
         self.aoflagger()
+        logger.info("Running aoflagger tasks for {0} in beam {1} ... Done ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
+    
         if self.fluxcal != '':
             query = "SELECT GNFALSE(FLAG) == 0 AS all_flagged, " + \
                     "GNTRUE(FLAG) == 0 AS all_unflagged FROM " + self.get_fluxcal_path()
             query_result = pt.taql(query)
             logger.debug("All visibilities     flagged after aoflag: " + str(query_result[0]["all_flagged"]))
             logger.debug("All visibilities not flagged after aoflag: " + str(query_result[0]["all_unflagged"]))
+        
+        logger.info("Running shadow for {0} in beam {1}".format(self.target, self.beam))
+        start_time = time()
         self.shadow()
+        logger.info("Running shadow for {0} in beam {1} ... Done ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
+        
+        logger.info("Running edge for {0} in beam {1}".format(self.target, self.beam))
+        start_time = time()
         self.edges()
+        logger.info("Running edge for {0} in beam {1} ... Done ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
+
+        logger.info("Running ghosts for {0} in beam {1}".format(self.target, self.beam))
+        start_time = time()
         self.ghosts()
+        logger.info("Running ghosts for {0} in beam {1} ... Done ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
+
         logger.info('Pre-flagging step done')
 
     def get_bandpass_path(self):
@@ -160,7 +190,16 @@ class preflag(BaseModule):
                     preflagpolcalshadow = False
             # Flag the target beams
             if self.target != '':
-                for vis, beam in self.get_datasets():
+                if self.preflag_targetbeams == 'all':
+                    datasets = self.get_datasets()
+                    logger.debug(
+                        'Flagging shadowed data for all target beams')
+                else:
+                    beams = self.preflag_targetbeams.split(",")
+                    datasets = self.get_datasets(beams=beams)
+                    logger.debug(
+                        'Flagging shadowed data for selected target beams')
+                for vis, beam in datasets:
                     if preflagtargetbeamsshadow[int(beam)]:
                         logger.info('Shadowed antenna(s) for beam ' + beam + ' were already flagged')
                     else:
@@ -249,7 +288,16 @@ class preflag(BaseModule):
             if self.target != '':
                 # Flag the subband edges of the the target beam datasets
                 # Collect all the available target beam datasets
-                for vis, beam in self.get_datasets():
+                if self.preflag_targetbeams == 'all':
+                    datasets = self.get_datasets()
+                    logger.debug(
+                        'Flagging subband edges for all target beams')
+                else:
+                    beams = self.preflag_targetbeams.split(",")
+                    datasets = self.get_datasets(beams=beams)
+                    logger.debug(
+                        'Flagging subband edges for selected target beams')
+                for vis, beam in datasets:
                     if preflagtargetbeamsedges[int(beam)]:
                         logger.info('Subband edges for target beam ' + beam + ' were already flagged')
                     else:
@@ -342,7 +390,16 @@ class preflag(BaseModule):
             if self.target != '':
                 # Flag the ghosts in the target beam datasets
                 # Collect all the available target beam datasets
-                for vis, beam in self.get_datasets():
+                if self.preflag_targetbeams == 'all':
+                    datasets = self.get_datasets()
+                    logger.debug(
+                        'Flagging ghosts for all target beams')
+                else:
+                    beams = self.preflag_targetbeams.split(",")
+                    datasets = self.get_datasets(beams=beams)
+                    logger.debug(
+                        'Flagging ghosts for selected target beams')
+                for vis, beam in datasets:
                     if preflagtargetbeamsghosts[int(beam)]:
                         logger.info('Ghost channels for target beam ' + beam + ' were already flagged')
                     else:
@@ -374,7 +431,7 @@ class preflag(BaseModule):
         any other calibration.
         """
         if self.preflag_manualflag:
-            logger.debug('Manual flagging step started')
+            logger.info('Manual flagging step started')
             self.manualflag_auto()
             self.manualflag_antenna()
             self.manualflag_corr()
@@ -382,7 +439,7 @@ class preflag(BaseModule):
             self.manualflag_channel()
             self.manualflag_time()
             self.manualflag_clipzeros()
-            logger.debug('Manual flagging step done')
+            logger.info('Manual flagging step done')
 
     def aoflagger(self):
         """
@@ -391,10 +448,23 @@ class preflag(BaseModule):
         calibrators and target fields normally differ.
         """
         if self.preflag_aoflagger:
-            logger.debug('Pre-flagging with AOFlagger started')
+            logger.info('Pre-flagging with AOFlagger started')
+
+            logger.info("Running aoflagger bandpass for {0} in beam {1}".format(
+                self.target, self.beam))
+            start_time = time()
             self.aoflagger_bandpass()
+            logger.info("Running aoflagger bandpass for {0} in beam {1} ... Done ({2:.0f}s)".format(
+                self.target, self.beam, time() - start_time))
+
+            logger.info("Running aoflagger flagging for {0} in beam {1}".format(
+                self.target, self.beam))
+            start_time = time()
             self.aoflagger_flag()
-            logger.debug('Pre-flagging with AOFlagger done')
+            logger.info("Running aoflagger flagging for {0} in beam {1} ... Done ({2:.0f}s)".format(
+                self.target, self.beam, time() - start_time))
+
+            logger.info('Pre-flagging with AOFlagger done')
         else:
             logger.warning('No flagging with AOflagger done! Your data might be contaminated by RFI!')
 
@@ -445,11 +515,11 @@ class preflag(BaseModule):
                                    'calibrator dataset will not be flagged!')
             # Flag the auto-correlations for the target beams
             if self.preflag_manualflag_target:
-                if self.preflag_manualflag_targetbeams == 'all':
+                if self.preflag_targetbeams == 'all':
                     datasets = self.get_datasets()
                     logger.debug('Flagging auto-correlations for all target beams')
                 else:
-                    beams = self.preflag_manualflag_targetbeams.split(",")
+                    beams = self.preflag_targetbeams.split(",")
                     datasets = self.get_datasets(beams=beams)
                     logger.debug('Flagging auto-correlations for selected target beams')
                 for vis, beam in datasets:
@@ -526,11 +596,11 @@ class preflag(BaseModule):
                     logger.warning('No polarised calibrator dataset specified. Specified antenna(s) for polarised calibrator dataset will not be flagged!')
             # Flag antenna(s) for target beams
             if self.preflag_manualflag_target:
-                if self.preflag_manualflag_targetbeams == 'all':
+                if self.preflag_targetbeams == 'all':
                     datasets = self.get_datasets()
                     logger.debug('Flagging antenna(s) ' + self.preflag_manualflag_antenna + ' for all target beams')
                 else:
-                    beams = self.preflag_manualflag_targetbeams.split(",")
+                    beams = self.preflag_targetbeams.split(",")
                     datasets = [self.get_datasets(beams=beams)]
                     logger.debug('Flagging antenna(s) ' + self.preflag_manualflag_antenna + ' for selected target beams')
                 for vis, beam in datasets:
@@ -609,11 +679,11 @@ class preflag(BaseModule):
                     logger.warning('No polarised calibrator dataset specified. Specified correlation(s) for polarised calibrator dataset will not be flagged!')
             # Flag correlation(s) for target beams
             if self.preflag_manualflag_target:
-                if self.preflag_manualflag_targetbeams == 'all':
+                if self.preflag_targetbeams == 'all':
                     datasets = self.get_datasets()
                     logger.debug('Flagging correlation(s) ' + self.preflag_manualflag_corr + ' for all target beams')
                 else:
-                    beams = self.preflag_manualflag_targetbeams.split(",")
+                    beams = self.preflag_targetbeams.split(",")
                     datasets = [self.get_datasets(beams=beams)]
                     logger.debug('Flagging correlation(s) ' + self.preflag_manualflag_corr + ' for selected target beams')
                 for vis, beam in datasets:
@@ -693,11 +763,11 @@ class preflag(BaseModule):
                     logger.warning('No polarised calibrator dataset specified. Specified baselines(s) for polarised calibrator dataset will not be flagged!')
             # Flag correlation(s) for the target beams
             if self.preflag_manualflag_target:
-                if self.preflag_manualflag_targetbeams == 'all':
+                if self.preflag_targetbeams == 'all':
                     datasets = self.get_datasets()
                     logger.debug('Flagging baseline(s) ' + self.preflag_manualflag_baseline + ' for all target beams')
                 else:
-                    beams = self.preflag_manualflag_targetbeams.split(",")
+                    beams = self.preflag_targetbeams.split(",")
                     datasets = [self.get_datasets(beams=beams)]
                     logger.debug('Flagging baseline(s) ' + self.preflag_manualflag_baseline + ' for selected target beams')
                 for vis, beam in datasets:
@@ -774,11 +844,11 @@ class preflag(BaseModule):
                     logger.warning('No polarised calibrator dataset specified. Specified channel range(s) for polarised calibrator dataset will not be flagged!')
             # Flag channel(s) for the target beams
             if self.preflag_manualflag_target:
-                if self.preflag_manualflag_targetbeams == 'all':
+                if self.preflag_targetbeams == 'all':
                     datasets = self.get_datasets()
                     logger.debug('Flagging channel(s) ' + self.preflag_manualflag_channel + ' for all target beams')
                 else:
-                    beams = self.preflag_manualflag_targetbeams.split(",")
+                    beams = self.preflag_targetbeams.split(",")
                     datasets = [self.get_datasets(beams=beams)]
                     logger.debug('Flagging channel(s) ' + self.preflag_manualflag_channel + ' for selected target beams')
                 for vis, beam in datasets:
@@ -857,11 +927,11 @@ class preflag(BaseModule):
                                    'for polarised calibrator dataset will not be flagged!')
             # Flag time range for the target beams
             if self.preflag_manualflag_target:
-                if self.preflag_manualflag_targetbeams == 'all':
+                if self.preflag_targetbeams == 'all':
                     datasets = self.get_datasets()
                     logger.debug('Flagging time range ' + self.preflag_manualflag_time + ' for all target beams')
                 else:
-                    beams = self.preflag_manualflag_targetbeams.split(",")
+                    beams = self.preflag_targetbeams.split(",")
                     datasets = [self.get_datasets(beams=beams)]
                     logger.debug('Flagging time range ' + self.preflag_manualflag_time + ' for selected target beams')
                 for vis, beam in datasets:
@@ -933,11 +1003,11 @@ class preflag(BaseModule):
                                    'calibrator dataset will not be flagged!')
             # Flag the Zero-valued for the target beams
             if self.preflag_manualflag_target:
-                if self.preflag_manualflag_targetbeams == 'all':
+                if self.preflag_targetbeams == 'all':
                     datasets = self.get_datasets()
                     logger.debug('Flagging Zero-valued data for all target beams')
                 else:
-                    beams = self.preflag_manualflag_targetbeams.split(",")
+                    beams = self.preflag_targetbeams.split(",")
                     datasets = [self.get_datasets(beams=beams)]
                     logger.debug('Flagging Zero-valued data for selected target beams')
                 for vis, beam in datasets:
@@ -982,6 +1052,8 @@ class preflag(BaseModule):
                 elif self.polcal != '':
                     create_bandpass(self.get_polcal_path(), self.get_bandpass_path())
                 else:
+                    # logger.debug("self.get_target_path(str(self.beam).zfill(2))= {0}".format(str(self.get_target_path(str(self.beam).zfill(2)))))
+                    # create_bandpass(self.get_target_path(str(self.beam).zfill(2)), self.get_bandpass_path())
                     create_bandpass(self.get_target_path(self.beam), self.get_bandpass_path())
                 if os.path.isfile(self.get_bandpass_path()):
                     preflagaoflaggerbandpassstatus = True
@@ -1044,6 +1116,7 @@ class preflag(BaseModule):
                                                         np.full(self.NBEAMS, False))
 
         base_cmd = 'aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_fluxcalstrat
+        
         # Suppress logging of lines that start with this (to prevent 1000s of lines of logging)
         strip_prefixes = ['Channel ']
         if self.preflag_aoflagger:
@@ -1070,7 +1143,12 @@ class preflag(BaseModule):
                             logger.warning('Used AOFlagger to flag flux calibrator without preliminary bandpass '
                                            'applied. Better results are usually obtained with a preliminary bandpass applied.')
                             preflagaoflaggerfluxcalflag = True
-                        self.aoflagger_plot(self.get_fluxcal_path())
+                        # it is not critical if plotting fails
+                        try:
+                            self.aoflagger_plot(self.get_fluxcal_path())
+                        except Exception as e:
+                            logger.warning("Aoflagger plotting failed")
+                            logger.exception(e)
                     else:
                         error = 'Flux calibrator dataset or strategy not defined properly or dataset' \
                                 'not available. Not AOFlagging flux calibrator.'
@@ -1111,7 +1189,12 @@ class preflag(BaseModule):
                         logger.info('Used AOFlagger to flag polarised calibrator without preliminary bandpass '
                                     'applied. Better results are usually obtained with a preliminary bandpass applied.')
                         preflagaoflaggerpolcalflag = True
-                    self.aoflagger_plot(self.get_polcal_path())
+                    # it is not critical if plotting fails
+                    try:
+                        self.aoflagger_plot(self.get_polcal_path())
+                    except Exception as e:
+                        logger.warning("Aoflagger plotting failed")
+                        logger.exception(e)
                 else:
                     logger.info('Polarised calibrator was already flagged with AOFlagger!')
 
@@ -1122,37 +1205,74 @@ class preflag(BaseModule):
                     # Check if parameter exists already and bandpass was applied successfully
                     # Check if bandpass table was derived successfully
                     preflagaoflaggerbandpassstatus = get_param_def(self, 'preflag_aoflagger_bandpass_status', False)
-                    if self.preflag_aoflagger_targetbeams == 'all':  # Create a list of target beams
+                    if self.preflag_targetbeams == 'all':  # Create a list of target beams
                         datasets = self.get_datasets()
                         logger.info('AOFlagging all target beams')
                     else:
-                        beams = self.preflag_aoflagger_targetbeams.split(",")
+                        beams = self.preflag_targetbeams.split(",")
                         datasets = self.get_datasets(beams=beams)
                         logger.info('AOFlagging all selected target beam(s)')
                     for vis, beam in datasets:
-                        base_cmd = 'aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_targetstrat
-                        if not preflagaoflaggertargetbeamsflag[int(beam)]:
-                            if self.preflag_aoflagger_bandpass and preflagaoflaggerbandpassstatus:
-                                lib.basher(base_cmd + ' -bandpass ' + self.get_bandpass_path() + ' ' + vis,
-                                           prefixes_to_strip=strip_prefixes)
-                                logger.debug('Used AOFlagger to flag target beam {} with preliminary '
-                                             'bandpass applied'.format(beam))
-                                preflagaoflaggertargetbeamsflag[int(beam)] = True
-                            elif self.preflag_aoflagger_bandpass and not preflagaoflaggerbandpassstatus:
-                                lib.basher(base_cmd + ' ' + vis, prefixes_to_strip=strip_prefixes)
-                                logger.warning('Used AOFlagger to flag target beam {} without preliminary bandpass '
-                                               'applied. Better results are usually obtained with a preliminary '
-                                               'bandpass applied.'.format(beam))
-                                preflagaoflaggertargetbeamsflag[int(beam)] = True
-                            elif not self.preflag_aoflagger_bandpass:
-                                lib.basher(base_cmd + ' ' + vis, prefixes_to_strip=strip_prefixes)
-                                logger.warning('Used AOFlagger to flag target beam {} without preliminary bandpass '
-                                               'applied. Better results are usually obtained with a preliminary '
-                                               'bandpass applied.'.format(beam))
-                                preflagaoflaggertargetbeamsflag[int(beam)] = True
-                            self.aoflagger_plot(vis)
+                        if self.preflag_aoflagger_use_interval:
+                            if not preflagaoflaggertargetbeamsflag[int(beam)]:
+                                base_cmd = 'aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_targetstrat + " --max-interval-size {0}".format(self.preflag_aoflagger_delta_interval) + " -j {0}".format(
+                                self.preflag_aoflagger_threads)
+                                if self.preflag_aoflagger_bandpass and preflagaoflaggerbandpassstatus:
+                                    lib.basher(base_cmd + ' -bandpass ' + self.get_bandpass_path() + ' ' + vis,
+                                            prefixes_to_strip=strip_prefixes)
+                                    logger.debug('Used AOFlagger to flag target beam {} with preliminary '
+                                                'bandpass applied'.format(beam))
+                                    preflagaoflaggertargetbeamsflag[int(beam)] = True
+                                elif self.preflag_aoflagger_bandpass and not preflagaoflaggerbandpassstatus:
+                                    lib.basher(base_cmd + ' ' + vis, prefixes_to_strip=strip_prefixes)
+                                    logger.warning('Used AOFlagger to flag target beam {} without preliminary bandpass '
+                                                'applied. Better results are usually obtained with a preliminary '
+                                                'bandpass applied.'.format(beam))
+                                    preflagaoflaggertargetbeamsflag[int(beam)] = True
+                                elif not self.preflag_aoflagger_bandpass:
+                                    lib.basher(base_cmd + ' ' + vis, prefixes_to_strip=strip_prefixes)
+                                    logger.warning('Used AOFlagger to flag target beam {} without preliminary bandpass '
+                                                'applied. Better results are usually obtained with a preliminary '
+                                                'bandpass applied.'.format(beam))
+                                    preflagaoflaggertargetbeamsflag[int(beam)] = True
+                                # it is not critical if plotting fails
+                                try:
+                                    self.aoflagger_plot(vis)
+                                except Exception as e:
+                                    logger.warning("Aoflagger plotting failed")
+                                    logger.exception(e)
+                            else:
+                                logger.info(
+                                    'Target beam ' + beam + ' was already flagged with AOFlagger!')
                         else:
-                            logger.info('Target beam ' + beam + ' was already flagged with AOFlagger!')
+                            base_cmd = 'aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_targetstrat
+                            if not preflagaoflaggertargetbeamsflag[int(beam)]:
+                                if self.preflag_aoflagger_bandpass and preflagaoflaggerbandpassstatus:
+                                    lib.basher(base_cmd + ' -bandpass ' + self.get_bandpass_path() + ' ' + vis,
+                                            prefixes_to_strip=strip_prefixes)
+                                    logger.debug('Used AOFlagger to flag target beam {} with preliminary '
+                                                'bandpass applied'.format(beam))
+                                    preflagaoflaggertargetbeamsflag[int(beam)] = True
+                                elif self.preflag_aoflagger_bandpass and not preflagaoflaggerbandpassstatus:
+                                    lib.basher(base_cmd + ' ' + vis, prefixes_to_strip=strip_prefixes)
+                                    logger.warning('Used AOFlagger to flag target beam {} without preliminary bandpass '
+                                                'applied. Better results are usually obtained with a preliminary '
+                                                'bandpass applied.'.format(beam))
+                                    preflagaoflaggertargetbeamsflag[int(beam)] = True
+                                elif not self.preflag_aoflagger_bandpass:
+                                    lib.basher(base_cmd + ' ' + vis, prefixes_to_strip=strip_prefixes)
+                                    logger.warning('Used AOFlagger to flag target beam {} without preliminary bandpass '
+                                                'applied. Better results are usually obtained with a preliminary '
+                                                'bandpass applied.'.format(beam))
+                                    preflagaoflaggertargetbeamsflag[int(beam)] = True
+                                # it is not critical if plotting fails
+                                try:
+                                    self.aoflagger_plot(vis)
+                                except Exception as e:
+                                    logger.warning("Aoflagger plotting failed")
+                                    logger.exception(e)
+                            else:
+                                logger.info('Target beam ' + beam + ' was already flagged with AOFlagger!')
                 else:
                     error = 'Target beam dataset(s) or strategy not defined properly. Not AOFlagging ' \
                             'target beam dataset(s).'

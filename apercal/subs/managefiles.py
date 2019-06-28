@@ -8,7 +8,7 @@ from apercal.subs import setinit as subs_setinit
 logger = logging.getLogger(__name__)
 
 
-def imagetofits(self, mirimage, fitsimage):
+def imagetofits(self, mirimage, fitsimage, remove=True):
     """
     Converts a MIRIAD image to a FITS image
     mirimage: The MIRIAD image to convert
@@ -20,8 +20,12 @@ def imagetofits(self, mirimage, fitsimage):
     fits.in_ = mirimage
     fits.out = fitsimage
     fits.go()
-    if os.path.isfile(fitsimage):
+    if os.path.isfile(fitsimage) and remove:
         director(self, 'rm', mirimage)
+    elif os.path.isfile(fitsimage) and remove==False:
+        pass
+    else:
+        pass
 
 
 def director(self, option, dest, file_=None, verbose=True,
