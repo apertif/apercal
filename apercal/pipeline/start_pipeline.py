@@ -10,6 +10,7 @@ from apercal.modules.ccal import ccal
 from apercal.modules.scal import scal
 from apercal.modules.continuum import continuum
 from apercal.modules.line import line
+from apercal.modules.polarisation import polarisation
 from apercal.subs.managefiles import director
 from apercal.modules.convert import convert
 from apercal.subs import calmodels as subs_calmodels
@@ -131,6 +132,14 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             return name.upper().strip().split('_')[0] + '.MS'
         else:
             return name + '.MS'
+    
+    def name_to_mir(name):
+        if not name:
+            return ''
+        elif '3C' in name:
+            return name.upper().strip().split('_')[0] + '.mir'
+        else:
+            return name + '.mir'
 
     def set_files(p):
         """
@@ -761,6 +770,66 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
 
             logger.info("Running line ... Done ({0:.0f}s)".format(
                 time() - start_time_line))
+        
+        # Polarisation
+        # ============
+
+        # keep a record of the parallalised step in the main log file
+        if 'polarisation' in steps:
+            logfilepath = os.path.join(basedir, 'apercal.log')
+            lib.setup_logger('debug', logfile=logfilepath)
+            logger = logging.getLogger(__name__)
+
+            logger.info("Running polarisation")
+            start_time_polarisation = time()
+        else:
+            logfilepath = os.path.join(basedir, 'apercal.log')
+            lib.setup_logger('debug', logfile=logfilepath)
+            logger = logging.getLogger(__name__)
+
+            logger.info("Skipping polarisation")
+
+        with pymp.Parallel(5) as p:
+            for beam_index in p.range(len(beamlist_target)):
+                beamnr = beamlist_target[beam_index]
+
+                logfilepath = os.path.join(
+                    basedir, 'apercal{:02d}.log'.format(beamnr))
+                lib.setup_logger('debug', logfile=logfilepath)
+                logger = logging.getLogger(__name__)
+
+                try:
+                    p7 = polarisation(file_=configfilename)
+                    p7.paramfilename = 'param_{:02d}.npy'.format(beamnr)
+                    p7.basedir = basedir
+                    p7.beam = "{:02d}".format(beamnr)
+                    p7.target = name_to_mir(name_target)
+                    if "polarisation" in steps and not dry_run:
+                        p7.go()
+                except Exception as e:
+                    # Exception was already logged just before
+                    logger.warning(
+                        "Failed beam {}, skipping that from polarisation".format(beamnr))
+                    logger.exception(e)
+                    status[beamnr] += ['polarisation']
+
+        # keep a record of the parallalised step in the main log file
+        if 'polarisation' in steps:
+            logfilepath = os.path.join(basedir, 'apercal.log')
+            lib.setup_logger('debug', logfile=logfilepath)
+            logger = logging.getLogger(__name__)
+
+            logger.info("Running selfcal and/or continuum ... Done ({0:.0f}s)".format(
+                time() - start_time_selfcal_continuum))
+
+        # keep a record of the parallalised step in the main log file
+        if 'polarisation' in steps:
+            logfilepath = os.path.join(basedir, 'apercal.log')
+            lib.setup_logger('debug', logfile=logfilepath)
+            logger = logging.getLogger(__name__)
+
+            logger.info("Running polarisation ... Done ({0:.0f}s)".format(
+                time() - start_time_polarisation))
 
 
         # if "ccalqa" in steps and not dry_run:
