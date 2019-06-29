@@ -505,14 +505,16 @@ class line(BaseModule):
                                                 clean.niters = 1
                                                 clean.gain = 0.0000001
                                                 clean.region = '"boxes(1,1,2,2)"'
-                                                clean.go()
+#                                                clean.go()
+#                                                JMH:   comment this out so no clean is run
                                                 restor = lib.miriad('restor')
                                                 restor.model = 'model_00_' + str(channel_counter).zfill(5)
                                                 restor.beam = 'beam_00_' + str(channel_counter).zfill(5)
                                                 restor.map = 'map_00_' + str(channel_counter).zfill(5)
                                                 restor.out = 'image_00_' + str(channel_counter).zfill(5)
                                                 restor.mode = 'clean'
-                                                restor.go()
+#                                                restor.go()
+#                                                JMH:   comment this out so no restor is run
                                             if self.line_image_convolbeam:
                                                 convol = lib.miriad('convol')
                                                 convol.map = 'image_' + str(minc).zfill(2) + '_' + str(
@@ -534,32 +536,33 @@ class line(BaseModule):
                                             minc = 0
                                             # Do one iteration of clean to create a model map for usage with restor to
                                             # give the beam size.
-                                            clean = lib.miriad('clean')
-                                            clean.map = 'map_00_' + str(channel_counter).zfill(5)
-                                            clean.beam = 'beam_00_' + str(channel_counter).zfill(5)
-                                            clean.out = 'model_00_' + str(channel_counter).zfill(5)
-                                            clean.niters = 1
-                                            clean.gain = 0.0000001
-                                            clean.region = '"boxes(1,1,2,2)"'
-                                            clean.go()
-                                            restor = lib.miriad('restor')
-                                            restor.model = 'model_00_' + str(channel_counter).zfill(5)
-                                            restor.beam = 'beam_00_' + str(channel_counter).zfill(5)
-                                            restor.map = 'map_00_' + str(channel_counter).zfill(5)
-                                            restor.out = 'image_00_' + str(channel_counter).zfill(5)
-                                            restor.mode = 'clean'
-                                            restor.go()
-                                            if self.line_image_convolbeam:
-                                                convol = lib.miriad('convol')
-                                                convol.map = 'image_00_' + str(channel_counter).zfill(5)
-                                                beam_parameters = self.line_image_convolbeam.split(',')
-                                                convol.fwhm = str(beam_parameters[0]) + ',' + str(beam_parameters[1])
-                                                convol.pa = str(beam_parameters[2])
-                                                convol.out = 'convol_00_' + str(channel_counter).zfill(5)
-                                                convol.options = 'final'
-                                                convol.go()
-                                            else:
-                                                pass
+                                            # JMH:  skip this step for now as it appears not useful and causes crashes
+#                                            clean = lib.miriad('clean')
+#                                            clean.map = 'map_00_' + str(channel_counter).zfill(5)
+#                                            clean.beam = 'beam_00_' + str(channel_counter).zfill(5)
+#                                            clean.out = 'model_00_' + str(channel_counter).zfill(5)
+#                                            clean.niters = 1
+#                                            clean.gain = 0.0000001
+#                                            clean.region = '"boxes(1,1,2,2)"'
+#                                            clean.go()
+#                                            restor = lib.miriad('restor')
+#                                            restor.model = 'model_00_' + str(channel_counter).zfill(5)
+#                                            restor.beam = 'beam_00_' + str(channel_counter).zfill(5)
+#                                            restor.map = 'map_00_' + str(channel_counter).zfill(5)
+#                                            restor.out = 'image_00_' + str(channel_counter).zfill(5)
+#                                            restor.mode = 'clean'
+#                                            restor.go()
+#                                            if self.line_image_convolbeam:
+#                                                convol = lib.miriad('convol')
+#                                                convol.map = 'image_00_' + str(channel_counter).zfill(5)
+#                                                beam_parameters = self.line_image_convolbeam.split(',')
+#                                                convol.fwhm = str(beam_parameters[0]) + ',' + str(beam_parameters[1])
+#                                                convol.pa = str(beam_parameters[2])
+#                                                convol.out = 'convol_00_' + str(channel_counter).zfill(5)
+#                                                convol.options = 'final'
+#                                                convol.go()
+#                                            else:
+#                                                pass
                                         fits = lib.miriad('fits')
                                         fits.op = 'xyout'
                                         minc = 0
@@ -573,8 +576,16 @@ class line(BaseModule):
                                                 fits.in_ = 'image_' + str(minc).zfill(2) + '_' + str(
                                                     channel_counter).zfill(5)
                                         else:
-                                            fits.in_ = 'image_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(
-                                                5)
+                                        # fits.in_ = 'image_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(
+#                                                5)
+                                            if os.path.exists(
+                                                    'image_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(
+                                                        5)):
+                                                fits.in_ = 'image_' + str(minc).zfill(2) + '_' + str(
+                                                    channel_counter).zfill(5)
+                                            else:
+                                                fits.in_ = 'map_' + str(minc).zfill(2) + '_' + str(
+                                                    channel_counter).zfill(5)
                                         fits.out = 'cube_image_' + str(channel_counter).zfill(5) + '.fits'
                                         fits.go()
                                         fits.in_ = 'beam_00_' + str(channel_counter).zfill(5)
