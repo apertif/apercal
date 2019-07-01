@@ -253,21 +253,16 @@ def write_mask(outfile, cat):
     outfile: The output file to write to
     cat: The catalogue to use for the file to write
     """
-    msktext1 = ''
-    msktext2 = ''
     ra_off = cat.RA_off
     dec_off = cat.DEC_off
     majaxis = cat.MajAxis
     minaxis = cat.MinAxis
     pa = np.nan_to_num(cat.PA)
-    for i, x in enumerate(ra_off):
-        msktext1 = msktext1 + 'gaussian,'
-        msktext2 = msktext2 + '1,' + str(int(ra_off[i])) + ',' + str(int(dec_off[i])) + ',' + str(
-            int(majaxis[i])) + ',' + str(int(minaxis[i])) + ',' + str(int(pa[i])) + ','
-    msktext = msktext1[:-1] + '\n' + msktext2[:-1]
-    mirmskfile = open(outfile, 'w')
-    mirmskfile.write(msktext)
-    mirmskfile.close()
+    with open(outfile, 'w') as fid:
+        for i, x in enumerate(ra_off):
+            msktext = '1,' + str(int(ra_off[i])) + ',' + str(int(dec_off[i])) + ',' + str(
+                    int(majaxis[i])) + ',' + str(int(minaxis[i])) + ',' + str(int(pa[i]))
+            fid.write(msktext)
     logging.debug(' Wrote mask textfile to ' + str(outfile) + '!')
 
 
