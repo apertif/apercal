@@ -28,7 +28,11 @@ class line(BaseModule):
     """
     module_name = 'LINE'
 
-    line_beams = 'all' 
+    line_beams = 'all'
+    line_input_channelwidth = None  # not for config file, will be set to finc in create_subbands
+    line_cube_channel_list = None
+    line_cube_channelwidth_list = None
+    line_single_cube_input_channels = None  #not to be used in the config file
     line_splitdata = None
     line_splitdata_chunkbandwidth = None
     line_splitdata_channelbandwidth = None
@@ -47,7 +51,10 @@ class line(BaseModule):
     line_subtract_mode_uvmodel_imsize = None
     line_subtract_mode_uvmodel_cellsize = None
     line_subtract_mode_uvmodel_minorcycle0_dr = None
+    line_image_cube_name = 'HI_image_cube.fits'
+    line_image_beam_cube_name = 'HI_beam_cube.fits'
     line_image = None
+    line_image_input_channels = None
     line_image_channels = None
     line_image_imsize = None
     line_image_cellsize = None
@@ -97,13 +104,63 @@ class line(BaseModule):
         nthreads = first_level_threads * second_level_threads
         self.transfergains(nthreads)  # first step after copy of crosscal data
         logger.info("(LINE) module transfergains done ")
-        self.createsubbands(threads) # create subbands if required
-        logger.info("(LINE) module createsubbands done ")
-        self.subtract(threads) # subtract continuum if required
-        logger.info("(LINE) module subtract done ")
-        self.image_line(threads)
-        pymp.config.nested = original_nested
-        logger.info("(LINE) module image_line done ")
+
+        # no go throught the requested image cubes
+        for cube_counter in range(len(self.line_cube_channelwidth_list)):
+            # set the channelbandwidth for splitting for a given cube from the list
+            self.line_splitdata_channelbandwidth = self.line_cube_channelwidth_list[
+                cube_counter]
+            
+            # if it is the first cube, create the subbands
+            if cube_counter == 0:
+                self.createsubbands(threads)  # create subbands if required
+                logger.info("(LINE) module createsubbands done for cube {0}".format(cube_counter))
+            # create the subbands again only if the channel width changes
+            elif self.line_cube_channelwidth_list[cube_counter] != self.line_cube_channelwidth_list[cube_counter-1]:
+                self.createsubbands(threads)  # create subbands if required
+                logger.info(
+                    "(LINE) module createsubbands done for cube {0}".format(cube_counter))
+
+            # run continuum subtraction
+            self.subtract(threads)  # subtract continuum if required
+            logger.info(
+                "(LINE) module subtract done for cube {0}".format(cube_counter))
+
+            # set the start and end channel for imaging
+            self.line_single_cube_input_channels = self.line_cube_channel_list[cube_counter]
+            # run imaging
+            self.image_line(threads)
+            pymp.config.nested = original_nested
+            
+
+            # clean up everything at the end
+            if cube_counter == len(self.line_cube_channelwidth_list) - 1:
+                self.cleanup(all_files=True)
+            # clean up only the cube directory if the channel width does not change
+            elif self.line_cube_channelwidth_list[cube_counter] == self.line_cube_channelwidth_list[cube_counter+1]:
+                self.cleanup(cube_dir = True)
+            # if the channel width changes clean up all
+            else:
+                self.cleanup(all_files=True)
+
+            # rename image cube
+            cube_name = self.linedir + '/cubes/' + self.line_image_cube_name
+            new_cube_name = self.linedir + '/cubes/' + \
+                self.line_image_cube_name.replace(
+                    '.fits', '{0}.fits'.format(cube_counter))
+            subs_managefiles.director(
+                self, 'rn', cube_name, file_=new_cube_name, ignore_nonexistent=True)
+            
+            # rename beam cube
+            beam_cube_name = self.linedir + '/cubes/' + self.line_image_beam_cube_name
+            new_beam_cube_name = self.linedir + '/cubes/' + \
+                self.line_image_beam_cube_name.replace(
+                    '.fits', '{0}.fits'.format(cube_counter))
+            subs_managefiles.director(
+                self, 'rn', beam_cube_name, file_=new_beam_cube_name, ignore_nonexistent=True)
+            
+            logger.info(
+                "(LINE) module image_line done for cube {0}".format(cube_counter))
 
     def transfergains(self, nthreads=1):
         """
@@ -167,6 +224,10 @@ class line(BaseModule):
                 raise ApercalException(' (LINE) No data in your line directory!')
             numchan = uv['nschan']  # Number of channels
             finc = np.fabs(uv['sdf'])  # Frequency increment for each channel
+            
+            # keep the incremenet as attribute of the object
+            self.line_input_channelwidth = finc
+            
             subband_bw = numchan * finc  # Bandwidth of one subband
             subband_chunks = round(subband_bw / self.line_splitdata_chunkbandwidth)
             # Round to the closest power of 2 for frequency chunks with the same bandwidth over the frequency
@@ -318,6 +379,19 @@ class line(BaseModule):
             threads = [1]
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
+
+        # determine the output channel number based on the width of the output cube
+        binchan = round(self.line_splitdata_channelbandwidth / self.line_input_channelwidth)
+        start_channel = self.line_cube_input_channels[0]
+        end_channel = self.line_cube_input_channels[1]
+
+        output_start_channel = int(start_channel / binchan)
+        output_end_channel = int(end_channel / binchan)
+
+        # put imaging channels into format used below to avoid changes
+        self.line_image_channels = '{0:d},{1:d}'.format(output_start_channel,output_end_channel)
+
+
         if self.line_image:
             logger.info(' (LINE) Starting line imaging of dataset #')
             subs_managefiles.director(self, 'ch', self.linedir)
@@ -623,25 +697,27 @@ class line(BaseModule):
             # fix this so that the startfreq is read from the first file that is put into the cube
             startfreq = get_freqstart(self.crosscaldir + '/' + self.target, self.line_channelbinning *
                                       int(str(self.line_image_channels).split(',')[0]))
-            self.create_linecube(self.linedir + '/cubes/cube_image_*.fits', 'HI_image_cube.fits', nchans,
+            self.create_linecube(self.linedir + '/cubes/cube_image_*.fits', self.line_image_cube_name, nchans,
                                  int(str(self.line_image_channels).split(',')[0]), startfreq)
             logger.info('(LINE) Created HI-image cube #')
-            self.create_linecube(self.linedir + '/cubes/cube_beam_*.fits', 'HI_beam_cube.fits', nchans,
+            self.create_linecube(self.linedir + '/cubes/cube_beam_*.fits', self.line_image_beam_cube_name, nchans,
                                  int(str(self.line_image_channels).split(',')[0]), startfreq)
             logger.info('(LINE) Created HI-beam cube #')
-            logger.info('(LINE) Removing obsolete files #')
-            subs_managefiles.director(self, 'ch', self.linedir)
-            subs_managefiles.director(self, 'rm', self.linedir + '/??', ignore_nonexistent=True)
-            subs_managefiles.director(self, 'rm', self.linedir + '/' + self.target, ignore_nonexistent=True)
-            subs_managefiles.director(self, 'rm', self.linedir + '/cubes/' + 'image*', ignore_nonexistent=True)
-            subs_managefiles.director(self, 'rm', self.linedir + '/cubes/' + 'beam*', ignore_nonexistent=True)
-            subs_managefiles.director(self, 'rm', self.linedir + '/cubes/' + 'model*', ignore_nonexistent=True)
-            subs_managefiles.director(self, 'rm', self.linedir + '/cubes/' + 'map*', ignore_nonexistent=True)
-            subs_managefiles.director(self, 'rm', self.linedir + '/cubes/' + 'cube_*', ignore_nonexistent=True)
-            subs_managefiles.director(self, 'rm', self.linedir + '/cubes/' + 'mask*', ignore_nonexistent=True)
-            subs_managefiles.director(self, 'rm', self.linedir + '/cubes/' + 'convol*', ignore_nonexistent=True)
-            subs_managefiles.director(self, 'rm', self.linedir + '/cubes/' + 'residual*', ignore_nonexistent=True)
-            logger.info('(LINE) Cleaned up the cubes directory #')
+
+            # Removing the cube data is done separately
+            # logger.info('(LINE) Removing obsolete files #')
+            # subs_managefiles.director(self, 'ch', self.linedir)
+            # subs_managefiles.director(self, 'rm', self.linedir + '/??', ignore_nonexistent=True)
+            # subs_managefiles.director(self, 'rm', self.linedir + '/' + self.target, ignore_nonexistent=True)
+            # subs_managefiles.director(self, 'rm', self.linedir + '/cubes/' + 'image*', ignore_nonexistent=True)
+            # subs_managefiles.director(self, 'rm', self.linedir + '/cubes/' + 'beam*', ignore_nonexistent=True)
+            # subs_managefiles.director(self, 'rm', self.linedir + '/cubes/' + 'model*', ignore_nonexistent=True)
+            # subs_managefiles.director(self, 'rm', self.linedir + '/cubes/' + 'map*', ignore_nonexistent=True)
+            # subs_managefiles.director(self, 'rm', self.linedir + '/cubes/' + 'cube_*', ignore_nonexistent=True)
+            # subs_managefiles.director(self, 'rm', self.linedir + '/cubes/' + 'mask*', ignore_nonexistent=True)
+            # subs_managefiles.director(self, 'rm', self.linedir + '/cubes/' + 'convol*', ignore_nonexistent=True)
+            # subs_managefiles.director(self, 'rm', self.linedir + '/cubes/' + 'residual*', ignore_nonexistent=True)
+            # logger.info('(LINE) Cleaned up the cubes directory #')
 
     def create_linecube(self, searchpattern, outcube, nchannel, startchan, startfreq):
         """
@@ -829,20 +905,57 @@ class line(BaseModule):
         subs_managefiles.director(self, 'ch', self.linedir)
         subs_managefiles.director(self, 'rm', self.linedir + '/*', ignore_nonexistent=True)
 
-    def cleanup(self):
+    def cleanup(self, all_files=False, cube_dir=False):
         """"
         Clean all intermediate products. Leaves the HI-image and HI-beam fits cubes in place. 
         """
+        # if both are falls, assume that everything should be deleted as it was originally intended
+        if not all_files and not cube_dir:
+            all_files = True
+        
         subs_setinit.setinitdirs(self)
-        logger.warning(' Deleting all intermediate line data.')
-        subs_managefiles.director(self, 'ch', self.linedir)
-        subs_managefiles.director(self, 'rm', self.linedir + '/??')
-        subs_managefiles.director(self, 'rm', self.linedir + '/' + self.target)
-        subs_managefiles.director(self, 'rm', self.linedir + '/cubes/beam*')
-        subs_managefiles.director(self, 'rm', self.linedir + '/cubes/image*')
-        subs_managefiles.director(self, 'rm', self.linedir + '/cubes/map*')
-        subs_managefiles.director(self, 'rm', self.linedir + '/cubes/model*')
-        subs_managefiles.director(self, 'rm', self.linedir + '/cubes/mask*')
-        subs_managefiles.director(self, 'rm', self.linedir + '/cubes/residual*')
-        subs_managefiles.director(self, 'rm', self.linedir + '/cubes/cube*.fits')
 
+        if all_files:
+            logger.info('(LINE) Removing all obsolete files #')
+            subs_managefiles.director(self, 'ch', self.linedir)
+            subs_managefiles.director(
+                self, 'rm', self.linedir + '/??', ignore_nonexistent=True)
+            subs_managefiles.director(
+                self, 'rm', self.linedir + '/' + self.target, ignore_nonexistent=True)
+            subs_managefiles.director(
+                self, 'rm', self.linedir + '/cubes/' + 'image*', ignore_nonexistent=True)
+            subs_managefiles.director(
+                self, 'rm', self.linedir + '/cubes/' + 'beam*', ignore_nonexistent=True)
+            subs_managefiles.director(
+                self, 'rm', self.linedir + '/cubes/' + 'model*', ignore_nonexistent=True)
+            subs_managefiles.director(
+                self, 'rm', self.linedir + '/cubes/' + 'map*', ignore_nonexistent=True)
+            subs_managefiles.director(
+                self, 'rm', self.linedir + '/cubes/' + 'cube_*', ignore_nonexistent=True)
+            subs_managefiles.director(
+                self, 'rm', self.linedir + '/cubes/' + 'mask*', ignore_nonexistent=True)
+            subs_managefiles.director(
+                self, 'rm', self.linedir + '/cubes/' + 'convol*', ignore_nonexistent=True)
+            subs_managefiles.director(
+                self, 'rm', self.linedir + '/cubes/' + 'residual*', ignore_nonexistent=True)
+            logger.info('(LINE) Cleaned up the cubes directory #')
+        elif cube_dir:
+            logger.info('(LINE) Removing image files only #')
+            subs_managefiles.director(self, 'ch', self.linedir)
+            subs_managefiles.director(
+                self, 'rm', self.linedir + '/cubes/' + 'image*', ignore_nonexistent=True)
+            subs_managefiles.director(
+                self, 'rm', self.linedir + '/cubes/' + 'beam*', ignore_nonexistent=True)
+            subs_managefiles.director(
+                self, 'rm', self.linedir + '/cubes/' + 'model*', ignore_nonexistent=True)
+            subs_managefiles.director(
+                self, 'rm', self.linedir + '/cubes/' + 'map*', ignore_nonexistent=True)
+            subs_managefiles.director(
+                self, 'rm', self.linedir + '/cubes/' + 'cube_*', ignore_nonexistent=True)
+            subs_managefiles.director(
+                self, 'rm', self.linedir + '/cubes/' + 'mask*', ignore_nonexistent=True)
+            subs_managefiles.director(
+                self, 'rm', self.linedir + '/cubes/' + 'convol*', ignore_nonexistent=True)
+            subs_managefiles.director(
+                self, 'rm', self.linedir + '/cubes/' + 'residual*', ignore_nonexistent=True)
+            logger.info('(LINE) Cleaned up the cubes directory #')
