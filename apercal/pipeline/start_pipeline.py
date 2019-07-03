@@ -415,7 +415,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                         logger.info("Running preflag for flux calibrator {0} in beam {1} ... Done ({2:.0f}s)".format(
                             p1.target, p1.beam, time() - preflag_flux_cal_start_time))
                 except Exception as e:
-                    logger.warning("Running preflag for flux calibrator {0} in beam {1} ... Failed, but probably because of maximum interval ({2:.0f}s)".format(
+                    logger.warning("Running preflag for flux calibrator {0} in beam {1} ... Failed ({2:.0f}s)".format(
                         p1.target, p1.beam, time() - preflag_flux_cal_start_time))
                     logger.exception(e)
                     status[beamnr] += ['preflag']
@@ -468,7 +468,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                             logger.info("Running preflag for pol calibrator {0} in beam {1} ... Done ({2:.0f}s)".format(
                                 p1.target, p1.beam, time() - preflag_pol_cal_start_time))
                 except Exception as e:
-                    logger.warning("Running preflag for pol calibrator {0} in beam {1} ... Failed, but probably because of maximum interval ({2:.0f}s)".format(
+                    logger.warning("Running preflag for pol calibrator {0} in beam {1} ... Failed ({2:.0f}s)".format(
                         p1.target, p1.beam, time() - preflag_pol_cal_start_time))
                     logger.exception(e)
                     status[beamnr] += ['preflag']
