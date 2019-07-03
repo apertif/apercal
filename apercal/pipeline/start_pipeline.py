@@ -310,7 +310,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             # copy the param file generated here
             param_file = os.path.join(basedir, 'param.npy')
             director(
-                p0, 'rn', param_file.replace(".npy", "_split.npy".format(name_fluxcal)), file_=param_file, ignore_nonexistent=True)
+                p0, 'rn', param_file.replace(".npy", "_split.npy"), file_=param_file, ignore_nonexistent=True)
 
         # =======
         # Preflag
