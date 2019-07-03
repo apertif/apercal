@@ -939,7 +939,7 @@ class preflag(BaseModule):
                         logger.info('Time range ' + self.preflag_manualflag_time + ' for target beam ' + beam + ' was already flagged')
                     else:
                         logger.debug('Flagging time range(s) ' + self.preflag_manualflag_time + ' for target beam ' + beam)
-                        tg_time = 'flagdata(vis="' + str(vis) + '", timerange="' + self.preflag_manualflag_channel + '", flagbackup=False)'
+                        tg_time = 'flagdata(vis="' + str(vis) + '", timerange="' + self.preflag_manualflag_time + '", flagbackup=False)'
                         lib.run_casa([tg_time])
                         for time in splttime:
                             if preflagtargetbeamsmanualflagtime[int(beam)].find(time) == -1:
