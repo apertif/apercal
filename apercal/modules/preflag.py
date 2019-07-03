@@ -601,7 +601,7 @@ class preflag(BaseModule):
                     logger.debug('Flagging antenna(s) ' + self.preflag_manualflag_antenna + ' for all target beams')
                 else:
                     beams = self.preflag_targetbeams.split(",")
-                    datasets = [self.get_datasets(beams=beams)]
+                    datasets = self.get_datasets(beams=beams)
                     logger.debug('Flagging antenna(s) ' + self.preflag_manualflag_antenna + ' for selected target beams')
                 for vis, beam in datasets:
                     if preflagtargetbeamsmanualflagantenna[int(beam)] == self.preflag_manualflag_antenna:
@@ -684,7 +684,7 @@ class preflag(BaseModule):
                     logger.debug('Flagging correlation(s) ' + self.preflag_manualflag_corr + ' for all target beams')
                 else:
                     beams = self.preflag_targetbeams.split(",")
-                    datasets = [self.get_datasets(beams=beams)]
+                    datasets = self.get_datasets(beams=beams)
                     logger.debug('Flagging correlation(s) ' + self.preflag_manualflag_corr + ' for selected target beams')
                 for vis, beam in datasets:
                     if preflagtargetbeamsmanualflagcorr[int(beam)] == self.preflag_manualflag_corr:
@@ -768,7 +768,7 @@ class preflag(BaseModule):
                     logger.debug('Flagging baseline(s) ' + self.preflag_manualflag_baseline + ' for all target beams')
                 else:
                     beams = self.preflag_targetbeams.split(",")
-                    datasets = [self.get_datasets(beams=beams)]
+                    datasets = self.get_datasets(beams=beams)
                     logger.debug('Flagging baseline(s) ' + self.preflag_manualflag_baseline + ' for selected target beams')
                 for vis, beam in datasets:
                     if preflagtargetbeamsmanualflagbaseline[int(beam)] == self.preflag_manualflag_baseline:
@@ -849,7 +849,7 @@ class preflag(BaseModule):
                     logger.debug('Flagging channel(s) ' + self.preflag_manualflag_channel + ' for all target beams')
                 else:
                     beams = self.preflag_targetbeams.split(",")
-                    datasets = [self.get_datasets(beams=beams)]
+                    datasets = self.get_datasets(beams=beams)
                     logger.debug('Flagging channel(s) ' + self.preflag_manualflag_channel + ' for selected target beams')
                 for vis, beam in datasets:
                     if preflagtargetbeamsmanualflagchannel[int(beam)] == self.preflag_manualflag_channel:
@@ -932,7 +932,7 @@ class preflag(BaseModule):
                     logger.debug('Flagging time range ' + self.preflag_manualflag_time + ' for all target beams')
                 else:
                     beams = self.preflag_targetbeams.split(",")
-                    datasets = [self.get_datasets(beams=beams)]
+                    datasets = self.get_datasets(beams=beams)
                     logger.debug('Flagging time range ' + self.preflag_manualflag_time + ' for selected target beams')
                 for vis, beam in datasets:
                     if preflagtargetbeamsmanualflagtime[int(beam)] == self.preflag_manualflag_time:
@@ -1008,7 +1008,7 @@ class preflag(BaseModule):
                     logger.debug('Flagging Zero-valued data for all target beams')
                 else:
                     beams = self.preflag_targetbeams.split(",")
-                    datasets = [self.get_datasets(beams=beams)]
+                    datasets = self.get_datasets(beams=beams)
                     logger.debug('Flagging Zero-valued data for selected target beams')
                 for vis, beam in datasets:
                     if preflagtargetbeamsmanualflagclipzeros[int(beam)]:
