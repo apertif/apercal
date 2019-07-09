@@ -149,7 +149,7 @@ class line(BaseModule):
                 self.line_image_cube_name.replace(
                     '.fits', '{0}.fits'.format(cube_counter))
             subs_managefiles.director(
-                self, 'rn', cube_name, file_=new_cube_name, ignore_nonexistent=True)
+                self, 'rn', new_cube_name, file_=cube_name, ignore_nonexistent=True)
             
             # rename beam cube
             beam_cube_name = self.linedir + '/cubes/' + self.line_image_beam_cube_name
@@ -157,7 +157,7 @@ class line(BaseModule):
                 self.line_image_beam_cube_name.replace(
                     '.fits', '{0}.fits'.format(cube_counter))
             subs_managefiles.director(
-                self, 'rn', beam_cube_name, file_=new_beam_cube_name, ignore_nonexistent=True)
+                self, 'rn', new_beam_cube_name, file_=beam_cube_name, ignore_nonexistent=True)
             
             logger.info(
                 "(LINE) module image_line done for cube {0}".format(cube_counter))
@@ -382,8 +382,8 @@ class line(BaseModule):
 
         # determine the output channel number based on the width of the output cube
         binchan = round(self.line_splitdata_channelbandwidth / self.line_input_channelwidth)
-        start_channel = self.line_cube_input_channels[0]
-        end_channel = self.line_cube_input_channels[1]
+        start_channel = self.line_single_cube_input_channels[0]
+        end_channel = self.line_single_cube_input_channels[1]
 
         output_start_channel = int(start_channel / binchan)
         output_end_channel = int(end_channel / binchan)
@@ -905,17 +905,24 @@ class line(BaseModule):
         subs_managefiles.director(self, 'ch', self.linedir)
         subs_managefiles.director(self, 'rm', self.linedir + '/*', ignore_nonexistent=True)
 
-    def cleanup(self, all_files=False, cube_dir=False):
+    def cleanup(self, clean_level=1):
         """"
         Clean all intermediate products. Leaves the HI-image and HI-beam fits cubes in place. 
+
+        There are three levels of cleaning
+        - level 1: cleans all data except the final cubes
+        - level 2: removes the chunks and auxillary files in the cube dir, so it keeps the mir file
+        and existing cubes
+        - level 3: removes only the auxillary files in the cube directory and keeps the chunks, 
+        mir file and existing cubes.
+
+        # Args
+            clean_level (int): level of cleaning
         """
-        # if both are falls, assume that everything should be deleted as it was originally intended
-        if not all_files and not cube_dir:
-            all_files = True
         
         subs_setinit.setinitdirs(self)
 
-        if all_files:
+        if clean_level == 1:
             logger.info('(LINE) Removing all obsolete files #')
             subs_managefiles.director(self, 'ch', self.linedir)
             subs_managefiles.director(
@@ -938,8 +945,32 @@ class line(BaseModule):
                 self, 'rm', self.linedir + '/cubes/' + 'convol*', ignore_nonexistent=True)
             subs_managefiles.director(
                 self, 'rm', self.linedir + '/cubes/' + 'residual*', ignore_nonexistent=True)
-            logger.info('(LINE) Cleaned up the cubes directory #')
-        elif cube_dir:
+            logger.info('(LINE) Removing all obsolete files ... Done #')
+        elif clean_level == 2:
+            logger.info('(LINE) Removing chunks and image files #')
+            subs_managefiles.director(self, 'ch', self.linedir)
+            subs_managefiles.director(
+                self, 'rm', self.linedir + '/??', ignore_nonexistent=True)
+            subs_managefiles.director(
+                self, 'rm', self.linedir + '/' + self.target, ignore_nonexistent=True)
+            subs_managefiles.director(
+                self, 'rm', self.linedir + '/cubes/' + 'image*', ignore_nonexistent=True)
+            subs_managefiles.director(
+                self, 'rm', self.linedir + '/cubes/' + 'beam*', ignore_nonexistent=True)
+            subs_managefiles.director(
+                self, 'rm', self.linedir + '/cubes/' + 'model*', ignore_nonexistent=True)
+            subs_managefiles.director(
+                self, 'rm', self.linedir + '/cubes/' + 'map*', ignore_nonexistent=True)
+            subs_managefiles.director(
+                self, 'rm', self.linedir + '/cubes/' + 'cube_*', ignore_nonexistent=True)
+            subs_managefiles.director(
+                self, 'rm', self.linedir + '/cubes/' + 'mask*', ignore_nonexistent=True)
+            subs_managefiles.director(
+                self, 'rm', self.linedir + '/cubes/' + 'convol*', ignore_nonexistent=True)
+            subs_managefiles.director(
+                self, 'rm', self.linedir + '/cubes/' + 'residual*', ignore_nonexistent=True)
+            logger.info('(LINE) Removing chunks and image files ... Done #')
+        elif clean_level == 3:
             logger.info('(LINE) Removing image files only #')
             subs_managefiles.director(self, 'ch', self.linedir)
             subs_managefiles.director(
@@ -958,4 +989,4 @@ class line(BaseModule):
                 self, 'rm', self.linedir + '/cubes/' + 'convol*', ignore_nonexistent=True)
             subs_managefiles.director(
                 self, 'rm', self.linedir + '/cubes/' + 'residual*', ignore_nonexistent=True)
-            logger.info('(LINE) Cleaned up the cubes directory #')
+            logger.info('(LINE) Removing image files only ... Done #')
