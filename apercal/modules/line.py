@@ -103,7 +103,7 @@ class line(BaseModule):
         threads = [first_level_threads, second_level_threads]
         nthreads = first_level_threads * second_level_threads
         self.transfergains(nthreads)  # first step after copy of crosscal data
-        logger.info("(LINE) module transfergains done ")
+        logger.info("(LINE) Function transfergains done ")
 
         # no go throught the requested image cubes
         for cube_counter in range(len(self.line_cube_channelwidth_list)):
@@ -114,17 +114,21 @@ class line(BaseModule):
             # if it is the first cube, create the subbands
             if cube_counter == 0:
                 self.createsubbands(threads)  # create subbands if required
-                logger.info("(LINE) module createsubbands done for cube {0}".format(cube_counter))
+                logger.info("(LINE) Function createsubbands done for cube {0}".format(cube_counter))
             # create the subbands again only if the channel width changes
             elif self.line_cube_channelwidth_list[cube_counter] != self.line_cube_channelwidth_list[cube_counter-1]:
                 self.createsubbands(threads)  # create subbands if required
                 logger.info(
-                    "(LINE) module createsubbands done for cube {0}".format(cube_counter))
+                    "(LINE) Function createsubbands done for cube {0}".format(cube_counter))
 
-            # run continuum subtraction
-            self.subtract(threads)  # subtract continuum if required
-            logger.info(
-                "(LINE) module subtract done for cube {0}".format(cube_counter))
+                # run continuum subtraction only when channel width changes
+                self.subtract(threads)  # subtract continuum if required
+                logger.info(
+                    "(LINE) Function subtract done for cube {0}".format(cube_counter))
+            else:
+                logger.info("(LINE) Chunks already exists. Function createsubbands is not executed for cube {0}")
+                logger.info(
+                    "(LINE) Function subtract not called for cube {0} as it was already called.")
 
             # set the start and end channel for imaging
             self.line_single_cube_input_channels = self.line_cube_channel_list[cube_counter]
@@ -133,15 +137,15 @@ class line(BaseModule):
             pymp.config.nested = original_nested
             
 
-            # clean up everything at the end
+            # clean up everything in the end
             if cube_counter == len(self.line_cube_channelwidth_list) - 1:
-                self.cleanup(all_files=True)
+                self.cleanup(level=1)
             # clean up only the cube directory if the channel width does not change
             elif self.line_cube_channelwidth_list[cube_counter] == self.line_cube_channelwidth_list[cube_counter+1]:
-                self.cleanup(cube_dir = True)
-            # if the channel width changes clean up all
+                self.cleanup(level=3)
+            # if the channel width changes clean up all except for the mir file
             else:
-                self.cleanup(all_files=True)
+                self.cleanup(level=2)
 
             # rename image cube
             cube_name = self.linedir + '/cubes/' + self.line_image_cube_name
