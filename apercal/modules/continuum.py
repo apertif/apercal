@@ -113,7 +113,6 @@ class continuum(BaseModule):
                 # Get the status of the selfcal for the specified beam
                 selfcaltargetbeamsphasestatus = get_param_def(self, sbeam + '_targetbeams_phase_status', False)
                 selfcaltargetbeamsampstatus = get_param_def(self, sbeam + '_targetbeams_amp_status', False)
-#                selfcaltargetbeamsphasestatus = True # Remove after fix
                 datasetname_amp = self.get_target_path().rstrip('.mir') + '_amp.mir'
                 datasetname_phase = self.get_target_path()
                 if os.path.isdir(datasetname_amp) and selfcaltargetbeamsampstatus:
