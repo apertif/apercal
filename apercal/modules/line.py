@@ -108,11 +108,10 @@ class line(BaseModule):
         # no go throught the requested image cubes
         for cube_counter in range(len(self.line_cube_channelwidth_list)):
             # set the channelbandwidth for splitting for a given cube from the list
-            self.line_splitdata_channelbandwidth = self.line_cube_channelwidth_list[
-                cube_counter]
+            self.line_splitdata_channelbandwidth = self.line_cube_channelwidth_list[cube_counter]
             
             # if it is the first cube, create the subbands
-            if cube_counter == 0:
+            if cube_counter == 7:
                 self.createsubbands(threads)  # create subbands if required
                 logger.info("(LINE) Function createsubbands done for cube {0}".format(cube_counter))
                 # run continuum subtraction only when channel width changes
@@ -959,8 +958,8 @@ class line(BaseModule):
             subs_managefiles.director(self, 'ch', self.linedir)
             subs_managefiles.director(
                 self, 'rm', self.linedir + '/??', ignore_nonexistent=True)
-            subs_managefiles.director(
-                self, 'rm', self.linedir + '/' + self.target, ignore_nonexistent=True)
+            #subs_managefiles.director(
+            #    self, 'rm', self.linedir + '/' + self.target, ignore_nonexistent=True)
             subs_managefiles.director(
                 self, 'rm', self.linedir + '/cubes/' + 'image*', ignore_nonexistent=True)
             subs_managefiles.director(
