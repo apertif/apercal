@@ -143,13 +143,13 @@ class line(BaseModule):
 
             # clean up everything in the end
             if cube_counter == len(self.line_cube_channelwidth_list) - 1:
-                self.cleanup(cleanup_level=1)
+                self.cleanup(clean_level=1)
             # clean up only the cube directory if the channel width does not change
             elif self.line_cube_channelwidth_list[cube_counter] == self.line_cube_channelwidth_list[cube_counter+1]:
-                self.cleanup(cleanup_level=3)
+                self.cleanup(clean_level=3)
             # if the channel width changes clean up all except for the mir file
             else:
-                self.cleanup(cleanup_level=2)
+                self.cleanup(clean_level=2)
 
             # rename image cube
             cube_name = self.linedir + '/cubes/' + self.line_image_cube_name
