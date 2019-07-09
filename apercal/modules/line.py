@@ -115,6 +115,10 @@ class line(BaseModule):
             if cube_counter == 0:
                 self.createsubbands(threads)  # create subbands if required
                 logger.info("(LINE) Function createsubbands done for cube {0}".format(cube_counter))
+                # run continuum subtraction only when channel width changes
+                self.subtract(threads)  # subtract continuum if required
+                logger.info(
+                    "(LINE) Function subtract done for cube {0}".format(cube_counter))    
             # create the subbands again only if the channel width changes
             elif self.line_cube_channelwidth_list[cube_counter] != self.line_cube_channelwidth_list[cube_counter-1]:
                 self.createsubbands(threads)  # create subbands if required
@@ -139,13 +143,13 @@ class line(BaseModule):
 
             # clean up everything in the end
             if cube_counter == len(self.line_cube_channelwidth_list) - 1:
-                self.cleanup(level=1)
+                self.cleanup(cleanup_level=1)
             # clean up only the cube directory if the channel width does not change
             elif self.line_cube_channelwidth_list[cube_counter] == self.line_cube_channelwidth_list[cube_counter+1]:
-                self.cleanup(level=3)
+                self.cleanup(cleanup_level=3)
             # if the channel width changes clean up all except for the mir file
             else:
-                self.cleanup(level=2)
+                self.cleanup(cleanup_level=2)
 
             # rename image cube
             cube_name = self.linedir + '/cubes/' + self.line_image_cube_name
