@@ -103,28 +103,34 @@ class line(BaseModule):
         threads = [first_level_threads, second_level_threads]
         nthreads = first_level_threads * second_level_threads
         self.transfergains(nthreads)  # first step after copy of crosscal data
-        logger.info("(LINE) module transfergains done ")
+        logger.info("(LINE) Function transfergains done ")
 
         # no go throught the requested image cubes
         for cube_counter in range(len(self.line_cube_channelwidth_list)):
             # set the channelbandwidth for splitting for a given cube from the list
-            self.line_splitdata_channelbandwidth = self.line_cube_channelwidth_list[
-                cube_counter]
-            
+            self.line_splitdata_channelbandwidth = self.line_cube_channelwidth_list[cube_counter]
             # if it is the first cube, create the subbands
-            if cube_counter == 0:
+            if cube_counter == 7:
                 self.createsubbands(threads)  # create subbands if required
-                logger.info("(LINE) module createsubbands done for cube {0}".format(cube_counter))
+                logger.info("(LINE) Function createsubbands done for cube {0}".format(cube_counter))
+                # run continuum subtraction only when channel width changes
+                self.subtract(threads)  # subtract continuum if required
+                logger.info(
+                    "(LINE) Function subtract done for cube {0}".format(cube_counter))    
             # create the subbands again only if the channel width changes
             elif self.line_cube_channelwidth_list[cube_counter] != self.line_cube_channelwidth_list[cube_counter-1]:
                 self.createsubbands(threads)  # create subbands if required
                 logger.info(
-                    "(LINE) module createsubbands done for cube {0}".format(cube_counter))
+                    "(LINE) Function createsubbands done for cube {0}".format(cube_counter))
 
-            # run continuum subtraction
-            self.subtract(threads)  # subtract continuum if required
-            logger.info(
-                "(LINE) module subtract done for cube {0}".format(cube_counter))
+                # run continuum subtraction only when channel width changes
+                self.subtract(threads)  # subtract continuum if required
+                logger.info(
+                    "(LINE) Function subtract done for cube {0}".format(cube_counter))
+            else:
+                logger.info("(LINE) Chunks already exists. Function createsubbands is not executed for cube {0}")
+                logger.info(
+                    "(LINE) Function subtract not called for cube {0} as it was already called.")
 
             # set the start and end channel for imaging
             self.line_single_cube_input_channels = self.line_cube_channel_list[cube_counter]
@@ -133,32 +139,38 @@ class line(BaseModule):
             pymp.config.nested = original_nested
             
 
-            # clean up everything at the end
+            # clean up everything in the end
             if cube_counter == len(self.line_cube_channelwidth_list) - 1:
-                self.cleanup(all_files=True)
+                self.cleanup(clean_level=1)
             # clean up only the cube directory if the channel width does not change
             elif self.line_cube_channelwidth_list[cube_counter] == self.line_cube_channelwidth_list[cube_counter+1]:
-                self.cleanup(cube_dir = True)
-            # if the channel width changes clean up all
+                self.cleanup(clean_level=3)
+            # if the channel width changes clean up all except for the mir file
             else:
-                self.cleanup(all_files=True)
+                self.cleanup(clean_level=2)
 
             # rename image cube
             cube_name = self.linedir + '/cubes/' + self.line_image_cube_name
             new_cube_name = self.linedir + '/cubes/' + \
                 self.line_image_cube_name.replace(
                     '.fits', '{0}.fits'.format(cube_counter))
-            subs_managefiles.director(
-                self, 'rn', cube_name, file_=new_cube_name, ignore_nonexistent=True)
-            
+            if os.path.exists(self.linedir + '/cubes/HI_image_cube.fits'):
+                subs_managefiles.director(
+                    self, 'rn', new_cube_name, file_=cube_name, ignore_nonexistent=True)
+            else:
+                logger.info( "(LINE) no image cube made for subband {0}".format(cube_counter) )
+
             # rename beam cube
             beam_cube_name = self.linedir + '/cubes/' + self.line_image_beam_cube_name
             new_beam_cube_name = self.linedir + '/cubes/' + \
                 self.line_image_beam_cube_name.replace(
                     '.fits', '{0}.fits'.format(cube_counter))
-            subs_managefiles.director(
-                self, 'rn', beam_cube_name, file_=new_beam_cube_name, ignore_nonexistent=True)
-            
+            if os.path.exists(self.linedir + '/cubes/HI_beam_cube.fits'):
+                subs_managefiles.director(
+                    self, 'rn', new_beam_cube_name, file_=beam_cube_name, ignore_nonexistent=True)
+            else:
+                logger.info( "(LINE) no beam cube made for subband {0}".format(cube_counter))
+
             logger.info(
                 "(LINE) module image_line done for cube {0}".format(cube_counter))
 
@@ -382,8 +394,8 @@ class line(BaseModule):
 
         # determine the output channel number based on the width of the output cube
         binchan = round(self.line_splitdata_channelbandwidth / self.line_input_channelwidth)
-        start_channel = self.line_cube_input_channels[0]
-        end_channel = self.line_cube_input_channels[1]
+        start_channel = self.line_single_cube_input_channels[0]
+        end_channel = self.line_single_cube_input_channels[1]
 
         output_start_channel = int(start_channel / binchan)
         output_end_channel = int(end_channel / binchan)
@@ -650,8 +662,6 @@ class line(BaseModule):
                                                 fits.in_ = 'image_' + str(minc).zfill(2) + '_' + str(
                                                     channel_counter).zfill(5)
                                         else:
-                                        # fits.in_ = 'image_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(
-#                                                5)
                                             if os.path.exists(
                                                     'image_' + str(minc).zfill(2) + '_' + str(channel_counter).zfill(
                                                         5)):
@@ -733,63 +743,65 @@ class line(BaseModule):
         # new: (old one was basically random, but consistently so across runs; in parallel the order was
         # completely different)
         filelist = sorted(glob.glob(searchpattern))  # Get a list of the fits files in the directory
-        firstfile = pyfits.open(filelist[0],
-                                memmap=True)  # Open the first file to get the header information and array sizes
-        firstheader = firstfile[0].header
-        naxis1 = firstheader['NAXIS1']
-        naxis2 = firstheader['NAXIS2']
-        firstfile.close()
-        nancube = np.full((nchannel, naxis2, naxis1), np.nan, dtype='float32')
-        for chan in range(startchan, startchan + nchannel):
-            if os.path.isfile(searchpattern[:-6] + str(chan).zfill(5) + '.fits'):
-                fitsfile = pyfits.open(searchpattern[:-6] + str(chan).zfill(5) + '.fits', memmap=True)
-                fitsfile_data = fitsfile[0].data
-                nancube[chan - startchan, :, :] = fitsfile_data
-                fitsfile.close()
-            else:
-                pass
-        firstfile = pyfits.open(filelist[0], memmap=True)
-        firstheader = firstfile[0].header
-        # change suggested by JV, added by JMH commented out by JMH
-        naxis = firstheader['NAXIS']  # put this line somewhere before that keyword is assigned the value 3
-        # end change
-        #        firstheader['NAXIS'] = 3    # commented out by JMH
-        firstheader['CRVAL3'] = startfreq  # set this for the beam as well even though the 3rd axis is not FREQ-OBS
-        # we will fix this later when we reorder the beam axes
-        # new:
-        # firstheader['REFFREQTYPE'] = 'BARY'
-        # ideally, the following should be fetched from the original data; so far it's hard coded (for HI)
-        restfreq = 1420405751.77
-        firstheader['RESTFREQ'] = restfreq
-        # changes added by JMH, based on suggestions by JV and NG
+        if not len(filelist) == 0:
+            firstfile = pyfits.open(filelist[0],
+                                    memmap=True)  # Open the first file to get the header information and array sizes
+            firstheader = firstfile[0].header
+            naxis1 = firstheader['NAXIS1']
+            naxis2 = firstheader['NAXIS2']
+            firstfile.close()
+            nancube = np.full((nchannel, naxis2, naxis1), np.nan, dtype='float32')
+            for chan in range(startchan, startchan + nchannel):
+                if os.path.isfile(searchpattern[:-6] + str(chan).zfill(5) + '.fits'):
+                    fitsfile = pyfits.open(searchpattern[:-6] + str(chan).zfill(5) + '.fits', memmap=True)
+                    fitsfile_data = fitsfile[0].data
+                    nancube[chan - startchan, :, :] = fitsfile_data
+                    fitsfile.close()
+                else:
+                    pass
+            firstfile = pyfits.open(filelist[0], memmap=True)
+            firstheader = firstfile[0].header
+            # change suggested by JV, added by JMH commented out by JMH
+            naxis = firstheader['NAXIS']  # put this line somewhere before that keyword is assigned the value 3
+            # end change
+            #        firstheader['NAXIS'] = 3    # commented out by JMH
+            firstheader['CRVAL3'] = startfreq  # set this for the beam as well even though the 3rd axis is not FREQ-OBS
+            # we will fix this later when we reorder the beam axes
+            # new:
+            # firstheader['REFFREQTYPE'] = 'BARY'
+            # ideally, the following should be fetched from the original data; so far it's hard coded (for HI)
+            restfreq = 1420405751.77
+            firstheader['RESTFREQ'] = restfreq
+            # changes added by JMH, based on suggestions by JV and NG
 
-        # if FREQ-OBS is not the 3rd axis (beams) but the 5th then rename the header keywords accordingly
-        #         for keyword in firstheader:
+            # if FREQ-OBS is not the 3rd axis (beams) but the 5th then rename the header keywords accordingly
+            #         for keyword in firstheader:
 
-        if firstheader['CTYPE3'] in ["SDBEAM"]:
-            sdbeam = firstheader['CTYPE3']
-            firstheader['CTYPE3'] = (firstheader['CTYPE4'], " ")
-            firstheader['CTYPE4'] = (sdbeam, " ")
-            firstheader['CDELT3'] = (firstheader['CDELT4'], " ")
-            firstheader['CRPIX3'] = (firstheader['CRPIX4'], " ")
-            firstheader['CRVAL3'] = (firstheader['CRVAL4'], " ")
+            if firstheader['CTYPE3'] in ["SDBEAM"]:
+                sdbeam = firstheader['CTYPE3']
+                firstheader['CTYPE3'] = (firstheader['CTYPE4'], " ")
+                firstheader['CTYPE4'] = (sdbeam, " ")
+                firstheader['CDELT3'] = (firstheader['CDELT4'], " ")
+                firstheader['CRPIX3'] = (firstheader['CRPIX4'], " ")
+                firstheader['CRVAL3'] = (firstheader['CRVAL4'], " ")
 
-        for n in range(1, naxis + 1):
-            if firstheader['CTYPE' + str(n)] not in ["RA---NCP", "DEC--NCP", "FREQ-OBS"]:
+            for n in range(1, naxis + 1):
+                if firstheader['CTYPE' + str(n)] not in ["RA---NCP", "DEC--NCP", "FREQ-OBS"]:
 
-                # at least if those are the only axes that are allowed; if there are other variaties of RA & DEC,
-                # those should be put in as well also, I'm assuming it's FREQ-OBS we want for the 3rd axis
-                # (both image & beam);
-                # if it should be something else (or possibly different between image & beam), let me know
+                    # at least if those are the only axes that are allowed; if there are other variaties of RA & DEC,
+                    # those should be put in as well also, I'm assuming it's FREQ-OBS we want for the 3rd axis
+                    # (both image & beam);
+                    # if it should be something else (or possibly different between image & beam), let me know
 
-                for keyword in ["CRPIX", "CDELT", "CRVAL", "CTYPE"]:
-                    del firstheader[keyword + str(n)]
-                    if n > firstheader['NAXIS']:
-                        del firstheader['NAXIS' + str(n)]
-        # end change
-
-        pyfits.writeto(outcube, nancube, firstheader)
-        firstfile.close()
+                    for keyword in ["CRPIX", "CDELT", "CRVAL", "CTYPE"]:
+                        del firstheader[keyword + str(n)]
+                        if n > firstheader['NAXIS']:
+                            del firstheader['NAXIS' + str(n)]
+            # end change
+            pyfits.writeto(outcube, nancube, firstheader)
+            firstfile.close()
+        else:
+            logger.error(' (LINE) Invert produced no images to make a cube ')
 
     def calc_irms(self, image):
         """
@@ -905,17 +917,24 @@ class line(BaseModule):
         subs_managefiles.director(self, 'ch', self.linedir)
         subs_managefiles.director(self, 'rm', self.linedir + '/*', ignore_nonexistent=True)
 
-    def cleanup(self, all_files=False, cube_dir=False):
+    def cleanup(self, clean_level=1):
         """"
         Clean all intermediate products. Leaves the HI-image and HI-beam fits cubes in place. 
+
+        There are three levels of cleaning
+        - level 1: cleans all data except the final cubes
+        - level 2: removes the chunks and auxillary files in the cube dir, so it keeps the mir file
+        and existing cubes
+        - level 3: removes only the auxillary files in the cube directory and keeps the chunks, 
+        mir file and existing cubes.
+
+        # Args
+            clean_level (int): level of cleaning
         """
-        # if both are falls, assume that everything should be deleted as it was originally intended
-        if not all_files and not cube_dir:
-            all_files = True
         
         subs_setinit.setinitdirs(self)
 
-        if all_files:
+        if clean_level == 1:
             logger.info('(LINE) Removing all obsolete files #')
             subs_managefiles.director(self, 'ch', self.linedir)
             subs_managefiles.director(
@@ -938,8 +957,30 @@ class line(BaseModule):
                 self, 'rm', self.linedir + '/cubes/' + 'convol*', ignore_nonexistent=True)
             subs_managefiles.director(
                 self, 'rm', self.linedir + '/cubes/' + 'residual*', ignore_nonexistent=True)
-            logger.info('(LINE) Cleaned up the cubes directory #')
-        elif cube_dir:
+            logger.info('(LINE) Removing all obsolete files ... Done #')
+        elif clean_level == 2:
+            logger.info('(LINE) Removing chunks and image files #')
+            subs_managefiles.director(self, 'ch', self.linedir)
+            subs_managefiles.director(
+                self, 'rm', self.linedir + '/??', ignore_nonexistent=True)
+            subs_managefiles.director(
+                self, 'rm', self.linedir + '/cubes/' + 'image*', ignore_nonexistent=True)
+            subs_managefiles.director(
+                self, 'rm', self.linedir + '/cubes/' + 'beam*', ignore_nonexistent=True)
+            subs_managefiles.director(
+                self, 'rm', self.linedir + '/cubes/' + 'model*', ignore_nonexistent=True)
+            subs_managefiles.director(
+                self, 'rm', self.linedir + '/cubes/' + 'map*', ignore_nonexistent=True)
+            subs_managefiles.director(
+                self, 'rm', self.linedir + '/cubes/' + 'cube_*', ignore_nonexistent=True)
+            subs_managefiles.director(
+                self, 'rm', self.linedir + '/cubes/' + 'mask*', ignore_nonexistent=True)
+            subs_managefiles.director(
+                self, 'rm', self.linedir + '/cubes/' + 'convol*', ignore_nonexistent=True)
+            subs_managefiles.director(
+                self, 'rm', self.linedir + '/cubes/' + 'residual*', ignore_nonexistent=True)
+            logger.info('(LINE) Removing chunks and image files ... Done #')
+        elif clean_level == 3:
             logger.info('(LINE) Removing image files only #')
             subs_managefiles.director(self, 'ch', self.linedir)
             subs_managefiles.director(
@@ -958,4 +999,4 @@ class line(BaseModule):
                 self, 'rm', self.linedir + '/cubes/' + 'convol*', ignore_nonexistent=True)
             subs_managefiles.director(
                 self, 'rm', self.linedir + '/cubes/' + 'residual*', ignore_nonexistent=True)
-            logger.info('(LINE) Cleaned up the cubes directory #')
+            logger.info('(LINE) Removing image files only ... Done #')
