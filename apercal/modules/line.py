@@ -142,11 +142,11 @@ class line(BaseModule):
                     self.line_single_cube_input_channels = self.line_cube_channel_list[cube_counter]
                     # run imaging
                     self.image_line(threads)
-                    pymp.config.nested = original_nested
                 except Exception as e:
                     logger.warning("(LINE) Failed to create line cube {}".format(cube_counter))
                     logger.exception(e)
                 
+                pymp.config.nested = original_nested
 
                 # clean up everything in the end
                 if cube_counter == len(self.line_cube_channelwidth_list) - 1:
