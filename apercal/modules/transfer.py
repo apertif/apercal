@@ -47,30 +47,41 @@ class transfer(BaseModule):
 
         # Create the parameters for the parameter file for the conversion of the UVFITS-files
 
-        transfertargetbeamsselfcaluv2uvfitsstatus = get_param_def(self, tbeam + '_targetbeams_selfcaluv2uvfits_status', False)
+        transfertargetbeamsselfcaluv2uvfitsstatus = get_param_def(
+            self, tbeam + '_targetbeams_selfcaluv2uvfits_status', False)
 
         if self.transfer_convert_selfcaluv2uvfits:
             subs_setinit.setinitdirs(self)
             subs_setinit.setdatasetnamestomiriad(self)
-            subs_managefiles.director(self, 'ch', self.transferdir, verbose=False)
+            subs_managefiles.director(
+                self, 'ch', self.transferdir, verbose=False)
             if not transfertargetbeamsselfcaluv2uvfitsstatus:
                 # Get the status of the selfcal for the specified beam
-                selfcaltargetbeamsphasestatus = get_param_def(self, sbeam + '_targetbeams_phase_status', False)
-                selfcaltargetbeamsampstatus = get_param_def(self, sbeam + '_targetbeams_amp_status', False)
-                datasetname_amp = self.get_target_path().rstrip('.mir') + '_amp.mir'
-                datasetname_phase = self.get_target_path()
+                selfcaltargetbeamsphasestatus = get_param_def(
+                    self, sbeam + '_targetbeams_phase_status', False)
+                selfcaltargetbeamsampstatus = get_param_def(
+                    self, sbeam + '_targetbeams_amp_status', False)
+                datasetname_amp = os.path.join(
+                    self.selfcalsubdir, self.target).rstrip('.mir') + '_amp.mir'
+                datasetname_phase = os.path.join(
+                    self.selfcalsubdir, self.target).rstrip('.mir')
+                # datasetname_amp = self.get_target_path().rstrip('.mir') + '_amp.mir'
+                # datasetname_phase = self.get_target_path()
                 if os.path.isdir(datasetname_amp) and selfcaltargetbeamsampstatus:
-                    logger.info('Beam ' + self.beam + ': Using amplitude self-calibrated dataset!')
+                    logger.info('Beam ' + self.beam +
+                                ': Using amplitude self-calibrated dataset!')
                     dataset = datasetname_amp
                 elif os.path.isdir(datasetname_phase) and selfcaltargetbeamsphasestatus:
-                    logger.info('Beam ' + self.beam + ': Using phase self-calibrated dataset. Amplitude calibration was not successful or not wanted!')
+                    logger.info(
+                        'Beam ' + self.beam + ': Using phase self-calibrated dataset. Amplitude calibration was not successful or not wanted!')
                     dataset = datasetname_phase
                 else:
                     dataset = None
 
                 if dataset != None:
                     # Copy the raw dataset to the transfer directory
-                    subs_managefiles.director(self, 'cp', self.transferdir + '/' + self.target, file_=self.crosscaldir + '/' + self.target)
+                    subs_managefiles.director(
+                        self, 'cp', self.transferdir + '/' + self.target, file_=self.crosscaldir + '/' + self.target)
                     if selfcaltargetbeamsampstatus:
                         gpcopy = lib.miriad('gpcopy')
                         gpcopy.vis = datasetname_phase
@@ -78,23 +89,30 @@ class transfer(BaseModule):
                         gpcopy.go()
                         uvaver = lib.miriad('uvaver')
                         uvaver.vis = self.transferdir + '/' + self.target
-                        uvaver.out = self.transferdir + '/' + self.target.rstrip('.mir') + '_phase.mir'
+                        uvaver.out = self.transferdir + '/' + \
+                            self.target.rstrip('.mir') + '_phase.mir'
                         uvaver.go()
                         gpcopy = lib.miriad('gpcopy')
                         gpcopy.vis = datasetname_amp
-                        gpcopy.out = self.transferdir + '/' + self.target.rstrip('.mir') + '_phase.mir'
+                        gpcopy.out = self.transferdir + '/' + \
+                            self.target.rstrip('.mir') + '_phase.mir'
                         gpcopy.go()
                         fits = lib.miriad('fits')
                         fits.op = 'uvout'
-                        fits.in_ = self.transferdir + '/' + self.target.rstrip('.mir') + '_phase.mir'
-                        fits.out = self.transferdir + '/' + self.target.rstrip('.mir') + '.UVFITS'
+                        fits.in_ = self.transferdir + '/' + \
+                            self.target.rstrip('.mir') + '_phase.mir'
+                        fits.out = self.transferdir + '/' + \
+                            self.target.rstrip('.mir') + '.UVFITS'
                         fits.go()
                         if os.path.isfile(self.transferdir + '/' + self.target.rstrip('.mir') + '.UVFITS'):
-                            subs_managefiles.director(self, 'rm', self.transferdir + '/' + self.target)
-                            subs_managefiles.director(self, 'rm', self.transferdir + '/' + self.target.rstrip('.mir') + '_phase.mir')
+                            subs_managefiles.director(
+                                self, 'rm', self.transferdir + '/' + self.target)
+                            subs_managefiles.director(
+                                self, 'rm', self.transferdir + '/' + self.target.rstrip('.mir') + '_phase.mir')
                             transfertargetbeamsselfcaluv2uvfitsstatus = True
                         else:
-                            logger.error('Beam ' + self.beam + ': Conversion was not successful. No UVFITS-file generated!')
+                            logger.error(
+                                'Beam ' + self.beam + ': Conversion was not successful. No UVFITS-file generated!')
                             transfertargetbeamsselfcaluv2uvfitsstatus = False
                     elif selfcaltargetbeamsphasestatus:
                         gpcopy = lib.miriad('gpcopy')
@@ -104,27 +122,32 @@ class transfer(BaseModule):
                         fits = lib.miriad('fits')
                         fits.op = 'uvout'
                         fits.in_ = self.transferdir + '/' + self.target
-                        fits.out = self.transferdir + '/' + self.target.rstrip('.mir') + '.UVFITS'
+                        fits.out = self.transferdir + '/' + \
+                            self.target.rstrip('.mir') + '.UVFITS'
                         fits.go()
                         if os.path.isfile(self.transferdir + '/' + self.target.rstrip('.mir') + '.UVFITS'):
-                            subs_managefiles.director(self, 'rm', self.transferdir + '/' + self.target)
+                            subs_managefiles.director(
+                                self, 'rm', self.transferdir + '/' + self.target)
                             transfertargetbeamsselfcaluv2uvfitsstatus = True
                         else:
-                            logger.error('Beam ' + self.beam + ': Conversion was not successful. No UVFITS-file generated!')
+                            logger.error(
+                                'Beam ' + self.beam + ': Conversion was not successful. No UVFITS-file generated!')
                             transfertargetbeamsselfcaluv2uvfitsstatus = False
                 else:
-                    logger.error('Beam ' + self.beam + ': Self-calibration was not successful. No conversion to UVFITS-format possible!')
+                    logger.error(
+                        'Beam ' + self.beam + ': Self-calibration was not successful. No conversion to UVFITS-format possible!')
                     transfertargetbeamsselfcaluv2uvfitsstatus = False
             else:
-                logger.info('Beam ' + self.beam + ': Conversion of final calibrated data to UVFITS-format already successfully executed!')
+                logger.info(
+                    'Beam ' + self.beam + ': Conversion of final calibrated data to UVFITS-format already successfully executed!')
         else:
-            logger.info('Beam ' + self.beam + ': Conversion of final calibrated data to UVFITS-format not selected!')
+            logger.info('Beam ' + self.beam +
+                        ': Conversion of final calibrated data to UVFITS-format not selected!')
 
         # Save the derived parameters to the parameter file
 
-        subs_param.add_param(self, tbeam + '_targetbeams_selfcaluv2uvfits_status', transfertargetbeamsselfcaluv2uvfitsstatus)
-
-
+        subs_param.add_param(self, tbeam + '_targetbeams_selfcaluv2uvfits_status',
+                             transfertargetbeamsselfcaluv2uvfitsstatus)
 
     # def convert_lineuv2uvfits(self):
     #     """
