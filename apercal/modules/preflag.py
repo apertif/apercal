@@ -1,4 +1,3 @@
-import glob
 import logging
 
 import numpy as np
@@ -47,12 +46,10 @@ class preflag(BaseModule):
     preflag_shadow = None
     preflag_edges = None
     preflag_ghosts = None
-    preflag_targetbeams = None
     preflag_manualflag = None
     preflag_manualflag_fluxcal = None
     preflag_manualflag_polcal = None
     preflag_manualflag_target = None
-    preflag_manualflag_targetbeams = None
     preflag_manualflag_auto = None
     preflag_manualflag_antenna = None
     preflag_manualflag_corr = None
@@ -65,7 +62,6 @@ class preflag(BaseModule):
     preflag_aoflagger_fluxcal = None
     preflag_aoflagger_polcal = None
     preflag_aoflagger_target = None
-    preflag_aoflagger_targetbeams = None
     preflag_aoflagger_fluxcalstrat = None
     preflag_aoflagger_polcalstrat = None
     preflag_aoflagger_targetstrat = None
@@ -90,48 +86,49 @@ class preflag(BaseModule):
         manualflag
         aoflagger
         """
-        logger.info('Starting Pre-flagging step')
+        logger.info('Beam ' + self.beam + ': Starting Pre-flagging step')
 
-        logger.info("Running manualflag for {0} in beam {1}".format(self.target, self.beam))
+        logger.info('Beam ' + self.beam + ': Running manualflag for {0}'.format(self.target))
         start_time = time()
         self.manualflag()
-        logger.info("Running manualflag for {0} in beam {1} ... Done ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
+        logger.info('Beam ' + self.beam + ': Running manualflag for {0} ... Done ({1:.0f}s)'.format(self.target, time() - start_time))
         
         if self.fluxcal != '':
             query = "SELECT GNFALSE(FLAG) == 0 AS all_flagged, " + \
                     "GNTRUE(FLAG) == 0 AS all_unflagged FROM " + self.get_fluxcal_path()
             query_result = pt.taql(query)
-            logger.debug("All visibilities     flagged before aoflag: " + str(query_result[0]["all_flagged"]))
-            logger.debug("All visibilities not flagged before aoflag: " + str(query_result[0]["all_unflagged"]))
+            logger.debug('Beam ' + self.beam + ': All visibilities     flagged before aoflag: ' + str(query_result[0]["all_flagged"]))
+            logger.debug('Beam ' + self.beam + ': All visibilities not flagged before aoflag: ' + str(query_result[0]["all_unflagged"]))
         
-        logger.info("Running aoflagger tasks for {0} in beam {1}".format(self.target, self.beam))
+        logger.info('Beam ' + self.beam + ': Running aoflagger tasks for {0}'.format(self.target))
         start_time = time()
         self.aoflagger()
-        logger.info("Running aoflagger tasks for {0} in beam {1} ... Done ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
+        logger.info('Beam ' + self.beam + ': Running aoflagger tasks for {0} ... Done ({1:.0f}s)'.format(self.target, time() - start_time))
     
         if self.fluxcal != '':
             query = "SELECT GNFALSE(FLAG) == 0 AS all_flagged, " + \
                     "GNTRUE(FLAG) == 0 AS all_unflagged FROM " + self.get_fluxcal_path()
             query_result = pt.taql(query)
-            logger.debug("All visibilities     flagged after aoflag: " + str(query_result[0]["all_flagged"]))
-            logger.debug("All visibilities not flagged after aoflag: " + str(query_result[0]["all_unflagged"]))
+            logger.debug('Beam ' + self.beam + ': All visibilities     flagged after aoflag: ' + str(query_result[0]["all_flagged"]))
+            logger.debug('Beam ' + self.beam + ': All visibilities not flagged after aoflag: ' + str(query_result[0]["all_unflagged"]))
         
-        logger.info("Running shadow for {0} in beam {1}".format(self.target, self.beam))
+        logger.info('Beam ' + self.beam + ': Running shadow for {0}'.format(self.target))
         start_time = time()
         self.shadow()
-        logger.info("Running shadow for {0} in beam {1} ... Done ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
+        logger.info('Beam ' + self.beam + ': Running shadow for {0} ... Done ({1:.0f}s)'.format(self.target, time() - start_time))
         
-        logger.info("Running edge for {0} in beam {1}".format(self.target, self.beam))
+        logger.info('Beam ' + self.beam + ': Running edge for {0}'.format(self.target))
         start_time = time()
         self.edges()
-        logger.info("Running edge for {0} in beam {1} ... Done ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
+        logger.info('Beam ' + self.beam + ': Running edge for {0} ... Done ({1:.0f}s)'.format(self.target, time() - start_time))
 
-        logger.info("Running ghosts for {0} in beam {1}".format(self.target, self.beam))
+        logger.info('Beam ' + self.beam + ': Running ghosts for {0}'.format(self.target))
         start_time = time()
         self.ghosts()
-        logger.info("Running ghosts for {0} in beam {1} ... Done ({2:.0f}s)".format(self.target, self.beam, time() - start_time))
+        logger.info('Beam ' + self.beam + ': Running ghosts for {0} ... Done ({1:.0f}s)'.format(self.target, time() - start_time))
 
-        logger.info('Pre-flagging step done')
+        logger.info('Beam ' + self.beam + ': Pre-flagging step done')
+
 
     def get_bandpass_path(self):
         if self.subdirification:
@@ -139,88 +136,81 @@ class preflag(BaseModule):
         else:
             return path.join(os.getcwd(), 'Bpass.txt')
 
+
     def shadow(self):
         """
         Flag all data sets for shadowed antennas using drivecasa and the CASA task flagdata
         """
         subs_setinit.setinitdirs(self)
 
-        logger.debug('Shadowed antenna flagging step started')
+        pbeam = 'preflag_B' + str(self.beam).zfill(2)
+
+        logger.debug('Beam ' + self.beam + ': Shadowed antenna flagging step started')
 
         # Create the parameters for the parameter file for the shadowing status
 
         # Is the fluxcal shadow flagged?
-        preflagfluxcalshadow = get_param_def(self, 'preflag_fluxcal_shadow', False)
+        preflagfluxcalshadow = get_param_def(self, pbeam + '_fluxcal_shadow', False)
 
         # Is the polcal shadow flagged?
-        preflagpolcalshadow = get_param_def(self, 'preflag_polcal_shadow', False)
+        preflagpolcalshadow = get_param_def(self, pbeam + '_polcal_shadow', False)
 
         # Are the target beams shadow flagged?
-        preflagtargetbeamsshadow = get_param_def(self, 'preflag_targetbeams_shadow', np.full(self.NBEAMS, False))
+        preflagtargetbeamsshadow = get_param_def(self, pbeam + '_targetbeams_shadow', False)
 
         # Flag shadowed antennas
 
         if self.preflag_shadow:
-            logger.info('Flagging shadowed antennas')
+            logger.info('Beam ' + self.beam + ': Flagging shadowed antennas')
             # Flag the flux calibrator
             if preflagfluxcalshadow:
-                logger.info('Shadowed antenna(s) for flux calibrator were already flagged')
+                logger.info('Beam ' + self.beam + ': Shadowed antenna(s) for flux calibrator were already flagged')
             else:
                 if self.fluxcal != '' and os.path.isdir(self.get_fluxcal_path()):
-                    logger.debug('Flagging shadowed antennas for flux calibrator')
+                    logger.debug('Beam ' + self.beam + ': Flagging shadowed antennas for flux calibrator')
                     fc_shadow = 'flagdata(vis="' + self.get_fluxcal_path() + '", mode="shadow", flagbackup=False)'
                     lib.run_casa([fc_shadow])
                     preflagfluxcalshadow = True
                 else:
-                    logger.warning('Flux calibrator dataset not available or dataset not specified. Not flagging '
+                    logger.warning('Beam ' + self.beam + ': Flux calibrator dataset not available or dataset not specified. Not flagging '
                                    'shadowed antennas for flux calibrator')
                     preflagfluxcalshadow = False
             # Flag the polarised calibrator
             if preflagpolcalshadow:
-                logger.info('Shadowed antenna(s) for polarised calibrator were already flagged')
+                logger.info('Beam ' + self.beam + ': Shadowed antenna(s) for polarised calibrator were already flagged')
             else:
                 if self.polcal != '' and os.path.isdir(self.get_polcal_path()):
-                    logger.debug('Flagging shadowed antennas for polarised calibrator')
+                    logger.debug('Beam ' + self.beam + ': Flagging shadowed antennas for polarised calibrator')
                     pc_shadow = 'flagdata(vis="' + self.get_polcal_path() + '", mode="shadow", flagbackup=False)'
                     lib.run_casa([pc_shadow])
                     preflagpolcalshadow = True
                 else:
-                    logger.warning('Polarised calibrator dataset not available or dataset not specified. Not '
+                    logger.warning('Beam ' + self.beam + ': Polarised calibrator dataset not available or dataset not specified. Not '
                                    'flagging shadowed antennas for polarised calibrator')
                     preflagpolcalshadow = False
             # Flag the target beams
-            if self.target != '':
-                if self.preflag_targetbeams == 'all':
-                    datasets = self.get_datasets()
-                    logger.debug(
-                        'Flagging shadowed data for all target beams')
-                else:
-                    try:
-                        beams = self.preflag_targetbeams.split(",")
-                    except:
-                        beams = self.preflag_targetbeams
-                    datasets = self.get_datasets(beams=beams)
-                    logger.debug(
-                        'Flagging shadowed data for selected target beams')
-                for vis, beam in datasets:
-                    if preflagtargetbeamsshadow[int(beam)]:
-                        logger.info('Shadowed antenna(s) for beam ' + beam + ' were already flagged')
-                    else:
-                        logger.debug('Flagging shadowed antennas for beam ' + beam)
-                        tg_shadow = 'flagdata(vis="' + str(vis) + '", mode="shadow", flagbackup=False)'
-                        lib.run_casa([tg_shadow])
-                        preflagtargetbeamsshadow[int(beam)] = True
+            if preflagtargetbeamsshadow:
+                logger.info('Beam ' + self.beam + ': Shadowed antenna(s) for target were already flagged')
             else:
-                logger.warning('No target dataset specified! Not flagging shadowed antennas for target datasets')
+                if self.target !='' and os.path.isdir(self.get_target_path()):
+                    logger.debug('Beam ' + self.beam + ': Flagging shadowed antennas for target')
+                    tg_shadow = 'flagdata(vis="' + self.get_target_path() + '", mode="shadow", flagbackup=False)'
+                    lib.run_casa([tg_shadow])
+                    preflagtargetbeamsshadow = True
+                else:
+                    logger.warning('Beam ' + self.beam + ': Target dataset not available or dataset not specified. Not '
+                                   'flagging shadowed antennas for polarised calibrator')
+                    preflagtargetbeamsshadow = False
         else:
-            logger.warning('Shadowed antenna(s) are not flagged!')
-        logger.debug('Shadowed antenna flagging step done')
+            logger.warning('Beam ' + self.beam + ': Shadowed antenna(s) are not flagged!')
+        logger.debug('Beam ' + self.beam + ': Shadowed antenna flagging step done')
 
         # Save the derived parameters for the shadow flagging to the parameter file
 
-        subs_param.add_param(self, 'preflag_fluxcal_shadow', preflagfluxcalshadow)
-        subs_param.add_param(self, 'preflag_polcal_shadow', preflagpolcalshadow)
-        subs_param.add_param(self, 'preflag_targetbeams_shadow', preflagtargetbeamsshadow)
+        subs_param.add_param(self, pbeam + '_fluxcal_shadow', preflagfluxcalshadow)
+        subs_param.add_param(self, pbeam + '_polcal_shadow', preflagpolcalshadow)
+        subs_param.add_param(self, pbeam + '_targetbeams_shadow', preflagtargetbeamsshadow)
+
 
     def edges(self):
         """
@@ -228,29 +218,31 @@ class preflag(BaseModule):
         """
         subs_setinit.setinitdirs(self)
 
-        logger.debug('Starting to flag the edges of the subbands')
+        pbeam = 'preflag_B' + str(self.beam).zfill(2)
+
+        logger.debug('Beam ' + self.beam + ': Starting to flag the edges of the subbands')
 
         # Create the parameters for the parameter file for the shadowing status
 
         # Edges of fluxcal flagged?
-        preflagfluxcaledges = get_param_def(self, 'preflag_fluxcal_edges', False)
+        preflagfluxcaledges = get_param_def(self, pbeam + '_fluxcal_edges', False)
 
         # Edges of polcal flagged?
-        preflagpolcaledges = get_param_def(self, 'preflag_polcal_edges', False)
+        preflagpolcaledges = get_param_def(self, pbeam + '_polcal_edges', False)
 
         # Edges of target beams flagged?
-        preflagtargetbeamsedges = get_param_def(self, 'preflag_targetbeams_edges', np.full(self.NBEAMS, False))
+        preflagtargetbeamsedges = get_param_def(self, pbeam + '_targetbeams_edges', False)
 
         if self.preflag_edges:
-            logger.info('Flagging subband edges')
+            logger.info('Beam ' + self.beam + ': Flagging subband edges')
             # Flag the flux calibrator
             if preflagfluxcaledges:
-                logger.info('Subband edges for flux calibrator were already flagged')
+                logger.info('Beam ' + self.beam + ': Subband edges for flux calibrator were already flagged')
             else:
                 if self.fluxcal != '' and os.path.isdir(
                         self.get_fluxcal_path()):
                     # Flag the subband edges of the flux calibrator data set
-                    logger.debug('Flagging subband edges for flux calibrator')
+                    logger.debug('Beam ' + self.beam + ': Flagging subband edges for flux calibrator')
                     # Get the number of channels of the flux calibrator data set
                     nchannel = get_nchan(self.get_fluxcal_path())
                     # Calculate the subband edges of the flux calibrator data set
@@ -263,16 +255,16 @@ class preflag(BaseModule):
                     lib.run_casa([fc_edges_flagcmd])
                     preflagfluxcaledges = True
                 else:
-                    logger.warning('No flux calibrator dataset specified. Subband edges of flux calibrator '
+                    logger.warning('Beam ' + self.beam + ': No flux calibrator dataset specified. Subband edges of flux calibrator '
                                    'will not be flagged!')
                     preflagfluxcaledges = False
             # Flag the polarised calibrator
             if preflagpolcaledges:
-                logger.info('Subband edges for polarised calibrator were already flagged')
+                logger.info('Beam ' + self.beam + ': Subband edges for polarised calibrator were already flagged')
             else:
                 if self.polcal != '' and os.path.isdir(self.get_polcal_path()):
                     # Flag the subband edges of the polarised calibrator data set
-                    logger.debug('Flagging subband edges for polarised calibrator #')
+                    logger.debug('Beam ' + self.beam + ': Flagging subband edges for polarised calibrator #')
                     # Get the number of channels of the polarised calibrator data set
                     nchannel = get_nchan(self.get_polcal_path())
                     # Calculate the subband edges of the polarised calibrator data set
@@ -285,50 +277,37 @@ class preflag(BaseModule):
                     lib.run_casa([pc_edges_flagcmd])
                     preflagpolcaledges = True
                 else:
-                    logger.warning('No polarised calibrator dataset specified. Subband edges of polarised '
+                    logger.warning('Beam ' + self.beam + ': No polarised calibrator dataset specified. Subband edges of polarised '
                                    'calibrator will not be flagged!')
                     preflagpolcaledges = False
-            if self.target != '':
-                # Flag the subband edges of the the target beam datasets
-                # Collect all the available target beam datasets
-                if self.preflag_targetbeams == 'all':
-                    datasets = self.get_datasets()
-                    logger.debug(
-                        'Flagging subband edges for all target beams')
-                else:
-                    try:
-                        beams = self.preflag_targetbeams.split(",")
-                    except:
-                        beams = self.preflag_targetbeams
-                    datasets = self.get_datasets(beams=beams)
-                    logger.debug(
-                        'Flagging subband edges for selected target beams')
-                for vis, beam in datasets:
-                    if preflagtargetbeamsedges[int(beam)]:
-                        logger.info('Subband edges for target beam ' + beam + ' were already flagged')
-                    else:
-                        logger.debug('Flagging subband edges for target beam ' + beam)
-                        nchannel = get_nchan(vis)
-                        # Calculate the subband edges for each target beam data set
-                        a = range(0, nchannel, 64)
-                        b = range(1, nchannel, 64)
-                        c = range(63, nchannel, 64)
-                        l = a + b + c
-                        m = ';'.join(str(ch) for ch in l)
-                        tg_edges_flagcmd = 'flagdata(vis="' + vis + '", spw="0:' + m + '", flagbackup=False)'
-                        lib.run_casa([tg_edges_flagcmd])
-                        preflagtargetbeamsedges[int(beam)] = True
+            if preflagtargetbeamsedges:
+                logger.info('Beam ' + self.beam + ': Subband edges for target dataset were already flagged')
             else:
-                logger.warning('No target dataset specified. Subband edges of target dataset(s) will not be flagged!')
+                if self.target != '' and os.path.isdir(self.get_target_path()):
+                    # Flag the subband edges of the the target beam dataset
+                    logger.debug('Beam ' + self.beam + ': Flagging subband edges for all target beams')
+                    nchannel = get_nchan(self.get_target_path())
+                    # Calculate the subband edges for each target beam data set
+                    a = range(0, nchannel, 64)
+                    b = range(1, nchannel, 64)
+                    c = range(63, nchannel, 64)
+                    l = a + b + c
+                    m = ';'.join(str(ch) for ch in l)
+                    tg_edges_flagcmd = 'flagdata(vis="' + self.get_target_path() + '", spw="0:' + m + '", flagbackup=False)'
+                    lib.run_casa([tg_edges_flagcmd])
+                    preflagtargetbeamsedges = True
+                else:
+                    logger.warning('Beam ' + self.beam + ': No target dataset specified. Subband edges of target dataset will not be flagged!')
+                    preflagtargetbeamsedges = False
         else:
-            logger.warning('Subband edges are not flagged!')
-        logger.debug(' Finished flagging subband edges')
+            logger.warning('Beam ' + self.beam + ': Subband edges are not flagged!')
+        logger.debug('Beam ' + self.beam + ': Finished flagging subband edges')
 
         # Save the derived parameters for the subband edges flagging to the parameter file
 
-        subs_param.add_param(self, 'preflag_fluxcal_edges', preflagfluxcaledges)
-        subs_param.add_param(self, 'preflag_polcal_edges', preflagpolcaledges)
-        subs_param.add_param(self, 'preflag_targetbeams_edges', preflagtargetbeamsedges)
+        subs_param.add_param(self, pbeam + '_fluxcal_edges', preflagfluxcaledges)
+        subs_param.add_param(self, pbeam + '_polcal_edges', preflagpolcaledges)
+        subs_param.add_param(self, pbeam + '_targetbeams_edges', preflagtargetbeamsedges)
 
     def ghosts(self):
         """
@@ -336,28 +315,30 @@ class preflag(BaseModule):
         """
         subs_setinit.setinitdirs(self)
 
-        logger.debug(' Starting to flag the ghost channels')
+        pbeam = 'preflag_B' + str(self.beam).zfill(2)
+
+        logger.debug('Beam ' + self.beam + ': Starting to flag the ghost channels')
 
         # Create the parameters for the parameter file for the shadowing status
 
         # Ghosts of fluxcal flagged?
-        preflagfluxcalghosts = get_param_def(self, 'preflag_fluxcal_ghosts', False)
+        preflagfluxcalghosts = get_param_def(self, pbeam + '_fluxcal_ghosts', False)
 
         # Ghosts of polcal flagged?
-        preflagpolcalghosts = get_param_def(self, 'preflag_polcal_ghosts', False)
+        preflagpolcalghosts = get_param_def(self,  pbeam + '_polcal_ghosts', False)
 
         # Ghosts of target beams flagged?
-        preflagtargetbeamsghosts = get_param_def(self, 'preflag_targetbeams_ghosts', np.full(self.NBEAMS, False))
+        preflagtargetbeamsghosts = get_param_def(self,  pbeam + '_targetbeams_ghosts', False)
 
         if self.preflag_ghosts:
-            logger.info('Flagging ghost channels')
+            logger.info('Beam ' + self.beam + ': Flagging ghost channels')
             # Flag the ghost channels in the flux calibrator
             if preflagfluxcalghosts:
-                logger.info('Ghost channels for flux calibrator were already flagged')
+                logger.info('Beam ' + self.beam + ': Ghost channels for flux calibrator were already flagged')
             else:
                 if self.fluxcal != '' and os.path.isdir(self.get_fluxcal_path()):
                     # Flag the ghosts in the flux calibrator data set
-                    logger.debug('Flagging ghost channels for flux calibrator')
+                    logger.debug('Beam ' + self.beam + ': Flagging ghost channels for flux calibrator')
                     # Get the number of channels of the flux calibrator data set
                     nchannel = get_nchan(self.get_fluxcal_path())
                     # Calculate the ghost positions for the flux calibrator data set
@@ -369,16 +350,16 @@ class preflag(BaseModule):
                     lib.run_casa([fc_ghosts_flagcmd])
                     preflagfluxcalghosts = True
                 else:
-                    logger.warning('No flux calibrator dataset specified. Ghosts in flux calibrator dataset '
+                    logger.warning('Beam ' + self.beam + ': No flux calibrator dataset specified. Ghosts in flux calibrator dataset '
                                    'will not be flagged!')
                     preflagfluxcalghosts = False
             # Flag the ghost channels in the polarised calibrator
             if preflagpolcalghosts:
-                logger.info('Ghost channels for polarised calibrator were already flagged')
+                logger.info('Beam ' + self.beam + ': Ghost channels for polarised calibrator were already flagged')
             else:
                 if self.polcal != '' and os.path.isdir(self.get_polcal_path()):
                     # Flag the ghosts in the polarised calibrator data set
-                    logger.debug('Flagging ghost channels for polarised calibrator')
+                    logger.debug('Beam ' + self.beam + ': Flagging ghost channels for polarised calibrator')
                     # Get the number of channels of the polarised calibrator data set
                     nchannel = get_nchan(self.get_polcal_path())
                     # Calculate the subband edges of the polarised calibrator data set
@@ -390,49 +371,38 @@ class preflag(BaseModule):
                     lib.run_casa([pc_ghosts_flagcmd])
                     preflagpolcalghosts = True
                 else:
-                    logger.warning('No polarised calibrator dataset specified. Ghosts in polarised calibrator '
+                    logger.warning('Beam ' + self.beam + ': No polarised calibrator dataset specified. Ghosts in polarised calibrator '
                                    'will not be flagged!')
                     preflagpolcalghosts = False
-            if self.target != '':
-                # Flag the ghosts in the target beam datasets
-                # Collect all the available target beam datasets
-                if self.preflag_targetbeams == 'all':
-                    datasets = self.get_datasets()
-                    logger.debug(
-                        'Flagging ghosts for all target beams')
-                else:
-                    try:
-                        beams = self.preflag_targetbeams.split(",")
-                    except:
-                        beams = self.preflag_targetbeams
-                    datasets = self.get_datasets(beams=beams)
-                    logger.debug(
-                        'Flagging ghosts for selected target beams')
-                for vis, beam in datasets:
-                    if preflagtargetbeamsghosts[int(beam)]:
-                        logger.info('Ghost channels for target beam ' + beam + ' were already flagged')
-                    else:
-                        logger.debug('Flagging ghost channels for target beam ' + beam)
-                        nchannel = get_nchan(vis)
-                        # Calculate the ghost channels for each target beam data set
-                        a = range(16, nchannel, 64)
-                        b = range(48, nchannel, 64)
-                        l = a + b
-                        m = ';'.join(str(ch) for ch in l)
-                        tg_ghosts_flagcmd = 'flagdata(vis="' + vis + '", spw="0:' + m + '", flagbackup=False)'
-                        lib.run_casa([tg_ghosts_flagcmd])
-                        preflagtargetbeamsghosts[int(beam)] = True
+
+            if preflagtargetbeamsghosts:
+                logger.info('Beam ' + self.beam + ': Ghost channels for target dataset were already flagged')
             else:
-                logger.warning('No target dataset specified. Ghosts in target dataset(s) will not be flagged!')
+                if self.target != '' and os.path.isdir(self.get_target_path()):
+                    # Flag the ghosts in the target beam dataset
+                    logger.debug('Beam ' + self.beam + ': Flagging ghost channels for target dataset')
+                    nchannel = get_nchan(self.get_target_path())
+                    # Calculate the ghost channels for each target beam data set
+                    a = range(16, nchannel, 64)
+                    b = range(48, nchannel, 64)
+                    l = a + b
+                    m = ';'.join(str(ch) for ch in l)
+                    tg_ghosts_flagcmd = 'flagdata(vis="' + self.get_target_path() + '", spw="0:' + m + '", flagbackup=False)'
+                    lib.run_casa([tg_ghosts_flagcmd])
+                    preflagtargetbeamsghosts = True
+                else:
+                    logger.warning('Beam ' + self.beam + ': No target dataset specified. Ghosts in target dataset will not be flagged!')
+                    preflagtargetbeamsghosts = False
         else:
-            logger.warning('Ghost channels are not flagged!')
-        logger.debug('Finished flagging ghost channels')
+            logger.warning('Beam ' + self.beam + ': Ghost channels are not flagged!')
+        logger.debug('Beam ' + self.beam + ': Finished flagging ghost channels')
 
         # Save the derived parameters for the subband edges flagging to the parameter file
 
-        subs_param.add_param(self, 'preflag_fluxcal_ghosts', preflagfluxcalghosts)
-        subs_param.add_param(self, 'preflag_polcal_ghosts', preflagpolcalghosts)
-        subs_param.add_param(self, 'preflag_targetbeams_ghosts', preflagtargetbeamsghosts)
+        subs_param.add_param(self, pbeam + '_fluxcal_ghosts', preflagfluxcalghosts)
+        subs_param.add_param(self, pbeam + '_polcal_ghosts', preflagpolcalghosts)
+        subs_param.add_param(self, pbeam + '_targetbeams_ghosts', preflagtargetbeamsghosts)
+
 
     def manualflag(self):
         """
@@ -440,7 +410,7 @@ class preflag(BaseModule):
         any other calibration.
         """
         if self.preflag_manualflag:
-            logger.info('Manual flagging step started')
+            logger.info('Beam ' + self.beam + ': Manual flagging step started')
             self.manualflag_auto()
             self.manualflag_antenna()
             self.manualflag_corr()
@@ -448,7 +418,8 @@ class preflag(BaseModule):
             self.manualflag_channel()
             self.manualflag_time()
             self.manualflag_clipzeros()
-            logger.info('Manual flagging step done')
+            logger.info('Beam ' + self.beam + ': Manual flagging step done')
+
 
     def aoflagger(self):
         """
@@ -457,25 +428,26 @@ class preflag(BaseModule):
         calibrators and target fields normally differ.
         """
         if self.preflag_aoflagger:
-            logger.info('Pre-flagging with AOFlagger started')
+            logger.info('Beam ' + self.beam + ': Pre-flagging with AOFlagger started')
 
-            logger.info("Running aoflagger bandpass for {0} in beam {1}".format(
-                self.target, self.beam))
+            logger.info('Beam ' + self.beam + ': Running aoflagger bandpass for {0}'.format(
+                self.target))
             start_time = time()
             self.aoflagger_bandpass()
-            logger.info("Running aoflagger bandpass for {0} in beam {1} ... Done ({2:.0f}s)".format(
-                self.target, self.beam, time() - start_time))
+            logger.info('Beam ' + self.beam + ': Running aoflagger bandpass for {0} ... Done ({1:.0f}s)'.format(
+                self.target, time() - start_time))
 
-            logger.info("Running aoflagger flagging for {0} in beam {1}".format(
-                self.target, self.beam))
+            logger.info('Beam ' + self.beam + ': Running aoflagger flagging for {0}'.format(
+                self.target))
             start_time = time()
             self.aoflagger_flag()
-            logger.info("Running aoflagger flagging for {0} in beam {1} ... Done ({2:.0f}s)".format(
-                self.target, self.beam, time() - start_time))
+            logger.info('Beam ' + self.beam + ': Running aoflagger flagging for {0} ... Done ({1:.0f}s)'.format(
+                self.target, time() - start_time))
 
-            logger.info('Pre-flagging with AOFlagger done')
+            logger.info('Beam ' + self.beam + ': Pre-flagging with AOFlagger done')
         else:
-            logger.warning('No flagging with AOflagger done! Your data might be contaminated by RFI!')
+            logger.warning('Beam ' + self.beam + ': No flagging with AOflagger done! Your data might be contaminated by RFI!')
+
 
     def manualflag_auto(self):
         """
@@ -483,74 +455,67 @@ class preflag(BaseModule):
         """
         subs_setinit.setinitdirs(self)
 
+        pbeam = 'preflag_B' + str(self.beam).zfill(2)
+
         # Create the parameters for the parameter file for the manualflag step to flag the auto-correlations
 
         # Auto-correlations of fluxcal flagged?
-        preflagfluxcalmanualflagauto = get_param_def(self, 'preflag_fluxcal_manualflag_auto', False)
+        preflagfluxcalmanualflagauto = get_param_def(self, pbeam + '_fluxcal_manualflag_auto', False)
 
         # Auto-correlations of polcal flagged?
-        preflagpolcalmanualflagauto = get_param_def(self, 'preflag_polcal_manualflag_auto', False)
+        preflagpolcalmanualflagauto = get_param_def(self, pbeam + '_polcal_manualflag_auto', False)
+
         # Auto-correlations of target beams flagged?
-        preflagtargetbeamsmanualflagauto = get_param_def(self, 'preflag_targetbeams_manualflag_auto',
-                                                         np.full(self.NBEAMS, False))
+        preflagtargetbeamsmanualflagauto = get_param_def(self, pbeam + '_targetbeams_manualflag_auto', False)
 
         if self.preflag_manualflag_auto:
-            logger.info('Flagging auto-correlations')
+            logger.info('Beam ' + self.beam + ': Flagging auto-correlations')
             # Flag the auto-correlations for the flux calibrator
             if preflagfluxcalmanualflagauto and self.preflag_manualflag_fluxcal:
-                logger.info('Auto-correlations for flux calibrator were already flagged')
+                logger.info('Beam ' + self.beam + ': Auto-correlations for flux calibrator were already flagged')
             else:
                 if self.preflag_manualflag_fluxcal and os.path.isdir(self.get_fluxcal_path()):
                     fc_auto = 'flagdata(vis="' + self.get_fluxcal_path() + '", autocorr=True, flagbackup=False)'
                     lib.run_casa([fc_auto])
-                    logger.debug('Flagged auto-correlations for flux calibrator')
+                    logger.debug('Beam ' + self.beam + ': Flagged auto-correlations for flux calibrator')
                     preflagfluxcalmanualflagauto = True
                 else:
                     preflagfluxcalmanualflagauto = False
-                    logger.warning('No flux calibrator dataset specified. Auto-correlations for flux calibrator '
+                    logger.warning('Beam ' + self.beam + ': No flux calibrator dataset specified. Auto-correlations for flux calibrator '
                                    'dataset will not be flagged!')
             # Flag the auto-correlations for the polarised calibrator
             if preflagpolcalmanualflagauto and self.preflag_manualflag_polcal:
-                logger.info('Auto-correlations for polarised calibrator were already flagged')
+                logger.info('Beam ' + self.beam + ': Auto-correlations for polarised calibrator were already flagged')
             else:
                 if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()):
                     pc_auto = 'flagdata(vis="' + self.get_polcal_path() + '", autocorr=True, flagbackup=False)'
                     lib.run_casa([pc_auto])
-                    logger.debug('Flagged auto-correlations for polarised calibrator')
+                    logger.debug('Beam ' + self.beam + ': Flagged auto-correlations for polarised calibrator')
                     preflagpolcalmanualflagauto = True
                 else:
                     preflagpolcalmanualflagauto = False
-                    logger.warning('No polarised calibrator dataset specified. Auto-correlations for polariased '
+                    logger.warning('Beam ' + self.beam + ': No polarised calibrator dataset specified. Auto-correlations for polariased '
                                    'calibrator dataset will not be flagged!')
             # Flag the auto-correlations for the target beams
-            if self.preflag_manualflag_target:
-                if self.preflag_targetbeams == 'all':
-                    datasets = self.get_datasets()
-                    logger.debug('Flagging auto-correlations for all target beams')
-                else:
-                    try:
-                        beams = self.preflag_targetbeams.split(",")
-                    except:
-                        beams = self.preflag_targetbeams
-                    datasets = self.get_datasets(beams=beams)
-                    logger.debug('Flagging auto-correlations for selected target beams')
-                for vis, beam in datasets:
-                    if preflagtargetbeamsmanualflagauto[int(beam)]:
-                        logger.info('Auto-correlations for target beam ' + beam + ' were already flagged')
-                    else:
-                        logger.debug('Flagging auto-correlations for target beam ' + beam)
-                        tg_auto = 'flagdata(vis="' + str(vis) + '", autocorr=True, flagbackup=False)'
-                        lib.run_casa([tg_auto])
-                        preflagtargetbeamsmanualflagauto[int(beam)] = True
+            if preflagtargetbeamsmanualflagauto and self.preflag_manualflag_target:
+                logger.info('Beam ' + self.beam + ': Auto-correlations for target beam dataset were already flagged')
             else:
-                logger.warning('Target dataset not specified. Auto-correlations for target beam dataset(s) will '
+                if self.preflag_manualflag_target and os.path.isdir(self.get_target_path()):
+                    tg_auto = 'flagdata(vis="' + self.get_target_path() + '", autocorr=True, flagbackup=False)'
+                    lib.run_casa([tg_auto])
+                    logger.debug('Beam ' + self.beam + ': Flagging auto-correlations for target beam dataset')
+                    preflagtargetbeamsmanualflagauto = True
+                else:
+                    preflagtargetbeamsmanualflagauto = False
+                    logger.warning('Beam ' + self.beam + ': Target dataset not specified. Auto-correlations for target beam dataset will '
                                'not be flagged!')
 
         # Save the derived parameters for the auto-correlation flagging to the parameter file
 
-        subs_param.add_param(self, 'preflag_fluxcal_manualflag_auto', preflagfluxcalmanualflagauto)
-        subs_param.add_param(self, 'preflag_polcal_manualflag_auto', preflagpolcalmanualflagauto)
-        subs_param.add_param(self, 'preflag_targetbeams_manualflag_auto', preflagtargetbeamsmanualflagauto)
+        subs_param.add_param(self, pbeam + '_fluxcal_manualflag_auto', preflagfluxcalmanualflagauto)
+        subs_param.add_param(self, pbeam + '_polcal_manualflag_auto', preflagpolcalmanualflagauto)
+        subs_param.add_param(self, pbeam + '_targetbeams_manualflag_auto', preflagtargetbeamsmanualflagauto)
+
 
     def manualflag_antenna(self):
         """
@@ -559,27 +524,28 @@ class preflag(BaseModule):
         """
         subs_setinit.setinitdirs(self)
 
+        pbeam = 'preflag_B' + str(self.beam).zfill(2)
+
         # Create the parameters for the parameter file for the manualflag step to flag individual antennas
 
         # Flagged antennas of fluxcal?
-        preflagfluxcalmanualflagantenna = get_param_def(self, 'preflag_fluxcal_manualflag_antenna', np.full(1, '', dtype='U50'))
+        preflagfluxcalmanualflagantenna = get_param_def(self, pbeam + '_fluxcal_manualflag_antenna', np.full(1, '', dtype='U50'))
 
         # Flagged antennas of polcal?
-        preflagpolcalmanualflagantenna = get_param_def(self, 'preflag_polcal_manualflag_antenna', np.full(1, '', dtype='U50'))
+        preflagpolcalmanualflagantenna = get_param_def(self, pbeam + '_polcal_manualflag_antenna', np.full(1, '', dtype='U50'))
         # Flagged antennas of target beams?
-        preflagtargetbeamsmanualflagantenna = get_param_def(self, 'preflag_targetbeams_manualflag_antenna',
-                                                            np.full(self.NBEAMS, '', dtype='U50'))
+        preflagtargetbeamsmanualflagantenna = get_param_def(self, pbeam + '_targetbeams_manualflag_antenna', np.full(1, '', dtype='U50'))
 
         if self.preflag_manualflag_antenna != '':
-            logger.info('Flagging antenna(s) ' + self.preflag_manualflag_antenna)
+            logger.info('Beam ' + self.beam + ': Flagging antenna(s) ' + self.preflag_manualflag_antenna)
             # Flag antenna(s) for flux calibrator
             if preflagfluxcalmanualflagantenna[0] == self.preflag_manualflag_antenna and self.preflag_manualflag_fluxcal:
-                logger.info('Antenna(s) ' + self.preflag_manualflag_antenna + ' for flux calibrator were already flagged')
+                logger.info('Beam ' + self.beam + ': Antenna(s) ' + self.preflag_manualflag_antenna + ' for flux calibrator were already flagged')
             else:
                 if self.preflag_manualflag_fluxcal and os.path.isdir(self.get_fluxcal_path()):
                     fc_ant = 'flagdata(vis="' + self.get_fluxcal_path() + '", antenna="' + self.preflag_manualflag_antenna + '", flagbackup=False)'
                     lib.run_casa([fc_ant])
-                    logger.debug('Flagged antenna(s) ' + self.preflag_manualflag_antenna + ' for flux calibrator')
+                    logger.debug('Beam ' + self.beam + ': Flagged antenna(s) ' + self.preflag_manualflag_antenna + ' for flux calibrator')
                     spltant = self.preflag_manualflag_antenna.split(',')
                     for ant in spltant:
                         if preflagfluxcalmanualflagantenna[0].find(ant) == -1:
@@ -588,15 +554,15 @@ class preflag(BaseModule):
                             else:
                                 preflagfluxcalmanualflagantenna[0] = preflagfluxcalmanualflagantenna[0] + ',' + ant
                 else:
-                    logger.warning('No flux calibrator dataset specified. Specified antenna(s) for flux calibrator dataset will not be flagged!')
+                    logger.warning('Beam ' + self.beam + ': No flux calibrator dataset specified. Specified antenna(s) for flux calibrator dataset will not be flagged!')
             # Flag antenna(s) for polarised calibrator
             if preflagpolcalmanualflagantenna[0] == self.preflag_manualflag_antenna and self.preflag_manualflag_polcal:
-                logger.info('Antenna(s) ' + self.preflag_manualflag_antenna + ' for polarised calibrator were already flagged')
+                logger.info('Beam ' + self.beam + ': Antenna(s) ' + self.preflag_manualflag_antenna + ' for polarised calibrator were already flagged')
             else:
                 if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()):
                     pc_ant = 'flagdata(vis="' + self.get_polcal_path() + '", antenna="' + self.preflag_manualflag_antenna + '", flagbackup=False)'
                     lib.run_casa([pc_ant])
-                    logger.debug('Flagged antenna(s) ' + self.preflag_manualflag_antenna + ' for polarised calibrator')
+                    logger.debug('Beam ' + self.beam + ': Flagged antenna(s) ' + self.preflag_manualflag_antenna + ' for polarised calibrator')
                     spltant = self.preflag_manualflag_antenna.split(',')
                     for ant in spltant:
                         if preflagpolcalmanualflagantenna[0].find(ant) == -1:
@@ -605,41 +571,31 @@ class preflag(BaseModule):
                             else:
                                 preflagpolcalmanualflagantenna[0] = preflagpolcalmanualflagantenna[0] + ',' + ant
                 else:
-                    logger.warning('No polarised calibrator dataset specified. Specified antenna(s) for polarised calibrator dataset will not be flagged!')
+                    logger.warning('Beam ' + self.beam + ': No polarised calibrator dataset specified. Specified antenna(s) for polarised calibrator dataset will not be flagged!')
             # Flag antenna(s) for target beams
-            if self.preflag_manualflag_target:
-                if self.preflag_targetbeams == 'all':
-                    datasets = self.get_datasets()
-                    logger.debug('Flagging antenna(s) ' + self.preflag_manualflag_antenna + ' for all target beams')
-                else:
-                    try:
-                        beams = self.preflag_targetbeams.split(",")
-                    except:
-                        beams = self.preflag_targetbeams
-                    datasets = self.get_datasets(beams=beams)
-                    logger.debug('Flagging antenna(s) ' + self.preflag_manualflag_antenna + ' for selected target beams')
-                for vis, beam in datasets:
-                    if preflagtargetbeamsmanualflagantenna[int(beam)] == self.preflag_manualflag_antenna:
-                        logger.info('Antenna(s) ' + self.preflag_manualflag_antenna + ' for target beam ' + beam + ' were already flagged')
-                    else:
-                        logger.debug('Flagging antenna(s) ' + self.preflag_manualflag_antenna + ' for target beam ' + beam)
-                        tg_ant = 'flagdata(vis="' + str(vis) + '", antenna="' + self.preflag_manualflag_antenna + '", flagbackup=False)'
-                        lib.run_casa([tg_ant])
-                        spltant = self.preflag_manualflag_antenna.split(',')
-                        for ant in spltant:
-                            if preflagtargetbeamsmanualflagantenna[int(beam)].find(ant) == -1:
-                                if preflagtargetbeamsmanualflagantenna[int(beam)] == '':
-                                    preflagtargetbeamsmanualflagantenna[int(beam)] = ant
-                                else:
-                                    preflagtargetbeamsmanualflagantenna[int(beam)] = preflagtargetbeamsmanualflagantenna[int(beam)] + ',' + ant
+            if preflagtargetbeamsmanualflagantenna[0] == self.preflag_manualflag_antenna and self.preflag_manualflag_target:
+                logger.info('Beam ' + self.beam + ': Antenna(s) ' + self.preflag_manualflag_antenna + ' for target beam dataset were already flagged')
             else:
-                logger.warning('Target dataset not specified. Specified antenna(s) for target beam dataset(s) will not be flagged!')
+                if self.preflag_manualflag_target and os.path.isdir(self.get_target_path()):
+                    tg_ant = 'flagdata(vis="' + self.get_target_path() + '", antenna="' + self.preflag_manualflag_antenna + '", flagbackup=False)'
+                    lib.run_casa([tg_ant])
+                    logger.debug('Beam ' + self.beam + ': Flagged antenna(s) ' + self.preflag_manualflag_antenna + ' for target')
+                    spltant = self.preflag_manualflag_antenna.split(',')
+                    for ant in spltant:
+                        if preflagtargetbeamsmanualflagantenna[0].find(ant) == -1:
+                            if preflagtargetbeamsmanualflagantenna[0] == '':
+                                preflagtargetbeamsmanualflagantenna[0] = ant
+                            else:
+                                preflagtargetbeamsmanualflagantenna[0] = preflagtargetbeamsmanualflagantenna[0] + ',' + ant
+                else:
+                    logger.warning('Beam ' + self.beam + ': Target dataset not specified. Specified antenna(s) for target beam dataset will not be flagged!')
 
         # Save the derived parameters for the antenna flagging to the parameter file
 
-        subs_param.add_param(self, 'preflag_fluxcal_manualflag_antenna', preflagfluxcalmanualflagantenna)
-        subs_param.add_param(self, 'preflag_polcal_manualflag_antenna', preflagpolcalmanualflagantenna)
-        subs_param.add_param(self, 'preflag_targetbeams_manualflag_antenna', preflagtargetbeamsmanualflagantenna)
+        subs_param.add_param(self, pbeam + '_fluxcal_manualflag_antenna', preflagfluxcalmanualflagantenna)
+        subs_param.add_param(self, pbeam + '_polcal_manualflag_antenna', preflagpolcalmanualflagantenna)
+        subs_param.add_param(self, pbeam + '_targetbeams_manualflag_antenna', preflagtargetbeamsmanualflagantenna)
+
 
     def manualflag_corr(self):
         """
@@ -648,23 +604,25 @@ class preflag(BaseModule):
         """
         subs_setinit.setinitdirs(self)
 
+        pbeam = 'preflag_B' + str(self.beam).zfill(2)
+
         # Create the parameters for the parameter file for the manualflag step to flag individual correlations
 
-        preflagfluxcalmanualflagcorr = get_param_def(self, 'preflag_fluxcal_manualflag_corr', np.full(1, '', dtype='U50'))  # Flagged correlations of fluxcal?
-        preflagpolcalmanualflagcorr = get_param_def(self, 'preflag_polcal_manualflag_corr', np.full(1, '', dtype='U50'))  # Flagged correlations of polcal?
-        preflagtargetbeamsmanualflagcorr = get_param_def(self, 'preflag_targetbeams_manualflag_corr', np.full(self.NBEAMS, '', dtype='U50'))  # Flagged correlations of target beams?
+        preflagfluxcalmanualflagcorr = get_param_def(self, pbeam + '_fluxcal_manualflag_corr', np.full(1, '', dtype='U50'))  # Flagged correlations of fluxcal?
+        preflagpolcalmanualflagcorr = get_param_def(self, pbeam + '_polcal_manualflag_corr', np.full(1, '', dtype='U50'))  # Flagged correlations of polcal?
+        preflagtargetbeamsmanualflagcorr = get_param_def(self, pbeam + '_targetbeams_manualflag_corr', np.full(1 , '', dtype='U50'))  # Flagged correlations of target beams?
 
         if self.preflag_manualflag_corr != '':
-            logger.info('Flagging correlation(s) ' + self.preflag_manualflag_corr)
+            logger.info('Beam ' + self.beam + ': Flagging correlation(s) ' + self.preflag_manualflag_corr)
             # Flag correlation(s) for flux calibrator
             if preflagfluxcalmanualflagcorr[0] == self.preflag_manualflag_corr and self.preflag_manualflag_fluxcal:
-                logger.info('Correlation(s) ' + self.preflag_manualflag_corr + ' for flux calibrator were already flagged')
+                logger.info('Beam ' + self.beam + ': Correlation(s) ' + self.preflag_manualflag_corr + ' for flux calibrator were already flagged')
             else:
                 if self.preflag_manualflag_fluxcal and os.path.isdir(self.get_fluxcal_path()):
                     subs_setinit.setinitdirs(self)
                     fc_corr = 'flagdata(vis="' + self.get_fluxcal_path() + '", correlation="' + self.preflag_manualflag_corr + '", flagbackup=False)'
                     lib.run_casa([fc_corr])
-                    logger.debug('Flagged correlation(s) ' + self.preflag_manualflag_corr + ' for flux calibrator')
+                    logger.debug('Beam ' + self.beam + ': Flagged correlation(s) ' + self.preflag_manualflag_corr + ' for flux calibrator')
                     spltcorr = self.preflag_manualflag_corr.split(',')
                     for corr in spltcorr:
                         if preflagfluxcalmanualflagcorr[0].find(corr) == -1:
@@ -673,16 +631,16 @@ class preflag(BaseModule):
                             else:
                                 preflagfluxcalmanualflagcorr[0] = preflagfluxcalmanualflagcorr[0] + ',' + corr
                 else:
-                    logger.warning('No flux calibrator dataset specified. Specified correlation(s) for flux calibrator dataset will not be flagged!')
+                    logger.warning('Beam ' + self.beam + ': No flux calibrator dataset specified. Specified correlation(s) for flux calibrator dataset will not be flagged!')
             # Flag correlation(s) for flux calibrator
             if preflagpolcalmanualflagcorr[0] == self.preflag_manualflag_corr and self.preflag_manualflag_polcal:
-                logger.info('Correlation(s) ' + self.preflag_manualflag_corr + ' for polarised calibrator were already flagged')
+                logger.info('Beam ' + self.beam + ': Correlation(s) ' + self.preflag_manualflag_corr + ' for polarised calibrator were already flagged')
             else:
                 if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()):
                     subs_setinit.setinitdirs(self)
                     pc_corr = 'flagdata(vis="' + self.get_polcal_path() + '", correlation="' + self.preflag_manualflag_corr + '", flagbackup=False)'
                     lib.run_casa([pc_corr])
-                    logger.debug('Flagged correlation(s) ' + self.preflag_manualflag_corr + ' for polarised calibrator')
+                    logger.debug('Beam ' + self.beam + ': Flagged correlation(s) ' + self.preflag_manualflag_corr + ' for polarised calibrator')
                     spltcorr = self.preflag_manualflag_corr.split(',')
                     for corr in spltcorr:
                         if preflagpolcalmanualflagcorr[0].find(corr) == -1:
@@ -691,41 +649,32 @@ class preflag(BaseModule):
                             else:
                                 preflagpolcalmanualflagcorr[0] = preflagpolcalmanualflagcorr[0] + ',' + corr
                 else:
-                    logger.warning('No polarised calibrator dataset specified. Specified correlation(s) for polarised calibrator dataset will not be flagged!')
+                    logger.warning('Beam ' + self.beam + ': No polarised calibrator dataset specified. Specified correlation(s) for polarised calibrator dataset will not be flagged!')
             # Flag correlation(s) for target beams
-            if self.preflag_manualflag_target:
-                if self.preflag_targetbeams == 'all':
-                    datasets = self.get_datasets()
-                    logger.debug('Flagging correlation(s) ' + self.preflag_manualflag_corr + ' for all target beams')
-                else:
-                    try:
-                        beams = self.preflag_targetbeams.split(",")
-                    except:
-                        beams = self.preflag_targetbeams
-                    datasets = self.get_datasets(beams=beams)
-                    logger.debug('Flagging correlation(s) ' + self.preflag_manualflag_corr + ' for selected target beams')
-                for vis, beam in datasets:
-                    if preflagtargetbeamsmanualflagcorr[int(beam)] == self.preflag_manualflag_corr:
-                        logger.info('Correlation(s) ' + self.preflag_manualflag_corr + ' for target beam ' + beam + ' were already flagged')
-                    else:
-                        logger.debug('Flagging correlations(s) ' + self.preflag_manualflag_corr + ' for target beam ' + beam)
-                        tg_corr = 'flagdata(vis="' + str(vis) + '", correlation="' + self.preflag_manualflag_corr + '", flagbackup=False)'
-                        lib.run_casa([tg_corr])
-                        spltcorr = self.preflag_manualflag_corr.split(',')
-                        for corr in spltcorr:
-                            if preflagtargetbeamsmanualflagcorr[int(beam)].find(corr) == -1:
-                                if preflagtargetbeamsmanualflagcorr[int(beam)] == '':
-                                    preflagtargetbeamsmanualflagcorr[int(beam)] = corr
-                                else:
-                                    preflagtargetbeamsmanualflagcorr[int(beam)] = preflagtargetbeamsmanualflagcorr[int(beam)] + ',' + corr
+            if preflagtargetbeamsmanualflagcorr[0] == self.preflag_manualflag_corr and self.preflag_manualflag_target:
+                logger.info('Beam ' + self.beam + ': Correlation(s) ' + self.preflag_manualflag_corr + ' for target beam dataset were already flagged')
             else:
-                logger.warning('Target dataset not specified. Specified correlation(s) for target beam dataset(s) will not be flagged!')
+                if self.preflag_manualflag_target and os.path.isdir(self.get_target_path()):
+                    subs_setinit.setinitdirs(self)
+                    tg_corr = 'flagdata(vis="' + self.get_target_path() + '", correlation="' + self.preflag_manualflag_corr + '", flagbackup=False)'
+                    lib.run_casa([tg_corr])
+                    logger.debug('Beam ' + self.beam + ': Flagged correlation(s) ' + self.preflag_manualflag_corr + ' for target dataset')
+                    spltcorr = self.preflag_manualflag_corr.split(',')
+                    for corr in spltcorr:
+                        if preflagtargetbeamsmanualflagcorr[0].find(corr) == -1:
+                            if preflagtargetbeamsmanualflagcorr[0] == '':
+                                preflagtargetbeamsmanualflagcorr[0] = corr
+                            else:
+                                preflagtargetbeamsmanualflagcorr[0] = preflagtargetbeamsmanualflagcorr[0] + ',' + corr
+                else:
+                    logger.warning('Beam ' + self.beam + ': Target dataset not specified. Specified correlation(s) for target beam dataset will not be flagged!')
 
         # Save the derived parameters for the correlation flagging to the parameter file
 
-        subs_param.add_param(self, 'preflag_fluxcal_manualflag_corr', preflagfluxcalmanualflagcorr)
-        subs_param.add_param(self, 'preflag_polcal_manualflag_corr', preflagpolcalmanualflagcorr)
-        subs_param.add_param(self, 'preflag_targetbeams_manualflag_corr', preflagtargetbeamsmanualflagcorr)
+        subs_param.add_param(self, pbeam + '_fluxcal_manualflag_corr', preflagfluxcalmanualflagcorr)
+        subs_param.add_param(self, pbeam + '_polcal_manualflag_corr', preflagpolcalmanualflagcorr)
+        subs_param.add_param(self, pbeam + '_targetbeams_manualflag_corr', preflagtargetbeamsmanualflagcorr)
+
 
     def manualflag_baseline(self):
         """
@@ -734,24 +683,25 @@ class preflag(BaseModule):
         """
         subs_setinit.setinitdirs(self)
 
+        pbeam = 'preflag_B' + str(self.beam).zfill(2)
+
         # Create the parameters for the parameter file for the manualflag step to flag individual baselines
 
-        preflagfluxcalmanualflagbaseline = get_param_def(self, 'preflag_fluxcal_manualflag_baseline', np.full(1, '', dtype='U50'))  # Flagged baselines of fluxcal?
-        preflagpolcalmanualflagbaseline = get_param_def(self, 'preflag_polcal_manualflag_baseline', np.full(1, '', dtype='U50'))  # Flagged baselines of polcal?
-        preflagtargetbeamsmanualflagbaseline = get_param_def(self, 'preflag_targetbeams_manualflag_baseline',
-                                                             np.full(self.NBEAMS, '', dtype='U50'))  # Flagged baselines of target beams?
+        preflagfluxcalmanualflagbaseline = get_param_def(self, pbeam + '_fluxcal_manualflag_baseline', np.full(1, '', dtype='U50'))  # Flagged baselines of fluxcal?
+        preflagpolcalmanualflagbaseline = get_param_def(self, pbeam + '_polcal_manualflag_baseline', np.full(1, '', dtype='U50'))  # Flagged baselines of polcal?
+        preflagtargetbeamsmanualflagbaseline = get_param_def(self, pbeam + '_targetbeams_manualflag_baseline', np.full(1 , '', dtype='U50'))  # Flagged baselines of target beams?
 
         if self.preflag_manualflag_baseline != '':
-            logger.info('Flagging baseline(s) ' + self.preflag_manualflag_baseline)
+            logger.info('Beam ' + self.beam + ': Flagging baseline(s) ' + self.preflag_manualflag_baseline)
             # Flag correlation(s) for the flux calibrator
             if preflagfluxcalmanualflagbaseline[0] == self.preflag_manualflag_baseline and self.preflag_manualflag_fluxcal:
-                logger.info('Baseline(s) ' + self.preflag_manualflag_baseline + ' for flux calibrator were already flagged')
+                logger.info('Beam ' + self.beam + ': Baseline(s) ' + self.preflag_manualflag_baseline + ' for flux calibrator were already flagged')
             else:
                 if self.preflag_manualflag_fluxcal and os.path.isdir(
                         self.get_fluxcal_path()):
                     fc_baseline = 'flagdata(vis="' + self.get_fluxcal_path() + '", antenna="' + self.preflag_manualflag_baseline + '", flagbackup=False)'
                     lib.run_casa([fc_baseline])
-                    logger.debug('Flagged baseline(s) ' + self.preflag_manualflag_baseline + ' for flux calibrator')
+                    logger.debug('Beam ' + self.beam + ': Flagged baseline(s) ' + self.preflag_manualflag_baseline + ' for flux calibrator')
                     spltbaseline = self.preflag_manualflag_baseline.split(',')
                     for baseline in spltbaseline:
                         if preflagfluxcalmanualflagbaseline[0].find(baseline) == -1:
@@ -760,16 +710,16 @@ class preflag(BaseModule):
                             else:
                                 preflagfluxcalmanualflagbaseline[0] = preflagfluxcalmanualflagbaseline[0] + ',' + baseline
                 else:
-                    logger.warning('No flux calibrator dataset specified. Specified baselines(s) for flux calibrator dataset will not be flagged!')
+                    logger.warning('Beam ' + self.beam + ': No flux calibrator dataset specified. Specified baselines(s) for flux calibrator dataset will not be flagged!')
             # Flag correlation(s) for the polarised calibrator
             if preflagpolcalmanualflagbaseline[0] == self.preflag_manualflag_baseline and \
                     self.preflag_manualflag_polcal:
-                logger.info('Baseline(s) ' + self.preflag_manualflag_baseline + ' for polarised calibrator were already flagged')
+                logger.info('Beam ' + self.beam + ': Baseline(s) ' + self.preflag_manualflag_baseline + ' for polarised calibrator were already flagged')
             else:
                 if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()):
                     pc_baseline = 'flagdata(vis="' + self.get_polcal_path() + '", antenna="' + self.preflag_manualflag_baseline + '", flagbackup=False)'
                     lib.run_casa([pc_baseline])
-                    logger.debug('Flagged baseline(s) ' + self.preflag_manualflag_baseline + ' for polarised calibrator')
+                    logger.debug('Beam ' + self.beam + ': Flagged baseline(s) ' + self.preflag_manualflag_baseline + ' for polarised calibrator')
                     spltbaseline = self.preflag_manualflag_baseline.split(',')
                     for baseline in spltbaseline:
                         if preflagpolcalmanualflagbaseline[0].find(baseline) == -1:
@@ -778,40 +728,31 @@ class preflag(BaseModule):
                             else:
                                 preflagpolcalmanualflagbaseline[0] = preflagpolcalmanualflagbaseline[0] + ',' + baseline
                 else:
-                    logger.warning('No polarised calibrator dataset specified. Specified baselines(s) for polarised calibrator dataset will not be flagged!')
+                    logger.warning('Beam ' + self.beam + ': No polarised calibrator dataset specified. Specified baselines(s) for polarised calibrator dataset will not be flagged!')
             # Flag correlation(s) for the target beams
-            if self.preflag_manualflag_target:
-                if self.preflag_targetbeams == 'all':
-                    datasets = self.get_datasets()
-                    logger.debug('Flagging baseline(s) ' + self.preflag_manualflag_baseline + ' for all target beams')
-                else:
-                    try:
-                        beams = self.preflag_targetbeams.split(",")
-                    except:
-                        beams = self.preflag_targetbeams
-                    datasets = self.get_datasets(beams=beams)
-                    logger.debug('Flagging baseline(s) ' + self.preflag_manualflag_baseline + ' for selected target beams')
-                for vis, beam in datasets:
-                    if preflagtargetbeamsmanualflagbaseline[int(beam)] == self.preflag_manualflag_baseline:
-                        logger.info('Correlation(s) ' + self.preflag_manualflag_baseline + ' for target beam ' + beam + ' were already flagged')
-                    else:
-                        logger.debug('Flagging baseline(s) ' + self.preflag_manualflag_baseline + ' for target beam ' + beam)
-                        tg_baseline = 'flagdata(vis="' + str(vis) + '", antenna="' + self.preflag_manualflag_baseline + '", flagbackup=False)'
-                        lib.run_casa([tg_baseline])
-                        for baseline in spltbaseline:
-                            if preflagtargetbeamsmanualflagbaseline[int(beam)].find(baseline) == -1:
-                                if preflagtargetbeamsmanualflagbaseline[int(beam)] == '':
-                                    preflagtargetbeamsmanualflagbaseline[int(beam)] = baseline
-                                else:
-                                    preflagtargetbeamsmanualflagbaseline[int(beam)] = preflagtargetbeamsmanualflagbaseline[int(beam)] + ',' + baseline
+            if preflagtargetbeamsmanualflagbaseline[0] == self.preflag_manualflag_baseline and self.preflag_manualflag_target:
+                logger.info('Beam ' + self.beam + ': Baseline(s) ' + self.preflag_manualflag_baseline + ' for target beam dataset were already flagged!')
             else:
-                logger.warning('Target dataset not specified. Specified baseline(s) for target beam dataset(s) will not be flagged!')
+                if self.preflag_manualflag_target and os.path.isdir(self.get_target_path()):
+                    tg_baseline = 'flagdata(vis="' + self.get_target_path() + '", antenna="' + self.preflag_manualflag_baseline + '", flagbackup=False)'
+                    lib.run_casa([tg_baseline])
+                    logger.debug('Beam ' + self.beam + ': Flagging baseline(s) ' + self.preflag_manualflag_baseline + ' for target beam dataset')
+                    spltbaseline = self.preflag_manualflag_baseline.split(',')
+                    for baseline in spltbaseline:
+                        if preflagtargetbeamsmanualflagbaseline[0].find(baseline) == -1:
+                            if preflagtargetbeamsmanualflagbaseline[0] == '':
+                                preflagtargetbeamsmanualflagbaseline[0] = baseline
+                            else:
+                                preflagtargetbeamsmanualflagbaseline[0] = preflagtargetbeamsmanualflagbaseline[0] + ',' + baseline
+                else:
+                    logger.warning('Beam ' + self.beam + ': Target dataset not specified. Specified baseline(s) for target beam dataset will not be flagged!')
 
         # Save the derived parameters for the baseline flagging to the parameter file
 
-        subs_param.add_param(self, 'preflag_fluxcal_manualflag_baseline', preflagfluxcalmanualflagbaseline)
-        subs_param.add_param(self, 'preflag_polcal_manualflag_baseline', preflagpolcalmanualflagbaseline)
-        subs_param.add_param(self, 'preflag_targetbeams_manualflag_baseline', preflagtargetbeamsmanualflagbaseline)
+        subs_param.add_param(self, pbeam + '_fluxcal_manualflag_baseline', preflagfluxcalmanualflagbaseline)
+        subs_param.add_param(self, pbeam + '_polcal_manualflag_baseline', preflagpolcalmanualflagbaseline)
+        subs_param.add_param(self, pbeam + '_targetbeams_manualflag_baseline', preflagtargetbeamsmanualflagbaseline)
+
 
     def manualflag_channel(self):
         """
@@ -820,23 +761,24 @@ class preflag(BaseModule):
         """
         subs_setinit.setinitdirs(self)
 
+        pbeam = 'preflag_B' + str(self.beam).zfill(2)
+
         # Create the parameters for the parameter file for the manualflag step to flag individual channel ranges
 
-        preflagfluxcalmanualflagchannel = get_param_def(self, 'preflag_fluxcal_manualflag_channel', np.full(1, '', dtype='U50'))  # Flagged channels of fluxcal?
-        preflagpolcalmanualflagchannel = get_param_def(self, 'preflag_polcal_manualflag_channel', np.full(1, '', dtype='U50'))  # Flagged channels of polcal?
-        preflagtargetbeamsmanualflagchannel = get_param_def(self, 'preflag_targetbeams_manualflag_channel',
-                                                            np.full(self.NBEAMS, '', dtype='U50'))  # Flagged channels of target beams?
+        preflagfluxcalmanualflagchannel = get_param_def(self, pbeam + '_fluxcal_manualflag_channel', np.full(1, '', dtype='U50'))  # Flagged channels of fluxcal?
+        preflagpolcalmanualflagchannel = get_param_def(self, pbeam + '_polcal_manualflag_channel', np.full(1, '', dtype='U50'))  # Flagged channels of polcal?
+        preflagtargetbeamsmanualflagchannel = get_param_def(self, pbeam + '_targetbeams_manualflag_channel', np.full(1 , '', dtype='U50'))  # Flagged channels of target beams?
 
         if self.preflag_manualflag_channel != '':
-            logger.info('Flagging channel(s) ' + self.preflag_manualflag_channel)
+            logger.info('Beam ' + self.beam + ': Flagging channel(s) ' + self.preflag_manualflag_channel)
             # Flag channel(s) for the flux calibrator
             if preflagfluxcalmanualflagchannel[0] == self.preflag_manualflag_channel and self.preflag_manualflag_fluxcal:
-                logger.info('Channel(s) ' + self.preflag_manualflag_channel + ' for flux calibrator were already flagged')
+                logger.info('Beam ' + self.beam + ': Channel(s) ' + self.preflag_manualflag_channel + ' for flux calibrator were already flagged')
             else:
                 if self.preflag_manualflag_fluxcal and os.path.isdir(self.get_fluxcal_path()):
                     fc_channel = 'flagdata(vis="' + self.get_fluxcal_path() + '", spw="0:' + self.preflag_manualflag_channel + '", flagbackup=False)'
                     lib.run_casa([fc_channel])
-                    logger.debug('Flagged channel(s) ' + self.preflag_manualflag_channel + ' for flux calibrator')
+                    logger.debug('Beam ' + self.beam + ': Flagged channel(s) ' + self.preflag_manualflag_channel + ' for flux calibrator')
                     spltchannel = self.preflag_manualflag_channel.split(',')
                     for channel in spltchannel:
                         if preflagfluxcalmanualflagchannel[0].find(channel) == -1:
@@ -845,15 +787,15 @@ class preflag(BaseModule):
                             else:
                                 preflagfluxcalmanualflagchannel[0] = preflagfluxcalmanualflagchannel[0] + ',' + channel
                 else:
-                    logger.warning('No flux calibrator dataset specified. Specified channel range(s) for flux calibrator dataset will not be flagged!')
+                    logger.warning('Beam ' + self.beam + ': No flux calibrator dataset specified. Specified channel range(s) for flux calibrator dataset will not be flagged!')
             # Flag channel(s) for the polarised calibrator
             if preflagpolcalmanualflagchannel[0] == self.preflag_manualflag_channel and self.preflag_manualflag_polcal:
-                logger.info('Channel(s) ' + self.preflag_manualflag_channel + ' for polarised calibrator were already flagged')
+                logger.info('Beam ' + self.beam + ': Channel(s) ' + self.preflag_manualflag_channel + ' for polarised calibrator were already flagged')
             else:
                 if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()):
                     pc_channel = 'flagdata(vis="' + self.get_polcal_path() + '", spw="0:' + self.preflag_manualflag_channel + '", flagbackup=False)'
                     lib.run_casa([pc_channel])
-                    logger.debug('Flagged channel(s) ' + self.preflag_manualflag_channel + ' for polarised calibrator')
+                    logger.debug('Beam ' + self.beam + ': Flagged channel(s) ' + self.preflag_manualflag_channel + ' for polarised calibrator')
                     spltchannel = self.preflag_manualflag_channel.split(',')
                     for channel in spltchannel:
                         if preflagpolcalmanualflagchannel[0].find(channel) == -1:
@@ -862,40 +804,31 @@ class preflag(BaseModule):
                             else:
                                 preflagpolcalmanualflagchannel[0] = preflagpolcalmanualflagchannel[0] + ',' + channel
                 else:
-                    logger.warning('No polarised calibrator dataset specified. Specified channel range(s) for polarised calibrator dataset will not be flagged!')
+                    logger.warning('Beam ' + self.beam + ': No polarised calibrator dataset specified. Specified channel range(s) for polarised calibrator dataset will not be flagged!')
             # Flag channel(s) for the target beams
-            if self.preflag_manualflag_target:
-                if self.preflag_targetbeams == 'all':
-                    datasets = self.get_datasets()
-                    logger.debug('Flagging channel(s) ' + self.preflag_manualflag_channel + ' for all target beams')
-                else:
-                    try:
-                        beams = self.preflag_targetbeams.split(",")
-                    except:
-                        beams = self.preflag_targetbeams
-                    datasets = self.get_datasets(beams=beams)
-                    logger.debug('Flagging channel(s) ' + self.preflag_manualflag_channel + ' for selected target beams')
-                for vis, beam in datasets:
-                    if preflagtargetbeamsmanualflagchannel[int(beam)] == self.preflag_manualflag_channel:
-                        logger.info('Correlation(s) ' + self.preflag_manualflag_channel + ' for target beam ' + beam + ' were already flagged')
-                    else:
-                        logger.debug('Flagging channel(s) ' + self.preflag_manualflag_channel + ' for target beam ' + beam)
-                        tg_channel = 'flagdata(vis="' + str(vis) + '", spw="0:' + self.preflag_manualflag_channel + '", flagbackup=False)'
-                        lib.run_casa([tg_channel])
-                        for channel in spltchannel:
-                            if preflagtargetbeamsmanualflagchannel[int(beam)].find(channel) == -1:
-                                if preflagtargetbeamsmanualflagchannel[int(beam)] == '':
-                                    preflagtargetbeamsmanualflagchannel[int(beam)] = channel
-                                else:
-                                    preflagtargetbeamsmanualflagchannel[int(beam)] = preflagtargetbeamsmanualflagchannel[int(beam)] + ',' + channel
+            if preflagtargetbeamsmanualflagchannel[0] == self.preflag_manualflag_channel and self.preflag_manualflag_target:
+                logger.info('Beam ' + self.beam + ': Correlation(s) ' + self.preflag_manualflag_channel + ' for target beam dataset were already flagged')
             else:
-                logger.warning('Target dataset not specified. Specified channel range(s) for target beam dataset(s) will not be flagged!')
+                if self.preflag_manualflag_target and os.path.isdir(self.get_target_path()):
+                    tg_channel = 'flagdata(vis="' + self.get_target_path() + '", spw="0:' + self.preflag_manualflag_channel + '", flagbackup=False)'
+                    lib.run_casa([tg_channel])
+                    logger.debug('Beam ' + self.beam + ': Flagging channel(s) ' + self.preflag_manualflag_channel + ' for target beam dataset')
+                    spltchannel = self.preflag_manualflag_channel.split(',')
+                    for channel in spltchannel:
+                        if preflagtargetbeamsmanualflagchannel[0].find(channel) == -1:
+                            if preflagtargetbeamsmanualflagchannel[0] == '':
+                                preflagtargetbeamsmanualflagchannel[0] = channel
+                            else:
+                                preflagtargetbeamsmanualflagchannel[0] = preflagtargetbeamsmanualflagchannel[0] + ',' + channel
+                else:
+                    logger.warning('Beam ' + self.beam + ': Target dataset not specified. Specified channel range(s) for target beam dataset will not be flagged!')
 
         # Save the derived parameters for the channel flagging to the parameter file
 
-        subs_param.add_param(self, 'preflag_fluxcal_manualflag_channel', preflagfluxcalmanualflagchannel)
-        subs_param.add_param(self, 'preflag_polcal_manualflag_channel', preflagpolcalmanualflagchannel)
-        subs_param.add_param(self, 'preflag_targetbeams_manualflag_channel', preflagtargetbeamsmanualflagchannel)
+        subs_param.add_param(self, pbeam + '_fluxcal_manualflag_channel', preflagfluxcalmanualflagchannel)
+        subs_param.add_param(self, pbeam + '_polcal_manualflag_channel', preflagpolcalmanualflagchannel)
+        subs_param.add_param(self, pbeam + '_targetbeams_manualflag_channel', preflagtargetbeamsmanualflagchannel)
+
 
     def manualflag_time(self):
         """
@@ -904,23 +837,24 @@ class preflag(BaseModule):
         """
         subs_setinit.setinitdirs(self)
 
+        pbeam = 'preflag_B' + str(self.beam).zfill(2)
+
         # Create the parameters for the parameter file for the manualflag step to flag individual channel ranges
 
-        preflagfluxcalmanualflagtime = get_param_def(self, 'preflag_fluxcal_manualflag_time', np.full(1, '', dtype='U50'))  # Flagged time range(s) of fluxcal?
-        preflagpolcalmanualflagtime = get_param_def(self, 'preflag_polcal_manualflag_time', np.full(1, '', dtype='U50'))  # Flagged time range(s) of polcal?
-        preflagtargetbeamsmanualflagtime = get_param_def(self, 'preflag_targetbeams_manualflag_time',
-                                                         np.full(self.NBEAMS, '', dtype='U50'))  # Flagged time range(s) of target beams?
+        preflagfluxcalmanualflagtime = get_param_def(self, pbeam + '_fluxcal_manualflag_time', np.full(1, '', dtype='U50'))  # Flagged time range(s) of fluxcal?
+        preflagpolcalmanualflagtime = get_param_def(self, pbeam + '_polcal_manualflag_time', np.full(1, '', dtype='U50'))  # Flagged time range(s) of polcal?
+        preflagtargetbeamsmanualflagtime = get_param_def(self, pbeam + '_targetbeams_manualflag_time', np.full(1 , '', dtype='U50'))  # Flagged time range(s) of target beams?
 
         if self.preflag_manualflag_time != '':
-            logger.info('Flagging time range ' + self.preflag_manualflag_time)
+            logger.info('Beam ' + self.beam + ': Flagging time range ' + self.preflag_manualflag_time)
             # Flag time range for the flux calibrator
             if preflagfluxcalmanualflagtime[0] == self.preflag_manualflag_time and self.preflag_manualflag_fluxcal:
-                logger.info('Time range ' + self.preflag_manualflag_time + ' for flux calibrator was already flagged')
+                logger.info('Beam ' + self.beam + ': Time range ' + self.preflag_manualflag_time + ' for flux calibrator was already flagged')
             else:
                 if self.preflag_manualflag_fluxcal and os.path.isdir(self.get_fluxcal_path()):
                     fc_time = 'flagdata(vis="' + self.get_fluxcal_path() + '", timerange="' + self.preflag_manualflag_time + '", flagbackup=False)'
                     lib.run_casa([fc_time])
-                    logger.debug('Flagged time range ' + self.preflag_manualflag_time + ' for flux calibrator')
+                    logger.debug('Beam ' + self.beam + ': Flagged time range ' + self.preflag_manualflag_time + ' for flux calibrator')
                     splttime = self.preflag_manualflag_time.split(',')
                     for time in splttime:
                         if preflagfluxcalmanualflagtime[0].find(time) == -1:
@@ -929,7 +863,7 @@ class preflag(BaseModule):
                             else:
                                 preflagfluxcalmanualflagtime[0] = preflagfluxcalmanualflagtime[0] + ',' + time
                 else:
-                    logger.warning('No flux calibrator dataset specified. Specified time range(s) for '
+                    logger.warning('Beam ' + self.beam + ': No flux calibrator dataset specified. Specified time range(s) for '
                                    'flux calibrator dataset will not be flagged!')
             # Flag time range for the polarised calibrator
             if preflagpolcalmanualflagtime[0] == self.preflag_manualflag_time and self.preflag_manualflag_polcal:
@@ -938,7 +872,7 @@ class preflag(BaseModule):
                 if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()):
                     pc_time = 'flagdata(vis="' + self.get_polcal_path() + '", timerange="' + self.preflag_manualflag_time + '", flagbackup=False)'
                     lib.run_casa([pc_time])
-                    logger.debug('Flagged time range ' + self.preflag_manualflag_time + ' for polarised calibrator')
+                    logger.debug('Beam ' + self.beam + ': Flagged time range ' + self.preflag_manualflag_time + ' for polarised calibrator')
                     splttime = self.preflag_manualflag_time.split(',')
                     for time in splttime:
                         if preflagpolcalmanualflagtime[0].find(time) == -1:
@@ -947,41 +881,31 @@ class preflag(BaseModule):
                             else:
                                 preflagpolcalmanualflagtime[0] = preflagpolcalmanualflagtime[0] + ',' + time
                 else:
-                    logger.warning('No polariased calibrator dataset specified. Specified time range(s) '
+                    logger.warning('Beam ' + self.beam + ': No polariased calibrator dataset specified. Specified time range(s) '
                                    'for polarised calibrator dataset will not be flagged!')
             # Flag time range for the target beams
-            if self.preflag_manualflag_target:
-                if self.preflag_targetbeams == 'all':
-                    datasets = self.get_datasets()
-                    logger.debug('Flagging time range ' + self.preflag_manualflag_time + ' for all target beams')
-                else:
-                    try:
-                        beams = self.preflag_targetbeams.split(",")
-                    except:
-                        beams = self.preflag_targetbeams
-                    datasets = self.get_datasets(beams=beams)
-                    logger.debug('Flagging time range ' + self.preflag_manualflag_time + ' for selected target beams')
-                for vis, beam in datasets:
-                    if preflagtargetbeamsmanualflagtime[int(beam)] == self.preflag_manualflag_time:
-                        logger.info('Time range ' + self.preflag_manualflag_time + ' for target beam ' + beam + ' was already flagged')
-                    else:
-                        logger.debug('Flagging time range(s) ' + self.preflag_manualflag_time + ' for target beam ' + beam)
-                        tg_time = 'flagdata(vis="' + str(vis) + '", timerange="' + self.preflag_manualflag_time + '", flagbackup=False)'
-                        lib.run_casa([tg_time])
-                        for time in splttime:
-                            if preflagtargetbeamsmanualflagtime[int(beam)].find(time) == -1:
-                                if preflagtargetbeamsmanualflagtime[int(beam)] == '':
-                                    preflagtargetbeamsmanualflagtime[int(beam)] = time
-                                else:
-                                    preflagtargetbeamsmanualflagtime[int(beam)] = preflagtargetbeamsmanualflagtime[int(beam)] + ',' + time
+            if preflagtargetbeamsmanualflagtime[0] == self.preflag_manualflag_time and self.preflag_manualflag_target:
+                logger.info('Beam ' + self.beam + ': Time range ' + self.preflag_manualflag_time + ' for target beam dataset was already flagged!')
             else:
-                logger.warning('Target dataset not specified. Specified time range(s) for target beam dataset(s) will not be flagged!')
+                if self.preflag_manualflag_target and os.path.isdir(self.get_target_path()):
+                    tg_time = 'flagdata(vis="' + self.get_target_path() + '", timerange="' + self.preflag_manualflag_time + '", flagbackup=False)'
+                    lib.run_casa([tg_time])
+                    logger.debug('Beam ' + self.beam + ': Flagging time range(s) ' + self.preflag_manualflag_time + ' for target beam dataset')
+                    for time in splttime:
+                        if preflagtargetbeamsmanualflagtime[0].find(time) == -1:
+                            if preflagtargetbeamsmanualflagtime[0] == '':
+                                preflagtargetbeamsmanualflagtime[0] = time
+                            else:
+                                preflagtargetbeamsmanualflagtime[0] = preflagtargetbeamsmanualflagtime[0] + ',' + time
+                else:
+                    logger.warning('Beam ' + self.beam + ': Target dataset not specified. Specified time range(s) for target beam dataset will not be flagged!')
 
         # Save the derived parameters for the channel flagging to the parameter file
 
-        subs_param.add_param(self, 'preflag_fluxcal_manualflag_time', preflagfluxcalmanualflagtime)
-        subs_param.add_param(self, 'preflag_polcal_manualflag_time', preflagpolcalmanualflagtime)
-        subs_param.add_param(self, 'preflag_targetbeams_manualflag_time', preflagtargetbeamsmanualflagtime)
+        subs_param.add_param(self, pbeam + '_fluxcal_manualflag_time', preflagfluxcalmanualflagtime)
+        subs_param.add_param(self, pbeam + '_polcal_manualflag_time', preflagpolcalmanualflagtime)
+        subs_param.add_param(self, pbeam + '_targetbeams_manualflag_time', preflagtargetbeamsmanualflagtime)
+
 
     def manualflag_clipzeros(self):
         """
@@ -989,74 +913,65 @@ class preflag(BaseModule):
         """
         subs_setinit.setinitdirs(self)
 
+        pbeam = 'preflag_B' + str(self.beam).zfill(2)
+
         # Create the parameters for the parameter file for the manualflag step to flag the zero-valued data.
 
         # Zero valued data of fluxcal flagged?
-        preflagfluxcalmanualflagclipzeros = get_param_def(self, 'preflag_fluxcal_manualflag_clipzeros', False)
+        preflagfluxcalmanualflagclipzeros = get_param_def(self, pbeam + '_fluxcal_manualflag_clipzeros', False)
 
         # Zero valued data of polcal flagged?
-        preflagpolcalmanualflagclipzeros = get_param_def(self, 'preflag_polcal_manualflag_clipzeros', False)
+        preflagpolcalmanualflagclipzeros = get_param_def(self, pbeam + '_polcal_manualflag_clipzeros', False)
         # Zero valued data of target beams flagged?
-        preflagtargetbeamsmanualflagclipzeros = get_param_def(self, 'preflag_targetbeams_manualflag_clipzeros',
-                                                              np.full(self.NBEAMS, False))
+        preflagtargetbeamsmanualflagclipzeros = get_param_def(self, pbeam + '_targetbeams_manualflag_clipzeros', False)
 
         if self.preflag_manualflag_clipzeros:
-            logger.info('Flagging Zero-valued data')
+            logger.info('Beam ' + self.beam + ': Flagging Zero-valued data')
             # Flag the Zero-valued data for the flux calibrator
             if preflagfluxcalmanualflagclipzeros and self.preflag_manualflag_fluxcal:
-                logger.info('Zero-valued data for flux calibrator were already flagged')
+                logger.info('Beam ' + self.beam + ': Zero-valued data for flux calibrator were already flagged')
             else:
                 if self.preflag_manualflag_fluxcal and os.path.isdir(self.get_fluxcal_path()):
                     fc_clipzeros = 'flagdata(vis="' + self.get_fluxcal_path() + '", mode="clip", clipzeros=True, flagbackup=False)'
                     lib.run_casa([fc_clipzeros])
-                    logger.debug('Flagged Zero-valued data for flux calibrator')
+                    logger.debug('Beam ' + self.beam + ': Flagged Zero-valued data for flux calibrator')
                     preflagfluxcalmanualflagclipzeros = True
                 else:
                     preflagfluxcalmanualflagclipzeros = False
-                    logger.warning('No flux calibrator dataset specified. Zero-valued data for flux calibrator '
+                    logger.warning('Beam ' + self.beam + ': No flux calibrator dataset specified. Zero-valued data for flux calibrator '
                                    'dataset will not be flagged!')
             # Flag the Zero-valued data for the polarised calibrator
             if preflagpolcalmanualflagclipzeros and self.preflag_manualflag_polcal:
-                logger.info('Zero-values data for polarised calibrator were already flagged')
+                logger.info('Beam ' + self.beam + ': Zero-values data for polarised calibrator were already flagged')
             else:
                 if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()):
                     pc_clipzeros = 'flagdata(vis="' + self.get_polcal_path() + '", mode="clip", clipzeros=True, flagbackup=False)'
                     lib.run_casa([pc_clipzeros])
-                    logger.debug('Flagged Zero-valued data for polarised calibrator')
+                    logger.debug('Beam ' + self.beam + ': Flagged Zero-valued data for polarised calibrator')
                     preflagpolcalmanualflagclipzeros = True
                 else:
                     preflagpolcalmanualflagclipzeros = False
-                    logger.warning('No polarised calibrator dataset specified. Zero-valued data for polariased '
+                    logger.warning('Beam ' + self.beam + ': No polarised calibrator dataset specified. Zero-valued data for polariased '
                                    'calibrator dataset will not be flagged!')
             # Flag the Zero-valued for the target beams
-            if self.preflag_manualflag_target:
-                if self.preflag_targetbeams == 'all':
-                    datasets = self.get_datasets()
-                    logger.debug('Flagging Zero-valued data for all target beams')
-                else:
-                    try:
-                        beams = self.preflag_targetbeams.split(",")
-                    except:
-                        beams = self.preflag_targetbeams
-                    datasets = self.get_datasets(beams=beams)
-                    logger.debug('Flagging Zero-valued data for selected target beams')
-                for vis, beam in datasets:
-                    if preflagtargetbeamsmanualflagclipzeros[int(beam)]:
-                        logger.info('Zero-valued data for target beam ' + beam + ' were already flagged')
-                    else:
-                        logger.debug('Zero-valued data for target beam ' + beam)
-                        tg_clipzeros = 'flagdata(vis="' + str(vis) + '", mode="clip", clipzeros=True, flagbackup=False)'
-                        lib.run_casa([tg_clipzeros])
-                        preflagtargetbeamsmanualflagclipzeros[int(beam)] = True
+            if self.preflag_manualflag_clipzeros and self.preflag_manualflag_target:
+                logger.info('Beam ' + self.beam + ': Zero-valued data for target beam dataset were already flagged')
             else:
-                logger.warning('Target dataset not specified. Zero-values data for target beam dataset(s) will '
+                if self.preflag_manualflag_target and os.path.isdir(self.get_target_path()):
+                    tg_clipzeros = 'flagdata(vis="' + self.get_target_path() + '", mode="clip", clipzeros=True, flagbackup=False)'
+                    lib.run_casa([tg_clipzeros])
+                    logger.debug('Beam ' + self.beam + ': Zero-valued data for target beam flagged!')
+                    preflagtargetbeamsmanualflagclipzeros = True
+                else:
+                    logger.warning('Beam ' + self.beam + ': Target dataset not specified. Zero-values data for target beam dataset will '
                                'not be flagged!')
 
         # Save the derived parameters for the auto-correlation flagging to the parameter file
 
-        subs_param.add_param(self, 'preflag_fluxcal_manualflag_clipzeros', preflagfluxcalmanualflagclipzeros)
-        subs_param.add_param(self, 'preflag_polcal_manualflag_clipzeros', preflagpolcalmanualflagclipzeros)
-        subs_param.add_param(self, 'preflag_targetbeams_manualflag_clipzeros', preflagtargetbeamsmanualflagclipzeros)
+        subs_param.add_param(self, pbeam + '_fluxcal_manualflag_clipzeros', preflagfluxcalmanualflagclipzeros)
+        subs_param.add_param(self, pbeam + '_polcal_manualflag_clipzeros', preflagpolcalmanualflagclipzeros)
+        subs_param.add_param(self, pbeam + '_targetbeams_manualflag_clipzeros', preflagtargetbeamsmanualflagclipzeros)
+
 
     def aoflagger_bandpass(self):
         """
@@ -1065,15 +980,17 @@ class preflag(BaseModule):
         """
         subs_setinit.setinitdirs(self)
 
+        pbeam = 'preflag_B' + str(self.beam).zfill(2)
+
         # Create the parameters for the parameter file for the bandpass step of the AOFLagger step
 
         # Bandpass successfully derived
-        preflagaoflaggerbandpassstatus = get_param_def(self, 'preflag_aoflagger_bandpass_status', False)
+        preflagaoflaggerbandpassstatus = get_param_def(self, pbeam + '_aoflagger_bandpass_status', False)
 
         if self.preflag_aoflagger_bandpass:
             # Check if bandpass was already derived and bandpass table is available
             if os.path.isfile(self.get_bandpass_path()):
-                logger.info('Preliminary bandpass table was already derived')
+                logger.info('Beam ' + self.beam + ': Preliminary bandpass table was already derived')
                 preflagaoflaggerbandpassstatus = True
             # If not, calculate the bandpass for the setup of the observation using the flux calibrator
             elif not preflagaoflaggerbandpassstatus:
@@ -1087,19 +1004,20 @@ class preflag(BaseModule):
                     create_bandpass(self.get_target_path(self.beam), self.get_bandpass_path())
                 if os.path.isfile(self.get_bandpass_path()):
                     preflagaoflaggerbandpassstatus = True
-                    logger.info('Derived preliminary bandpass table for AOFlagging')
+                    logger.info('Beam ' + self.beam + ': Derived preliminary bandpass table for AOFlagging')
                 else:
-                    error = 'Preliminary bandpass table for flux calibrator was not derived successfully!'
+                    error = 'Beam ' + self.beam + ': Preliminary bandpass table for flux calibrator was not derived successfully!'
                     logger.error(error)
                     raise ApercalException(error)
             else:
-                error = 'Bandpass table not available at {}. Preliminary bandpass cannot be applied'.format(self.get_bandpass_path())
+                error = 'Beam ' + self.beam + ': Bandpass table not available at {}. Preliminary bandpass cannot be applied'.format(self.get_bandpass_path())
                 logger.error(error)
                 raise ApercalException(error)
 
         # Save the derived parameters for the AOFlagger bandpass status to the parameter file
 
-        subs_param.add_param(self, 'preflag_aoflagger_bandpass_status', preflagaoflaggerbandpassstatus)
+        subs_param.add_param(self, pbeam + '_aoflagger_bandpass_status', preflagaoflaggerbandpassstatus)
+
 
     def aoflagger_plot(self, mspath, baselines=[(0, 0xb), (2, 7), (4, 5)]):
         """
@@ -1111,7 +1029,7 @@ class preflag(BaseModule):
             baselines (List[Tuple[int]]): baselines for which to produce the plots. These are
                                           antenna number in the MS (typically 0 means RT2).
         """
-        logger.info("Storing flagging images for " + mspath)
+        logger.info('Beam ' + self.beam + ': Storing flagging images for ' + mspath)
         beamstr = mspath.rstrip('/').split('/')[-3] # beam number as string, "29" or so
 
         if self.subdirification:
@@ -1124,7 +1042,8 @@ class preflag(BaseModule):
         for (ant1, ant2) in baselines:
             pngname = "{}-flags-{:02d}-{:02d}.png".format(msname, ant1, ant2)
             lib.basher("rfigui -save-baseline {} {} {} 0 0 {}".format(destination_path + "/" + pngname, ant1, ant2, mspath))
-        logger.info("Done storing flagging images for " + mspath)
+        logger.info('Beam ' + self.beam + ': Done storing flagging images for ' + mspath)
+
 
     def aoflagger_flag(self):
         """
@@ -1133,17 +1052,18 @@ class preflag(BaseModule):
         """
         subs_setinit.setinitdirs(self)
 
+        pbeam = 'preflag_B' + str(self.beam).zfill(2)
+
         # Create the parameters for the parameter file for the bandpass step of the AOFlagger step
 
         # AOFlagged the flux calibrator?
-        preflagaoflaggerfluxcalflag = get_param_def(self, 'preflag_aoflagger_fluxcal_flag_status', False)
+        preflagaoflaggerfluxcalflag = get_param_def(self, pbeam + '_aoflagger_fluxcal_flag_status', False)
 
         # AOFlagged the polarised calibrator?
-        preflagaoflaggerpolcalflag = get_param_def(self, 'preflag_aoflagger_polcal_flag_status', False)
+        preflagaoflaggerpolcalflag = get_param_def(self, pbeam + '_aoflagger_polcal_flag_status', False)
 
         # AOFlagged the target beams?
-        preflagaoflaggertargetbeamsflag = get_param_def(self, 'preflag_aoflagger_targetbeams_flag_status',
-                                                        np.full(self.NBEAMS, False))
+        preflagaoflaggertargetbeamsflag = get_param_def(self, pbeam + '_aoflagger_targetbeams_flag_status', False)
 
         base_cmd = 'aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_fluxcalstrat
         
@@ -1154,9 +1074,9 @@ class preflag(BaseModule):
             if self.preflag_aoflagger_fluxcal and self.fluxcal != '':
                 if not preflagaoflaggerfluxcalflag:
                     if os.path.isdir(self.get_fluxcal_path()) and self.preflag_aoflagger_fluxcalstrat != '':
-                        logger.info('Using AOFlagger to flag flux calibrator dataset')
+                        logger.info('Beam ' + self.beam + ': Using AOFlagger to flag flux calibrator dataset')
                         # Check if bandpass table was derived successfully
-                        preflagaoflaggerbandpassstatus = get_param_def(self, 'preflag_aoflagger_bandpass_status', True)
+                        preflagaoflaggerbandpassstatus = get_param_def(self, '_aoflagger_bandpass_status', True)
                         if self.preflag_aoflagger_bandpass and preflagaoflaggerbandpassstatus:
                             lib.basher(base_cmd + ' -bandpass ' + self.get_bandpass_path() + ' ' + self.get_fluxcal_path(),
                                        prefixes_to_strip=strip_prefixes)
@@ -1165,157 +1085,151 @@ class preflag(BaseModule):
                         elif self.preflag_aoflagger_bandpass and not preflagaoflaggerbandpassstatus:
                             lib.basher(base_cmd + ' ' + self.get_fluxcal_path(),
                                        prefixes_to_strip=strip_prefixes)
-                            logger.warning('Used AOFlagger to flag flux calibrator without preliminary bandpass '
+                            logger.warning('Beam ' + self.beam + ': Used AOFlagger to flag flux calibrator without preliminary bandpass '
                                            'applied. Better results are usually obtained with a preliminary bandpass applied.')
                             preflagaoflaggerfluxcalflag = True
                         elif not self.preflag_aoflagger_bandpass:
                             lib.basher(base_cmd + ' ' + self.get_fluxcal_path(), prefixes_to_strip=strip_prefixes)
-                            logger.warning('Used AOFlagger to flag flux calibrator without preliminary bandpass '
+                            logger.warning('Beam ' + self.beam + ': Used AOFlagger to flag flux calibrator without preliminary bandpass '
                                            'applied. Better results are usually obtained with a preliminary bandpass applied.')
                             preflagaoflaggerfluxcalflag = True
                         # it is not critical if plotting fails
                         try:
                             self.aoflagger_plot(self.get_fluxcal_path())
                         except Exception as e:
-                            logger.warning("Aoflagger plotting failed")
+                            logger.warning('Beam ' + self.beam + ': AOflagger plotting failed')
                             logger.exception(e)
                     else:
-                        error = 'Flux calibrator dataset or strategy not defined properly or dataset' \
+                        error = 'Beam ' + self.beam + ': Flux calibrator dataset or strategy not defined properly or dataset' \
                                 'not available. Not AOFlagging flux calibrator.'
                         logger.error(error)
                         raise ApercalException(error)
                 else:
-                    logger.info('Flux calibrator was already flagged with AOFlagger!')
+                    logger.info('Beam ' + self.beam + ': Flux calibrator was already flagged with AOFlagger!')
             # Flag the polarised calibrator with AOFlagger
             if self.preflag_aoflagger_polcal and self.polcal != '':
                 if not preflagaoflaggerpolcalflag:
                     if not os.path.isdir(self.get_polcal_path()):
-                        error = "Can't find polarisation calibrator dataset: {}".format(self.get_polcal_path())
+                        error = 'Beam ' + self.beam + ': Cannot find polarisation calibrator dataset: {}'.format(self.get_polcal_path())
                         logger.error(error)
                         raise ApercalException(error)
 
                     if self.preflag_aoflagger_polcalstrat == '':
-                        error = 'Polarised strategy not defined'
+                        error = 'Beam ' + self.beam + ': Strategy for polarised calibrator not defined'
                         logger.error(error)
                         raise ApercalException(error)
 
-                    logger.info('Using AOFlagger to flag polarised calibrator dataset.')
+                    logger.info('Beam ' + self.beam + ': Using AOFlagger to flag polarised calibrator dataset.')
                     # Check if bandpass was applied successfully
                     # Check if bandpass table was derived successfully
-                    preflagaoflaggerbandpassstatus = get_param_def(self, 'preflag_aoflagger_bandpass_status', False)
+                    preflagaoflaggerbandpassstatus = get_param_def(self, pbeam + '_aoflagger_bandpass_status', False)
                     ao_base_cmd = 'aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_polcalstrat
                     if self.preflag_aoflagger_bandpass and preflagaoflaggerbandpassstatus:
                         lib.basher(ao_base_cmd + ' -bandpass ' + self.get_bandpass_path() + ' ' + self.get_polcal_path(),
                                    prefixes_to_strip=strip_prefixes)
-                        logger.debug('Used AOFlagger to flag polarised calibrator with preliminary bandpass applied.')
+                        logger.debug('Beam ' + self.beam + ': Used AOFlagger to flag polarised calibrator with preliminary bandpass applied.')
                         preflagaoflaggerpolcalflag = True
                     elif self.preflag_aoflagger_bandpass and not preflagaoflaggerbandpassstatus:
                         lib.basher(ao_base_cmd + ' ' + self.get_polcal_path(), prefixes_to_strip=strip_prefixes)
-                        logger.warning('Used AOFlagger to flag polarised calibrator without preliminary bandpass '
+                        logger.warning('Beam ' + self.beam + ': Used AOFlagger to flag polarised calibrator without preliminary bandpass '
                                        'applied. Better results are usually obtained with a preliminary bandpass applied.')
                         preflagaoflaggerpolcalflag = True
                     elif not self.preflag_aoflagger_bandpass:
                         lib.basher(ao_base_cmd + ' ' + self.get_polcal_path(), prefixes_to_strip=strip_prefixes)
-                        logger.info('Used AOFlagger to flag polarised calibrator without preliminary bandpass '
+                        logger.info('Beam ' + self.beam + ': Used AOFlagger to flag polarised calibrator without preliminary bandpass '
                                     'applied. Better results are usually obtained with a preliminary bandpass applied.')
                         preflagaoflaggerpolcalflag = True
                     # it is not critical if plotting fails
                     try:
                         self.aoflagger_plot(self.get_polcal_path())
                     except Exception as e:
-                        logger.warning("Aoflagger plotting failed")
+                        logger.warning('Beam ' + self.beam + ': Aoflagger plotting failed')
                         logger.exception(e)
                 else:
-                    logger.info('Polarised calibrator was already flagged with AOFlagger!')
+                    logger.info('Beam ' + self.beam + ': Polarised calibrator was already flagged with AOFlagger!')
 
             # Flag the target beams with AOFlagger
             if self.preflag_aoflagger_target and self.target != '':
-                if self.preflag_aoflagger_targetstrat != '':
-                    logger.info('Using AOFlagger to flag selected target beam dataset(s)')
+                if not preflagaoflaggertargetbeamsflag:
+                    if not os.path.isdir(self.get_target_path()):
+                        error = 'Beam ' + self.beam + ': Cannot find target dataset: {}'.format(self.get_target_path())
+                        logger.error(error)
+                        raise ApercalException(error)
+
+                    if self.preflag_aoflagger_targetstrat == '':
+                        error = 'Beam ' + self.beam + ': Strategy for target dataset not defined'
+                        logger.error(error)
+                        raise ApercalException(error)
+
+                    logger.info('Beam ' + self.beam + ': Using AOFlagger to flag selected target beam dataset(s)')
                     # Check if parameter exists already and bandpass was applied successfully
                     # Check if bandpass table was derived successfully
-                    preflagaoflaggerbandpassstatus = get_param_def(self, 'preflag_aoflagger_bandpass_status', False)
-                    if self.preflag_targetbeams == 'all':  # Create a list of target beams
-                        datasets = self.get_datasets()
-                        logger.info('AOFlagging all target beams')
-                    else:
-                        try:
-                            beams = self.preflag_targetbeams.split(",")
-                        except:
-                            beams = self.preflag_targetbeams
-                        datasets = self.get_datasets(beams=beams)
-                        logger.info('AOFlagging all selected target beam(s)')
-                    for vis, beam in datasets:
-                        if self.preflag_aoflagger_use_interval:
-                            if not preflagaoflaggertargetbeamsflag[int(beam)]:
-                                base_cmd = 'aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_targetstrat + " --max-interval-size {0}".format(self.preflag_aoflagger_delta_interval) + " -j {0}".format(
-                                self.preflag_aoflagger_threads)
-                                if self.preflag_aoflagger_bandpass and preflagaoflaggerbandpassstatus:
-                                    lib.basher(base_cmd + ' -bandpass ' + self.get_bandpass_path() + ' ' + vis,
-                                            prefixes_to_strip=strip_prefixes)
-                                    logger.debug('Used AOFlagger to flag target beam {} with preliminary '
-                                                'bandpass applied'.format(beam))
-                                    preflagaoflaggertargetbeamsflag[int(beam)] = True
-                                elif self.preflag_aoflagger_bandpass and not preflagaoflaggerbandpassstatus:
-                                    lib.basher(base_cmd + ' ' + vis, prefixes_to_strip=strip_prefixes)
-                                    logger.warning('Used AOFlagger to flag target beam {} without preliminary bandpass '
-                                                'applied. Better results are usually obtained with a preliminary '
-                                                'bandpass applied.'.format(beam))
-                                    preflagaoflaggertargetbeamsflag[int(beam)] = True
-                                elif not self.preflag_aoflagger_bandpass:
-                                    lib.basher(base_cmd + ' ' + vis, prefixes_to_strip=strip_prefixes)
-                                    logger.warning('Used AOFlagger to flag target beam {} without preliminary bandpass '
-                                                'applied. Better results are usually obtained with a preliminary '
-                                                'bandpass applied.'.format(beam))
-                                    preflagaoflaggertargetbeamsflag[int(beam)] = True
-                                # it is not critical if plotting fails
-                                try:
-                                    self.aoflagger_plot(vis)
-                                except Exception as e:
-                                    logger.warning("Aoflagger plotting failed")
-                                    logger.exception(e)
-                            else:
-                                logger.info(
-                                    'Target beam ' + beam + ' was already flagged with AOFlagger!')
+                    preflagaoflaggerbandpassstatus = get_param_def(self, pbeam + '_aoflagger_bandpass_status', False)
+                    if self.preflag_aoflagger_use_interval:
+                        if not preflagaoflaggertargetbeamsflag:
+                            base_cmd = 'aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_targetstrat + " --max-interval-size {0}".format(self.preflag_aoflagger_delta_interval) + " -j {0}".format(
+                            self.preflag_aoflagger_threads)
+                            if self.preflag_aoflagger_bandpass and preflagaoflaggerbandpassstatus:
+                                lib.basher(base_cmd + ' -bandpass ' + self.get_bandpass_path() + ' ' + self.get_target_path(),
+                                        prefixes_to_strip=strip_prefixes)
+                                logger.debug('Beam ' + self.beam + ': Used AOFlagger to flag target beam with preliminary bandpass applied')
+                                preflagaoflaggertargetbeamsflag = True
+                            elif self.preflag_aoflagger_bandpass and not preflagaoflaggerbandpassstatus:
+                                lib.basher(base_cmd + ' ' + self.get_target_path(), prefixes_to_strip=strip_prefixes)
+                                logger.warning('Beam ' + self.beam + ': Used AOFlagger to flag target beam without preliminary bandpass '
+                                            'applied. Better results are usually obtained with a preliminary bandpass applied.')
+                                preflagaoflaggertargetbeamsflag = True
+                            elif not self.preflag_aoflagger_bandpass:
+                                lib.basher(base_cmd + ' ' + self.get_target_path(), prefixes_to_strip=strip_prefixes)
+                                logger.warning('Beam ' + self.beam + ': Used AOFlagger to flag target beam without preliminary bandpass '
+                                            'applied. Better results are usually obtained with a preliminary '
+                                            'bandpass applied.')
+                                preflagaoflaggertargetbeamsflag = True
+                            # it is not critical if plotting fails
+                            try:
+                                self.aoflagger_plot(self.get_target_path())
+                            except Exception as e:
+                                logger.warning('Beam ' + self.beam + ': Aoflagger plotting failed')
+                                logger.exception(e)
                         else:
-                            base_cmd = 'aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_targetstrat
-                            if not preflagaoflaggertargetbeamsflag[int(beam)]:
-                                if self.preflag_aoflagger_bandpass and preflagaoflaggerbandpassstatus:
-                                    lib.basher(base_cmd + ' -bandpass ' + self.get_bandpass_path() + ' ' + vis,
-                                            prefixes_to_strip=strip_prefixes)
-                                    logger.debug('Used AOFlagger to flag target beam {} with preliminary '
-                                                'bandpass applied'.format(beam))
-                                    preflagaoflaggertargetbeamsflag[int(beam)] = True
-                                elif self.preflag_aoflagger_bandpass and not preflagaoflaggerbandpassstatus:
-                                    lib.basher(base_cmd + ' ' + vis, prefixes_to_strip=strip_prefixes)
-                                    logger.warning('Used AOFlagger to flag target beam {} without preliminary bandpass '
-                                                'applied. Better results are usually obtained with a preliminary '
-                                                'bandpass applied.'.format(beam))
-                                    preflagaoflaggertargetbeamsflag[int(beam)] = True
-                                elif not self.preflag_aoflagger_bandpass:
-                                    lib.basher(base_cmd + ' ' + vis, prefixes_to_strip=strip_prefixes)
-                                    logger.warning('Used AOFlagger to flag target beam {} without preliminary bandpass '
-                                                'applied. Better results are usually obtained with a preliminary '
-                                                'bandpass applied.'.format(beam))
-                                    preflagaoflaggertargetbeamsflag[int(beam)] = True
-                                # it is not critical if plotting fails
-                                try:
-                                    self.aoflagger_plot(vis)
-                                except Exception as e:
-                                    logger.warning("Aoflagger plotting failed")
-                                    logger.exception(e)
-                            else:
-                                logger.info('Target beam ' + beam + ' was already flagged with AOFlagger!')
+                            logger.info('Beam ' + self.beam + ': Target beam dataset was already flagged with AOFlagger!')
+                    else:
+                        base_cmd = 'aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_targetstrat
+                        if not preflagaoflaggertargetbeamsflag:
+                            if self.preflag_aoflagger_bandpass and preflagaoflaggerbandpassstatus:
+                                lib.basher(base_cmd + ' -bandpass ' + self.get_bandpass_path() + ' ' + self.get_target_path(),
+                                        prefixes_to_strip=strip_prefixes)
+                                logger.debug('Beam ' + self.beam + ': Used AOFlagger to flag target beam with preliminary bandpass applied')
+                                preflagaoflaggertargetbeamsflag = True
+                            elif self.preflag_aoflagger_bandpass and not preflagaoflaggerbandpassstatus:
+                                lib.basher(base_cmd + ' ' + self.get_target_path(), prefixes_to_strip=strip_prefixes)
+                                logger.warning('Beam ' + self.beam + ': Used AOFlagger to flag target beam without preliminary bandpass '
+                                            'applied. Better results are usually obtained with a preliminary bandpass applied.')
+                                preflagaoflaggertargetbeamsflag = True
+                            elif not self.preflag_aoflagger_bandpass:
+                                lib.basher(base_cmd + ' ' + self.get_target_path(), prefixes_to_strip=strip_prefixes)
+                                logger.warning('Beam ' + self.beam + ': Used AOFlagger to flag target beam without preliminary bandpass '
+                                            'applied. Better results are usually obtained with a preliminary bandpass applied.')
+                                preflagaoflaggertargetbeamsflag = True
+                            # it is not critical if plotting fails
+                            try:
+                                self.aoflagger_plot(self.get_target_path())
+                            except Exception as e:
+                                logger.warning('Beam ' + self.beam + ': Aoflagger plotting failed')
+                                logger.exception(e)
+                        else:
+                            logger.info('Beam ' + self.beam + ': Target beam dataset was already flagged with AOFlagger!')
                 else:
-                    error = 'Target beam dataset(s) or strategy not defined properly. Not AOFlagging ' \
+                    error = 'Beam ' + self.beam + ': Target beam dataset(s) or strategy not defined properly. Not AOFlagging ' \
                             'target beam dataset(s).'
                     logger.error(error)
                     raise ApercalException(error)
 
         # Save the derived parameters for the AOFlagger status to the parameter file
-        subs_param.add_param(self, 'preflag_aoflagger_fluxcal_flag_status', preflagaoflaggerfluxcalflag)
-        subs_param.add_param(self, 'preflag_aoflagger_polcal_flag_status', preflagaoflaggerpolcalflag)
-        subs_param.add_param(self, 'preflag_aoflagger_targetbeams_flag_status', preflagaoflaggertargetbeamsflag)
+        subs_param.add_param(self, pbeam + '_aoflagger_fluxcal_flag_status', preflagaoflaggerfluxcalflag)
+        subs_param.add_param(self, pbeam + '_aoflagger_polcal_flag_status', preflagaoflaggerpolcalflag)
+        subs_param.add_param(self, pbeam + '_aoflagger_targetbeams_flag_status', preflagaoflaggertargetbeamsflag)
+
 
     def temp_del(self):
         subs_param.del_param(self, 'preflag_fluxcal_manualflag_antenna')
@@ -1330,6 +1244,7 @@ class preflag(BaseModule):
         subs_param.del_param(self, 'preflag_polcal_manualflag_time')
         subs_param.del_param(self, 'preflag_fluxcal_manualflag_clipzeros')
         subs_param.del_param(self, 'preflag_polcal_manualflag_clipzeros')
+
 
     def summary(self):
         """
@@ -1445,57 +1360,129 @@ class preflag(BaseModule):
         logger.warning('Deleting all raw data products and their directories. You will need to '
                        'start with the PREPARE step again!')
         subs_managefiles.director(self, 'ch', self.basedir)
-        deldirs = glob.glob(self.basedir + '[0-9][0-9]' + '/' + self.rawsubdir)
-        for dir_ in deldirs:
-            subs_managefiles.director(self, 'rm', dir_)
-        logger.warning(' Deleting all parameter file entries for PREPARE and PREFLAG module')
-        subs_param.del_param(self, 'prepare_fluxcal_requested')
-        subs_param.del_param(self, 'prepare_fluxcal_diskstatus')
-        subs_param.del_param(self, 'prepare_fluxcal_altastatus')
-        subs_param.del_param(self, 'prepare_fluxcal_copystatus')
-        subs_param.del_param(self, 'prepare_fluxcal_rejreason')
-        subs_param.del_param(self, 'prepare_polcal_requested')
-        subs_param.del_param(self, 'prepare_polcal_diskstatus')
-        subs_param.del_param(self, 'prepare_polcal_altastatus')
-        subs_param.del_param(self, 'prepare_polcal_copystatus')
-        subs_param.del_param(self, 'prepare_polcal_rejreason')
-        subs_param.del_param(self, 'prepare_targetbeams_requested')
-        subs_param.del_param(self, 'prepare_targetbeams_diskstatus')
-        subs_param.del_param(self, 'prepare_targetbeams_altastatus')
-        subs_param.del_param(self, 'prepare_targetbeams_copystatus')
-        subs_param.del_param(self, 'prepare_targetbeams_rejreason')
+        subs_managefiles.director(self, 'rm', self.basedir + self.beam + '/' + self.rawsubdir)
+        logger.warning('Deleting all parameter file entries for PREPARE and PREFLAG module')
 
-        subs_param.del_param(self, 'preflag_fluxcal_shadow')
-        subs_param.del_param(self, 'preflag_polcal_shadow')
-        subs_param.del_param(self, 'preflag_targetbeams_shadow')
-        subs_param.del_param(self, 'preflag_fluxcal_edges')
-        subs_param.del_param(self, 'preflag_polcal_edges')
-        subs_param.del_param(self, 'preflag_targetbeams_edges')
-        subs_param.del_param(self, 'preflag_fluxcal_ghosts')
-        subs_param.del_param(self, 'preflag_polcal_ghosts')
-        subs_param.del_param(self, 'preflag_targetbeams_ghosts')
-        subs_param.del_param(self, 'preflag_fluxcal_manualflag_auto')
-        subs_param.del_param(self, 'preflag_polcal_manualflag_auto')
-        subs_param.del_param(self, 'preflag_targetbeams_manualflag_auto')
-        subs_param.del_param(self, 'preflag_fluxcal_manualflag_antenna')
-        subs_param.del_param(self, 'preflag_polcal_manualflag_antenna')
-        subs_param.del_param(self, 'preflag_targetbeams_manualflag_antenna')
-        subs_param.del_param(self, 'preflag_fluxcal_manualflag_corr')
-        subs_param.del_param(self, 'preflag_polcal_manualflag_corr')
-        subs_param.del_param(self, 'preflag_targetbeams_manualflag_corr')
-        subs_param.del_param(self, 'preflag_fluxcal_manualflag_baseline')
-        subs_param.del_param(self, 'preflag_polcal_manualflag_baseline')
-        subs_param.del_param(self, 'preflag_targetbeams_manualflag_baseline')
-        subs_param.del_param(self, 'preflag_fluxcal_manualflag_channel')
-        subs_param.del_param(self, 'preflag_polcal_manualflag_channel')
-        subs_param.del_param(self, 'preflag_targetbeams_manualflag_channel')
-        subs_param.del_param(self, 'preflag_fluxcal_manualflag_time')
-        subs_param.del_param(self, 'preflag_polcal_manualflag_time')
-        subs_param.del_param(self, 'preflag_targetbeams_manualflag_time')
-        subs_param.del_param(self, 'preflag_fluxcal_manualflag_clipzeros')
-        subs_param.del_param(self, 'preflag_polcal__manualflag_clipzeros')
-        subs_param.del_param(self, 'preflag_targetbeams_manualflag_clipzeros')
-        subs_param.del_param(self, 'preflag_aoflagger_bandpass_status')
-        subs_param.del_param(self, 'preflag_aoflagger_fluxcal_flag_status')
-        subs_param.del_param(self, 'preflag_aoflagger_polcal_flag_status')
-        subs_param.del_param(self, 'preflag_aoflagger_targetbeams_flag_status')
+        prebeam = 'prepare_B' + str(self.beam).zfill(2)
+        pbeam = 'preflag_B' + str(self.beam).zfill(2)
+
+        subs_param.del_param(self, prebeam + '_fluxcal_requested')
+        subs_param.del_param(self, prebeam + '_fluxcal_diskstatus')
+        subs_param.del_param(self, prebeam + '_fluxcal_altastatus')
+        subs_param.del_param(self, prebeam + '_fluxcal_copystatus')
+        subs_param.del_param(self, prebeam + '_fluxcal_rejreason')
+        subs_param.del_param(self, prebeam + '_polcal_requested')
+        subs_param.del_param(self, prebeam + '_polcal_diskstatus')
+        subs_param.del_param(self, prebeam + '_polcal_altastatus')
+        subs_param.del_param(self, prebeam + '_polcal_copystatus')
+        subs_param.del_param(self, prebeam + '_polcal_rejreason')
+        subs_param.del_param(self, prebeam + '_targetbeams_requested')
+        subs_param.del_param(self, prebeam + '_targetbeams_diskstatus')
+        subs_param.del_param(self, prebeam + '_targetbeams_altastatus')
+        subs_param.del_param(self, prebeam + '_targetbeams_copystatus')
+        subs_param.del_param(self, prebeam + '_targetbeams_rejreason')
+
+        subs_param.del_param(self, pbeam + '_fluxcal_shadow')
+        subs_param.del_param(self, pbeam + '_polcal_shadow')
+        subs_param.del_param(self, pbeam + '_targetbeams_shadow')
+        subs_param.del_param(self, pbeam + '_fluxcal_edges')
+        subs_param.del_param(self, pbeam + '_polcal_edges')
+        subs_param.del_param(self, pbeam + '_targetbeams_edges')
+        subs_param.del_param(self, pbeam + '_fluxcal_ghosts')
+        subs_param.del_param(self, pbeam + '_polcal_ghosts')
+        subs_param.del_param(self, pbeam + '_targetbeams_ghosts')
+        subs_param.del_param(self, pbeam + '_fluxcal_manualflag_auto')
+        subs_param.del_param(self, pbeam + '_polcal_manualflag_auto')
+        subs_param.del_param(self, pbeam + '_targetbeams_manualflag_auto')
+        subs_param.del_param(self, pbeam + '_fluxcal_manualflag_antenna')
+        subs_param.del_param(self, pbeam + '_polcal_manualflag_antenna')
+        subs_param.del_param(self, pbeam + '_targetbeams_manualflag_antenna')
+        subs_param.del_param(self, pbeam + '_fluxcal_manualflag_corr')
+        subs_param.del_param(self, pbeam + '_polcal_manualflag_corr')
+        subs_param.del_param(self, pbeam + '_targetbeams_manualflag_corr')
+        subs_param.del_param(self, pbeam + '_fluxcal_manualflag_baseline')
+        subs_param.del_param(self, pbeam + '_polcal_manualflag_baseline')
+        subs_param.del_param(self, pbeam + '_targetbeams_manualflag_baseline')
+        subs_param.del_param(self, pbeam + '_fluxcal_manualflag_channel')
+        subs_param.del_param(self, pbeam + '_polcal_manualflag_channel')
+        subs_param.del_param(self, pbeam + '_targetbeams_manualflag_channel')
+        subs_param.del_param(self, pbeam + '_fluxcal_manualflag_time')
+        subs_param.del_param(self, pbeam + '_polcal_manualflag_time')
+        subs_param.del_param(self, pbeam + '_targetbeams_manualflag_time')
+        subs_param.del_param(self, pbeam + '_fluxcal_manualflag_clipzeros')
+        subs_param.del_param(self, pbeam + '_polcal__manualflag_clipzeros')
+        subs_param.del_param(self, pbeam + '_targetbeams_manualflag_clipzeros')
+        subs_param.del_param(self, pbeam + '_aoflagger_bandpass_status')
+        subs_param.del_param(self, pbeam + '_aoflagger_fluxcal_flag_status')
+        subs_param.del_param(self, pbeam + '_aoflagger_polcal_flag_status')
+        subs_param.del_param(self, pbeam + '_aoflagger_targetbeams_flag_status')
+
+    def reset_all(self):
+        """
+        Function to reset the current step and remove all generated data. Be careful! Deletes all data generated in
+        this step!
+        """
+        subs_setinit.setinitdirs(self)
+        logger.warning('Deleting all raw data products and their directories for all beams. You will need to '
+                       'start with the PREPARE step again!')
+        subs_managefiles.director(self, 'ch', self.basedir)
+        for b in range(self.NBEAMS):
+            prebeam = 'prepare_B' + str(b).zfill(2)
+            pbeam = 'preflag_B' + str(b).zfill(2)
+            if os.path.isdir(self.basedir + str(b).zfill(2) + '/' + self.rawsubdir):
+                logger.warning('Beam ' + str(b).zfill(2) + ': Deleting all raw data products.')
+                subs_managefiles.director(self, 'rm', self.basedir + str(b).zfill(2) + '/' + self.rawsubdir)
+                logger.warning('Beam ' + str(b).zfill(2) + ': Deleting all parameter file entries for PREPARE and PREFLAG module.')
+
+                subs_param.del_param(self, prebeam + '_fluxcal_requested')
+                subs_param.del_param(self, prebeam + '_fluxcal_diskstatus')
+                subs_param.del_param(self, prebeam + '_fluxcal_altastatus')
+                subs_param.del_param(self, prebeam + '_fluxcal_copystatus')
+                subs_param.del_param(self, prebeam + '_fluxcal_rejreason')
+                subs_param.del_param(self, prebeam + '_polcal_requested')
+                subs_param.del_param(self, prebeam + '_polcal_diskstatus')
+                subs_param.del_param(self, prebeam + '_polcal_altastatus')
+                subs_param.del_param(self, prebeam + '_polcal_copystatus')
+                subs_param.del_param(self, prebeam + '_polcal_rejreason')
+                subs_param.del_param(self, prebeam + '_targetbeams_requested')
+                subs_param.del_param(self, prebeam + '_targetbeams_diskstatus')
+                subs_param.del_param(self, prebeam + '_targetbeams_altastatus')
+                subs_param.del_param(self, prebeam + '_targetbeams_copystatus')
+                subs_param.del_param(self, prebeam + '_targetbeams_rejreason')
+
+                subs_param.del_param(self, pbeam + '_fluxcal_shadow')
+                subs_param.del_param(self, pbeam + '_polcal_shadow')
+                subs_param.del_param(self, pbeam + '_targetbeams_shadow')
+                subs_param.del_param(self, pbeam + '_fluxcal_edges')
+                subs_param.del_param(self, pbeam + '_polcal_edges')
+                subs_param.del_param(self, pbeam + '_targetbeams_edges')
+                subs_param.del_param(self, pbeam + '_fluxcal_ghosts')
+                subs_param.del_param(self, pbeam + '_polcal_ghosts')
+                subs_param.del_param(self, pbeam + '_targetbeams_ghosts')
+                subs_param.del_param(self, pbeam + '_fluxcal_manualflag_auto')
+                subs_param.del_param(self, pbeam + '_polcal_manualflag_auto')
+                subs_param.del_param(self, pbeam + '_targetbeams_manualflag_auto')
+                subs_param.del_param(self, pbeam + '_fluxcal_manualflag_antenna')
+                subs_param.del_param(self, pbeam + '_polcal_manualflag_antenna')
+                subs_param.del_param(self, pbeam + '_targetbeams_manualflag_antenna')
+                subs_param.del_param(self, pbeam + '_fluxcal_manualflag_corr')
+                subs_param.del_param(self, pbeam + '_polcal_manualflag_corr')
+                subs_param.del_param(self, pbeam + '_targetbeams_manualflag_corr')
+                subs_param.del_param(self, pbeam + '_fluxcal_manualflag_baseline')
+                subs_param.del_param(self, pbeam + '_polcal_manualflag_baseline')
+                subs_param.del_param(self, pbeam + '_targetbeams_manualflag_baseline')
+                subs_param.del_param(self, pbeam + '_fluxcal_manualflag_channel')
+                subs_param.del_param(self, pbeam + '_polcal_manualflag_channel')
+                subs_param.del_param(self, pbeam + '_targetbeams_manualflag_channel')
+                subs_param.del_param(self, pbeam + '_fluxcal_manualflag_time')
+                subs_param.del_param(self, pbeam + '_polcal_manualflag_time')
+                subs_param.del_param(self, pbeam + '_targetbeams_manualflag_time')
+                subs_param.del_param(self, pbeam + '_fluxcal_manualflag_clipzeros')
+                subs_param.del_param(self, pbeam + '_polcal__manualflag_clipzeros')
+                subs_param.del_param(self, pbeam + '_targetbeams_manualflag_clipzeros')
+                subs_param.del_param(self, pbeam + '_aoflagger_bandpass_status')
+                subs_param.del_param(self, pbeam + '_aoflagger_fluxcal_flag_status')
+                subs_param.del_param(self, pbeam + '_aoflagger_polcal_flag_status')
+                subs_param.del_param(self, pbeam + '_aoflagger_targetbeams_flag_status')
+            else:
+                logger.warning('Beam ' + str(b).zfill(2) + ': No raw data present.')
