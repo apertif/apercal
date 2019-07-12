@@ -54,7 +54,7 @@ class transfer(BaseModule):
             subs_setinit.setinitdirs(self)
             subs_setinit.setdatasetnamestomiriad(self)
             subs_managefiles.director(
-                self, 'ch', self.transferdir, verbose=False)
+                self, 'ch', self.transferdir, verbose=True)
             if not transfertargetbeamsselfcaluv2uvfitsstatus:
                 # Get the status of the selfcal for the specified beam
                 selfcaltargetbeamsphasestatus = get_param_def(
@@ -62,9 +62,9 @@ class transfer(BaseModule):
                 selfcaltargetbeamsampstatus = get_param_def(
                     self, sbeam + '_targetbeams_amp_status', False)
                 datasetname_amp = os.path.join(
-                    self.selfcalsubdir, self.target).rstrip('.mir') + '_amp.mir'
+                    os.path.join(self.basedir, self.selfcaldir), self.target).rstrip('.mir') + '_amp.mir'
                 datasetname_phase = os.path.join(
-                    self.selfcalsubdir, self.target).rstrip('.mir')
+                    os.path.join(sefl.basedir, self.selfcaldir), self.target).rstrip('.mir')
                 # datasetname_amp = self.get_target_path().rstrip('.mir') + '_amp.mir'
                 # datasetname_phase = self.get_target_path()
                 if os.path.isdir(datasetname_amp) and selfcaltargetbeamsampstatus:
