@@ -64,7 +64,7 @@ class transfer(BaseModule):
                 datasetname_amp = os.path.join(
                     os.path.join(self.basedir, self.selfcaldir), self.target).rstrip('.mir') + '_amp.mir'
                 datasetname_phase = os.path.join(
-                    os.path.join(sefl.basedir, self.selfcaldir), self.target).rstrip('.mir')
+                    os.path.join(self.basedir, self.selfcaldir), self.target).rstrip('.mir')
                 # datasetname_amp = self.get_target_path().rstrip('.mir') + '_amp.mir'
                 # datasetname_phase = self.get_target_path()
                 if os.path.isdir(datasetname_amp) and selfcaltargetbeamsampstatus:
