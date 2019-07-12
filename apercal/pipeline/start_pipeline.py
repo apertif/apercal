@@ -758,24 +758,32 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             lib.setup_logger('debug', logfile=logfilepath)
             logger.info("Skipping line")
 
-        for beamnr in beamlist_target:
-            try:
-                p7 = line(file_=configfilename)
-                if beamnr not in p7.line_beams:
-                    logger.debug(
-                        "Skipping line imaging for beam {}".format(beamnr))
-                    continue
-                p7.basedir = basedir
-                p7.beam = "{:02d}".format(beamnr)
-                p7.target = name_target + '.mir'
-                if "line" in steps and not dry_run:
-                    p7.go()
-            except Exception as e:
-                # Exception was already logged just before
-                logger.warning(
-                    "Failed beam {}, skipping that from line".format(beamnr))
-                logger.exception(e)
-                status[beamnr] += ['line']
+        with pymp.Parallel(5) as p:
+            for beam_index in p.range(len(beamlist_target)):
+                beamnr = beamlist_target[beam_index]
+
+                logfilepath = os.path.join(
+                    basedir, 'apercal{:02d}.log'.format(beamnr))
+                lib.setup_logger('debug', logfile=logfilepath)
+                logger = logging.getLogger(__name__)
+
+                try:
+                    p7 = line(file_=configfilename)
+                    if beamnr not in p7.line_beams:
+                        logger.debug(
+                            "Skipping line imaging for beam {}".format(beamnr))
+                        continue
+                    p7.basedir = basedir
+                    p7.beam = "{:02d}".format(beamnr)
+                    p7.target = name_target + '.mir'
+                    if "line" in steps and not dry_run:
+                        p7.go()
+                except Exception as e:
+                    # Exception was already logged just before
+                    logger.warning(
+                        "Failed beam {}, skipping that from line".format(beamnr))
+                    logger.exception(e)
+                    status[beamnr] += ['line']
 
         # keep a record of the parallalised step in the main log file
         if 'line' in steps:
