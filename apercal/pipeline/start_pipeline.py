@@ -758,8 +758,6 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             lib.setup_logger('debug', logfile=logfilepath)
             logger.info("Skipping line")
 
-        #pymp.config.nested = True
-
         with pymp.Parallel(5) as p:
             for beam_index in p.range(len(beamlist_target)):
                 beamnr = beamlist_target[beam_index]
