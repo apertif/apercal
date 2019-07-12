@@ -363,7 +363,7 @@ class line(BaseModule):
                 pymp.config.nested = True
                 model_number = 0
                 for i in range(9, 0, -1):
-                    if os.path.exists(self.contdir + '/image_mf_' + str(i).zfill(2)):
+                    if os.path.isfile(self.contdir + '/' + 'image_mf_' + str(i).zfill(2) + '.fits'):
                         model_number = str(i).zfill(2)
                         logger.info(
                             '(LINE) found model number ' + model_number + ' in continuum subdirectory')
