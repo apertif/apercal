@@ -62,9 +62,13 @@ class transfer(BaseModule):
                 selfcaltargetbeamsampstatus = get_param_def(
                     self, sbeam + '_targetbeams_amp_status', False)
                 datasetname_amp = os.path.join(
-                    os.path.join(self.basedir, self.selfcaldir), self.target).rstrip('.mir') + '_amp.mir'
+                    self.selfcaldir, self.target).rstrip('.mir') + '_amp.mir'
                 datasetname_phase = os.path.join(
-                    os.path.join(self.basedir, self.selfcaldir), self.target).rstrip('.mir')
+                    self.selfcaldir, self.target).rstrip('.mir')
+                logger.debug(
+                    "Setting amplitude selfcal file name: {}".format(datasetname_amp))
+                logger.debug(
+                    "Setting phase selfcal file name: {}".format(datasetname_amp))
                 # datasetname_amp = self.get_target_path().rstrip('.mir') + '_amp.mir'
                 # datasetname_phase = self.get_target_path()
                 if os.path.isdir(datasetname_amp) and selfcaltargetbeamsampstatus:
