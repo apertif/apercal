@@ -64,7 +64,7 @@ class transfer(BaseModule):
                 datasetname_amp = os.path.join(
                     self.selfcaldir, self.target).rstrip('.mir') + '_amp.mir'
                 datasetname_phase = os.path.join(
-                    self.selfcaldir, self.target).rstrip('.mir')
+                    self.selfcaldir, self.target)
                 logger.debug(
                     "Setting amplitude selfcal file name: {}".format(datasetname_amp))
                 logger.debug(
