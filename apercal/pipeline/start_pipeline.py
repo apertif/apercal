@@ -13,6 +13,7 @@ from apercal.modules.line import line
 from apercal.modules.polarisation import polarisation
 from apercal.subs.managefiles import director
 from apercal.modules.convert import convert
+from apercal.modules.transfer import transfer
 from apercal.subs import calmodels as subs_calmodels
 from apercal.exceptions import ApercalException
 import socket
@@ -69,7 +70,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
     """
     if steps is None:
         steps = ["prepare", "preflag", "ccal",
-                 "convert", "scal", "continuum", "polarisation", "line"]
+                 "convert", "scal", "continuum", "polarisation", "line", "transfer"]
 
     (taskid_target, name_target, beamlist_target) = targets
 
@@ -785,6 +786,64 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
 
             logger.info("Running line ... Done ({0:.0f}s)".format(
                 time() - start_time_line))
+
+        # ========
+        # Transfer
+        # ========
+
+        # keep a record of the parallalised step in the main log file
+        if 'transfer' in steps:
+            logfilepath = os.path.join(basedir, 'apercal.log')
+            lib.setup_logger('debug', logfile=logfilepath)
+            logger.info("Running transfer")
+            start_time_transfer = time()
+        else:
+            logfilepath = os.path.join(basedir, 'apercal.log')
+            lib.setup_logger('debug', logfile=logfilepath)
+            logger.info("Skipping transfer")
+
+        # 5 threads to not hammer the disks too much during copying
+        with pymp.Parallel(5) as p:
+            for beam_index in p.range(len(beamlist_target)):
+                beamnr = beamlist_target[beam_index]
+
+                logfilepath = os.path.join(
+                    basedir, 'apercal{:02d}.log'.format(beamnr))
+                lib.setup_logger('debug', logfile=logfilepath)
+                logger = logging.getLogger(__name__)
+
+                try:
+                    p8 = transfer(file_=configfilename)
+                    p8.paramfilename = 'param_{:02d}.npy'.format(beamnr)
+                    p8.basedir = basedir
+                    p8.target = name_target + '.mir'
+                    p8.beam = "{:02d}".format(beamnr)
+                    if "transfer" in steps and not dry_run:
+                        # director(
+                        #     p8, 'rm', basedir + '/param_{:02d}.npy'.format(beamnr), ignore_nonexistent=True)
+                        p8.go()
+
+                        # it is necessary to move the param files in order to keep them
+                        param_file = os.path.join(
+                            basedir, 'param_{:02d}.npy'.format(beamnr))
+                        director(
+                            p8, 'rn', param_file.replace(".npy", "_transfer.npy"), file_=param_file, ignore_nonexistent=True)
+                        # director(
+                        #     p8, 'rm', basedir + '/param_{:02d}.npy'.format(beamnr), ignore_nonexistent=True)
+                except Exception as e:
+                    logger.warning(
+                        "Failed beam {}, skipping that from transfer".format(beamnr))
+                    logger.exception(e)
+                    status[beamnr] += ['transfer']
+
+        # keep a record of the parallalised step in the main log file
+        if 'transfer' in steps:
+            logfilepath = os.path.join(basedir, 'apercal.log')
+            lib.setup_logger('debug', logfile=logfilepath)
+            logger = logging.getLogger(__name__)
+
+            logger.info("Running transfer ... Done ({0:.0f}s)".format(
+                time() - start_time_transfer))
         
         # Polarisation
         # ============
