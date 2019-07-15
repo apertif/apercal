@@ -82,7 +82,7 @@ class transfer(BaseModule):
                 else:
                     dataset = None
 
-                if dataset != None:
+                if dataset is not None:
                     # Copy the raw dataset to the transfer directory
                     subs_managefiles.director(
                         self, 'cp', self.transferdir + '/' + self.target, file_=self.crosscaldir + '/' + self.target)
