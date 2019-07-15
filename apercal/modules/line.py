@@ -85,7 +85,7 @@ class line(BaseModule):
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
 
-    def go(self, first_level_threads=6, second_level_threads=8):
+    def go(self, first_level_threads=8, second_level_threads=40):
         """
         Executes the whole continuum subtraction process and line imaging in the following order:
         transfergains
@@ -363,7 +363,7 @@ class line(BaseModule):
                 pymp.config.nested = True
                 model_number = 0
                 for i in range(9, 0, -1):
-                    if os.path.exists(self.contdir + '/image_mf_' + str(i).zfill(2)):
+                    if os.path.isfile(self.contdir + '/' + 'image_mf_' + str(i).zfill(2) + '.fits'):
                         model_number = str(i).zfill(2)
                         logger.info(
                             '(LINE) found model number ' + model_number + ' in continuum subdirectory')
