@@ -68,7 +68,7 @@ class transfer(BaseModule):
                 logger.debug(
                     "Setting amplitude selfcal file name: {}".format(datasetname_amp))
                 logger.debug(
-                    "Setting phase selfcal file name: {}".format(datasetname_amp))
+                    "Setting phase selfcal file name: {}".format(datasetname_phase))
                 # datasetname_amp = self.get_target_path().rstrip('.mir') + '_amp.mir'
                 # datasetname_phase = self.get_target_path()
                 if os.path.isdir(datasetname_amp) and selfcaltargetbeamsampstatus:
