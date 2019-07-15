@@ -13,6 +13,7 @@ from apercal.subs import msutils as subs_msutils
 from apercal.subs import calmodels as subs_calmodels
 from apercal.subs.param import get_param_def
 from apercal.subs import param as subs_param
+from apercal.exceptions import ApercalException
 
 from apercal.libs import lib
 
@@ -38,7 +39,6 @@ class ccal(BaseModule):
     crosscal_polarisation_angle = None
     crosscal_transfer_to_cal = None
     crosscal_transfer_to_target = None
-    crosscal_transfer_to_target_targetbeams = None
     crosscal_refant = None
 
 
@@ -80,16 +80,19 @@ class ccal(BaseModule):
         """
 
         subs_setinit.setinitdirs(self)
+
+        cbeam = 'ccal_B' + str(self.beam).zfill(2)
+
         subs_managefiles.director(self, 'ch', self.get_rawsubdir_path())
 
         # Status of model of the flux and polarisation calibrator
-        ccalfluxcalmodel = get_param_def(self, 'ccal_fluxcal_model', False)
-        ccalpolcalmodel = get_param_def(self, 'ccal_polcal_model', False)
+        ccalfluxcalmodel = get_param_def(self, cbeam + '_fluxcal_model', False)
+        ccalpolcalmodel = get_param_def(self, cbeam + '_polcal_model', False)
 
         if self.fluxcal != '' and os.path.isdir(self.get_fluxcal_path()):
             # Ingest the model of the flux calibrator into the MODEL column
             if ccalfluxcalmodel:
-                logger.info('Model was already ingested into the flux calibrator dataset!')
+                logger.info('Beam ' + self.beam + ': Model was already ingested into the flux calibrator dataset!')
             else:
                 # Get the name of the calibrator
                 ms = self.get_fluxcal_path()
@@ -100,10 +103,10 @@ class ccal(BaseModule):
                 if av:
                     pass
                 else:
-                    error = 'Calibrator model not in database for source ' + srcname
+                    error = 'Beam ' + self.beam + ': Calibrator model not in database for source ' + srcname
                     logger.error(error)
-                    subs_param.add_param(self, 'ccal_fluxcal_model', ccalfluxcalmodel)
-                    subs_param.add_param(self, 'ccal_polcal_model', ccalpolcalmodel)
+                    subs_param.add_param(self, cbeam + '_fluxcal_model', ccalfluxcalmodel)
+                    subs_param.add_param(self, cbeam + '_polcal_model', ccalpolcalmodel)
                     raise ApercalException(error)
                 lib.run_casa([cc_fluxcal_model], log_output=True, timeout=3600)
 
@@ -112,15 +115,15 @@ class ccal(BaseModule):
                     ccalfluxcalmodel = True
                 else:
                     ccalfluxcalmodel = False
-                    logger.warning('Model not ingested properly. Flux scale and bandpass corrections will not be right!')
+                    logger.warning('Beam ' + self.beam + ': Model not ingested properly. Flux scale and bandpass corrections will not be right!')
         else:
-            logger.warning('Fluxcal not set! No model ingested for flux calibrator!')
+            logger.warning('Beam ' + self.beam + ': Fluxcal not set! No model ingested for flux calibrator!')
 
 
         if self.polcal != '' and os.path.isdir(self.get_polcal_path()):
             # Ingest the model of the polarised calibrator into the MODEL column
             if ccalpolcalmodel:
-                logger.info('Model was already ingested into the polarised calibrator dataset!')
+                logger.info('Beam ' + self.beam + ': Model was already ingested into the polarised calibrator dataset!')
             else:
                 # Get the name of the calibrator
                 ms = self.get_polcal_path()
@@ -131,10 +134,10 @@ class ccal(BaseModule):
                 if av:
                     pass
                 else:
-                    error = 'Calibrator model not in database for source ' + srcname
+                    error = 'Beam ' + self.beam + ': Calibrator model not in database for source ' + srcname
                     logger.error(error)
-                    subs_param.add_param(self, 'ccal_fluxcal_model', ccalfluxcalmodel)
-                    subs_param.add_param(self, 'ccal_polcal_model', ccalpolcalmodel)
+                    subs_param.add_param(self, cbeam + '_fluxcal_model', ccalfluxcalmodel)
+                    subs_param.add_param(self, cbeam + '_polcal_model', ccalpolcalmodel)
                     raise ApercalException(error)
                 lib.run_casa([cc_polcal_model], log_output=True, timeout=3600)
 
@@ -143,12 +146,12 @@ class ccal(BaseModule):
                     ccalpolcalmodel = True
                 else:
                     ccalpolcalmodel = False
-                    logger.warning('Model not ingested properly. Polarisation calibration corrections will not be right!')
+                    logger.warning('Beam ' + self.beam + ': Model not ingested properly. Polarisation calibration corrections will not be right!')
         else:
-            logger.warning('Polcal not set! No model ingested for polarised calibrator!')
+            logger.warning('Beam ' + self.beam + ': Polcal not set! No model ingested for polarised calibrator!')
 
-        subs_param.add_param(self, 'ccal_fluxcal_model', ccalfluxcalmodel)
-        subs_param.add_param(self, 'ccal_polcal_model', ccalpolcalmodel)
+        subs_param.add_param(self, cbeam + '_fluxcal_model', ccalfluxcalmodel)
+        subs_param.add_param(self, cbeam + '_polcal_model', ccalpolcalmodel)
 
 
     def initial_phase(self):
@@ -157,14 +160,17 @@ class ccal(BaseModule):
         """
 
         subs_setinit.setinitdirs(self)
+
+        cbeam = 'ccal_B' + str(self.beam).zfill(2)
+
         subs_managefiles.director(self, 'ch', self.get_rawsubdir_path())
 
         # Status of the initial phase calibration for the flux calibrator
-        ccalfluxcalmodel = get_param_def(self, 'ccal_fluxcal_model', False)
-        ccalfluxcalinitialphase = get_param_def(self, 'ccal_fluxcal_initialphase', False)
+        ccalfluxcalmodel = get_param_def(self, cbeam + '_fluxcal_model', False)
+        ccalfluxcalinitialphase = get_param_def(self, cbeam + '_fluxcal_initialphase', False)
 
         if self.crosscal_initial_phase:
-            logger.info('Calculating initial phase corrections for flux calibrator')
+            logger.info('Beam ' + self.beam + ': Calculating initial phase corrections for flux calibrator')
 
             if self.fluxcal != '' and os.path.isdir(self.get_fluxcal_path()):
 
@@ -174,7 +180,7 @@ class ccal(BaseModule):
                     # Create the initial phase correction tables for the flux calibrator
                     fluxcal_G0ph = self.get_fluxcal_path().rstrip('.MS') + '.G0ph'
                     if ccalfluxcalinitialphase or os.path.isdir(fluxcal_G0ph):
-                        logger.info('Initial phase gain table for flux calibrator was already generated')
+                        logger.info('Beam ' + self.beam + ': Initial phase gain table for flux calibrator was already generated')
                         ccalfluxcalinitialphase = True
                     else:
                         gaincal_cmd = 'gaincal(vis="{vis}", caltable="{caltable}", gaintype="G", solint="int", ' \
@@ -187,25 +193,25 @@ class ccal(BaseModule):
                             ccalfluxcalinitialphase = True
                         else:
                             ccalfluxcalinitialphase = False
-                            error = 'Initial phase calibration table for flux calibrator was not created successfully!'
+                            error = 'Beam ' + self.beam + ': Initial phase calibration table for flux calibrator was not created successfully!'
                             logger.error(error)
-                            subs_param.add_param(self, 'ccal_fluxcal_initialphase', ccalfluxcalinitialphase)
+                            subs_param.add_param(self, cbeam + '_fluxcal_initialphase', ccalfluxcalinitialphase)
                             raise RuntimeError(error)
                 else:
                     ccalfluxcalinitialphase = False
-                    error = 'Model for flux calibrator not ingested properly. Initial phase calibration not possible!'
+                    error = 'Beam ' + self.beam + ': Model for flux calibrator not ingested properly. Initial phase calibration not possible!'
                     logger.error(error)
-                    subs_param.add_param(self, 'ccal_fluxcal_initialphase', ccalfluxcalinitialphase)
+                    subs_param.add_param(self, cbeam + '_fluxcal_initialphase', ccalfluxcalinitialphase)
                     raise RuntimeError(error)
             else:
-                error = 'Flux calibrator dataset not specified or dataset not available. Cross calibration will probably not work!'
+                error = 'Beam ' + self.beam + ': Flux calibrator dataset not specified or dataset not available. Cross calibration will probably not work!'
                 logger.error(error)
-                subs_param.add_param(self, 'ccal_fluxcal_initialphase', ccalfluxcalinitialphase)
+                subs_param.add_param(self, cbeam + '_fluxcal_initialphase', ccalfluxcalinitialphase)
                 raise RuntimeError(error)
         else:
-            logger.warning('Initial phase calibration for flux calibrator switched off!')
+            logger.warning('Beam ' + self.beam + ': Initial phase calibration for flux calibrator switched off!')
 
-        subs_param.add_param(self, 'ccal_fluxcal_initialphase', ccalfluxcalinitialphase)
+        subs_param.add_param(self, cbeam + '_fluxcal_initialphase', ccalfluxcalinitialphase)
 
 
     def global_delay(self):
@@ -214,16 +220,19 @@ class ccal(BaseModule):
         """
 
         subs_setinit.setinitdirs(self)
+
+        cbeam = 'ccal_B' + str(self.beam).zfill(2)
+
         subs_managefiles.director(self, 'ch', self.get_rawsubdir_path())
 
         # Create the parameters for the parameter file for the global delay correction step
 
-        ccalfluxcalmodel = get_param_def(self, 'ccal_fluxcal_model', False)  # Status of model of the flux calibrator
-        ccalfluxcalinitialphase = get_param_def(self, 'ccal_fluxcal_initialphase', False)  # Status of the initial phase gains for the flux calibrator
-        ccalfluxcalglobaldelay = get_param_def(self, 'ccal_fluxcal_globaldelay', False)  # Status of the global delay corrections for the flux calibrator
+        ccalfluxcalmodel = get_param_def(self, cbeam + '_fluxcal_model', False)  # Status of model of the flux calibrator
+        ccalfluxcalinitialphase = get_param_def(self, cbeam + '_fluxcal_initialphase', False)  # Status of the initial phase gains for the flux calibrator
+        ccalfluxcalglobaldelay = get_param_def(self, cbeam + '_fluxcal_globaldelay', False)  # Status of the global delay corrections for the flux calibrator
 
         if self.crosscal_global_delay:
-            logger.info('Calculating global delay corrections for flux calibrator')
+            logger.info('Beam ' + self.beam + ': Calculating global delay corrections for flux calibrator')
 
             if self.fluxcal != '' and os.path.isdir(self.get_fluxcal_path()):
 
@@ -233,7 +242,7 @@ class ccal(BaseModule):
                     # Create the global delay correction table for the flux calibrator
                     fluxcal_K = self.get_fluxcal_path().rstrip('.MS') + '.K'
                     if ccalfluxcalglobaldelay or os.path.isdir(fluxcal_K):
-                        logger.info('Global delay correction table for flux calibrator was already generated')
+                        logger.info('Beam ' + self.beam + ': Global delay correction table for flux calibrator was already generated')
                         ccalfluxcalglobaldelay = True
                     else:
                         prevtables = '""'
@@ -250,22 +259,22 @@ class ccal(BaseModule):
                             ccalfluxcalglobaldelay = True
                         else:
                             ccalfluxcalglobaldelay = False
-                            logger.error('# Global delay correction table for flux calibrator was not created successfully!')
+                            logger.error('Beam ' + self.beam + ': Global delay correction table for flux calibrator was not created successfully!')
                 else:
                     ccalfluxcalglobaldelay = False
-                    error = 'Model for flux calibrator not ingested properly. Global delay calibration not possible!'
+                    error = 'Beam ' + self.beam + ': Model for flux calibrator not ingested properly. Global delay calibration not possible!'
                     logger.error(error)
-                    subs_param.add_param(self, 'ccal_fluxcal_globaldelay', ccalfluxcalglobaldelay)
+                    subs_param.add_param(self, cbeam + '_fluxcal_globaldelay', ccalfluxcalglobaldelay)
                     raise RuntimeError(error)
             else:
-                error = 'Flux calibrator dataset not specified or dataset not available. Cross calibration will probably not work!'
+                error = 'Beam ' + self.beam + ': Flux calibrator dataset not specified or dataset not available. Cross calibration will probably not work!'
                 logger.error(error)
-                subs_param.add_param(self, 'ccal_fluxcal_globaldelay', ccalfluxcalglobaldelay)
+                subs_param.add_param(self, cbeam + '_fluxcal_globaldelay', ccalfluxcalglobaldelay)
                 raise RuntimeError(error)
         else:
-            logger.warning('Global Delay calibration for flux calibrator switched off!')
+            logger.warning('Beam ' + self.beam + ': Global Delay calibration for flux calibrator switched off!')
 
-        subs_param.add_param(self, 'ccal_fluxcal_globaldelay', ccalfluxcalglobaldelay)
+        subs_param.add_param(self, cbeam + '_fluxcal_globaldelay', ccalfluxcalglobaldelay)
 
 
     def bandpass(self):
@@ -274,17 +283,20 @@ class ccal(BaseModule):
         """
 
         subs_setinit.setinitdirs(self)
+
+        cbeam = 'ccal_B' + str(self.beam).zfill(2)
+
         subs_managefiles.director(self, 'ch', self.get_rawsubdir_path())
 
         # Create the parameters for the parameter file for the bandpass correction step
 
-        ccalfluxcalmodel = get_param_def(self, 'ccal_fluxcal_model', False)  # Status of model of the flux calibrator
-        ccalfluxcalinitialphase = get_param_def(self, 'ccal_fluxcal_initialphase', False)  # Status of the initial phase gains for the flux calibrator
-        ccalfluxcalglobaldelay = get_param_def(self, 'ccal_fluxcal_globaldelay', False)  # Status of the global delay corrections for the flux calibrator
-        ccalfluxcalbandpass = get_param_def(self, 'ccal_fluxcal_bandpass', False) # Status of the bandpass table of the flux calibrator
+        ccalfluxcalmodel = get_param_def(self, cbeam + '_fluxcal_model', False)  # Status of model of the flux calibrator
+        ccalfluxcalinitialphase = get_param_def(self, cbeam + '_fluxcal_initialphase', False)  # Status of the initial phase gains for the flux calibrator
+        ccalfluxcalglobaldelay = get_param_def(self, cbeam + '_fluxcal_globaldelay', False)  # Status of the global delay corrections for the flux calibrator
+        ccalfluxcalbandpass = get_param_def(self, cbeam + '_fluxcal_bandpass', False) # Status of the bandpass table of the flux calibrator
 
         if self.crosscal_bandpass:
-            logger.info('Calculating bandpass corrections for flux calibrator')
+            logger.info('Beam ' + self.beam + ': Calculating bandpass corrections for flux calibrator')
 
             if self.fluxcal != '' and os.path.isdir(self.get_fluxcal_path()):
 
@@ -294,7 +306,7 @@ class ccal(BaseModule):
                     # Calculate the bandpass for the flux calibrator
                     fluxcal_bscan = self.get_fluxcal_path().rstrip('.MS') + '.Bscan'
                     if ccalfluxcalbandpass or os.path.isdir(fluxcal_bscan):
-                        logger.info('Bandpass for flux calibrator was already derived successfully!')
+                        logger.info('Beam ' + self.beam + ': Bandpass for flux calibrator was already derived successfully!')
                         ccalfluxcalbandpass = True
                     else:
                         prevtables = '""'
@@ -322,24 +334,24 @@ class ccal(BaseModule):
                             ccalfluxcalbandpass = True
                         else:
                             ccalfluxcalbandpass = False
-                            error = 'Initial bandpass calibration table for flux calibrator was not created successfully!'
+                            error = 'Beam ' + self.beam + ': Initial bandpass calibration table for flux calibrator was not created successfully!'
                             logger.error(error)
-                            subs_param.add_param(self, 'ccal_fluxcal_bandpass', ccalfluxcalbandpass)
+                            subs_param.add_param(self, cbeam + '_fluxcal_bandpass', ccalfluxcalbandpass)
                             raise RuntimeError(error)
                 else:
                     ccalfluxcalbandpass = False
-                    error = 'Model for flux calibrator not ingested properly. Bandpass calibration not possible!'
+                    error = 'Beam ' + self.beam + ': Model for flux calibrator not ingested properly. Bandpass calibration not possible!'
                     logger.error(error)
-                    subs_param.add_param(self, 'ccal_fluxcal_bandpass', ccalfluxcalbandpass)
+                    subs_param.add_param(self, cbeam + '_fluxcal_bandpass', ccalfluxcalbandpass)
                     raise RuntimeError(error)
             else:
-                error = 'Flux calibrator dataset {} not specified or dataset not available. Bandpass corrections ' + \
+                error = 'Beam ' + self.beam + ': Flux calibrator dataset {} not specified or dataset not available. Bandpass corrections ' + \
                         'are not available!'.format(self.get_fluxcal_path())
                 logger.error(error)
         else:
-            logger.warning('Bandpass calibration for flux calibrator switched off!')
+            logger.warning('Beam ' + self.beam + ': Bandpass calibration for flux calibrator switched off!')
 
-        subs_param.add_param(self, 'ccal_fluxcal_bandpass', ccalfluxcalbandpass)
+        subs_param.add_param(self, cbeam + '_fluxcal_bandpass', ccalfluxcalbandpass)
 
 
     def gains(self):
@@ -348,17 +360,20 @@ class ccal(BaseModule):
         """
 
         subs_setinit.setinitdirs(self)
+
+        cbeam = 'ccal_B' + str(self.beam).zfill(2)
+
         subs_managefiles.director(self, 'ch', self.get_rawsubdir_path())
 
         # Create the parameters for the parameter file for the gain correction step
 
-        ccalfluxcalmodel = get_param_def(self, 'ccal_fluxcal_model', False)  # Status of model of the flux calibrator
-        ccalfluxcalglobaldelay = get_param_def(self, 'ccal_fluxcal_globaldelay', False)  # Status of the global delay corrections for the flux calibrator
-        ccalfluxcalbandpass = get_param_def(self, 'ccal_fluxcal_bandpass', False)  # Status of the bandpass table of the flux calibrator
-        ccalfluxcalapgains = get_param_def(self, 'ccal_fluxcal_apgains', False) # Status of the amplitude and phase gains for the flux calibrator
+        ccalfluxcalmodel = get_param_def(self, cbeam + '_fluxcal_model', False)  # Status of model of the flux calibrator
+        ccalfluxcalglobaldelay = get_param_def(self, cbeam + '_fluxcal_globaldelay', False)  # Status of the global delay corrections for the flux calibrator
+        ccalfluxcalbandpass = get_param_def(self, cbeam + '_fluxcal_bandpass', False)  # Status of the bandpass table of the flux calibrator
+        ccalfluxcalapgains = get_param_def(self, cbeam + '_fluxcal_apgains', False) # Status of the amplitude and phase gains for the flux calibrator
 
         if self.crosscal_gains:
-            logger.info('Calculating gain corrections for flux calibrator')
+            logger.info('Beam ' + self.beam + ': Calculating gain corrections for flux calibrator')
 
             if self.fluxcal != '' and os.path.isdir(self.get_fluxcal_path()):
 
@@ -369,7 +384,7 @@ class ccal(BaseModule):
     
                     # Create the amplitude and phase correction table for the flux calibrator
                     if ccalfluxcalapgains or os.path.isdir(fluxcal_g1ap):
-                        logger.info('Initial gain table for flux calibrator was already generated')
+                        logger.info('Beam ' + self.beam + ': Initial gain table for flux calibrator was already generated')
                         ccalfluxcalapgains = True
                     else:
                         prevtables = '""'
@@ -391,25 +406,25 @@ class ccal(BaseModule):
                             ccalfluxcalapgains = True
                         else:
                             ccalfluxcalapgains = False
-                            error = 'Gain calibration table for flux calibrator was not created successfully!'
+                            error = 'Beam ' + self.beam + ': Gain calibration table for flux calibrator was not created successfully!'
                             logger.error(error)
-                            subs_param.add_param(self, 'ccal_fluxcal_apgains', ccalfluxcalapgains)
+                            subs_param.add_param(self, cbeam + '_fluxcal_apgains', ccalfluxcalapgains)
                             raise RuntimeError(error)
                 else:
                     ccalfluxcalapgains = False
-                    error = 'Model for flux calibrator not ingested properly. Gain calibration not possible!'
+                    error = 'Beam ' + self.beam + ': Model for flux calibrator not ingested properly. Gain calibration not possible!'
                     logger.error(error)
-                    subs_param.add_param(self, 'ccal_fluxcal_apgains', ccalfluxcalapgains)
+                    subs_param.add_param(self, cbeam + '_fluxcal_apgains', ccalfluxcalapgains)
                     raise RuntimeError(error)
             else:
-                error = 'Flux calibrator dataset not specified or dataset {} not available. Cross calibration will probably not work!'.format(self.get_fluxcal_path())
+                error = 'Beam ' + self.beam + ': Flux calibrator dataset not specified or dataset {} not available. Cross calibration will probably not work!'.format(self.get_fluxcal_path())
                 logger.error(error)
-                subs_param.add_param(self, 'ccal_fluxcal_apgains', ccalfluxcalapgains)
+                subs_param.add_param(self, cbeam + '_fluxcal_apgains', ccalfluxcalapgains)
                 raise RuntimeError(error)
         else:
-            logger.warning('Gain calibration for flux calibrator switched off!')
+            logger.warning('Beam ' + self.beam + ': Gain calibration for flux calibrator switched off!')
 
-        subs_param.add_param(self, 'ccal_fluxcal_apgains', ccalfluxcalapgains)
+        subs_param.add_param(self, cbeam + '_fluxcal_apgains', ccalfluxcalapgains)
 
 
     def crosshand_delay(self):
@@ -418,18 +433,21 @@ class ccal(BaseModule):
         """
 
         subs_setinit.setinitdirs(self)
+
+        cbeam = 'ccal_B' + str(self.beam).zfill(2)
+
         subs_managefiles.director(self, 'ch', self.get_rawsubdir_path())
 
         # Create the parameters for the parameter file for the cross hand delay correction step
 
-        ccalpolcalmodel = get_param_def(self, 'ccal_polcal_model', False)  # Status of model of the polarised calibrator
-        ccalfluxcalglobaldelay = get_param_def(self, 'ccal_fluxcal_globaldelay', False)  # Status of the global delay corrections for the flux calibrator
-        ccalfluxcalbandpass = get_param_def(self, 'ccal_fluxcal_bandpass', False)  # Status of the bandpass table of the flux calibrator
-        ccalfluxcalapgains = get_param_def(self, 'ccal_fluxcal_apgains', False) # Status of the amplitude and phase gains for the flux calibrator
-        ccalpolcalcrosshanddelay = get_param_def(self, 'ccal_polcal_crosshanddelay', False) # Status of the cross hand delay calibration from the polarised calibrator
+        ccalpolcalmodel = get_param_def(self, cbeam + '_polcal_model', False)  # Status of model of the polarised calibrator
+        ccalfluxcalglobaldelay = get_param_def(self, cbeam + '_fluxcal_globaldelay', False)  # Status of the global delay corrections for the flux calibrator
+        ccalfluxcalbandpass = get_param_def(self, cbeam + '_fluxcal_bandpass', False)  # Status of the bandpass table of the flux calibrator
+        ccalfluxcalapgains = get_param_def(self, cbeam + '_fluxcal_apgains', False) # Status of the amplitude and phase gains for the flux calibrator
+        ccalpolcalcrosshanddelay = get_param_def(self, cbeam + '_polcal_crosshanddelay', False) # Status of the cross hand delay calibration from the polarised calibrator
 
         if self.crosscal_crosshand_delay:
-            logger.info('Calculating cross-hand delay corrections for polarised calibrator')
+            logger.info('Beam ' + self.beam + ': Calculating cross-hand delay corrections for polarised calibrator')
 
             if self.polcal != '' and os.path.isdir(self.get_polcal_path()):
 
@@ -440,7 +458,7 @@ class ccal(BaseModule):
 
                     polcal_Kcross = self.get_polcal_path().rstrip('.MS') + '.Kcross'
                     if ccalpolcalcrosshanddelay or os.path.isdir(polcal_Kcross):
-                        logger.info('Cross hand delay correction table for polarised calibrator was already generated')
+                        logger.info('Beam ' + self.beam + ': Cross hand delay correction table for polarised calibrator was already generated')
                         ccalpolcalcrosshanddelay = True
                     else:
                         prevtables = '""'
@@ -467,21 +485,21 @@ class ccal(BaseModule):
                             ccalpolcalcrosshanddelay = True
                         else:
                             ccalpolcalcrosshanddelay = False
-                            logger.error('Cross hand delay correction table for polarised calibrator was '
+                            logger.error('Beam ' + self.beam + ': Cross hand delay correction table for polarised calibrator was '
                                          'not created successfully!')
                 else:
                     ccalpolcalcrosshanddelay = False
-                    error = 'Model for polarised calibrator not ingested properly. Cross hand delay calibration not possible!'
+                    error = 'Beam ' + self.beam + ': Model for polarised calibrator not ingested properly. Cross hand delay calibration not possible!'
                     logger.error(error)
-                    subs_param.add_param(self, 'ccal_polcal_crosshanddelay', ccalpolcalcrosshanddelay)
+                    subs_param.add_param(self, cbeam + '_polcal_crosshanddelay', ccalpolcalcrosshanddelay)
                     raise RuntimeError(error)
             else:
                 ccalpolcalcrosshanddelay = False
-                error = 'Polarised calibrator dataset not specified or dataset not available. Polarisation ' + \
+                error = 'Beam ' + self.beam + ': Polarised calibrator dataset not specified or dataset not available. Polarisation ' + \
                         'calibration will probably not work!'
                 logger.error(error)
 
-        subs_param.add_param(self, 'ccal_polcal_crosshanddelay', ccalpolcalcrosshanddelay)
+        subs_param.add_param(self, cbeam + '_polcal_crosshanddelay', ccalpolcalcrosshanddelay)
 
 
     def leakage(self):
@@ -490,19 +508,22 @@ class ccal(BaseModule):
         """
 
         subs_setinit.setinitdirs(self)
+
+        cbeam = 'ccal_B' + str(self.beam).zfill(2)
+
         subs_managefiles.director(self, 'ch', self.get_rawsubdir_path())
 
         # Create the parameters for the parameter file for the leakage correction step
 
-        ccalfluxcalmodel = get_param_def(self, 'ccal_fluxcal_model', False)  # Status of model of the flux calibrator
-        ccalfluxcalglobaldelay = get_param_def(self, 'ccal_fluxcal_globaldelay', False)  # Status of the global delay corrections for the flux calibrator
-        ccalfluxcalbandpass = get_param_def(self, 'ccal_fluxcal_bandpass', False)  # Status of the bandpass table of the flux calibrator
-        ccalfluxcalapgains = get_param_def(self, 'ccal_fluxcal_apgains', False) # Status of the amplitude and phase gains for the flux calibrator
-        ccalpolcalcrosshanddelay = get_param_def(self, 'ccal_polcal_crosshanddelay', False) # Status of the cross hand delay calibration from the polarised calibrator
-        ccalfluxcalleakage = get_param_def(self, 'ccal_fluxcal_leakage', False)  # Status of the leakage corrections for the flux calibrator
+        ccalfluxcalmodel = get_param_def(self, cbeam + '_fluxcal_model', False)  # Status of model of the flux calibrator
+        ccalfluxcalglobaldelay = get_param_def(self, cbeam + '_fluxcal_globaldelay', False)  # Status of the global delay corrections for the flux calibrator
+        ccalfluxcalbandpass = get_param_def(self, cbeam + '_fluxcal_bandpass', False)  # Status of the bandpass table of the flux calibrator
+        ccalfluxcalapgains = get_param_def(self, cbeam + '_fluxcal_apgains', False) # Status of the amplitude and phase gains for the flux calibrator
+        ccalpolcalcrosshanddelay = get_param_def(self, cbeam + '_polcal_crosshanddelay', False) # Status of the cross hand delay calibration from the polarised calibrator
+        ccalfluxcalleakage = get_param_def(self, cbeam + '_fluxcal_leakage', False)  # Status of the leakage corrections for the flux calibrator
 
         if self.crosscal_leakage:
-            logger.info('Calculating leakage corrections for flux calibrator')
+            logger.info('Beam ' + self.beam + ': Calculating leakage corrections for flux calibrator')
 
             if self.fluxcal != '' and os.path.isdir(self.get_fluxcal_path()):
 
@@ -513,7 +534,7 @@ class ccal(BaseModule):
 
                     fluxcal_Df = self.get_fluxcal_path().rstrip('.MS') + '.Df'
                     if ccalfluxcalleakage or os.path.isdir(fluxcal_Df):
-                        logger.info('Leakage correction table for flux calibrator was already generated')
+                        logger.info('Beam ' + self.beam + ': Leakage correction table for flux calibrator was already generated')
                         ccalfluxcalleakage = True
                     else:
                         prevtables = '""'
@@ -545,20 +566,20 @@ class ccal(BaseModule):
                             ccalfluxcalleakage = True
                         else:
                             ccalfluxcalleakage = False
-                            logger.error('# Leakage correction table for flux calibrator was not created successfully!')
+                            logger.error('Beam ' + self.beam + ': Leakage correction table for flux calibrator was not created successfully!')
                 else:
                     ccalfluxcalleakage = False
-                    error = 'Model for flux calibrator not ingested properly. Leakage calibration not possible!'
+                    error = 'Beam ' + self.beam + ': Model for flux calibrator not ingested properly. Leakage calibration not possible!'
                     logger.error(error)
-                    subs_param.add_param(self, 'ccal_fluxcal_leakage', ccalfluxcalleakage)
+                    subs_param.add_param(self, cbeam + '_fluxcal_leakage', ccalfluxcalleakage)
                     raise RuntimeError(error)
             else:
-                error = 'Flux calibrator dataset not specified or dataset not available. Cross calibration will probably not work!'
+                error = 'Beam ' + self.beam + ': Flux calibrator dataset not specified or dataset not available. Cross calibration will probably not work!'
                 logger.error(error)
-                subs_param.add_param(self, 'ccal_fluxcal_leakage', ccalfluxcalleakage)
+                subs_param.add_param(self, cbeam + '_fluxcal_leakage', ccalfluxcalleakage)
                 raise RuntimeError(error)
 
-        subs_param.add_param(self, 'ccal_fluxcal_leakage', ccalfluxcalleakage)
+        subs_param.add_param(self, cbeam + '_fluxcal_leakage', ccalfluxcalleakage)
 
 
     def polarisation_angle(self):
@@ -567,25 +588,28 @@ class ccal(BaseModule):
         """
 
         subs_setinit.setinitdirs(self)
+
+        cbeam = 'ccal_B' + str(self.beam).zfill(2)
+
         subs_managefiles.director(self, 'ch', self.get_rawsubdir_path())
 
         # Create the parameters for the parameter file for the polarisation angle correction step
 
-        ccalpolcalmodel = get_param_def(self, 'ccal_polcal_model', False)  # Status of model of the polarised calibrator
-        ccalfluxcalglobaldelay = get_param_def(self, 'ccal_fluxcal_globaldelay', False)  # Status of the global delay corrections for the flux calibrator
-        ccalfluxcalbandpass = get_param_def(self, 'ccal_fluxcal_bandpass', False)  # Status of the bandpass table of the flux calibrator
-        ccalfluxcalapgains = get_param_def(self, 'ccal_fluxcal_apgains', False) # Status of the amplitude and phase gains for the flux calibrator
-        ccalpolcalcrosshanddelay = get_param_def(self, 'ccal_polcal_crosshanddelay', False) # Status of the cross hand delay calibration from the polarised calibrator
-        ccalfluxcalleakage = get_param_def(self, 'ccal_fluxcal_leakage', False)  # Status of the leakage corrections for the flux calibrator
-        ccalpolcalpolarisationangle = get_param_def(self, 'ccal_polcal_polarisationangle', False)  # Status of the polarisation angle corrections for the polarised calibrator
+        ccalpolcalmodel = get_param_def(self, cbeam + '_polcal_model', False)  # Status of model of the polarised calibrator
+        ccalfluxcalglobaldelay = get_param_def(self, cbeam + '_fluxcal_globaldelay', False)  # Status of the global delay corrections for the flux calibrator
+        ccalfluxcalbandpass = get_param_def(self, cbeam + '_fluxcal_bandpass', False)  # Status of the bandpass table of the flux calibrator
+        ccalfluxcalapgains = get_param_def(self, cbeam + '_fluxcal_apgains', False) # Status of the amplitude and phase gains for the flux calibrator
+        ccalpolcalcrosshanddelay = get_param_def(self, cbeam + '_polcal_crosshanddelay', False) # Status of the cross hand delay calibration from the polarised calibrator
+        ccalfluxcalleakage = get_param_def(self, cbeam + '_fluxcal_leakage', False)  # Status of the leakage corrections for the flux calibrator
+        ccalpolcalpolarisationangle = get_param_def(self, cbeam + '_polcal_polarisationangle', False)  # Status of the polarisation angle corrections for the polarised calibrator
 
         if not subs_calmodels.is_polarised(self.polcal) and self.crosscal_polarisation_angle:
             self.crosscal_polarisation_angle = False
-            logger.warning("Changing crosscal_polarisation angle to false because " + self.polcal +
-                           "is unpolarised.")
+            logger.warning('Beam ' + self.beam + ': Changing crosscal_polarisation angle to false because ' + self.polcal +
+                           'is unpolarised.')
 
         if self.crosscal_polarisation_angle:
-            logger.info('Calculating polarisation angle corrections for polarised calibrator')
+            logger.info('Beam ' + self.beam + ': Calculating polarisation angle corrections for polarised calibrator')
 
             if self.polcal != '' and os.path.isdir(self.get_polcal_path()):
                 # Create the polarisation angle correction table for the polarised calibrator
@@ -596,7 +620,7 @@ class ccal(BaseModule):
                     polcal_Xf = self.get_polcal_path().rstrip('.MS') + '.Xf'
                     if ccalpolcalpolarisationangle or os.path.isdir(polcal_Xf):
                         logger.info(
-                            '# Polarisation angle correction table for polarised calibrator was already generated')
+                            'Beam ' + self.beam + ': Polarisation angle correction table for polarised calibrator was already generated')
                         ccalpolcalpolarisationangle = True
                     else:
                         prevtables = '""'
@@ -633,22 +657,22 @@ class ccal(BaseModule):
                             ccalpolcalpolarisationangle = True
                         else:
                             ccalpolcalpolarisationangle = False
-                            logger.error('Polarisation angle correction table for polarised calibrator '
+                            logger.error('Beam ' + self.beam + ': Polarisation angle correction table for polarised calibrator '
                                          'was not created successfully!')
 
                 else:
                     ccalpolcalpolarisationangle = False
-                    error = 'Model for polarised calibrator not ingested properly. Polarisation angle calibration not possible!'
+                    error = 'Beam ' + self.beam + ': Model for polarised calibrator not ingested properly. Polarisation angle calibration not possible!'
                     logger.error(error)
-                    subs_param.add_param(self, 'ccal_polcal_polarisationangle', ccalpolcalpolarisationangle)
+                    subs_param.add_param(self, cbeam + '_polcal_polarisationangle', ccalpolcalpolarisationangle)
                     raise RuntimeError(error)
 
             else:
-                msg = 'Polarised calibrator dataset not specified or dataset not available.' + \
+                msg = 'Beam ' + self.beam + ': Polarised calibrator dataset not specified or dataset not available.' + \
                       'Cross calibration will probably not work!'
                 logger.error(msg)
 
-        subs_param.add_param(self, 'ccal_polcal_polarisationangle', ccalpolcalpolarisationangle)
+        subs_param.add_param(self, cbeam + '_polcal_polarisationangle', ccalpolcalpolarisationangle)
 
 
     def transfer_to_cal(self):
@@ -657,23 +681,26 @@ class ccal(BaseModule):
         """
 
         subs_setinit.setinitdirs(self)
+
+        cbeam = 'ccal_B' + str(self.beam).zfill(2)
+
         subs_managefiles.director(self, 'ch', self.get_rawsubdir_path())
 
         # Create the parameters for the parameter file for the transfer step
 
-        ccalfluxcalmodel = get_param_def(self, 'ccal_fluxcal_model', False)  # Status of model of the flux calibrator
-        ccalpolcalmodel = get_param_def(self, 'ccal_polcal_model', False)  # Status of model of the polarised calibrator
-        ccalfluxcalglobaldelay = get_param_def(self, 'ccal_fluxcal_globaldelay', False)  # Status of the global delay corrections for the flux calibrator
-        ccalfluxcalbandpass = get_param_def(self, 'ccal_fluxcal_bandpass', False)  # Status of the bandpass table of the flux calibrator
-        ccalfluxcalapgains = get_param_def(self, 'ccal_fluxcal_apgains', False) # Status of the amplitude and phase gains for the flux calibrator
-        ccalpolcalcrosshanddelay = get_param_def(self, 'ccal_polcal_crosshanddelay', False) # Status of the cross hand delay calibration from the polarised calibrator
-        ccalfluxcalleakage = get_param_def(self, 'ccal_fluxcal_leakage', False)  # Status of the leakage corrections for the flux calibrator
-        ccalpolcalpolarisationangle = get_param_def(self, 'ccal_polcal_polarisationangle', False)  # Status of the polarisation angle corrections for the polarised calibrator
-        ccalfluxcaltransfer = get_param_def(self, 'ccal_fluxcal_transfer', False)  # Status of the solution transfer for the flux calibrator
-        ccalpolcaltransfer = get_param_def(self, 'ccal_polcal_transfer', False)  # Status of the solution transfer for the polarised calibrator
+        ccalfluxcalmodel = get_param_def(self, cbeam + '_fluxcal_model', False)  # Status of model of the flux calibrator
+        ccalpolcalmodel = get_param_def(self, cbeam + '_polcal_model', False)  # Status of model of the polarised calibrator
+        ccalfluxcalglobaldelay = get_param_def(self, cbeam + '_fluxcal_globaldelay', False)  # Status of the global delay corrections for the flux calibrator
+        ccalfluxcalbandpass = get_param_def(self, cbeam + '_fluxcal_bandpass', False)  # Status of the bandpass table of the flux calibrator
+        ccalfluxcalapgains = get_param_def(self, cbeam + '_fluxcal_apgains', False) # Status of the amplitude and phase gains for the flux calibrator
+        ccalpolcalcrosshanddelay = get_param_def(self, cbeam + '_polcal_crosshanddelay', False) # Status of the cross hand delay calibration from the polarised calibrator
+        ccalfluxcalleakage = get_param_def(self, cbeam + '_fluxcal_leakage', False)  # Status of the leakage corrections for the flux calibrator
+        ccalpolcalpolarisationangle = get_param_def(self, cbeam + '_polcal_polarisationangle', False)  # Status of the polarisation angle corrections for the polarised calibrator
+        ccalfluxcaltransfer = get_param_def(self, cbeam + '_fluxcal_transfer', False)  # Status of the solution transfer for the flux calibrator
+        ccalpolcaltransfer = get_param_def(self, cbeam + '_polcal_transfer', False)  # Status of the solution transfer for the polarised calibrator
 
         if self.crosscal_transfer_to_cal:
-            logger.info('Applying solutions to calibrators')
+            logger.info('Beam ' + self.beam + ': Applying solutions to calibrators')
 
             # Apply solutions to the flux calibrator
 
@@ -683,7 +710,7 @@ class ccal(BaseModule):
                 if ccalfluxcalmodel:
 
                     if ccalfluxcaltransfer:
-                        logger.info('Solution tables were already applied to flux calibrator')
+                        logger.info('Beam ' + self.beam + ': Solution tables were already applied to flux calibrator')
                         ccalfluxcaltransfer = True
                     else:
                         # Check which calibration tables are available for the flux calibrator
@@ -727,19 +754,19 @@ class ccal(BaseModule):
                             ccalfluxcaltransfer = True
                         else:
                             ccalfluxcaltransfer = False
-                            logger.warning('Corrected visibilities were not written to flux calibrator dataset !')
+                            logger.warning('Beam ' + self.beam + ': Corrected visibilities were not written to flux calibrator dataset !')
                 else:
                     ccalfluxcaltransfer = False
-                    error = 'Model for flux calibrator not ingested properly. Application of cross calibration solutions not possible!'
+                    error = 'Beam ' + self.beam + ': Model for flux calibrator not ingested properly. Application of cross calibration solutions not possible!'
                     logger.error(error)
-                    subs_param.add_param(self, 'ccal_fluxcal_transfer', ccalfluxcaltransfer)
-                    subs_param.add_param(self, 'ccal_polcal_transfer', ccalpolcaltransfer)
+                    subs_param.add_param(self, cbeam + '_fluxcal_transfer', ccalfluxcaltransfer)
+                    subs_param.add_param(self, cbeam + '_polcal_transfer', ccalpolcaltransfer)
                     raise RuntimeError(error)
             else:
                 ccalfluxcaltransfer = False
-                error = 'Flux calibrator dataset not specified or dataset not available. Application of cross calibration solutions not possible!'
-                subs_param.add_param(self, 'ccal_fluxcal_transfer', ccalfluxcaltransfer)
-                subs_param.add_param(self, 'ccal_polcal_transfer', ccalpolcaltransfer)
+                error = 'Beam ' + self.beam + ': Flux calibrator dataset not specified or dataset not available. Application of cross calibration solutions not possible!'
+                subs_param.add_param(self, cbeam + '_fluxcal_transfer', ccalfluxcaltransfer)
+                subs_param.add_param(self, cbeam + '_polcal_transfer', ccalpolcaltransfer)
                 logger.error(error)
                 raise RuntimeError(error)
                 
@@ -752,7 +779,7 @@ class ccal(BaseModule):
                 if ccalpolcalmodel:
 
                     if ccalpolcaltransfer:
-                        logger.info('Solution tables were already applied to the polarised calibrator')
+                        logger.info('Beam ' + self.beam + ': Solution tables were already applied to the polarised calibrator')
                         ccalpolcaltransfer = True
                     else:
                         # Check which calibration tables are available for the polarised calibrator
@@ -796,24 +823,24 @@ class ccal(BaseModule):
                             ccalpolcaltransfer = True
                         else:
                             ccalpolcaltransfer = False
-                            logger.warning('# Corrected visibilities were not written to polarised calibrator dataset !')
+                            logger.warning('Beam ' + self.beam + ': Corrected visibilities were not written to polarised calibrator dataset !')
                 else:
                     ccalpolcaltransfer = False
-                    error = 'Model for polarised calibrator not ingested properly. Application of cross calibration solutions not possible!'
+                    error = 'Beam ' + self.beam + ': Model for polarised calibrator not ingested properly. Application of cross calibration solutions not possible!'
                     logger.error(error)
-                    subs_param.add_param(self, 'ccal_fluxcal_transfer', ccalfluxcaltransfer)
-                    subs_param.add_param(self, 'ccal_polcal_transfer', ccalpolcaltransfer)
+                    subs_param.add_param(self, cbeam + '_fluxcal_transfer', ccalfluxcaltransfer)
+                    subs_param.add_param(self, cbeam + '_polcal_transfer', ccalpolcaltransfer)
                     raise RuntimeError(error)
             else:
                 ccalfluxcaltransfer = False
-                error = 'Polarised calibrator dataset not specified or dataset not available. Application of cross calibration solutions not possible!'
-                subs_param.add_param(self, 'ccal_fluxcal_transfer', ccalfluxcaltransfer)
-                subs_param.add_param(self, 'ccal_polcal_transfer', ccalpolcaltransfer)
+                error = 'Beam ' + self.beam + ': Polarised calibrator dataset not specified or dataset not available. Application of cross calibration solutions not possible!'
+                subs_param.add_param(self, cbeam + '_fluxcal_transfer', ccalfluxcaltransfer)
+                subs_param.add_param(self, cbeam + '_polcal_transfer', ccalpolcaltransfer)
                 logger.error(error)
                 raise RuntimeError(error)
 
-        subs_param.add_param(self, 'ccal_fluxcal_transfer', ccalfluxcaltransfer)
-        subs_param.add_param(self, 'ccal_polcal_transfer', ccalpolcaltransfer)
+        subs_param.add_param(self, cbeam + '_fluxcal_transfer', ccalfluxcaltransfer)
+        subs_param.add_param(self, cbeam + '_polcal_transfer', ccalpolcaltransfer)
 
 
     def transfer_to_target(self):
@@ -822,92 +849,85 @@ class ccal(BaseModule):
         """
 
         subs_setinit.setinitdirs(self)
+
+        cbeam = 'ccal_B' + str(self.beam).zfill(2)
+
         subs_managefiles.director(self, 'ch', self.get_rawsubdir_path())
 
         # Create the parameters for the parameter file for the transfer step
 
         # Status of the solution transfer for the target beams
-        ccalfluxcalglobaldelay = get_param_def(self, 'ccal_fluxcal_globaldelay', False)  # Status of the global delay corrections for the flux calibrator
-        ccalfluxcalbandpass = get_param_def(self, 'ccal_fluxcal_bandpass', False)  # Status of the bandpass table of the flux calibrator
-        ccalfluxcalapgains = get_param_def(self, 'ccal_fluxcal_apgains', False) # Status of the amplitude and phase gains for the flux calibrator
-        ccalpolcalcrosshanddelay = get_param_def(self, 'ccal_polcal_crosshanddelay', False) # Status of the cross hand delay calibration from the polarised calibrator
-        ccalfluxcalleakage = get_param_def(self, 'ccal_fluxcal_leakage', False)  # Status of the leakage corrections for the flux calibrator
-        ccalpolcalpolarisationangle = get_param_def(self, 'ccal_polcal_polarisationangle', False)  # Status of the polarisation angle corrections for the polarised calibrator
-        ccaltargetbeamstransfer = get_param_def(self, 'ccal_targetbeams_transfer', np.full(self.NBEAMS, False))
+        ccalfluxcalglobaldelay = get_param_def(self, cbeam + '_fluxcal_globaldelay', False)  # Status of the global delay corrections for the flux calibrator
+        ccalfluxcalbandpass = get_param_def(self, cbeam + '_fluxcal_bandpass', False)  # Status of the bandpass table of the flux calibrator
+        ccalfluxcalapgains = get_param_def(self, cbeam + '_fluxcal_apgains', False) # Status of the amplitude and phase gains for the flux calibrator
+        ccalpolcalcrosshanddelay = get_param_def(self, cbeam + '_polcal_crosshanddelay', False) # Status of the cross hand delay calibration from the polarised calibrator
+        ccalfluxcalleakage = get_param_def(self, cbeam + '_fluxcal_leakage', False)  # Status of the leakage corrections for the flux calibrator
+        ccalpolcalpolarisationangle = get_param_def(self, cbeam + '_polcal_polarisationangle', False)  # Status of the polarisation angle corrections for the polarised calibrator
+        ccaltargetbeamstransfer = get_param_def(self, cbeam + '_targetbeams_transfer', False)
 
         if self.crosscal_transfer_to_target:
-            logger.info('Applying solutions to target beams')
+            logger.info('Beam ' + self.beam + ': Applying solutions to target dataset')
 
             # Apply solutions to the target beams
 
             if self.target != '' and os.path.isdir(self.get_target_path()):
+                if ccaltargetbeamstransfer:
+                    logger.info('Beam ' + self.beam + ': Solutions were already applied to target dataset')
+                    ccaltargetbeamstransfer = True
+                else:
+                    # Check which calibration tables are available for each beam
+                    prevtables = '""'
+                    interp = '""'
 
-                # Check which beams are requested for applying solutions
+                    # Check for the global delay table to apply on-the-fly
+                    if ccalfluxcalglobaldelay:
+                        fluxcal_K = self.get_fluxcal_path().rstrip('.MS') + '.K'
+                        prevtables, interp = subs_msutils.add_caltables(prevtables, interp, '"' + fluxcal_K + '"', '"nearest"')
 
-                if self.crosscal_transfer_to_target_targetbeams == 'all':  # if all beams are requested
-                    datasets = self.get_datasets()
-                else:  # if only certain beams are requested
-                    beams = self.crosscal_transfer_to_target_targetbeams.split(",")
-                    datasets = self.get_datasets(beams=beams)
+                    # Check for the bandpass calibration table to apply on-the-fly
+                    if ccalfluxcalbandpass:
+                        fluxcal_bscan = self.get_fluxcal_path().rstrip('.MS') + '.Bscan'
+                        prevtables, interp = subs_msutils.add_caltables(prevtables, interp, '"' + fluxcal_bscan + '"', '"nearest"')
 
-                for vis, beam in datasets:
-                    if ccaltargetbeamstransfer[int(beam)]:
-                        logger.info('Solutions were already applied to beam ' + beam + '')
-                        ccaltargetbeamstransfer[int(beam)] = True
+                    # Check for the gain calibration table to apply on-the-fly
+                    if ccalfluxcalapgains:
+                        fluxcal_g1ap = self.get_fluxcal_path().rstrip('.MS') + '.G1ap'
+                        prevtables, interp = subs_msutils.add_caltables(prevtables, interp, '"' + fluxcal_g1ap + '"', '"nearest"')
+
+                    # Check for the cross hand calibration table to apply on-the-fly
+                    if ccalpolcalcrosshanddelay:
+                        polcal_Kcross = self.get_polcal_path().rstrip('.MS') + '.Kcross'
+                        prevtables, interp = subs_msutils.add_caltables(prevtables, interp, '"' + polcal_Kcross + '"', '"nearest"')
+
+                    # Check for the leakage calibration table to apply on-the-fly
+                    if ccalfluxcalleakage:
+                        fluxcal_Df = self.get_fluxcal_path().rstrip('.MS') + '.Df'
+                        prevtables, interp = subs_msutils.add_caltables(prevtables, interp, '"' + fluxcal_Df + '"', '"nearest"')
+
+                    # Check for the polarisation angle calibration on-the-fly
+                    if ccalpolcalpolarisationangle:
+                        polcal_Xf = self.get_polcal_path().rstrip('.MS') + '.Xf'
+                        prevtables, interp = subs_msutils.add_caltables(prevtables, interp, '"' + polcal_Xf + '"', '"nearest"')
+
+                    # Execute the CASA command to apply the solutions
+                    logger.debug('Beam ' + self.beam + ': Applying solutions to target dataset')
+                    cc_targetbeams_saveflags = 'flagmanager(vis = "' + self.get_target_path() + '", mode = "save", versionname = "ccal")'  # Save the flags before applying solutions
+                    cc_targetbeams_apply = 'applycal(vis = "' + self.get_target_path() + '", gaintable = [' + prevtables + '], interp = [' + interp + '], parang = False, flagbackup = False)'
+                    lib.run_casa([cc_targetbeams_saveflags, cc_targetbeams_apply], timeout=10000)
+                    if subs_msutils.has_correcteddata(self.get_target_path()):
+                        ccaltargetbeamstransfer = True
                     else:
-                        # Check which calibration tables are available for each beam
-                        prevtables = '""'
-                        interp = '""'
-
-                        # Check for the global delay table to apply on-the-fly
-                        if ccalfluxcalglobaldelay:
-                            fluxcal_K = self.get_fluxcal_path().rstrip('.MS') + '.K'
-                            prevtables, interp = subs_msutils.add_caltables(prevtables, interp, '"' + fluxcal_K + '"', '"nearest"')
-
-                        # Check for the bandpass calibration table to apply on-the-fly
-                        if ccalfluxcalbandpass:
-                            fluxcal_bscan = self.get_fluxcal_path().rstrip('.MS') + '.Bscan'
-                            prevtables, interp = subs_msutils.add_caltables(prevtables, interp, '"' + fluxcal_bscan + '"', '"nearest"')
-
-                        # Check for the gain calibration table to apply on-the-fly
-                        if ccalfluxcalapgains:
-                            fluxcal_g1ap = self.get_fluxcal_path().rstrip('.MS') + '.G1ap'
-                            prevtables, interp = subs_msutils.add_caltables(prevtables, interp, '"' + fluxcal_g1ap + '"', '"nearest"')
-
-                        # Check for the cross hand calibration table to apply on-the-fly
-                        if ccalpolcalcrosshanddelay:
-                            polcal_Kcross = self.get_polcal_path().rstrip('.MS') + '.Kcross'
-                            prevtables, interp = subs_msutils.add_caltables(prevtables, interp, '"' + polcal_Kcross + '"', '"nearest"')
-
-                        # Check for the leakage calibration table to apply on-the-fly
-                        if ccalfluxcalleakage:
-                            fluxcal_Df = self.get_fluxcal_path().rstrip('.MS') + '.Df'
-                            prevtables, interp = subs_msutils.add_caltables(prevtables, interp, '"' + fluxcal_Df + '"', '"nearest"')
-
-                        # Check for the polarisation angle calibration on-the-fly
-                        if ccalpolcalpolarisationangle:
-                            polcal_Xf = self.get_polcal_path().rstrip('.MS') + '.Xf'
-                            prevtables, interp = subs_msutils.add_caltables(prevtables, interp, '"' + polcal_Xf + '"', '"nearest"')
-
-                        # Execute the CASA command to apply the solutions
-                        logger.debug('Applying solutions to beam ' + beam + '')
-                        cc_targetbeams_saveflags = 'flagmanager(vis = "' + vis + '", mode = "save", versionname = "ccal")'  # Save the flags before applying solutions
-                        cc_targetbeams_apply = 'applycal(vis = "' + vis + '", gaintable = [' + prevtables + '], interp = [' + interp + '], parang = False, flagbackup = False)'
-                        lib.run_casa([cc_targetbeams_saveflags, cc_targetbeams_apply], timeout=10000)
-                        if subs_msutils.has_correcteddata(vis):
-                            ccaltargetbeamstransfer[int(beam)] = True
-                        else:
-                            ccaltargetbeamstransfer[int(beam)] = False
-                            logger.warning('Corrected visibilities were not written to dataset for beam ' + vis.split('/')[-3] + ' !')
+                        ccaltargetbeamstransfer = False
+                        logger.warning('Beam ' + self.beam + ': Corrected visibilities were not written to target dataset!')
             else:
-                ccaltargetbeamstransfer[int(self.beam)] = False
-                error = 'No target dataset specified or target dataset not available! Not applying solutions to target datasets'
-                subs_param.add_param(self, 'ccal_targetbeams_transfer', ccaltargetbeamstransfer)
+                ccaltargetbeamstransfer = False
+                error = 'Beam ' + self.beam + ': No target dataset specified or target dataset not available! Not applying solutions to target dataset'
+                subs_param.add_param(self, cbeam + '_targetbeams_transfer', ccaltargetbeamstransfer)
                 logger.error(error)
                 raise RuntimeError(error)
 
 
-        subs_param.add_param(self, 'ccal_targetbeams_transfer', ccaltargetbeamstransfer)
+        subs_param.add_param(self, cbeam + '_targetbeams_transfer', ccaltargetbeamstransfer)
 
 
     def summary(self):
@@ -921,18 +941,20 @@ class ccal(BaseModule):
 
         # Load the parameters from the parameter file
 
-        FMOD = subs_param.get_param_def(self, 'ccal_fluxcal_model', False)
-        PMOD = subs_param.get_param_def(self, 'ccal_polcal_model', False)
-        FIPH = subs_param.get_param_def(self, 'ccal_fluxcal_initial_phase', False)
-        FGD = subs_param.get_param_def(self, 'ccal_fluxcal_globaldelay', False)
-        FBP = subs_param.get_param_def(self, 'ccal_fluxcal_bandpass', False)
-        FG = subs_param.get_param_def(self, 'ccal_fluxcal_apgains', False)
-        PCD = subs_param.get_param_def(self, 'ccal_polcal_crosshanddelay', False)
-        FL = subs_param.get_param_def(self, 'ccal_fluxcal_leakage', False)
-        PPA = subs_param.get_param_def(self, 'ccal_polcal_polarisationangle', False)
-        FT = subs_param.get_param_def(self, 'ccal_fluxcal_transfer', False)
-        PT = subs_param.get_param_def(self, 'ccal_polcal_transfer', False)
-        TT = get_param_def(self, 'ccal_targetbeams_transfer', np.full(self.NBEAMS, False))
+        cbeam = 'ccal_B' + str(self.beam).zfill(2)
+
+        FMOD = subs_param.get_param_def(self, cbeam + '_fluxcal_model', False)
+        PMOD = subs_param.get_param_def(self, cbeam + '_polcal_model', False)
+        FIPH = subs_param.get_param_def(self, cbeam + '_fluxcal_initial_phase', False)
+        FGD = subs_param.get_param_def(self, cbeam + '_fluxcal_globaldelay', False)
+        FBP = subs_param.get_param_def(self, cbeam + '_fluxcal_bandpass', False)
+        FG = subs_param.get_param_def(self, cbeam + '_fluxcal_apgains', False)
+        PCD = subs_param.get_param_def(self, cbeam + '_polcal_crosshanddelay', False)
+        FL = subs_param.get_param_def(self, cbeam + '_fluxcal_leakage', False)
+        PPA = subs_param.get_param_def(self, cbeam + '_polcal_polarisationangle', False)
+        FT = subs_param.get_param_def(self, cbeam + '_fluxcal_transfer', False)
+        PT = subs_param.get_param_def(self, cbeam + '_polcal_transfer', False)
+        TT = get_param_def(self, cbeam + '_targetbeams_transfer', False)
 
         # Create the data frame
 
@@ -991,7 +1013,10 @@ class ccal(BaseModule):
         Function to reset the current step and clear all calibration from datasets as well as all calibration tables.
         """
         subs_setinit.setinitdirs(self)
-        logger.warning('Resetting flags and data values to before cross-calibration step')
+
+        cbeam = 'ccal_B' + str(self.beam).zfill(2)
+
+        logger.warning('Beam ' + self.beam + ': Resetting flags and data values to before cross-calibration step')
         # Remove the calibration tables
         # for all beams and calibrators
         subs_managefiles.director(self, 'rm', self.get_fluxcal_path().rstrip(
@@ -1013,29 +1038,28 @@ class ccal(BaseModule):
                                   self.get_polcal_path().rstrip('.MS') + '.Xf',
                                   ignore_nonexistent=True)
         # Run a clearcal on all datasets and revert to the last flagversion
-        targetdatasets = glob.glob(self.get_target_path('[0-9][0-9]'))
+        targetdatasets = glob.glob(self.get_target_path())
         targetdatasets.append(self.get_fluxcal_path())
         targetdatasets.append(self.get_polcal_path())
-        datasets_toclear = sorted(targetdatasets)
-        for dataset in datasets_toclear:
+        for dataset in sorted(targetdatasets):
             try:
                 cc_dataset_clear = 'clearcal(vis = "' + dataset + '")'
                 cc_dataset_resetflags = 'flagmanager(vis = "' + dataset + '", mode = "restore", versionname = "ccal")'
                 cc_dataset_removeflagtable = 'flagmanager(vis = "' + dataset + '", mode = "delete", versionname = "ccal")'
                 lib.run_casa([cc_dataset_clear, cc_dataset_resetflags, cc_dataset_removeflagtable], timeout=10000)
             except Exception:
-                logger.error('Calibration could not completely be removed from ' + dataset + '. Flags might also not have be properly reset!')
+                logger.error('Beam ' + self.beam + ': Calibration could not completely be removed from ' + dataset + '. Flags might also not have been properly reset!')
         # Remove the keywords in the parameter file
-        logger.warning('Deleting all parameter file entries for CROSSCAL module')
-        subs_param.del_param(self, 'ccal_fluxcal_model')
-        subs_param.del_param(self, 'ccal_polcal_model')
-        subs_param.del_param(self, 'ccal_fluxcal_initial_phase')
-        subs_param.del_param(self, 'ccal_fluxcal_globaldelay')
-        subs_param.del_param(self, 'ccal_fluxcal_bandpass')
-        subs_param.del_param(self, 'ccal_fluxcal_apgains')
-        subs_param.del_param(self, 'ccal_polcal_crosshanddelay')
-        subs_param.del_param(self, 'ccal_fluxcal_leakage')
-        subs_param.del_param(self, 'ccal_polcal_polarisationangle')
-        subs_param.del_param(self, 'ccal_fluxcal_transfer')
-        subs_param.del_param(self, 'ccal_polcal_transfer')
-        subs_param.del_param(self, 'ccal_targetbeams_transfer')
+        logger.warning('Beam ' + self.beam + ': Deleting all parameter file entries for CROSSCAL module')
+        subs_param.del_param(self, cbeam + '_fluxcal_model')
+        subs_param.del_param(self, cbeam + '_polcal_model')
+        subs_param.del_param(self, cbeam + '_fluxcal_initialphase')
+        subs_param.del_param(self, cbeam + '_fluxcal_globaldelay')
+        subs_param.del_param(self, cbeam + '_fluxcal_bandpass')
+        subs_param.del_param(self, cbeam + '_fluxcal_apgains')
+        subs_param.del_param(self, cbeam + '_polcal_crosshanddelay')
+        subs_param.del_param(self, cbeam + '_fluxcal_leakage')
+        subs_param.del_param(self, cbeam + '_polcal_polarisationangle')
+        subs_param.del_param(self, cbeam + '_fluxcal_transfer')
+        subs_param.del_param(self, cbeam + '_polcal_transfer')
+        subs_param.del_param(self, cbeam + '_targetbeams_transfer')
