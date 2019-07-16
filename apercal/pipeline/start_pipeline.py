@@ -849,14 +849,6 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                         # director(
                         #     p8, 'rm', basedir + '/param_{:02d}.npy'.format(beamnr), ignore_nonexistent=True)
                         p8.go()
-
-                        # it is necessary to move the param files in order to keep them
-                        param_file = os.path.join(
-                            basedir, 'param_{:02d}.npy'.format(beamnr))
-                        # director(
-                        #     p8, 'rn', param_file.replace(".npy", "_transfer.npy"), file_=param_file, ignore_nonexistent=True)
-                        # director(
-                        #     p8, 'rm', basedir + '/param_{:02d}.npy'.format(beamnr), ignore_nonexistent=True)
                 except Exception as e:
                     logger.warning(
                         "Failed beam {}, skipping that from transfer".format(beamnr))
