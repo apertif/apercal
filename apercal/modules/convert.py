@@ -117,8 +117,7 @@ class convert(BaseModule):
         else:
             logger.warning('Beam ' + self.beam + ': Polarised calibrator dataset not specified. Cannot convert polarised calibrator!')
         if self.target != '':
-            for b in range(self.NBEAMS):
-                converttargetbeamsmsavailable[b] = path.isdir(self.get_target_path(str(b).zfill(2)))
+            converttargetbeamsmsavailable = path.isdir(self.get_target_path())
         else:
             logger.warning('Beam ' + self.beam + ': Target beam dataset not specified. Cannot convert target beams!')
 
