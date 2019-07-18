@@ -412,10 +412,13 @@ class convert(BaseModule):
                 subs_managefiles.director(self, 'rm', mspath_to_fitspath(self.get_crosscalsubdir_path(), self.fluxcal))
             if self.polcal != '' and path.exists(mspath_to_fitspath(self.get_crosscalsubdir_path(), self.polcal)):
                 subs_managefiles.director(self, 'rm', mspath_to_fitspath(self.get_crosscalsubdir_path(), self.polcal))
-            for beam in range(self.NBEAMS):
-                basedir = self.get_crosscalsubdir_path(str(beam).zfill(2))
-                if path.isdir(basedir):
-                    subs_managefiles.director(self, 'rm', mspath_to_fitspath(basedir, self.target))
+            if self.target != '' and path.exists(mspath_to_fitspath(self.get_crosscalsubdir_path(), self.target)):
+                subs_managefiles.director(self, 'rm', mspath_to_fitspath(
+                    self.get_crosscalsubdir_path(), self.target))
+            # for beam in range(self.NBEAMS):
+            #     basedir = self.get_crosscalsubdir_path(str(beam).zfill(2))
+            #     if path.isdir(basedir):
+            #         subs_managefiles.director(self, 'rm', mspath_to_fitspath(basedir, self.target))
 
     def summary(self):
         """
