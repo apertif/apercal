@@ -186,7 +186,7 @@ class line(BaseModule):
             logger.warning("LINE Imaging failed")
             if self.line_always_cleanup:
                 logger.warning("All auxiliary files are being deleted")
-                self.cleanup(clean_level==1)    
+                self.cleanup(clean_level=1)    
             logger.exception(e)
         else:
             logger.info("Finished LINE imaging")
