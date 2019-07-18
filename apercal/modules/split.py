@@ -29,15 +29,14 @@ class split(BaseModule):
         """
         Executes the split step with the parameters indicated in the config-file
         """
-        logger.info('Splitting data for quicklook')
+        logger.info('Beam ' + self.beam + ': Splitting data for quicklook')
         self.split_data()
-        logger.info('Data splitted for quicklook')
+        logger.info('Beam ' + self.beam + ': Data splitted for quicklook')
 
     def split_data(self):
         """
         Splits out a certain frequency range from the datasets
         """
-        # if self.split:
 
         subs_setinit.setinitdirs(self)
 
@@ -108,3 +107,80 @@ class split(BaseModule):
             logger.warning('Beam ' + self.beam + ': Target not set or dataset not available! Cannot split target beam dataset!')
 
         subs_param.add_param(self, sbeam + '_targetbeams_status', splittargetbeamsstatus)
+
+    def reset(self):
+        """
+        Function to reset the current step and remove all generated data. Be careful! Deletes all data generated in
+        this step!
+        """
+        subs_setinit.setinitdirs(self)
+
+        logger.warning('Beam ' + self.beam + ': Deleting all raw data and their directories.')
+        subs_managefiles.director(self, 'ch', self.basedir)
+        subs_managefiles.director(self, 'rm', self.basedir + self.beam + '/' + self.rawsubdir)
+        logger.warning('Beam ' + self.beam + ': Deleting all parameter file entries for SPLIT and PREPARE module')
+
+        prebeam = 'prepare_B' + str(self.beam).zfill(2)
+        sbeam = 'split_B' + str(self.beam).zfill(2)
+
+        subs_param.del_param(self, prebeam + '_fluxcal_requested')
+        subs_param.del_param(self, prebeam + '_fluxcal_diskstatus')
+        subs_param.del_param(self, prebeam + '_fluxcal_altastatus')
+        subs_param.del_param(self, prebeam + '_fluxcal_copystatus')
+        subs_param.del_param(self, prebeam + '_fluxcal_rejreason')
+        subs_param.del_param(self, prebeam + '_polcal_requested')
+        subs_param.del_param(self, prebeam + '_polcal_diskstatus')
+        subs_param.del_param(self, prebeam + '_polcal_altastatus')
+        subs_param.del_param(self, prebeam + '_polcal_copystatus')
+        subs_param.del_param(self, prebeam + '_polcal_rejreason')
+        subs_param.del_param(self, prebeam + '_targetbeams_requested')
+        subs_param.del_param(self, prebeam + '_targetbeams_diskstatus')
+        subs_param.del_param(self, prebeam + '_targetbeams_altastatus')
+        subs_param.del_param(self, prebeam + '_targetbeams_copystatus')
+        subs_param.del_param(self, prebeam + '_targetbeams_rejreason')
+
+        subs_param.del_param(self, sbeam + '_fluxcal_status')
+        subs_param.del_param(self, sbeam + '_polcal_status')
+        subs_param.del_param(self, sbeam + '_targetbeams_status')
+
+
+    def reset_all(self):
+        """
+        Function to reset the current step and remove all generated data. Be careful! Deletes all data generated in
+        this step!
+        """
+        subs_setinit.setinitdirs(self)
+        logger.warning('Deleting all raw data products and their directories for all beams. You will need to '
+                       'start with the PREPARE step again!')
+        subs_managefiles.director(self, 'ch', self.basedir)
+        for b in range(self.NBEAMS):
+
+            prebeam = 'prepare_B' + str(b).zfill(2)
+            sbeam = 'split_B' + str(b).zfill(2)
+
+            if os.path.isdir(self.basedir + str(b).zfill(2) + '/' + self.rawsubdir):
+                logger.warning('Beam ' + str(b).zfill(2) + ': Deleting all raw data products.')
+                subs_managefiles.director(self, 'rm', self.basedir + str(b).zfill(2) + '/' + self.rawsubdir)
+                logger.warning('Beam ' + str(b).zfill(2) + ': Deleting all parameter file entries for PREPARE and SPLIT module.')
+
+                subs_param.del_param(self, prebeam + '_fluxcal_requested')
+                subs_param.del_param(self, prebeam + '_fluxcal_diskstatus')
+                subs_param.del_param(self, prebeam + '_fluxcal_altastatus')
+                subs_param.del_param(self, prebeam + '_fluxcal_copystatus')
+                subs_param.del_param(self, prebeam + '_fluxcal_rejreason')
+                subs_param.del_param(self, prebeam + '_polcal_requested')
+                subs_param.del_param(self, prebeam + '_polcal_diskstatus')
+                subs_param.del_param(self, prebeam + '_polcal_altastatus')
+                subs_param.del_param(self, prebeam + '_polcal_copystatus')
+                subs_param.del_param(self, prebeam + '_polcal_rejreason')
+                subs_param.del_param(self, prebeam + '_targetbeams_requested')
+                subs_param.del_param(self, prebeam + '_targetbeams_diskstatus')
+                subs_param.del_param(self, prebeam + '_targetbeams_altastatus')
+                subs_param.del_param(self, prebeam + '_targetbeams_copystatus')
+                subs_param.del_param(self, prebeam + '_targetbeams_rejreason')
+
+                subs_param.del_param(self, sbeam + '_fluxcal_status')
+                subs_param.del_param(self, sbeam + '_polcal_status')
+                subs_param.del_param(self, sbeam + '_targetbeams_status')
+            else:
+                logger.warning('Beam ' + str(b).zfill(2) + ': No raw data present.')
