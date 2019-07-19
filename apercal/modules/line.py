@@ -375,8 +375,7 @@ class line(BaseModule):
                                 ' (threads [' + str(p0.thread_num + 1) + '/'
                                 + str(p0.num_threads) + '] [1st,2nd]) #')
                         chunk = chunks_list[index]
-                        subs_managefiles.director(self, 'cp', self.linedir + '/' + chunk,
-                                      file_=self.contdir + '/model_mf_' + str(model_number).zfill(2))
+                        subs_managefiles.director(self, 'cp', self.linedir + '/' + chunk, file_=self.contdir + '/model_mf_' + str(model_number).zfill(2))
                         uvmodel = lib.miriad('uvmodel')
                         uvmodel.vis = self.linedir + '/' + chunk + '/' + chunk + '.mir'
                         uvmodel.model = self.linedir + '/' + chunk + '/model_mf_' + str(model_number).zfill(2)
