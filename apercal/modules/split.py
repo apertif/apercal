@@ -54,7 +54,7 @@ class split(BaseModule):
         if self.fluxcal != '' and os.path.isdir(self.get_fluxcal_path()):
             fluxcal_split = 'split(vis = "' + self.get_fluxcal_path() + '", outputvis = "' + self.get_fluxcal_path().rstrip('.MS') + '_split.MS"' + \
                 ', spw = "0:' + str(self.split_startchannel) + '~' + str(self.split_endchannel) + '", datacolumn = "data")'
-            lib.run_casa([fluxcal_split], log_output=True, timeout=3600)
+            lib.run_casa([fluxcal_split], log_output=True, timeout=30000)
             if os.path.isdir(self.get_fluxcal_path().rstrip('.MS') + '_split.MS'):
                 subs_managefiles.director(self, 'rm', self.get_fluxcal_path())
                 subs_managefiles.director(self, 'rn', self.get_fluxcal_path(), file_=self.get_fluxcal_path().rstrip('.MS') + '_split.MS')
@@ -74,7 +74,7 @@ class split(BaseModule):
         if self.polcal != '' and os.path.isdir(self.get_polcal_path()):
             polcal_split = 'split(vis = "' + self.get_polcal_path() + '", outputvis = "' + self.get_polcal_path().rstrip('.MS') + '_split.MS"' + \
                 ', spw = "0:' + str(self.split_startchannel) + '~' + str(self.split_endchannel) + '", datacolumn = "data")'
-            lib.run_casa([polcal_split], log_output=True, timeout=3600)
+            lib.run_casa([polcal_split], log_output=True, timeout=30000)
             if os.path.isdir(self.get_polcal_path().rstrip('.MS') + '_split.MS'):
                 subs_managefiles.director(self, 'rm', self.get_polcal_path())
                 subs_managefiles.director(self, 'rn', self.get_polcal_path(), file_=self.get_polcal_path().rstrip('.MS') + '_split.MS')
@@ -94,7 +94,7 @@ class split(BaseModule):
         if self.target != '' and os.path.isdir(self.get_target_path()):
             target_split = 'split(vis = "' + self.get_target_path() + '", outputvis = "' + self.get_target_path().rstrip('.MS') + '_split.MS"' + \
                 ', spw = "0:' + str(self.split_startchannel) + '~' + str(self.split_endchannel) + '", datacolumn = "data")'
-            lib.run_casa([target_split], log_output=True, timeout=3600)
+            lib.run_casa([target_split], log_output=True, timeout=30000)
             if os.path.isdir(self.get_target_path().rstrip('.MS') + '_split.MS'):
                 subs_managefiles.director(self, 'rm', self.get_target_path())
                 subs_managefiles.director(self, 'rn', self.get_target_path(), file_=self.get_target_path().rstrip('.MS') + '_split.MS')
