@@ -840,7 +840,11 @@ class continuum(BaseModule):
         beam = 'continuum_B' + str(b).zfill(2)
         if steps == 'all' or steps == 'mf':
             logger.warning('Beam ' + str(b).zfill(2) + ': Deleting all multi-frequency continuum imaging data products.')
-            subs_managefiles.director(self, 'rm', self.basedir + str(b).zfill(2) + '/' + self.contsubdir + '/*_mf_*')
+            try:
+                subs_managefiles.director(self, 'rm', self.basedir + str(b).zfill(2) + '/' + self.contsubdir + '/*_mf_*')
+            except:
+                pass
+            logger.warning('Beam ' + str(b).zfill(2) + ': Deleting all parameter file entries for CONTINUUM mf-imaging.')
             subs_param.del_param(self, beam + '_targetbeams_mf_status')
             subs_param.del_param(self, beam + '_targetbeams_mf_mapstatus')
             subs_param.del_param(self, beam + '_targetbeams_mf_mapstats')
@@ -859,7 +863,11 @@ class continuum(BaseModule):
             subs_param.del_param(self, beam + '_targetbeams_mf_final_minorcycle')
         if steps == 'all' or steps == 'chunks':
             logger.warning('Beam ' + str(b).zfill(2) + ': Deleting all chunk continuum imaging data products.')
-            subs_managefiles.director(self, 'rm', self.basedir + str(b).zfill(2) + '/' + self.contsubdir + '/*_C*_*')
+            try:
+                subs_managefiles.director(self, 'rm', self.basedir + str(b).zfill(2) + '/' + self.contsubdir + '/*_C*_*')
+            except:
+                pass
+            logger.warning('Beam ' + str(b).zfill(2) + ': Deleting all parameter file entries for CONTINUUM chunk imaging.')
             subs_param.del_param(self, beam + '_targetbeams_chunkall_status')
             subs_param.del_param(self, beam + '_targetbeams_chunk_status')
             subs_param.del_param(self, beam + '_targetbeams_chunk_mapstatus')
@@ -890,7 +898,11 @@ class continuum(BaseModule):
             if os.path.isdir(self.basedir + str(b).zfill(2) + '/' + self.contsubdir):
                 if steps == 'all' or steps == 'mf':
                     logger.warning('Beam ' + str(b).zfill(2) + ': Deleting all multi-frequency continuum imaging data products.')
-                    subs_managefiles.director(self, 'rm', self.basedir + str(b).zfill(2) + '/' + self.contsubdir + '/*_mf_*')
+                    try:
+                        subs_managefiles.director(self, 'rm', self.basedir + str(b).zfill(2) + '/' + self.contsubdir + '/*_mf_*')
+                    except:
+                        pass
+                    logger.warning('Beam ' + str(b).zfill(2) + ': Deleting all parameter file entries for CONTINUUM mf-imaging.')
                     subs_param.del_param(self, beam + '_targetbeams_mf_status')
                     subs_param.del_param(self, beam + '_targetbeams_mf_mapstatus')
                     subs_param.del_param(self, beam + '_targetbeams_mf_mapstats')
@@ -909,7 +921,11 @@ class continuum(BaseModule):
                     subs_param.del_param(self, beam + '_targetbeams_mf_final_minorcycle')
                 if steps == 'all' or steps == 'chunks':
                     logger.warning('Beam ' + str(b).zfill(2) + ': Deleting all chunk continuum imaging data products.')
-                    subs_managefiles.director(self, 'rm', self.basedir + str(b).zfill(2) + '/' + self.contsubdir + '/*_C*_*')
+                    try:
+                        subs_managefiles.director(self, 'rm', self.basedir + str(b).zfill(2) + '/' + self.contsubdir + '/*_C*_*')
+                    except:
+                        pass
+                    logger.warning('Beam ' + str(b).zfill(2) + ': Deleting all parameter file entries for CONTINUUM chunk imaging.')
                     subs_param.del_param(self, beam + '_targetbeams_chunkall_status')
                     subs_param.del_param(self, beam + '_targetbeams_chunk_status')
                     subs_param.del_param(self, beam + '_targetbeams_chunk_mapstatus')

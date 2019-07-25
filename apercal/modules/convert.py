@@ -452,7 +452,7 @@ class convert(BaseModule):
 
         logger.warning('Beam ' + self.beam + ': Deleting all converted data.')
         path = self.get_crosscalsubdir_path()
-        if path.isdir(path):
+        if os.path.isdir(path):
             subs_managefiles.director(self, 'rm', path + '/*')
         logger.warning('Beam ' + self.beam + ': Deleting all parameter file entries for CONVERT module')
         subs_param.del_param(self, cbeam + '_fluxcal_MSavailable')
@@ -481,7 +481,7 @@ class convert(BaseModule):
 
             logger.warning('Beam ' + str(b).zfill(2) + ': Deleting all converted data.')
             path = self.get_crosscalsubdir_path(str(b).zfill(2))
-            if path.isdir(path):
+            if os.path.isdir(path):
                 subs_managefiles.director(self, 'rm', path + '/*')
             logger.warning('Beam ' + str(b).zfill(2) + ': Deleting all parameter file entries for CONVERT module')
             subs_param.del_param(self, cbeam + '_fluxcal_MSavailable')
