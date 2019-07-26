@@ -117,7 +117,10 @@ class split(BaseModule):
 
         logger.warning('Beam ' + self.beam + ': Deleting all raw data and their directories.')
         subs_managefiles.director(self, 'ch', self.basedir)
-        subs_managefiles.director(self, 'rm', self.basedir + self.beam + '/' + self.rawsubdir)
+        try:
+            subs_managefiles.director(self, 'rm', self.basedir + self.beam + '/' + self.rawsubdir)
+        except:
+            pass
         logger.warning('Beam ' + self.beam + ': Deleting all parameter file entries for SPLIT and PREPARE module')
 
         prebeam = 'prepare_B' + str(self.beam).zfill(2)
@@ -159,8 +162,11 @@ class split(BaseModule):
             sbeam = 'split_B' + str(b).zfill(2)
 
             if os.path.isdir(self.basedir + str(b).zfill(2) + '/' + self.rawsubdir):
-                logger.warning('Beam ' + str(b).zfill(2) + ': Deleting all raw data products.')
-                subs_managefiles.director(self, 'rm', self.basedir + str(b).zfill(2) + '/' + self.rawsubdir)
+                try:
+                    logger.warning('Beam ' + str(b).zfill(2) + ': Deleting all raw data products.')
+                    subs_managefiles.director(self, 'rm', self.basedir + str(b).zfill(2) + '/' + self.rawsubdir)
+                except:
+                    pass
                 logger.warning('Beam ' + str(b).zfill(2) + ': Deleting all parameter file entries for PREPARE and SPLIT module.')
 
                 subs_param.del_param(self, prebeam + '_fluxcal_requested')
