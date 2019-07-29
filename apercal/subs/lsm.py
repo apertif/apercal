@@ -264,6 +264,43 @@ def write_mask(outfile, cat):
                     int(majaxis[i])) + ',' + str(int(minaxis[i])) + ',' + str(int(pa[i]))
             fid.write(msktext)
     logging.debug(' Wrote mask textfile to ' + str(outfile) + '!')
+    return outfile
+
+
+def mir2fits(inp, out=None):
+    """Convert MIRIAD image to FITS format """
+    import os
+    inp = os.path.abspath(inp)
+    if out is None:
+        tmp, _ = os.path.splitext(inp)
+        out = tmp + '.fits'
+    fits = lib.miriad('fits')
+    fits.op = 'xyout'
+    fits.in_ = "{}".format(inp)
+    fits.out = "{}".format(out)
+    fits.go()
+    return out
+
+
+def create_parametric_image(infile, parametric_mask_file, radius=0.5, cutoff=0.8,
+                                 catalogue = 'NVSS', output='parametric_image'):
+    """
+    Create the mask image for selfcal using the parametric (NVSS) catalogue
+    produced by write_mask function.
+    Creates FITS image
+    """
+
+    cat = lsm_mask(infile, radius, cutoff, catalogue)
+    write_mask(parametric_mask_file, cat)
+
+    imgen = lib.miriad('imgen')
+    imgen.factor=0.0
+    imgen.in_ = infile
+    imgen.out = output
+    imgen.source = parametric_mask_file
+    imgen.object = 'source'
+    imgen.go()
+    mir2fits(output)
 
 
 def fixra(ra0):
