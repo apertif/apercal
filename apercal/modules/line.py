@@ -85,7 +85,7 @@ class line(BaseModule):
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
 
-    def go(self, first_level_threads=8, second_level_threads=40):
+    def go(self, first_level_threads=16, second_level_threads=40):
         """
         Executes the whole continuum subtraction process and line imaging in the following order:
         transfergains
@@ -117,7 +117,7 @@ class line(BaseModule):
                     self.line_splitdata_channelbandwidth = self.line_cube_channelwidth_list[cube_counter]
                     # if it is the first cube, create the subbands
                     if cube_counter == 0:
-                        self.createsubbands(threads)  # create subbands if required
+                        self.createsubbands(threads)  # create subbands for the first subband
                         logger.info("(LINE) Function createsubbands done for cube {0}".format(cube_counter))
                         # run continuum subtraction only when channel width changes
                         self.subtract(threads)  # subtract continuum if required
@@ -257,10 +257,10 @@ class line(BaseModule):
             numchan = uv['nschan']  # Number of channels
             finc = np.fabs(uv['sdf'])  # Frequency increment for each channel
             
-            # keep the incremenet as attribute of the object
+            # keep the increment as attribute of the object
             self.line_input_channelwidth = finc
             
-            subband_bw = numchan * finc  # Bandwidth of one subband
+            subband_bw = numchan * finc  # Bandwidth of the full band
             subband_chunks = round(subband_bw / self.line_splitdata_chunkbandwidth)
             # Round to the closest power of 2 for frequency chunks with the same bandwidth over the frequency
             # range of a subband
