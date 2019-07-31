@@ -37,7 +37,7 @@ class line(BaseModule):
     line_splitdata_chunkbandwidth = None
     line_splitdata_channelbandwidth = None
     line_channelbinning = None
-    line_transfergains = None  #remove, is now obsolete
+    line_transfergains = None  #revive use to allow skipping alpplication of selfcal solutions
     line_subtract = None
     line_subtract_mode = None
     line_subtract_mode_uvmodel_majorcycle_function = None
@@ -108,7 +108,7 @@ class line(BaseModule):
             self.transfergains(nthreads)  # first step after copy of crosscal data
             logger.info("(LINE) Function transfergains done ")
 
-            # no go throught the requested image cubes
+            # now go throught the requested image cubes
             for cube_counter in range(len(self.line_cube_channelwidth_list)):
 
                 # catch in case line fails on one of the cubes, but make sure it continues with the next cube
@@ -116,7 +116,7 @@ class line(BaseModule):
                     # set the channelbandwidth for splitting for a given cube from the list
                     self.line_splitdata_channelbandwidth = self.line_cube_channelwidth_list[cube_counter]
                     # if it is the first cube, create the subbands
-                    if cube_counter == 7:
+                    if cube_counter == 0:
                         self.createsubbands(threads)  # create subbands if required
                         logger.info("(LINE) Function createsubbands done for cube {0}".format(cube_counter))
                         # run continuum subtraction only when channel width changes
@@ -128,7 +128,6 @@ class line(BaseModule):
                         self.createsubbands(threads)  # create subbands if required
                         logger.info(
                             "(LINE) Function createsubbands done for cube {0}".format(cube_counter))
-
                         # run continuum subtraction only when channel width changes
                         self.subtract(threads)  # subtract continuum if required
                         logger.info(
@@ -211,28 +210,32 @@ class line(BaseModule):
             subs_managefiles.director(self, 'cp', self.linedir + '/' + self.target,
                                       file_=self.crosscaldir + '/' + self.target)
             logger.info('(LINE) crosscal data copied to line directory #')
-            # apply phase selfcal solutions if these exist
-            if os.path.isfile(self.selfcaldir + '/' + self.target + '/gains'):
-                gpcopy = lib.miriad('gpcopy')
-                gpcopy.vis = self.selfcaldir + '/' + self.target
-                gpcopy.out = self.linedir + '/' + self.target
-                gpcopy.go()
-                logger.info('(LINE) Copying phase corrections from selfcal to line data #')
+            if self.line_transfergains:
+                # apply phase selfcal solutions if these exist
+                if os.path.isfile(self.selfcaldir + '/' + self.target + '/gains'):
+                    gpcopy = lib.miriad('gpcopy')
+                    gpcopy.vis = self.selfcaldir + '/' + self.target
+                    gpcopy.out = self.linedir + '/' + self.target
+                    gpcopy.go()
+                    logger.info('(LINE) Copying phase corrections from selfcal to line data #')
+                else:
+
+                    logger.warning('(LINE) phase selfcal data not found #')
+                # amp selfcal corrections applied
+                logger.info('(LINE) Selfcal phase solutions applied to target data #')
+                # apply amp selfcal solutions if these exist
+                if os.path.isfile(self.selfcaldir + '/' + self.target.rstrip('.mir') + '_amp.mir' + '/gains'):
+                    gpcopy = lib.miriad('gpcopy')
+                    gpcopy.vis = self.selfcaldir + '/' + self.target.rstrip('.mir') + '_amp.mir'
+                    gpcopy.out = self.linedir + '/' + self.target
+                    gpcopy.go()
+                    logger.info('(LINE) Copying amp corrections from selfcal to line data #')
+                else:
+                    logger.warning('(LINE) amp selfcal data not found #')
+                # amp selfcal corrections applied
+                logger.info('(LINE) Selfcal amp solutions applied to target data #')
             else:
-                logger.warning('(LINE) phase selfcal data not found #')
-            # amp selfcal corrections applied
-            logger.info('(LINE) Selfcal phase solutions applied to target data #')
-            # apply amp selfcal solutions if these exist
-            if os.path.isfile(self.selfcaldir + '/' + self.target.rstrip('.mir') + '_amp.mir' + '/gains'):
-                gpcopy = lib.miriad('gpcopy')
-                gpcopy.vis = self.selfcaldir + '/' + self.target.rstrip('.mir') + '_amp.mir'
-                gpcopy.out = self.linedir + '/' + self.target
-                gpcopy.go()
-                logger.info('(LINE) Copying amp corrections from selfcal to line data #')
-            else:
-                logger.warning('(LINE) amp selfcal data not found #')
-            # amp selfcal corrections applied
-            logger.info('(LINE) Selfcal amp solutions applied to target data #')
+                logger.info('(LINE) No selfcal solutions applied to target data #')
 
     def createsubbands(self, threads=None):
         """
