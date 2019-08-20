@@ -85,7 +85,7 @@ class line(BaseModule):
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
 
-    def go(self, first_level_threads=16, second_level_threads=40):
+    def go(self, first_level_threads=32, second_level_threads=16):
         """
         Executes the whole continuum subtraction process and line imaging in the following order:
         transfergains
