@@ -43,7 +43,7 @@ def validate_taskid(taskid_from_autocal):
 
 
 def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=None, flip_ra=False,
-                           steps=None, configfilename=None):
+                           steps=None, configfilename=None, restart=False):
     """
     Trigger the start of a fluxcal pipeline. Returns when pipeline is done.
     Example for taskid, name, beamnr: (190108926, '3C147_36', 36)
@@ -69,8 +69,12 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                                           exception', only for target steps. Please also read logs.
     """
     if steps is None:
-        steps = ["prepare", "preflag", "ccal",
-                 "convert", "scal", "continuum", "polarisation", "line", "transfer"]
+        if restart:
+            steps = ["prepare", "applycal",
+                        "convert", "scal", "continuum", "polarisation", "line", "transfer"]
+        else:
+            steps = ["prepare", "preflag", "ccal",
+                    "convert", "scal", "continuum", "polarisation", "line", "transfer"]
 
     (taskid_target, name_target, beamlist_target) = targets
 
