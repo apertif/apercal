@@ -75,9 +75,33 @@ class applycal(BaseModule):
 
         return 0
 
-    def apply_flagtable():
+    def apply_flagtable_cal(self):
         """
+        This function applies the flagging table to the calibrators
         """
+
+        return 0
+
+    def apply_flagtable_target(self):
+        """
+        This function applies the flagging table to the target
+        """
+
+        return 0
+
+    def apply_caltables_cal(self):
+        """
+        This function applies the calibration tables to the calibrators
+        """
+
+        return 0
+
+    def apply_flagtable_target(self):
+        """
+        This function applies the calibration tables to the target
+        """
+
+        return 0
 
     def split_data(self):
         """
