@@ -304,7 +304,7 @@ class line(BaseModule):
                                     ' to keep bandwidth of chunks equal over the whole bandwidth (threads [' +
                                     str(p0.thread_num + 1) + '/' + str(p0.num_threads) + '] [1st,2nd]) #')
                         logger.info('(LINE) New frequency bin is ' + str(binchan * finc) +
-                                    ' GHz (threads [' + str(p4.thread_num + 1) + '/' + str(p0.num_threads)
+                                    ' GHz (threads [' + str(p0.thread_num + 1) + '/' + str(p0.num_threads)
                                     + '] [1st,2nd]) #')
                     nchan = int(chan_per_chunk / binchan)  # Total number of output channels per chunk
                     start = 1 + chunk * chan_per_chunk
