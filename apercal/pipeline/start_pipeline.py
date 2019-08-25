@@ -289,13 +289,23 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         # Splitting a small chunk of data for quicklook pipeline
         # at the moment it all relies on the target beams
         # what if there are more calibrator than target beams-> realistic?
-        s0 = split(file_=configfilename)
-        set_files(s0)
-        for beamnr in beamlist_target:
-            s0.beam = "{:02d}".format(beamnr)
-            if "split" in steps and not dry_run:
+        with pymp.Parallel(5) as p:
+            for beam_index in p.range(len(beamlist_target)):
+                beamnr = beamlist_target[beam_index]
+
+                # individual logfiles for each process
+                logfilepath = os.path.join(
+                    basedir, 'apercal{:02d}.log'.format(beamnr))
+                lib.setup_logger('debug', logfile=logfilepath)
+                logger = logging.getLogger(__name__)
+
+                logger.debug("Starting logfile for beam " + str(beamnr))
                 try:
-                    s0.go()
+                    s0 = split(file_=configfilename)
+                    set_files(s0)
+                    s0.beam = "{:02d}".format(beamnr)
+                    if "split" in steps and not dry_run:
+                            s0.go()
                 except Exception as e:
                     logger.warning("Split failed for {0} beam {1}".format(
                         str(taskid_target), str(beamnr)))
@@ -305,6 +315,10 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         
         # keep a start-finish record of step in the main log file
         if "split" in steps:
+            logfilepath = os.path.join(basedir, 'apercal.log')
+            lib.setup_logger('debug', logfile=logfilepath)
+            logger = logging.getLogger(__name__)
+            
             logger.info("Running split ... Done ({0:.0f}s)".format(
                 time() - start_time_split))
 
