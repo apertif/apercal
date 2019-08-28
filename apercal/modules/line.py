@@ -29,7 +29,7 @@ class line(BaseModule):
     module_name = 'LINE'
 
     line_beams = 'all'
-    line_first_level_threads = 16
+    line_first_level_threads = 32
     line_second_level_threads = 16
     line_input_channelwidth = None  # not for config file, will be set to finc in create_subbands
     line_cube_channel_list = None
@@ -88,7 +88,7 @@ class line(BaseModule):
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
 
-    def go(self, first_level_threads=32, second_level_threads=16):
+    def go(self, first_level_threads=None, second_level_threads=None):
         """
         Executes the whole continuum subtraction process and line imaging in the following order:
         transfergains
@@ -104,6 +104,13 @@ class line(BaseModule):
             # added a try-except to allow for removing all auxiliary files in case line crashes
         try:
             logger.info("Starting LINE IMAGING ")
+            
+            # setting the threads
+            if first_level_threads is None:
+                first_level_threads = self.line_first_level_threads
+            if second_level_threads is None:
+                second_level_threads = self.line_second_level_threads
+
             # build in check on number of threads to prevent excessive demands? (here?)
             original_nested = pymp.config.nested
             threads = [first_level_threads, second_level_threads]
