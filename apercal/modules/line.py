@@ -29,6 +29,8 @@ class line(BaseModule):
     module_name = 'LINE'
 
     line_beams = 'all'
+    line_first_level_threads = 16
+    line_second_level_threads = 16
     line_input_channelwidth = None  # not for config file, will be set to finc in create_subbands
     line_cube_channel_list = None
     line_cube_channelwidth_list = None
@@ -395,10 +397,18 @@ class line(BaseModule):
                         uvmodel.model = self.linedir + '/' + chunk + '/model_mf_' + str(model_number).zfill(2)
                         uvmodel.options = 'subtract,mfs'
                         uvmodel.out = self.linedir + '/' + chunk + '/' + chunk + '_line.mir'
-                        uvmodel.go()
-                        logger.info('(LINE) Subtracted model from chunk ' + str(chunk) +
-                                ' (thread ' + str(p0.thread_num + 1) +
-                                ' out of ' + str(p0.num_threads) + ') #')
+                        # putting the following into a try-except in case something goes wrong on a specific chunk
+                        try:
+                            uvmodel.go()
+                        except Exception as e:
+                            logger.warning('(LINE) Subtracted model from chunk ' + str(chunk) +
+                                           ' (thread ' + str(p0.thread_num + 1) +
+                                           ' out of ' + str(p0.num_threads) + ') ... Failed')
+                            logger.exception(e)
+                        else:
+                            logger.info('(LINE) Subtracted model from chunk ' + str(chunk) +
+                                    ' (thread ' + str(p0.thread_num + 1) +
+                                    ' out of ' + str(p0.num_threads) + ') #')
                 logger.info(' (LINE) Continuum subtraction using uvmodel done!')
 #                pymp.config.nested = original_nested
             else:
