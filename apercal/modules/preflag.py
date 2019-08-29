@@ -858,6 +858,8 @@ class preflag(BaseModule):
                         logger.debug('Flagging channel(s) ' + self.preflag_manualflag_channel + ' for target beam ' + beam)
                         tg_channel = 'flagdata(vis="' + str(vis) + '", spw="0:' + self.preflag_manualflag_channel + '", flagbackup=False)'
                         lib.run_casa([tg_channel])
+                        spltchannel = self.preflag_manualflag_channel.split(
+                            ',')
                         for channel in spltchannel:
                             if preflagtargetbeamsmanualflagchannel[int(beam)].find(channel) == -1:
                                 if preflagtargetbeamsmanualflagchannel[int(beam)] == '':
