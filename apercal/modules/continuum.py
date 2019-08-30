@@ -40,6 +40,7 @@ class continuum(BaseModule):
     continuum_mfimage_drinc = None
     continuum_mfimage_mindr = None
     continuum_mfimage_nsigma = None
+    continuum_mfimage_robust = None
     continuum_chunkimage = None
     continuum_chunkimage_startchannels = None
     continuum_chunkimage_endchannels = None
@@ -50,6 +51,7 @@ class continuum(BaseModule):
     continuum_chunkimage_drinc = None
     continuum_chunkimage_mindr = None
     continuum_chunkimage_nsigma = None
+    continuum_chunkimage_robust = None
 
 
     def __init__(self, file_=None, **kwargs):
@@ -228,7 +230,7 @@ class continuum(BaseModule):
                                     invert.stokes = 'i'
                                     invert.options = 'mfs,sdb,double'
                                     invert.slop = 1
-                                    invert.robust = -2
+                                    invert.robust = self.continuum_mfimage_robust
                                     invert.go()
                                     # Check if dirty image and beam is there and ok
                                     if os.path.isdir('map_mf_00') and os.path.isdir('beam_mf_00'):
@@ -604,7 +606,7 @@ class continuum(BaseModule):
                                         invert.options = 'mfs,double'
                                         invert.line = 'channel,1,' + str(startchanarray[chunk] + 1) + ',' + str(endchanarray[chunk] - startchanarray[chunk] + 1) + ',' + str(endchanarray[chunk] - startchanarray[chunk] + 1)
                                         invert.slop = 1
-                                        invert.robust = -2
+                                        invert.robust = self.continuum_chunkimage_robust
                                         invert.go()
                                         # Check if dirty image and beam is there and ok
                                         if os.path.isdir('map_C' + str(chunk).zfill(2) + '_00') and os.path.isdir('beam_C' + str(chunk).zfill(2) + '_00'):

@@ -76,6 +76,7 @@ class scal(BaseModule):
     selfcal_phase_uvmax = None
     selfcal_phase_solint = None
     selfcal_phase_nfbin = None
+    selfcal_phase_robust = None
     selfcal_amp = None
     selfcal_amp_auto_limit = None
     selfcal_amp_minorcycle = None
@@ -90,6 +91,7 @@ class scal(BaseModule):
     selfcal_amp_solint = None
     selfcal_amp_nfbin = None
     selfcal_amp_ratio = None
+    selfcal_amp_robust = None
 
     selfcaldir = None
     crosscaldir = None
@@ -436,7 +438,7 @@ class scal(BaseModule):
                                         invert.stokes = 'i'
                                         invert.options = 'mfs,sdb,double'
                                         invert.slop = 1
-                                        invert.robust = -2
+                                        invert.robust = self.selfcal_phase_robust
                                         try:
                                             invert.go()
                                         except:
@@ -897,7 +899,7 @@ class scal(BaseModule):
                                     invert.stokes = 'i'
                                     invert.options = 'mfs,sdb,double'
                                     invert.slop = 1
-                                    invert.robust = -2
+                                    invert.robust = self.selfcal_amp_robust
                                     try:
                                         invert.go()
                                     except:
@@ -1228,7 +1230,7 @@ class scal(BaseModule):
                             invert.stokes = 'i'
                             invert.options = 'mfs,sdb,double'
                             invert.slop = 1
-                            invert.robust = -2
+                            invert.robust = self.selfcal_amp_robust
                             try:
                                 invert.go()
                             except:
