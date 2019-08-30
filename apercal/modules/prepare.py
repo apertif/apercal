@@ -10,7 +10,7 @@ from apercal.subs import setinit as subs_setinit
 from apercal.subs import managefiles as subs_managefiles
 from apercal.subs.param import get_param_def
 from apercal.subs import param as subs_param
-from apercal.subs.getdata_alta import getdata_alta
+from getdata_alta import getdata_alta, getstatus_alta
 from apercal.libs import lib
 from apercal.subs.msutils import flip_ra
 
@@ -127,7 +127,7 @@ class prepare(BaseModule):
                 logger.debug("Skipping fetching dataset from ALTA")
             else:
                 # Check if the flux calibrator dataset is available on ALTA
-                preparefluxcalaltastatus = subs_irods.getstatus_alta(self.prepare_date, self.prepare_obsnum_fluxcal,
+                preparefluxcalaltastatus = getstatus_alta(self.prepare_date, self.prepare_obsnum_fluxcal,
                                                                      self.beam)
                 if preparefluxcalaltastatus:
                     logger.debug('Flux calibrator dataset available on ALTA')
@@ -189,7 +189,7 @@ class prepare(BaseModule):
             else:
 
                 # Check if the polarisation calibrator dataset is available on ALTA
-                preparepolcalaltastatus = subs_irods.getstatus_alta(self.prepare_date, self.prepare_obsnum_polcal, self.beam)
+                preparepolcalaltastatus = getstatus_alta(self.prepare_date, self.prepare_obsnum_polcal, self.beam)
                 if preparepolcalaltastatus:
                     logger.debug('Polarisation calibrator dataset available on ALTA')
                 else:
@@ -260,7 +260,7 @@ class prepare(BaseModule):
                     logger.debug("Skipping fetching dataset from ALTA")
                 else:
                     # Check which target datasets are available on ALTA
-                    preparetargetbeamsaltastatus[b] = subs_irods.getstatus_alta(self.prepare_date, self.prepare_obsnum_target, str(b).zfill(2))
+                    preparetargetbeamsaltastatus[b] = getstatus_alta(self.prepare_date, self.prepare_obsnum_target, str(b).zfill(2))
                     if preparetargetbeamsaltastatus[b]:
                         logger.debug('Target dataset for beam ' + str(b).zfill(2) + ' available on ALTA')
                     else:
