@@ -8,6 +8,9 @@ https://github.com/apertif/apercal/wiki/pipeline-overview
 
 # Installation
 
+Get `getdata_alta` package from https://github.com/cosmicpudding/getdata_alta and add it to your PYTHONPATH 
+or add getdata_alta.py to your python-package directory.
+
 ```bash
 $ pip install .
 ```
