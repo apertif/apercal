@@ -29,11 +29,14 @@ class line(BaseModule):
     module_name = 'LINE'
 
     line_beams = 'all'
+    line_first_level_threads = 32
+    line_second_level_threads = 16
     line_input_channelwidth = None  # not for config file, will be set to finc in create_subbands
     line_cube_channel_list = None
     line_cube_channelwidth_list = None
     line_single_cube_input_channels = None  #not to be used in the config file
     line_splitdata = None
+    line_splitdata_force_chunkbandwidth = None
     line_splitdata_chunkbandwidth = None
     line_splitdata_channelbandwidth = None
     line_channelbinning = None
@@ -85,7 +88,7 @@ class line(BaseModule):
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
 
-    def go(self, first_level_threads=32, second_level_threads=16):
+    def go(self, first_level_threads=None, second_level_threads=None):
         """
         Executes the whole continuum subtraction process and line imaging in the following order:
         transfergains
@@ -101,6 +104,13 @@ class line(BaseModule):
             # added a try-except to allow for removing all auxiliary files in case line crashes
         try:
             logger.info("Starting LINE IMAGING ")
+
+            # setting the threads
+            if first_level_threads is None:
+                first_level_threads = self.line_first_level_threads
+            if second_level_threads is None:
+                second_level_threads = self.line_second_level_threads
+
             # build in check on number of threads to prevent excessive demands? (here?)
             original_nested = pymp.config.nested
             threads = [first_level_threads, second_level_threads]
@@ -267,9 +277,19 @@ class line(BaseModule):
             subband_chunks = int(np.power(2, np.ceil(np.log(subband_chunks) / np.log(2))))
             if subband_chunks == 0:
                 subband_chunks = 1
-            chunkbandwidth = (numchan / subband_chunks) * finc
-            logger.info('(LINE) Adjusting chunk size to ' + str(
-                chunkbandwidth) + ' GHz for regular gridding of the data chunks over frequency' )
+
+            # some more logging messages for information
+            logger.info("(LINE) Number of channels found: {}".format(numchan))
+            logger.info("(LINE) Frequency increment found: {}".format(finc))
+            logger.info("(LINE) Total bandwidth: {}".format(subband_bw))
+            logger.info("(LINE) Calculated number of chunks based on input chunkbandwidth to: {}".format(subband_chunks))
+            if self.line_splitdata_force_chunkbandwidth:
+                logger.info("Forcing chunkbandwdith to be {}".format(self.line_splitdata_chunkbandwidth))
+                chunkbandwdith = self.line_splitdata_chunkbandwidth
+            else:
+                chunkbandwidth = (numchan / subband_chunks) * finc
+                logger.info('(LINE) Adjusting chunk size to ' + str(
+                    chunkbandwidth) + ' GHz for regular gridding of the data chunks over frequency')
             # start splitting the data
             base_counter = 0
             original_nested = pymp.config.nested
@@ -304,7 +324,7 @@ class line(BaseModule):
                                     ' to keep bandwidth of chunks equal over the whole bandwidth (threads [' +
                                     str(p0.thread_num + 1) + '/' + str(p0.num_threads) + '] [1st,2nd]) #')
                         logger.info('(LINE) New frequency bin is ' + str(binchan * finc) +
-                                    ' GHz (threads [' + str(p4.thread_num + 1) + '/' + str(p0.num_threads)
+                                    ' GHz (threads [' + str(p0.thread_num + 1) + '/' + str(p0.num_threads)
                                     + '] [1st,2nd]) #')
                     nchan = int(chan_per_chunk / binchan)  # Total number of output channels per chunk
                     start = 1 + chunk * chan_per_chunk
@@ -384,10 +404,17 @@ class line(BaseModule):
                         uvmodel.model = self.linedir + '/' + chunk + '/model_mf_' + str(model_number).zfill(2)
                         uvmodel.options = 'subtract,mfs'
                         uvmodel.out = self.linedir + '/' + chunk + '/' + chunk + '_line.mir'
-                        uvmodel.go()
-                        logger.info('(LINE) Subtracted model from chunk ' + str(chunk) +
-                                ' (thread ' + str(p0.thread_num + 1) +
-                                ' out of ' + str(p0.num_threads) + ') #')
+                        # putting the following into a try-except in case something goes wrong on a specific chunk
+                        try:
+                            uvmodel.go()
+                        except Exception as e:
+                            logger.warning('(LINE) Subtracted model from chunk ' + str(chunk) +
+                                           ' (thread ' + str(p0.thread_num + 1) +
+                                           ' out of ' + str(p0.num_threads) + ') ... Failed')
+                            logger.exception(e)
+                        else:
+                            logger.info('(LINE) Subtracted model from chunk ' + str(chunk) +
+                                        ' (thread ' + str(p0.thread_num + 1) + ' out of ' + str(p0.num_threads) + ') #')
                 logger.info(' (LINE) Continuum subtraction using uvmodel done!')
 #                pymp.config.nested = original_nested
             else:
