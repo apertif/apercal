@@ -104,7 +104,7 @@ class line(BaseModule):
             # added a try-except to allow for removing all auxiliary files in case line crashes
         try:
             logger.info("Starting LINE IMAGING ")
-            
+
             # setting the threads
             if first_level_threads is None:
                 first_level_threads = self.line_first_level_threads
@@ -277,7 +277,7 @@ class line(BaseModule):
             subband_chunks = int(np.power(2, np.ceil(np.log(subband_chunks) / np.log(2))))
             if subband_chunks == 0:
                 subband_chunks = 1
-            
+
             # some more logging messages for information
             logger.info("(LINE) Number of channels found: {}".format(numchan))
             logger.info("(LINE) Frequency increment found: {}".format(finc))
@@ -289,7 +289,7 @@ class line(BaseModule):
             else:
                 chunkbandwidth = (numchan / subband_chunks) * finc
                 logger.info('(LINE) Adjusting chunk size to ' + str(
-                    chunkbandwidth) + ' GHz for regular gridding of the data chunks over frequency' )
+                    chunkbandwidth) + ' GHz for regular gridding of the data chunks over frequency')
             # start splitting the data
             base_counter = 0
             original_nested = pymp.config.nested
@@ -413,9 +413,8 @@ class line(BaseModule):
                                            ' out of ' + str(p0.num_threads) + ') ... Failed')
                             logger.exception(e)
                         else:
-                            logger.info('(LINE) Subtracted model from chunk ' + str(chunk) +
-                                    ' (thread ' + str(p0.thread_num + 1) +
-                                    ' out of ' + str(p0.num_threads) + ') #')
+                            logger.info('(LINE) Subtracted model from chunk ' + str(chunk) + 
+                                        ' (thread ' + str(p0.thread_num + 1) + ' out of ' + str(p0.num_threads) + ') #')
                 logger.info(' (LINE) Continuum subtraction using uvmodel done!')
 #                pymp.config.nested = original_nested
             else:
