@@ -143,9 +143,9 @@ class continuum(BaseModule):
 
             # set selfcal status to false
             subs_param.add_param(
-                self, beam + '_targetbeams_mf_status', False)
+                self, cbeam + '_targetbeams_mf_status', False)
             subs_param.add_param(
-                self, beam + '_targetbeams_chunkall_status', False)
+                self, cbeam + '_targetbeams_chunkall_status', False)
 
             return False
 
