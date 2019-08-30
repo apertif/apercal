@@ -59,10 +59,89 @@ class polarisation(BaseModule):
         vimaging
         """
         logger.info("Starting POLARISATION IMAGING")
-        self.quimaging()
-        self.qucube()
-        self.vimaging()
-        logger.info("POLARISATION IMAGING done ")
+
+        # check starting conditions for selfcal
+        all_good = self.check_starting_conditions()
+        if all_good:
+            self.quimaging()
+            self.qucube()
+            self.vimaging()
+            logger.info("POLARISATION IMAGING done ")
+        else:
+            logger.warning("POLARISATION IMAGING failed ")
+
+    def check_starting_conditions(self):
+        """
+        Check that the miriad files from convert and selfcalibration exists prior to
+        executing other functions.
+
+        If the crosscal miriad file does not exists, none of the subsequent tasks 
+        in go() need to be executed. It is easier for now to add this task than edit
+        each task in go().
+
+        Reason for adding selfcalibration check: Functions quimaging() and vimaging()
+        check for amp and phase selfcal, but the phase-selfcal-status is set to True
+        Also qucube() reads from selfcal dataset without checking it exists.
+        Should be changed in the functions.
+
+        Not sure if it is necessary to add all the param variables from polarisation
+        and set them False if the check fails. For now, just use the main ones
+
+        Args:
+            self
+        
+        Return:
+            (bool): True if file is found, otherwise False
+        """
+
+        logger.info(
+            "Beam {}: Checking starting conditions for CONTINUUM IMAGING".format(self.beam))
+
+        # initial setup
+        subs_setinit.setinitdirs(self)
+        subs_setinit.setdatasetnamestomiriad(self)
+
+        sbeam = 'selfcal_B' + str(self.beam).zfill(2)
+        pbeam = 'polarisation_B' + str(self.beam).zfill(2)
+
+        # variables for selfcalibration
+        selfcaltargetbeamsphasestatus = get_param_def(
+            self, sbeam + '_targetbeams_phase_status', False)
+        selfcaltargetbeamsampstatus = get_param_def(
+            self, sbeam + '_targetbeams_amp_status', False)
+
+        # path to miriad files
+        convert_mir_file = os.path.join(self.crosscaldir, self.target)
+
+        # variable to check that starting conditions are met
+        all_good = True
+
+        # check that the file exists
+        if not os.path.isdir(convert_mir_file):
+            logger.warning(
+                "Beam {}: Did not find main miriad file in {}".format(self.beam, convert_mir_file))
+            all_good = False
+        
+        # check selfcal
+        if not selfcaltargetbeamsphasestatus and not selfcaltargetbeamsampstatus:
+            logger.warning("Beam {}: Neither phase nor amplitude self-calibration was successful. No polarisation imaging".format(self.beam))
+            all_good = False
+
+        if all_good:
+            logger.info(
+                "Beam {}: Checking starting conditions for POLARISATION IMAGING ... Done: All good.".format(self.beam))
+            return all_good
+        else:
+            logger.warning(
+                "Beam {}: Checking starting conditions for POLARISATION IMAGING ... Done: Failed".format(self.beam))
+
+            # set selfcal status to false
+            subs_param.add_param(
+                self, pbeam + '_targetbeams_qu_status', False)
+            subs_param.add_param(
+                self, pbeam + '_targetbeams_v_status', False)
+
+            return False
 
     def get_target_path(self, beam=None):
         if self.subdirification:
