@@ -305,7 +305,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     set_files(s0)
                     s0.beam = "{:02d}".format(beamnr)
                     if "split" in steps and not dry_run:
-                            s0.go()
+                        s0.go()
                 except Exception as e:
                     logger.warning("Split failed for {0} beam {1}".format(
                         str(taskid_target), str(beamnr)))
@@ -318,7 +318,6 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             logfilepath = os.path.join(basedir, 'apercal.log')
             lib.setup_logger('debug', logfile=logfilepath)
             logger = logging.getLogger(__name__)
-            
             logger.info("Running split ... Done ({0:.0f}s)".format(
                 time() - start_time_split))
 
