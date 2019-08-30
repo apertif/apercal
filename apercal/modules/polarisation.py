@@ -83,13 +83,15 @@ class polarisation(BaseModule):
 
         # Create the parameters for the parameter file for the polarisation imaging
 
+        nsbs = (self.polarisation_qu_endsubband - self.polarisation_qu_startsubband) + 1
+
         polarisationtargetbeamsqustatus = get_param_def(self, pbeam + '_targetbeams_qu_status', False)
-        polarisationtargetbeamsqumapstatus = get_param_def(self, pbeam + '_targetbeams_qu_mapstatus', np.full((384/self.polarisation_qu_nsubband, 2), False))
-        polarisationtargetbeamsqubeamstatus = get_param_def(self, pbeam + '_targetbeams_qu_beamstatus', np.full((384/self.polarisation_qu_nsubband, 2), False))
-        polarisationtargetbeamsqumodelstatus = get_param_def(self, pbeam + '_targetbeams_qu_modelstatus', np.full((384/self.polarisation_qu_nsubband, 2), False))
-        polarisationtargetbeamsquimagestatus = get_param_def(self, pbeam + '_targetbeams_qu_imagestatus', np.full((384/self.polarisation_qu_nsubband, 2), False))
-        polarisationtargetbeamsquimagestats = get_param_def(self, pbeam + '_targetbeams_qu_imagestats', np.full((384/self.polarisation_qu_nsubband, 3, 2), np.nan))
-        polarisationtargetbeamsqubeamparams = get_param_def(self, pbeam + '_targetbeams_qu_beamparams', np.full((384/self.polarisation_qu_nsubband, 3, 2), np.nan))
+        polarisationtargetbeamsqumapstatus = get_param_def(self, pbeam + '_targetbeams_qu_mapstatus', np.full((nsbs/self.polarisation_qu_nsubband, 2), False))
+        polarisationtargetbeamsqubeamstatus = get_param_def(self, pbeam + '_targetbeams_qu_beamstatus', np.full((nsbs/self.polarisation_qu_nsubband, 2), False))
+        polarisationtargetbeamsqumodelstatus = get_param_def(self, pbeam + '_targetbeams_qu_modelstatus', np.full((nsbs/self.polarisation_qu_nsubband, 2), False))
+        polarisationtargetbeamsquimagestatus = get_param_def(self, pbeam + '_targetbeams_qu_imagestatus', np.full((nsbs/self.polarisation_qu_nsubband, 2), False))
+        polarisationtargetbeamsquimagestats = get_param_def(self, pbeam + '_targetbeams_qu_imagestats', np.full((nsbs/self.polarisation_qu_nsubband, 3, 2), np.nan))
+        polarisationtargetbeamsqubeamparams = get_param_def(self, pbeam + '_targetbeams_qu_beamparams', np.full((nsbs/self.polarisation_qu_nsubband, 3, 2), np.nan))
 
         if self.polarisation_qu:
             subs_setinit.setinitdirs(self)
@@ -295,8 +297,8 @@ class polarisation(BaseModule):
                     # Check the results of the imaging
                     nQimages = np.sum(polarisationtargetbeamsquimagestatus[:, 0])
                     nUimages = np.sum(polarisationtargetbeamsquimagestatus[:, 1])
-                    logger.info('Beam ' + self.beam + ': ' + str(nQimages) + '/' + str(384/self.polarisation_qu_nsubband) + ' Stokes Q-images were created successfully!')
-                    logger.info('Beam ' + self.beam + ': ' + str(nUimages) + '/' + str(384/self.polarisation_qu_nsubband) + ' Stokes U-images were created successfully!')
+                    logger.info('Beam ' + self.beam + ': ' + str(nQimages) + '/' + str(nsbs/self.polarisation_qu_nsubband) + ' Stokes Q-images were created successfully!')
+                    logger.info('Beam ' + self.beam + ': ' + str(nUimages) + '/' + str(nsbs/self.polarisation_qu_nsubband) + ' Stokes U-images were created successfully!')
                     if nQimages != 0 and nUimages != 0:
                         polarisationtargetbeamsqustatus = True
                         logger.info('Beam ' + self.beam + ': Q-/U-imaging successful!')
@@ -329,6 +331,8 @@ class polarisation(BaseModule):
 
         # Create the parameters for the parameter file for the creation of the cubes
 
+        nsbs = (self.polarisation_qu_endsubband - self.polarisation_qu_startsubband) + 1
+
         polarisationtargetbeamsqucubeQ = get_param_def(self, pbeam + '_targetbeams_qu_cubeQ', False)
         polarisationtargetbeamsqucubeU = get_param_def(self, pbeam + '_targetbeams_qu_cubeU', False)
 
@@ -338,10 +342,10 @@ class polarisation(BaseModule):
             subs_managefiles.director(self, 'ch', self.poldir)
             if not polarisationtargetbeamsqucubeQ:
                 # Create a three dimensional array with NaNs for the Q cube
-                qcube = np.full((384/self.polarisation_qu_nsubband, self.polarisation_qu_imsize, self.polarisation_qu_imsize), np.nan)
+                qcube = np.full((nsbs/self.polarisation_qu_nsubband, self.polarisation_qu_imsize, self.polarisation_qu_imsize), np.nan)
                 # Insert the images into the cube
-                polarisationtargetbeamsquimagestatus = get_param_def(self, pbeam + '_targetbeams_qu_imagestatus', np.full((384 / self.polarisation_qu_nsubband, 2), False))
-                for q in range(384/self.polarisation_qu_nsubband):
+                polarisationtargetbeamsquimagestatus = get_param_def(self, pbeam + '_targetbeams_qu_imagestatus', np.full((nsbs / self.polarisation_qu_nsubband, 2), False))
+                for q in range(nsbs/self.polarisation_qu_nsubband):
                     if os.path.isdir('image_Q_' + str(q).zfill(3)) and polarisationtargetbeamsquimagestatus[q, 0]:
                         subs_managefiles.imagetofits(self, 'image_Q_' + str(q).zfill(3), 'image_Q_' + str(q).zfill(3) + '.fits', remove=False)
                         qimage = pyfits.open('image_Q_' + str(q).zfill(3) + '.fits')
@@ -378,10 +382,10 @@ class polarisation(BaseModule):
 
             if not polarisationtargetbeamsqucubeU:
                 # Create a three dimensional array with NaNs for the U cube
-                ucube = np.full((384 / self.polarisation_qu_nsubband, self.polarisation_qu_imsize, self.polarisation_qu_imsize), np.nan)
+                ucube = np.full((nsbs / self.polarisation_qu_nsubband, self.polarisation_qu_imsize, self.polarisation_qu_imsize), np.nan)
                 # Insert the images into the cube
-                polarisationtargetbeamsquimagestatus = get_param_def(self, pbeam + '_targetbeams_qu_imagestatus', np.full((384 / self.polarisation_qu_nsubband, 2), False))
-                for u in range(384 / self.polarisation_qu_nsubband):
+                polarisationtargetbeamsquimagestatus = get_param_def(self, pbeam + '_targetbeams_qu_imagestatus', np.full((nsbs / self.polarisation_qu_nsubband, 2), False))
+                for u in range(nsbs / self.polarisation_qu_nsubband):
                     if os.path.isdir('image_U_' + str(u).zfill(3)) and polarisationtargetbeamsquimagestatus[u, 1]:
                         subs_managefiles.imagetofits(self, 'image_U_' + str(u).zfill(3), 'image_U_' + str(u).zfill(3) + '.fits', remove=False)
                         uimage = pyfits.open('image_U_' + str(u).zfill(3) + '.fits')

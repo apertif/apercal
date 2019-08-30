@@ -1313,7 +1313,11 @@ class scal(BaseModule):
         b = self.beam
         beam = 'selfcal_B' + str(b).zfill(2)
         logger.warning('Beam ' + str(b).zfill(2) + ': Deleting all self-calibrated data.')
-        subs_managefiles.director(self, 'rm', self.basedir + str(b).zfill(2) + '/' + self.selfcalsubdir)
+        try:
+            subs_managefiles.director(self, 'rm', self.basedir + str(b).zfill(2) + '/' + self.selfcalsubdir)
+        except:
+            pass
+        logger.warning('Beam ' + str(b).zfill(2) + ': Deleting all parameter file entries for SELFCAL module.')
         subs_param.del_param(self, beam + '_targetbeams_average')
         subs_param.del_param(self, beam + '_targetbeams_flagline')
         subs_param.del_param(self, beam + '_targetbeams_flagline_channels')
@@ -1364,7 +1368,11 @@ class scal(BaseModule):
             beam = 'selfcal_B' + str(b).zfill(2)
             if os.path.isdir(self.basedir + str(b).zfill(2) + '/' + self.selfcalsubdir):
                 logger.warning('Beam ' + str(b).zfill(2) + ': Deleting all self-calibrated data.')
-                subs_managefiles.director(self, 'rm', self.basedir + str(b).zfill(2) + '/' + self.selfcalsubdir)
+                try:
+                    subs_managefiles.director(self, 'rm', self.basedir + str(b).zfill(2) + '/' + self.selfcalsubdir)
+                except:
+                    pass
+                logger.warning('Beam ' + str(b).zfill(2) + ': Deleting all parameter file entries for SELFCAL module.')
                 subs_param.del_param(self, beam + '_targetbeams_average')
                 subs_param.del_param(self, beam + '_targetbeams_flagline')
                 subs_param.del_param(self, beam + '_targetbeams_flagline_channels')
