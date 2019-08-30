@@ -133,6 +133,9 @@ class scal(BaseModule):
         This seems necessary as not all the tasks do this check and they do not have
         to. A single task is enough.
 
+        Not sure if it is necessary to add all the param variables from selfcal
+        and set them False if the check fails. For now, just use the main one
+
         Args:
             self
         
@@ -140,7 +143,7 @@ class scal(BaseModule):
             (bool): True if file is found, otherwise False
         """
 
-        logger.info("Beam {}: Checking starting conditions for SELFCAL".format(self.beam))
+        logger.info("Beam {}: Checking starting conditions for SELF CALIBRATION".format(self.beam))
 
         # initial setup
         subs_setinit.setinitdirs(self)
@@ -165,7 +168,8 @@ class scal(BaseModule):
         else:
             # miriad file does not exists
             logger.warning("Beam {}: Checking starting conditions for SELF CALIBRATION ... Done: Failed".format(self.beam))
-            logger.warning("Beam {}: File {} not found".format(self.beam, mir_file))
+            logger.warning(
+                "Beam {}: Did not find main miriad file in {}".format(self.beam, mir_file))
             
             # set selfcal status to false
             subs_param.add_param(self, beam + '_targetbeams_phase_status', selfcaltargetbeamsphasestatus)
