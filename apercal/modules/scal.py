@@ -151,12 +151,6 @@ class scal(BaseModule):
 
         beam = 'selfcal_B' + str(self.beam).zfill(2)
 
-        # variables for phase and amplitude selfcal status
-        selfcaltargetbeamsphasestatus = get_param_def(
-            self, beam + '_targetbeams_phase_status', False)
-        selfcaltargetbeamsampstatus = get_param_def(
-            self, beam + '_targetbeams_amp_status', False)
-
         # path to converted miriad file
         mir_file = os.path.join(self.crosscaldir,self.target)
 
@@ -172,8 +166,8 @@ class scal(BaseModule):
                 "Beam {}: Did not find main miriad file in {}".format(self.beam, mir_file))
             
             # set selfcal status to false
-            subs_param.add_param(self, beam + '_targetbeams_phase_status', selfcaltargetbeamsphasestatus)
-            subs_param.add_param(self, beam + '_targetbeams_amp_status', selfcaltargetbeamsampstatus)
+            subs_param.add_param(self, beam + '_targetbeams_phase_status', False)
+            subs_param.add_param(self, beam + '_targetbeams_amp_status', False)
 
             return False
 
