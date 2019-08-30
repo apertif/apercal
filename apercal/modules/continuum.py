@@ -128,7 +128,7 @@ class continuum(BaseModule):
             logger.warning(
                 "Beam {}: Checking starting conditions for CONTINUUM IMAGING ... Done: Failed".format(self.beam))
             logger.warning(
-                "Beam {}: Did not find main miriad file in {}".format(self.beam, mir_file))
+                "Beam {}: Did not find main miriad file in {}".format(self.beam, convert_mir_file))
 
             # set selfcal status to false
             subs_param.add_param(
