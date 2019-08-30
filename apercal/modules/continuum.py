@@ -76,7 +76,7 @@ class continuum(BaseModule):
 
     def check_starting_conditions(self):
         """
-        Check that the miriad file from convert exists.
+        Check that the miriad file from convert and self-calibration exists.
 
         If the crosscal miriad file does not exists, none of the subsequent tasks 
         in go() need to be executed. It is easier for now to add this task than edit
@@ -86,11 +86,11 @@ class continuum(BaseModule):
         exists, continuum will not crash, but report that selfcalibration was not successfull.
         While this is true, it is not the main cause. This function will report the main cause
         in this case.
+
+        The check for self-calibration is added for completeness.
         
         Not sure if it is necessary to add all the param variables from continuum
         and set them False if the check fails. For now, just use the main ones
-
-        In principle, one could check also self-calibration with this task.
 
         Args:
             self
@@ -106,35 +106,46 @@ class continuum(BaseModule):
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
 
-        beam = 'continuum_B' + str(self.beam).zfill(2)
+        sbeam = 'selfcal_B' + str(self.beam).zfill(2)
+        cbeam = 'continuum_B' + str(self.beam).zfill(2)
 
-        # main variables for continuum imaging
-        continuumtargetbeamsmfstatus = get_param_def(
-            self, beam + '_targetbeams_mf_status', False)
-        continuumtargetbeamschunkallstatus = get_param_def(
-            self, beam + '_targetbeams_chunkall_status', False)
+        # variables for selfcalibration
+        selfcaltargetbeamsphasestatus = get_param_def(
+            self, sbeam + '_targetbeams_phase_status', False)
+        selfcaltargetbeamsampstatus = get_param_def(
+            self, sbeam + '_targetbeams_amp_status', False)
 
         # path to miriad file from convert
         convert_mir_file = os.path.join(self.crosscaldir, self.target)
 
+        # variable to check that starting conditions are met
+        all_good = True
+
         # check that the file exists
-        if os.path.isdir(convert_mir_file):
-            # miriad file exists
-            logger.info(
-                "Beam {}: Checking starting conditions for CONTINUUM IMAGING ... Done: All good.".format(self.beam))
-            return True
-        else:
-            # miriad file does not exists
-            logger.warning(
-                "Beam {}: Checking starting conditions for CONTINUUM IMAGING ... Done: Failed".format(self.beam))
+        if not os.path.isdir(convert_mir_file):
             logger.warning(
                 "Beam {}: Did not find main miriad file in {}".format(self.beam, convert_mir_file))
+            all_good = False
+        
+        # check selfcal
+        if not selfcaltargetbeamsphasestatus and not selfcaltargetbeamsampstatus:
+            logger.warning(
+                "Beam {}: Neither phase nor amplitude self-calibration was successful. No continuum imaging".format(self.beam))
+            all_good = False
+
+        if all_good:
+            logger.info(
+                "Beam {}: Checking starting conditions for CONTINUUM IMAGING ... Done: All good.".format(self.beam))
+            return all_good
+        else:
+            logger.warning(
+                "Beam {}: Checking starting conditions for CONTINUUM IMAGING ... Done: Failed".format(self.beam))
 
             # set selfcal status to false
             subs_param.add_param(
-                self, beam + '_targetbeams_mf_status', continuumtargetbeamsmfstatus)
+                self, beam + '_targetbeams_mf_status', False)
             subs_param.add_param(
-                self, beam + '_targetbeams_chunkall_status', continuumtargetbeamschunkallstatus)
+                self, beam + '_targetbeams_chunkall_status', False)
 
             return False
 
