@@ -114,11 +114,11 @@ class continuum(BaseModule):
         continuumtargetbeamschunkallstatus = get_param_def(
             self, beam + '_targetbeams_chunkall_status', False)
 
-        # path to converted miriad file
-        mir_file = os.path.join(self.crosscaldir, self.target)
+        # path to miriad file from convert
+        convert_mir_file = os.path.join(self.crosscaldir, self.target)
 
         # check that the file exists
-        if os.path.isdir(mir_file):
+        if os.path.isdir(convert_mir_file):
             # miriad file exists
             logger.info(
                 "Beam {}: Checking starting conditions for CONTINUUM IMAGING ... Done: All good.".format(self.beam))
