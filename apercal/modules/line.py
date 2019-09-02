@@ -100,105 +100,152 @@ class line(BaseModule):
             msg = "Line imaging requested on a beam not in line_beams"
             logger.error(msg)
             raise ApercalException(msg)
-        
+        # added miriad main file check
+        elif self.check_starting_conditions():
+
             # added a try-except to allow for removing all auxiliary files in case line crashes
-        try:
-            logger.info("Starting LINE IMAGING ")
+            try:
+                logger.info("Starting LINE IMAGING ")
 
-            # setting the threads
-            if first_level_threads is None:
-                first_level_threads = self.line_first_level_threads
-            if second_level_threads is None:
-                second_level_threads = self.line_second_level_threads
+                # setting the threads
+                if first_level_threads is None:
+                    first_level_threads = self.line_first_level_threads
+                if second_level_threads is None:
+                    second_level_threads = self.line_second_level_threads
 
-            # build in check on number of threads to prevent excessive demands? (here?)
-            original_nested = pymp.config.nested
-            threads = [first_level_threads, second_level_threads]
-            nthreads = first_level_threads * second_level_threads
-            self.transfergains(nthreads)  # first step after copy of crosscal data
-            logger.info("(LINE) Function transfergains done ")
+                # build in check on number of threads to prevent excessive demands? (here?)
+                original_nested = pymp.config.nested
+                threads = [first_level_threads, second_level_threads]
+                nthreads = first_level_threads * second_level_threads
+                self.transfergains(nthreads)  # first step after copy of crosscal data
+                logger.info("(LINE) Function transfergains done ")
 
-            # now go throught the requested image cubes
-            for cube_counter in range(len(self.line_cube_channelwidth_list)):
+                # now go throught the requested image cubes
+                for cube_counter in range(len(self.line_cube_channelwidth_list)):
 
-                # catch in case line fails on one of the cubes, but make sure it continues with the next cube
-                try:
-                    # set the channelbandwidth for splitting for a given cube from the list
-                    self.line_splitdata_channelbandwidth = self.line_cube_channelwidth_list[cube_counter]
-                    # if it is the first cube, create the subbands
-                    if cube_counter == 0:
-                        self.createsubbands(threads)  # create subbands for the first subband
-                        logger.info("(LINE) Function createsubbands done for cube {0}".format(cube_counter))
-                        # run continuum subtraction only when channel width changes
-                        self.subtract(threads)  # subtract continuum if required
-                        logger.info(
-                            "(LINE) Function subtract done for cube {0}".format(cube_counter))    
-                    # create the subbands again only if the channel width changes
-                    elif self.line_cube_channelwidth_list[cube_counter] != self.line_cube_channelwidth_list[cube_counter-1]:
-                        self.createsubbands(threads)  # create subbands if required
-                        logger.info(
-                            "(LINE) Function createsubbands done for cube {0}".format(cube_counter))
-                        # run continuum subtraction only when channel width changes
-                        self.subtract(threads)  # subtract continuum if required
-                        logger.info(
-                            "(LINE) Function subtract done for cube {0}".format(cube_counter))
+                    # catch in case line fails on one of the cubes, but make sure it continues with the next cube
+                    try:
+                        # set the channelbandwidth for splitting for a given cube from the list
+                        self.line_splitdata_channelbandwidth = self.line_cube_channelwidth_list[cube_counter]
+                        # if it is the first cube, create the subbands
+                        if cube_counter == 0:
+                            self.createsubbands(threads)  # create subbands for the first subband
+                            logger.info("(LINE) Function createsubbands done for cube {0}".format(cube_counter))
+                            # run continuum subtraction only when channel width changes
+                            self.subtract(threads)  # subtract continuum if required
+                            logger.info(
+                                "(LINE) Function subtract done for cube {0}".format(cube_counter))    
+                        # create the subbands again only if the channel width changes
+                        elif self.line_cube_channelwidth_list[cube_counter] != self.line_cube_channelwidth_list[cube_counter-1]:
+                            self.createsubbands(threads)  # create subbands if required
+                            logger.info(
+                                "(LINE) Function createsubbands done for cube {0}".format(cube_counter))
+                            # run continuum subtraction only when channel width changes
+                            self.subtract(threads)  # subtract continuum if required
+                            logger.info(
+                                "(LINE) Function subtract done for cube {0}".format(cube_counter))
+                        else:
+                            logger.info("(LINE) Chunks already exists. Function createsubbands is not executed for cube {0}".format(cube_counter))
+                            logger.info(
+                                "(LINE) Function subtract not called for cube {0} as it was already called.".format(cube_counter))
+
+                        # set the start and end channel for imaging
+                        self.line_single_cube_input_channels = self.line_cube_channel_list[cube_counter]
+                        # run imaging
+                        self.image_line(threads)
+                    except Exception as e:
+                        logger.warning("(LINE) Failed to create line cube {}".format(cube_counter))
+                        logger.exception(e)
+                    
+                    pymp.config.nested = original_nested
+
+                    # clean up everything in the end
+                    if cube_counter == len(self.line_cube_channelwidth_list) - 1:
+                        self.cleanup(clean_level=1)
+                    # clean up only the cube directory if the channel width does not change
+                    elif self.line_cube_channelwidth_list[cube_counter] == self.line_cube_channelwidth_list[cube_counter+1]:
+                        self.cleanup(clean_level=3)
+                    # if the channel width changes clean up all except for the mir file
                     else:
-                        logger.info("(LINE) Chunks already exists. Function createsubbands is not executed for cube {0}".format(cube_counter))
-                        logger.info(
-                            "(LINE) Function subtract not called for cube {0} as it was already called.".format(cube_counter))
+                        self.cleanup(clean_level=2)
 
-                    # set the start and end channel for imaging
-                    self.line_single_cube_input_channels = self.line_cube_channel_list[cube_counter]
-                    # run imaging
-                    self.image_line(threads)
-                except Exception as e:
-                    logger.warning("(LINE) Failed to create line cube {}".format(cube_counter))
-                    logger.exception(e)
-                
-                pymp.config.nested = original_nested
+                    # rename image cube
+                    cube_name = self.linedir + '/cubes/' + self.line_image_cube_name
+                    new_cube_name = self.linedir + '/cubes/' + \
+                        self.line_image_cube_name.replace(
+                            '.fits', '{0}.fits'.format(cube_counter))
+                    if os.path.exists(self.linedir + '/cubes/HI_image_cube.fits'):
+                        subs_managefiles.director(
+                            self, 'rn', new_cube_name, file_=cube_name, ignore_nonexistent=True)
+                    else:
+                        logger.info( "(LINE) no image cube made for subband {0}".format(cube_counter) )
 
-                # clean up everything in the end
-                if cube_counter == len(self.line_cube_channelwidth_list) - 1:
-                    self.cleanup(clean_level=1)
-                # clean up only the cube directory if the channel width does not change
-                elif self.line_cube_channelwidth_list[cube_counter] == self.line_cube_channelwidth_list[cube_counter+1]:
-                    self.cleanup(clean_level=3)
-                # if the channel width changes clean up all except for the mir file
-                else:
-                    self.cleanup(clean_level=2)
+                    # rename beam cube
+                    beam_cube_name = self.linedir + '/cubes/' + self.line_image_beam_cube_name
+                    new_beam_cube_name = self.linedir + '/cubes/' + \
+                        self.line_image_beam_cube_name.replace(
+                            '.fits', '{0}.fits'.format(cube_counter))
+                    if os.path.exists(self.linedir + '/cubes/HI_beam_cube.fits'):
+                        subs_managefiles.director(
+                            self, 'rn', new_beam_cube_name, file_=beam_cube_name, ignore_nonexistent=True)
+                    else:
+                        logger.info( "(LINE) no beam cube made for subband {0}".format(cube_counter))
 
-                # rename image cube
-                cube_name = self.linedir + '/cubes/' + self.line_image_cube_name
-                new_cube_name = self.linedir + '/cubes/' + \
-                    self.line_image_cube_name.replace(
-                        '.fits', '{0}.fits'.format(cube_counter))
-                if os.path.exists(self.linedir + '/cubes/HI_image_cube.fits'):
-                    subs_managefiles.director(
-                        self, 'rn', new_cube_name, file_=cube_name, ignore_nonexistent=True)
-                else:
-                    logger.info( "(LINE) no image cube made for subband {0}".format(cube_counter) )
-
-                # rename beam cube
-                beam_cube_name = self.linedir + '/cubes/' + self.line_image_beam_cube_name
-                new_beam_cube_name = self.linedir + '/cubes/' + \
-                    self.line_image_beam_cube_name.replace(
-                        '.fits', '{0}.fits'.format(cube_counter))
-                if os.path.exists(self.linedir + '/cubes/HI_beam_cube.fits'):
-                    subs_managefiles.director(
-                        self, 'rn', new_beam_cube_name, file_=beam_cube_name, ignore_nonexistent=True)
-                else:
-                    logger.info( "(LINE) no beam cube made for subband {0}".format(cube_counter))
-
-                logger.info(
-                    "(LINE) module image_line done for cube {0}".format(cube_counter))
-        except Exception as e:
-            logger.warning("LINE Imaging failed")
-            if self.line_always_cleanup:
-                logger.warning("All auxiliary files are being deleted")
-                self.cleanup(clean_level=1)    
-            logger.exception(e)
+                    logger.info(
+                        "(LINE) module image_line done for cube {0}".format(cube_counter))
+            except Exception as e:
+                logger.warning("LINE IMAGING failed")
+                if self.line_always_cleanup:
+                    logger.warning("All auxiliary files are being deleted")
+                    self.cleanup(clean_level=1)    
+                logger.exception(e)
+            else:
+                logger.info("Finished LINE IMAGING")
         else:
-            logger.info("Finished LINE imaging")
+            logger.warning("LINE IMAGING failed")
+
+    def check_starting_conditions(self):
+        """
+        Check that the miriad file from convert exists.
+
+        If it does not exists, none of the subsequent tasks in go need to be executed.
+        This seems necessary as not all the tasks do this check and they do not have
+        to. A single task is enough.
+
+        Not sure if it is necessary to add all the param variables from selfcal
+        and set them False if the check fails. For now, just use the main one
+
+        Args:
+            self
+        
+        Return:
+            (bool): True if file is found, otherwise False
+        """
+
+        logger.info(
+            "Beam {}: Checking starting conditions for LINE".format(self.beam))
+
+        # initial setup
+        subs_setinit.setinitdirs(self)
+        subs_setinit.setdatasetnamestomiriad(self)
+
+        # path to converted miriad file
+        mir_file = os.path.join(self.crosscaldir, self.target)
+
+        # check that the file exists
+        if os.path.isdir(mir_file):
+            # miriad file exists
+            logger.info(
+                "Beam {}: Checking starting conditions for LINE ... Done: All good.".format(self.beam))
+            return True
+        else:
+            # miriad file does not exists
+            logger.warning(
+                "Beam {}: Checking starting conditions for LINE ... Done: Failed".format(self.beam))
+            logger.warning(
+                "Beam {}: Did not find main miriad file in {}".format(self.beam, mir_file))
+
+            return False
 
     def transfergains(self, nthreads=1):
         """
