@@ -100,8 +100,9 @@ class line(BaseModule):
             msg = "Line imaging requested on a beam not in line_beams"
             logger.error(msg)
             raise ApercalException(msg)
+        
         # added miriad main file check
-        elif self.check_starting_conditions():
+        if self.check_starting_conditions():
 
             # added a try-except to allow for removing all auxiliary files in case line crashes
             try:
