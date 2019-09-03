@@ -498,7 +498,9 @@ class line(BaseModule):
 
         # put imaging channels into format used below to avoid changes
         self.line_image_channels = '{0:d},{1:d}'.format(output_start_channel,output_end_channel)
-
+        logger.info("(LINE) Channel range of input cube: {0:d},{1:d}".format(
+            self.line_single_cube_input_channels[0], self.line_single_cube_input_channels[1]))
+        logger.info("(LINE) Number of channels found: {0}".format(self.line_image_channels))
 
         if self.line_image:
             logger.info(' (LINE) Starting line imaging of dataset #')
