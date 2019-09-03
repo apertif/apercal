@@ -1486,3 +1486,4 @@ class preflag(BaseModule):
                 subs_param.del_param(self, pbeam + '_aoflagger_targetbeams_flag_status')
             else:
                 logger.warning('Beam ' + str(b).zfill(2) + ': No raw data present.')
+
