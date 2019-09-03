@@ -459,9 +459,9 @@ class line(BaseModule):
                             logger.warning('(LINE) Subtracted model from chunk ' + str(chunk) +
                                            ' (thread ' + str(p0.thread_num + 1) +
                                            ' out of ' + str(p0.num_threads) + ') ... Failed')
-                            logger.exception(e)
                             subs_managefiles.director(self, 'rn', self.linedir + '/' + chunk + '/' + chunk + '_line.mir',
                                                       file_=self.linedir + '/' + chunk + '/' + chunk + '.mir')
+                            logger.exception(e)
                         else:
                             logger.info('(LINE) Subtracted model from chunk ' + str(chunk) +
                                         ' (thread ' + str(p0.thread_num + 1) + ' out of ' + str(p0.num_threads) + ') #')
