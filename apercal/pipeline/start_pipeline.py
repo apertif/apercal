@@ -767,11 +767,6 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             lib.setup_logger('debug', logfile=logfilepath)
             logger.info("Running line")
             start_time_line = time()
-
-            # Because of the amount of information coming from line
-            # this module gets its own logfile
-            logfilepath = os.path.join(basedir, 'apercal_line.log')
-            lib.setup_logger('debug', logfile=logfilepath)
         else:
             logfilepath = os.path.join(basedir, 'apercal.log')
             lib.setup_logger('debug', logfile=logfilepath)
@@ -779,6 +774,11 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
 
 
         for beamnr in beamlist_target:
+
+            # Because of the amount of information coming from line
+            # this module gets its own logfile
+            logfilepath = os.path.join(basedir, 'apercal{:02d}_line.log'.format(beamnr))
+            lib.setup_logger('debug', logfile=logfilepath)
             try:
                 p7 = line(file_=configfilename)
                 if beamnr not in p7.line_beams:
