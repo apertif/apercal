@@ -73,6 +73,7 @@ class line(BaseModule):
     line_image_restorbeam = None
     line_image_convolbeam = None
     line_always_cleanup = None
+    line_total_channel_numbers = None #not to be used in config file
 
     selfcaldir = None
     crosscaldir = None
@@ -327,6 +328,7 @@ class line(BaseModule):
                 subband_chunks = 1
 
             # some more logging messages for information
+            self.line_total_channel_numbers = numchan
             logger.info("(LINE) Number of channels found: {}".format(numchan))
             logger.info("(LINE) Frequency increment found: {}".format(finc))
             logger.info("(LINE) Total bandwidth: {}".format(subband_bw))
@@ -518,6 +520,13 @@ class line(BaseModule):
                 if os.path.exists(self.linedir + '/' + chunk + '/' + chunk + '_line.mir/visdata'):
                     uv = aipy.miriad.UV(self.linedir + '/' + chunk + '/' + chunk + '_line.mir')
                     nchannel = uv['nschan']  # Number of channels in the dataset
+                    logger.info("  (LINE) Beam {0}, Chunk {1}: Found {2} channels in chunk".format(self.beam, chunk, nchannel) )
+                else:
+                    logger.warning(" (LINE) Beam {0}, Chunk {1}: No visibility data found".format(self.beam, chunk))
+                # nchannel cannot be 0, otherwise the counting below would not properly
+                if nchannel == 0:
+                    nchannel = int(self.line_total_channel_numbers / nchunks)
+                    logger.info("  (LINE) Found 0 number of channels. Calculate the correct number of channels of this chunk to be {}.".format(nchannel))
                 chunk_channels.append(nchannel)
             logger.info(" (LINE) List of number of channels in chunks: {}".format(str(chunk_channels)))
             # old:
