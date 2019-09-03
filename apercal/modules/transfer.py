@@ -33,8 +33,57 @@ class transfer(BaseModule):
         convert_lineuv2uvfits
         """
         logger.info("Starting TRANSFER module")
-        self.convert_selfcaluv2uvfits()
-        logger.info("TRANSFER module done")
+
+        # checking miriad source file
+        if self.check_starting_conditions():
+            self.convert_selfcaluv2uvfits()
+
+            logger.info("TRANSFER module done")
+        else:
+            logger.warning("TRANSFER module failed")
+
+    def check_starting_conditions(self):
+        """
+        Check that the miriad file from convert exists.
+
+        If it does not exists, none of the subsequent tasks in go need to be executed.
+        This seems necessary as not all the tasks do this check and they do not have
+        to. A single task is enough.
+
+        Not sure if it is necessary to add all the param variables from selfcal
+        and set them False if the check fails. For now, just use the main one
+
+        Args:
+            self
+
+        Return:
+            (bool): True if file is found, otherwise False
+        """
+
+        logger.info(
+            "Beam {}: Checking starting conditions for LINE".format(self.beam))
+
+        # initial setup
+        subs_setinit.setinitdirs(self)
+        subs_setinit.setdatasetnamestomiriad(self)
+
+        # path to converted miriad file
+        mir_file = os.path.join(self.crosscaldir, self.target)
+
+        # check that the file exists
+        if os.path.isdir(mir_file):
+            # miriad file exists
+            logger.info(
+                "Beam {}: Checking starting conditions for LINE ... Done: All good.".format(self.beam))
+            return True
+        else:
+            # miriad file does not exists
+            logger.warning(
+                "Beam {}: Checking starting conditions for LINE ... Done: Failed".format(self.beam))
+            logger.warning(
+                "Beam {}: Did not find main miriad file in {}".format(self.beam, mir_file))
+
+            return False
 
     def convert_selfcaluv2uvfits(self):
         """

@@ -76,6 +76,7 @@ class scal(BaseModule):
     selfcal_phase_uvmax = None
     selfcal_phase_solint = None
     selfcal_phase_nfbin = None
+    selfcal_phase_robust = None
     selfcal_amp = None
     selfcal_amp_auto_limit = None
     selfcal_amp_minorcycle = None
@@ -90,6 +91,7 @@ class scal(BaseModule):
     selfcal_amp_solint = None
     selfcal_amp_nfbin = None
     selfcal_amp_ratio = None
+    selfcal_amp_robust = None
 
     selfcaldir = None
     crosscaldir = None
@@ -111,13 +113,65 @@ class scal(BaseModule):
         amp
         """
         logger.info("Starting SELF CALIBRATION")
-        self.averagedata()
-        self.flagline()
-        self.parametric()
-        self.phase()
-        self.amp()
-        logger.info("SELF CALIBRATION done")
 
+        # check starting conditions for selfcal
+        all_good = self.check_starting_conditions()
+        if all_good:
+            self.averagedata()
+            self.flagline()
+            self.parametric()
+            self.phase()
+            self.amp()
+            logger.info("SELF CALIBRATION done")
+        else:
+            logger.warning("SELF CALIBRATION failed")
+
+
+    def check_starting_conditions(self):
+        """
+        Check that the miriad file from convert exists.
+
+        If it does not exists, none of the subsequent tasks in go need to be executed.
+        This seems necessary as not all the tasks do this check and they do not have
+        to. A single task is enough.
+
+        Not sure if it is necessary to add all the param variables from selfcal
+        and set them False if the check fails. For now, just use the main one
+
+        Args:
+            self
+        
+        Return:
+            (bool): True if file is found, otherwise False
+        """
+
+        logger.info("Beam {}: Checking starting conditions for SELF CALIBRATION".format(self.beam))
+
+        # initial setup
+        subs_setinit.setinitdirs(self)
+        subs_setinit.setdatasetnamestomiriad(self)
+
+        beam = 'selfcal_B' + str(self.beam).zfill(2)
+
+        # path to converted miriad file
+        mir_file = os.path.join(self.crosscaldir,self.target)
+
+        # check that the file exists
+        if os.path.isdir(mir_file):
+            # miriad file exists
+            logger.info("Beam {}: Checking starting conditions for SELF CALIBRATION ... Done: All good.".format(self.beam))
+            return True
+        else:
+            # miriad file does not exists
+            logger.warning("Beam {}: Checking starting conditions for SELF CALIBRATION ... Done: Failed".format(self.beam))
+            logger.warning(
+                "Beam {}: Did not find main miriad file in {}".format(self.beam, mir_file))
+            
+            # set selfcal status to false
+            subs_param.add_param(self, beam + '_targetbeams_phase_status', False)
+            subs_param.add_param(self, beam + '_targetbeams_amp_status', False)
+
+            return False
 
     def averagedata(self):
         """
@@ -384,7 +438,7 @@ class scal(BaseModule):
                                         invert.stokes = 'i'
                                         invert.options = 'mfs,sdb,double'
                                         invert.slop = 1
-                                        invert.robust = -2
+                                        invert.robust = self.selfcal_phase_robust
                                         try:
                                             invert.go()
                                         except:
@@ -845,7 +899,7 @@ class scal(BaseModule):
                                     invert.stokes = 'i'
                                     invert.options = 'mfs,sdb,double'
                                     invert.slop = 1
-                                    invert.robust = -2
+                                    invert.robust = self.selfcal_amp_robust
                                     try:
                                         invert.go()
                                     except:
@@ -1176,7 +1230,7 @@ class scal(BaseModule):
                             invert.stokes = 'i'
                             invert.options = 'mfs,sdb,double'
                             invert.slop = 1
-                            invert.robust = -2
+                            invert.robust = self.selfcal_amp_robust
                             try:
                                 invert.go()
                             except:
