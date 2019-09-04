@@ -524,9 +524,11 @@ class line(BaseModule):
                 else:
                     logger.warning(" (LINE) Beam {0}, Chunk {1}: No visibility data found".format(self.beam, chunk))
                 # nchannel cannot be 0, otherwise the counting below would not properly
+                # Calculating the channel number assumes that all cubes have the same number of channels
+                # This is the current state
                 if nchannel == 0:
                     nchannel = int(self.line_total_channel_numbers / nchunks)
-                    logger.info("  (LINE) Found 0 number of channels. Calculate the correct number of channels of this chunk to be {}.".format(nchannel))
+                    logger.info("  (LINE) Found 0 number of channels. Calculate the correct number of channels of this chunk to be {}. (Assuming equal channel numbers of all chunks)".format(nchannel))
                 chunk_channels.append(nchannel)
             logger.info(" (LINE) List of number of channels in chunks: {}".format(str(chunk_channels)))
             # old:
