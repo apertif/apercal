@@ -490,11 +490,14 @@ class line(BaseModule):
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
 
-        # determine the output channel number based on the width of the output cube
-        binchan = round(self.line_splitdata_channelbandwidth / self.line_input_channelwidth)
+        # get the number of channels that were averaged
+        binchan = self.line_channelbinning
+        # Do not use the following line as it does not account for forced adjustment of the channel width
+        #binchan = round(self.line_splitdata_channelbandwidth / self.line_input_channelwidth)
+
+        # calculate the output start and end channel based on the inputs and channel averaging
         start_channel = self.line_single_cube_input_channels[0]
         end_channel = self.line_single_cube_input_channels[1]
-
         output_start_channel = int(start_channel / binchan)
         output_end_channel = int(end_channel / binchan)
 
@@ -527,7 +530,8 @@ class line(BaseModule):
                 # Calculating the channel number assumes that all cubes have the same number of channels
                 # This is the current state
                 if nchannel == 0:
-                    nchannel = int(self.line_total_channel_numbers / nchunks)
+                    # take the number of channels averaged into account
+                    nchannel = int(round(self.line_total_channel_numbers / nchunks / binchan))
                     logger.info("  (LINE) Found 0 number of channels. Calculate the correct number of channels of this chunk to be {}. (Assuming equal channel numbers of all chunks)".format(nchannel))
                 chunk_channels.append(nchannel)
             logger.info(" (LINE) List of number of channels in chunks: {}".format(str(chunk_channels)))
