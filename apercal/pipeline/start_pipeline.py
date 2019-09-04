@@ -69,7 +69,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                                           exception', only for target steps. Please also read logs.
     """
     if steps is None:
-        steps = ["prepare", "preflag", "ccal",
+        steps = ["prepare", "split", "preflag", "ccal",
                  "convert", "scal", "continuum", "polarisation", "line", "transfer"]
 
     (taskid_target, name_target, beamlist_target) = targets
