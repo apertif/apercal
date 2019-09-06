@@ -112,8 +112,14 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
     if (fluxcals and fluxcals != '') and (polcals and polcals != ''):
         assert(len(fluxcals) == len(polcals))
 
+    # avoid symmetry bias, if there is only a polcal but no fluxcal, switch them
+    if fluxcals is None and polcals is not None:
+        logger.info(
+            "Only polcal was provided. Setting polcal {} to fluxcal".format(name_polcal))
+        fluxcals, polcals = polcals, fluxcals
+        name_polcal = ""
     # Exchange polcal and fluxcal if specified in the wrong order
-    if not subs_calmodels.is_polarised(name_polcal) and name_polcal != '':
+    elif not subs_calmodels.is_polarised(name_polcal) and name_polcal != '':
         if subs_calmodels.is_polarised(name_fluxcal):
             logger.info("Switching polcal and fluxcal because " + name_polcal +
                          " is not polarised")
@@ -123,10 +129,6 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             logger.info("Setting polcal to '' since " +
                          name_polcal + " is not polarised")
             name_polcal = ""
-    # avoid symmetry bias, if there is only a polcal but no fluxcal, switch them
-    elif fluxcals is None and polcals is not None:
-        logger.info("Only polcal was provided. Setting polcal {} to fluxcal".format(name_polcal))
-        fluxcals, polcals = polcals, fluxcals
     elif name_polcal != '':
         logger.info("Polcal " + name_polcal + " is polarised, all good")
 
