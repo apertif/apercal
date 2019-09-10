@@ -837,7 +837,7 @@ class ccal(BaseModule):
                 subs_param.add_param(self, cbeam + '_fluxcal_transfer', ccalfluxcaltransfer)
                 subs_param.add_param(self, cbeam + '_polcal_transfer', ccalpolcaltransfer)
                 logger.error(error)
-                raise RuntimeError(error)
+                #raise RuntimeError(error)
 
         subs_param.add_param(self, cbeam + '_fluxcal_transfer', ccalfluxcaltransfer)
         subs_param.add_param(self, cbeam + '_polcal_transfer', ccalpolcaltransfer)
