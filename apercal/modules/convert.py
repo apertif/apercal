@@ -136,27 +136,28 @@ class convert(BaseModule):
                         subs_managefiles.director(self, 'mk', self.get_crosscalsubdir_path(),
                                                   verbose=False)
                         fluxcal_ms = self.get_fluxcal_path()
+
+                        # convert only if corrected data column exists
                         if subs_msutils.has_correcteddata(fluxcal_ms):
                             datacolumn = "corrected"
+                        
+                            fluxcal_fits = mspath_to_fitspath(self.get_crosscalsubdir_path(), fluxcal_ms)
+
+                            fc_convert = exportuvfits_cmd.format(vis=self.get_fluxcal_path(),
+                                                                fits=fluxcal_fits,
+                                                                datacolumn=datacolumn)
+
+                            lib.run_casa([fc_convert], timeout=3600)
+                            if path.isfile(fluxcal_fits):
+                                convertfluxcalms2uvfits = True
+                                logger.info('Beam ' + self.beam + ': Converted flux calibrator dataset from MS to UVFITS format!')
+                            else:
+                                convertfluxcalms2uvfits = False
+                                logger.warning('Beam ' + self.beam + ': Could not convert flux calibrator dataset {} '
+                                            'from MS to UVFITS format!'.format(fluxcal_fits))
                         else:
-                            datacolumn = "data"
-                            logger.warning('Beam ' + self.beam + ': Flux calibrator does not have a corrected_data column! Using uncorrected'
-                                           'data for conversion!')
-
-                        fluxcal_fits = mspath_to_fitspath(self.get_crosscalsubdir_path(), fluxcal_ms)
-
-                        fc_convert = exportuvfits_cmd.format(vis=self.get_fluxcal_path(),
-                                                             fits=fluxcal_fits,
-                                                             datacolumn=datacolumn)
-
-                        lib.run_casa([fc_convert], timeout=3600)
-                        if path.isfile(fluxcal_fits):
-                            convertfluxcalms2uvfits = True
-                            logger.info('Beam ' + self.beam + ': Converted flux calibrator dataset from MS to UVFITS format!')
-                        else:
-                            convertfluxcalms2uvfits = False
-                            logger.warning('Beam ' + self.beam + ': Could not convert flux calibrator dataset {} '
-                                           'from MS to UVFITS format!'.format(fluxcal_fits))
+                            logger.warning('Beam ' + self.beam + ': Flux calibrator does not have a corrected_data column! Not '
+                                           'converting flux calibrator dataset!')
                     else:
                         logger.warning('Beam ' + self.beam + ': Flux calibrator dataset {} not available!'.format(self.get_fluxcal_path()))
                 else:
@@ -174,26 +175,28 @@ class convert(BaseModule):
                         logger.debug('Beam ' + self.beam + ': Converting polarised calibrator dataset from MS to UVFITS format.')
                         subs_managefiles.director(self, 'mk', self.get_crosscalsubdir_path(), verbose=False)
                         polcal_ms = self.get_polcal_path()
+                        
+                        # convert only if corrected data column exists
                         if subs_msutils.has_correcteddata(polcal_ms):
                             datacolumn = "corrected"
+                        
+                            polcal_fits = mspath_to_fitspath(self.get_crosscalsubdir_path(), polcal_ms)
+
+                            pc_convert = exportuvfits_cmd.format(vis=polcal_ms,
+                                                                fits=polcal_fits,
+                                                                datacolumn=datacolumn)
+
+                            lib.run_casa([pc_convert], timeout=3600)
+                            if path.isfile(polcal_fits):
+                                convertpolcalms2uvfits = True
+                                logger.info('Beam ' + self.beam + ': Converted polarised calibrator dataset from MS to UVFITS format!')
+                            else:
+                                convertpolcalms2uvfits = False
+                                logger.warning('Beam ' + self.beam + ': Could not convert polarised calibrator dataset from MS to UVFITS format!')
                         else:
-                            datacolumn = "data"
-                            logger.warning('Beam ' + self.beam + ': Polarised calibrator does not have a corrected_data column! Using'
-                                           'uncorrected data for conversion!')
+                            logger.warning('Beam ' + self.beam + ': Polarised calibrator does not have a corrected_data column! Not '
+                                           'converting polarised calibrator dataset!')
 
-                        polcal_fits = mspath_to_fitspath(self.get_crosscalsubdir_path(), polcal_ms)
-
-                        pc_convert = exportuvfits_cmd.format(vis=polcal_ms,
-                                                             fits=polcal_fits,
-                                                             datacolumn=datacolumn)
-
-                        lib.run_casa([pc_convert], timeout=3600)
-                        if path.isfile(polcal_fits):
-                            convertpolcalms2uvfits = True
-                            logger.info('Beam ' + self.beam + ': Converted polarised calibrator dataset from MS to UVFITS format!')
-                        else:
-                            convertpolcalms2uvfits = False
-                            logger.warning('Beam ' + self.beam + ': Could not convert polarised calibrator dataset from MS to UVFITS format!')
                     else:
                         logger.warning('Beam ' + self.beam + ': Polarised calibrator dataset not available!')
                 else:
@@ -214,23 +217,24 @@ class convert(BaseModule):
                         target_ms = self.get_target_path()
                         target_fits = mspath_to_fitspath(self.get_crosscalsubdir_path(), target_ms)
 
+                        # only convert if corrected data column exists
                         if subs_msutils.has_correcteddata(target_ms):
                             datacolumn = "corrected"
-                        else:
-                            datacolumn = "data"
-                            logger.warning('Beam ' + self.beam + ': Target beam dataset does not have a corrected_data column! Using '
-                                           'uncorrected data for conversion!')
+                        
+                            tg_convert = exportuvfits_cmd.format(vis=target_ms, fits=target_fits,
+                                                        datacolumn=datacolumn)
 
-                        tg_convert = exportuvfits_cmd.format(vis=target_ms, fits=target_fits,
-                                                      datacolumn=datacolumn)
-
-                        lib.run_casa([tg_convert], timeout=10000)
-                        if path.isfile(target_fits):
-                            converttargetbeamsms2uvfits = True
-                            logger.debug('Beam ' + self.beam + ': Converted dataset of target beam  from MS to UVFITS format!')
+                            lib.run_casa([tg_convert], timeout=10000)
+                            if path.isfile(target_fits):
+                                converttargetbeamsms2uvfits = True
+                                logger.debug('Beam ' + self.beam + ': Converted dataset of target beam  from MS to UVFITS format!')
+                            else:
+                                converttargetbeamsms2uvfits = False
+                                logger.warning('Beam ' + self.beam + ': Could not convert dataset for target beam from MS to UVFITS format!')
                         else:
-                            converttargetbeamsms2uvfits = False
-                            logger.warning('Beam ' + self.beam + ': Could not convert dataset for target beam from MS to UVFITS format!')
+                            logger.warning('Beam ' + self.beam + ': Target beam dataset does not have a corrected_data column! Not '
+                                           'converting target beam dataset!')
+
                     else:
                         logger.warning('Beam ' + self.beam + ': Target beam dataset not available!')
                 else:
