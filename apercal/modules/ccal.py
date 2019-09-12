@@ -837,7 +837,8 @@ class ccal(BaseModule):
                 subs_param.add_param(self, cbeam + '_fluxcal_transfer', ccalfluxcaltransfer)
                 subs_param.add_param(self, cbeam + '_polcal_transfer', ccalpolcaltransfer)
                 logger.error(error)
-                #raise RuntimeError(error)
+                # do not raise exception as it prevents the pipeline from running with fluxcal-only
+                # raise RuntimeError(error)
 
         subs_param.add_param(self, cbeam + '_fluxcal_transfer', ccalfluxcaltransfer)
         subs_param.add_param(self, cbeam + '_polcal_transfer', ccalpolcaltransfer)
