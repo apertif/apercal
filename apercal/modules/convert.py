@@ -140,12 +140,10 @@ class convert(BaseModule):
                         # convert only if corrected data column exists
                         if subs_msutils.has_correcteddata(fluxcal_ms):
                             datacolumn = "corrected"
-                        
+
                             fluxcal_fits = mspath_to_fitspath(self.get_crosscalsubdir_path(), fluxcal_ms)
 
-                            fc_convert = exportuvfits_cmd.format(vis=self.get_fluxcal_path(),
-                                                                fits=fluxcal_fits,
-                                                                datacolumn=datacolumn)
+                            fc_convert = exportuvfits_cmd.format(vis=self.get_fluxcal_path(), fits=fluxcal_fits, datacolumn=datacolumn)
 
                             lib.run_casa([fc_convert], timeout=3600)
                             if path.isfile(fluxcal_fits):
@@ -175,16 +173,14 @@ class convert(BaseModule):
                         logger.debug('Beam ' + self.beam + ': Converting polarised calibrator dataset from MS to UVFITS format.')
                         subs_managefiles.director(self, 'mk', self.get_crosscalsubdir_path(), verbose=False)
                         polcal_ms = self.get_polcal_path()
-                        
+
                         # convert only if corrected data column exists
                         if subs_msutils.has_correcteddata(polcal_ms):
                             datacolumn = "corrected"
-                        
+
                             polcal_fits = mspath_to_fitspath(self.get_crosscalsubdir_path(), polcal_ms)
 
-                            pc_convert = exportuvfits_cmd.format(vis=polcal_ms,
-                                                                fits=polcal_fits,
-                                                                datacolumn=datacolumn)
+                            pc_convert = exportuvfits_cmd.format(vis=polcal_ms, fits=polcal_fits, datacolumn=datacolumn)
 
                             lib.run_casa([pc_convert], timeout=3600)
                             if path.isfile(polcal_fits):
@@ -220,9 +216,8 @@ class convert(BaseModule):
                         # only convert if corrected data column exists
                         if subs_msutils.has_correcteddata(target_ms):
                             datacolumn = "corrected"
-                        
-                            tg_convert = exportuvfits_cmd.format(vis=target_ms, fits=target_fits,
-                                                        datacolumn=datacolumn)
+
+                            tg_convert = exportuvfits_cmd.format(vis=target_ms, fits=target_fits, datacolumn=datacolumn)
 
                             lib.run_casa([tg_convert], timeout=10000)
                             if path.isfile(target_fits):
