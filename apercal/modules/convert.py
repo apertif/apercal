@@ -366,9 +366,9 @@ class convert(BaseModule):
         subs_param.add_param(self, cbeam + '_polcal_UVFITS2MIRIAD', convertpolcaluvfits2miriad)
         subs_param.add_param(self, cbeam + '_targetbeams_UVFITS2MIRIAD', converttargetbeamsuvfits2miriad)
 
-
-        if self.convert_averagems and self.subdirification:
-            logger.info('Beam ' + self.beam + ': Averaging down target measurement set')
+        if self.convert_averagems and self.subdirification and converttargetbeamsms2uvfits:
+            logger.info('Beam ' + self.beam +
+                        ': Averaging down target measurement set')
             average_cmd = 'mstransform(vis="{vis}", outputvis="{outputvis}", chanaverage=True, chanbin=64)'
             vis = self.get_target_path()
             outputvis = vis.replace(".MS", "_avg.MS")
@@ -384,12 +384,26 @@ class convert(BaseModule):
         # Remove the UVFITS files if wanted
         if self.convert_removeuvfits and self.subdirification:
             logger.info('Beam ' + self.beam + ': Removing all UVFITS files')
-            if self.fluxcal != '' and path.exists(mspath_to_fitspath(self.get_crosscalsubdir_path(), self.fluxcal)):
+            if self.fluxcal != '' and path.exists(mspath_to_fitspath(self.get_crosscalsubdir_path(), self.fluxcal)) and convertfluxcalms2uvfits:
                 subs_managefiles.director(self, 'rm', mspath_to_fitspath(self.get_crosscalsubdir_path(), self.fluxcal))
-            if self.polcal != '' and path.exists(mspath_to_fitspath(self.get_crosscalsubdir_path(), self.polcal)):
+                logger.info('Beam ' + self.beam + ': Removed fluxcal UVFITS files')
+            else:
+                logger.warning('Beam ' + self.beam +
+                            ': No fluxcal UVFITS file available for removing')
+            if self.polcal != '' and path.exists(mspath_to_fitspath(self.get_crosscalsubdir_path(), self.polcal)) and convertpolcalms2uvfits:
                 subs_managefiles.director(self, 'rm', mspath_to_fitspath(self.get_crosscalsubdir_path(), self.polcal))
-            if self.target != '' and path.exists(mspath_to_fitspath(self.get_crosscalsubdir_path(), self.target)):
+                logger.info('Beam ' + self.beam +
+                            ': Removed polcal UVFITS files')
+            else:
+                logger.warning('Beam ' + self.beam +
+                               ': No polcal UVFITS file available for removing')
+            if self.target != '' and path.exists(mspath_to_fitspath(self.get_crosscalsubdir_path(), self.target)) and convertfluxcalms2uvfits:
                 subs_managefiles.director(self, 'rm', mspath_to_fitspath(self.get_crosscalsubdir_path(), self.target))
+                logger.info('Beam ' + self.beam +
+                            ': Removed target UVFITS files')
+            else:
+                logger.warning('Beam ' + self.beam +
+                               ': No target UVFITS file available for removing')
 
     def summary(self):
         """
