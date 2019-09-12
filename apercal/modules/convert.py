@@ -152,7 +152,7 @@ class convert(BaseModule):
                             else:
                                 convertfluxcalms2uvfits = False
                                 logger.warning('Beam ' + self.beam + ': Could not convert flux calibrator dataset {} '
-                                            'from MS to UVFITS format!'.format(fluxcal_fits))
+                                               'from MS to UVFITS format!'.format(fluxcal_fits))
                         else:
                             logger.warning('Beam ' + self.beam + ': Flux calibrator does not have a corrected_data column! Not '
                                            'converting flux calibrator dataset!')
@@ -384,7 +384,7 @@ class convert(BaseModule):
                 logger.info('Beam ' + self.beam + ': Removed fluxcal UVFITS files')
             else:
                 logger.warning('Beam ' + self.beam +
-                            ': No fluxcal UVFITS file available for removing')
+                               ': No fluxcal UVFITS file available for removing')
             if self.polcal != '' and path.exists(mspath_to_fitspath(self.get_crosscalsubdir_path(), self.polcal)) and convertpolcalms2uvfits:
                 subs_managefiles.director(self, 'rm', mspath_to_fitspath(self.get_crosscalsubdir_path(), self.polcal))
                 logger.info('Beam ' + self.beam +
