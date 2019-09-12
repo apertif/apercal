@@ -373,9 +373,6 @@ class convert(BaseModule):
             vis = self.get_target_path()
             outputvis = vis.replace(".MS", "_avg.MS")
             lib.run_casa([average_cmd.format(vis=vis, outputvis=outputvis)], timeout=10000)
-            if not converttargetbeamsms2uvfits:
-                logger.info('Beam ' + self.beam +
-                            ': Averaged measurement set based on failed cross-calibrated data')
 
         # Remove measurement sets if wanted
         if self.convert_removems and self.subdirification:
