@@ -61,7 +61,7 @@ class transfer(BaseModule):
         """
 
         logger.info(
-            "Beam {}: Checking starting conditions for LINE".format(self.beam))
+            "Beam {}: Checking starting conditions for TRANSFER".format(self.beam))
 
         # initial setup
         subs_setinit.setinitdirs(self)
@@ -74,12 +74,12 @@ class transfer(BaseModule):
         if os.path.isdir(mir_file):
             # miriad file exists
             logger.info(
-                "Beam {}: Checking starting conditions for LINE ... Done: All good.".format(self.beam))
+                "Beam {}: Checking starting conditions for TRANSFER ... Done: All good.".format(self.beam))
             return True
         else:
             # miriad file does not exists
             logger.warning(
-                "Beam {}: Checking starting conditions for LINE ... Done: Failed".format(self.beam))
+                "Beam {}: Checking starting conditions for TRANSFER ... Done: Failed".format(self.beam))
             logger.warning(
                 "Beam {}: Did not find main miriad file in {}".format(self.beam, mir_file))
 
