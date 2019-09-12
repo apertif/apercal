@@ -366,13 +366,16 @@ class convert(BaseModule):
         subs_param.add_param(self, cbeam + '_polcal_UVFITS2MIRIAD', convertpolcaluvfits2miriad)
         subs_param.add_param(self, cbeam + '_targetbeams_UVFITS2MIRIAD', converttargetbeamsuvfits2miriad)
 
-        if self.convert_averagems and self.subdirification and converttargetbeamsms2uvfits:
+        if self.convert_averagems and self.subdirification:
             logger.info('Beam ' + self.beam +
                         ': Averaging down target measurement set')
             average_cmd = 'mstransform(vis="{vis}", outputvis="{outputvis}", chanaverage=True, chanbin=64)'
             vis = self.get_target_path()
             outputvis = vis.replace(".MS", "_avg.MS")
             lib.run_casa([average_cmd.format(vis=vis, outputvis=outputvis)], timeout=10000)
+            if not converttargetbeamsms2uvfits:
+                logger.info('Beam ' + self.beam +
+                            ': Averaged measurement set based on failed cross-calibrated data')
 
         # Remove measurement sets if wanted
         if self.convert_removems and self.subdirification:
