@@ -181,10 +181,12 @@ class ccal(BaseModule):
                 config.set("Selfcal", "selfcal_refant", "'{}'".format(refant_fluxcal_index))
 
                 # make a copy of old config file
+                logger.info("Beam {0}: Creating backup of config file before adjusting settings".format(self.beam))
                 subs_managefiles.director(
                     self, 'rn', self.config_file_name.replace(".cfg", "_backup_wrong_refant.cfg"), file_=self.config_file_name, ignore_nonexistent=True)
 
                 # write changes to config file
+                logger.info("Beam {0}: Writing changes to config file {1}".format(self.beam, self.config_file_name))
                 with open(self.config_file_name, "w") as fp:
                     config.write(fp)
             else:
