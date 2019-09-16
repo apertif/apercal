@@ -174,11 +174,11 @@ class ccal(BaseModule):
                 
                 # change the setting in crosscal
                 # not strictly necessary here, but good to make the config file consistent
-                config.set("CROSSCAL", "crosscal_refant", crosscal_refant)
+                config.set("CROSSCAL", "crosscal_refant", "'{}'".format(crosscal_refant))
                 self.crosscal_refant = crosscal_refant
                 
                 # change the setting in selfcal
-                config.set("CROSSCAL", "selfcal_refant", refant_fluxcal_index)
+                config.set("Selfcal", "selfcal_refant", "'{}'".format(refant_fluxcal_index))
 
                 # make a copy of old config file
                 subs_managefiles.director(
