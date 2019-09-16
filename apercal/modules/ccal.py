@@ -161,7 +161,7 @@ class ccal(BaseModule):
                 raise RuntimeError(error)
         # reference antenna is not completely flagged
         else:
-            logger.info("Reference antenna {0} is not completely flagged. Keeping it.")
+            logger.info("Reference antenna {0} is not completely flagged. Keeping it.".format(crosscal_refant))
 
         if crosscal_refant != self.crosscal_refant:
             if self.config_file_name is not None:
