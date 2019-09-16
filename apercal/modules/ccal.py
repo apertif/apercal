@@ -178,7 +178,7 @@ class ccal(BaseModule):
                 self.crosscal_refant = crosscal_refant
                 
                 # change the setting in selfcal
-                config.set("Selfcal", "selfcal_refant", "'{}'".format(refant_fluxcal_index+1))
+                config.set("SELFCAL", "selfcal_refant", "'{}'".format(refant_fluxcal_index+1))
 
                 # make a copy of old config file
                 logger.info("Beam {0}: Creating backup of config file before adjusting settings".format(self.beam))
