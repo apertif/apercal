@@ -755,6 +755,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     p6.paramfilename = 'param_{:02d}.npy'.format(beamnr)
                     p6.basedir = basedir
                     p6.beam = "{:02d}".format(beamnr)
+                    p6.polcal = name_to_mir(name_polcal)
                     p6.target = name_to_mir(name_target)
                     if "polarisation" in steps and not dry_run:
                         p6.go()
