@@ -74,6 +74,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
 
     (taskid_target, name_target, beamlist_target) = targets
 
+    # set the base directory if none was provided
     if not basedir:
         basedir = '/data/apertif/{}/'.format(taskid_target)
     elif len(basedir) > 0 and basedir[-1] != '/':
@@ -89,9 +90,20 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                                       '&& git describe --tag; cd', shell=True).strip()
     logger.info("Apercal version: " + gitinfo)
 
-    logger.debug("start_apercal called with arguments targets={}; fluxcals={}; polcals={}".format(
+    logger.info("start_apercal called with arguments targets={}; fluxcals={}; polcals={}".format(
         targets, fluxcals, polcals))
-    logger.debug("steps = {}".format(steps))
+    logger.info("steps = {}".format(steps))
+
+    # get the default configfile if none was provided
+    if not configfilename:
+        logger.info("No config file provided, getting default config")
+        # set the config file name
+        configfilename = os.path.join(basedir, "{}_Apercal_settings.cfg".format(taskid_target))
+        # get the default config settings
+        config = lib.get_default_config()
+        with open(configfilename, "w") as fp:
+            config.write(fp)
+        logger.info("Config file saved to {}".format(configfilename))
 
     status = pymp.shared.dict({beamnr: [] for beamnr in beamlist_target})
 
@@ -743,6 +755,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     p6.paramfilename = 'param_{:02d}.npy'.format(beamnr)
                     p6.basedir = basedir
                     p6.beam = "{:02d}".format(beamnr)
+                    p6.polcal = name_to_mir(name_polcal)
                     p6.target = name_to_mir(name_target)
                     if "polarisation" in steps and not dry_run:
                         p6.go()

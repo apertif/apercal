@@ -767,3 +767,15 @@ def load_config(config_object, file_=None):
         for o in config.items(s):
             setattr(config_object, o[0], eval(o[1]))
     return config  # Save the loaded config file as defaults for later usage
+
+
+def get_default_config():
+    """
+    Function to get the default config settins
+    """
+
+    config = ConfigParser()
+
+    config.readfp(open(default_cfg))
+
+    return config

@@ -95,12 +95,13 @@ class polarisation(BaseModule):
         """
 
         logger.info(
-            "Beam {}: Checking starting conditions for CONTINUUM IMAGING".format(self.beam))
+            "Beam {}: Checking starting conditions for POLARISATION IMAGING".format(self.beam))
 
         # initial setup
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
 
+        cbeam = 'convert_B' + str(self.beam).zfill(2)
         sbeam = 'selfcal_B' + str(self.beam).zfill(2)
         pbeam = 'polarisation_B' + str(self.beam).zfill(2)
 
@@ -109,9 +110,12 @@ class polarisation(BaseModule):
             self, sbeam + '_targetbeams_phase_status', False)
         selfcaltargetbeamsampstatus = get_param_def(
             self, sbeam + '_targetbeams_amp_status', False)
+        convertpolcaluvfits2miriad = get_param_def(
+            self, cbeam + '_polcal_UVFITS2MIRIAD', False)
 
         # path to miriad files
         convert_mir_file = os.path.join(self.crosscaldir, self.target)
+        convert_mir_file_polcal = os.path.join(self.crosscaldir, self.polcal)
 
         # variable to check that starting conditions are met
         all_good = True
@@ -122,6 +126,17 @@ class polarisation(BaseModule):
                 "Beam {}: Did not find main miriad file in {}".format(self.beam, convert_mir_file))
             all_good = False
         
+        if not os.path.isdir(convert_mir_file_polcal):
+            if convertpolcaluvfits2miriad:
+                # everything okay if either the miriad file or the parameter is set. Nothing to do here.
+                # the parameter is necessary for restarting without the polcal miriad file
+                pass
+            else:
+                logger.warning(
+                    "Beam {0}: Did not find polarisation calibrator miriad file in {1} and convert-parameter is negative.".format(self.beam, convert_mir_file_polcal)) 
+                logger.warning("Beam {}: Assuming that polarisation calibration failed. No polarisation imaging.".format(self.beam))
+                all_good = False
+
         # check selfcal
         if not selfcaltargetbeamsphasestatus and not selfcaltargetbeamsampstatus:
             logger.warning("Beam {}: Neither phase nor amplitude self-calibration was successful. No polarisation imaging".format(self.beam))
