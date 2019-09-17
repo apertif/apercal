@@ -101,7 +101,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         configfilename = os.path.join(basedir, "{}_Apercal_settings.cfg".format(taskid_target))
         # get the default config settings
         config = lib.get_default_config()
-        with open(configfilename,"w") as fp:
+        with open(configfilename, "w") as fp:
             config.write(fp)
         logger.info("Config file saved to {}".format(configfilename))
 
