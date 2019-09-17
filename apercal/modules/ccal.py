@@ -44,7 +44,7 @@ class ccal(BaseModule):
     crosscal_refant = None
     crosscal_refant_exclude = ["RTC", "RTD"]
     config_file_name = None
-    
+
     def __init__(self, file_=None, **kwargs):
         self.default = lib.load_config(self, file_)
         subs_setinit.setinitdirs(self)
@@ -112,7 +112,7 @@ class ccal(BaseModule):
 
         # check that the reference antenna is in the list of antennas
         refant_in_fluxcal = crosscal_refant in fluxcal_ant_list
-        
+
         if refant_in_fluxcal:
             logger.info("Beam {0}: Reference antenna {1} exists in flux calibrator".format(self.beam, crosscal_refant))
         else:
@@ -124,10 +124,10 @@ class ccal(BaseModule):
                     crosscal_refant = ant
                     refant_in_fluxcal = True
                     break
-        
+
         # get the index of the reference antenna
         refant_fluxcal_index = np.where(fluxcal_ant_list == crosscal_refant)[0][0]
-        
+
         # check if the entire referance antenna is flagged
         # dropping "==0" would give the number of non-flagged data points
         query = "SELECT GNFALSE(FLAG)==0 as all_flagged FROM {0} WHERE ANTENNA1=={1}".format(self.get_fluxcal_path(), refant_fluxcal_index)
@@ -138,7 +138,7 @@ class ccal(BaseModule):
             logger.info("Beam {0}: All visibilities of reference antenna {1} are flagged. Choosing another one".format(self.beam, crosscal_refant))
             # go through the list of antennas
             ant_name = ""
-            for ant_index in range(refant_fluxcal_index+1, len(fluxcal_ant_list)):
+            for ant_index in range(refant_fluxcal_index + 1, len(fluxcal_ant_list)):
                 # check if it completely flagged
                 query_ref_search = "SELECT GNFALSE(FLAG)==0 as all_flagged FROM {0} WHERE ANTENNA1=={1}".format(
                     self.get_fluxcal_path(), ant_index)
@@ -171,14 +171,14 @@ class ccal(BaseModule):
                 # read the config file settings
                 with open(self.config_file_name, "r") as fp:
                     config.readfp(fp)
-                
+
                 # change the setting in crosscal
                 # not strictly necessary here, but good to make the config file consistent
                 config.set("CROSSCAL", "crosscal_refant", "'{}'".format(crosscal_refant))
                 self.crosscal_refant = crosscal_refant
-                
+
                 # change the setting in selfcal
-                config.set("SELFCAL", "selfcal_refant", "'{}'".format(refant_fluxcal_index+1))
+                config.set("SELFCAL", "selfcal_refant", "'{}'".format(refant_fluxcal_index + 1))
 
                 # make a copy of old config file
                 logger.info("Beam {0}: Creating backup of config file before adjusting settings".format(self.beam))
