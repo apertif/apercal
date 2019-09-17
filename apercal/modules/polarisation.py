@@ -133,7 +133,8 @@ class polarisation(BaseModule):
                 pass
             else:
                 logger.warning(
-                    "Beam {}: Did not find polarisation calibrator miriad file in {} and convert-parameter is negative. Assuming that polarisation calibration failed. No polarisation imaging.".format(self.beam, convert_mir_file_polcal))
+                    "Beam {0}: Did not find polarisation calibrator miriad file in {1} and convert-parameter is negative.".format(self.beam, convert_mir_file_polcal)) 
+                logger.warning("Beam {}: Assuming that polarisation calibration failed. No polarisation imaging.".format(self.beam))
                 all_good = False
 
         # check selfcal
