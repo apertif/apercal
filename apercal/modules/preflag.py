@@ -2,6 +2,7 @@ import logging
 
 import numpy as np
 import pandas as pd
+import json
 import os
 from os import path
 from time import time
@@ -57,6 +58,8 @@ class preflag(BaseModule):
     preflag_manualflag_channel = None
     preflag_manualflag_time = None
     preflag_manualflag_clipzeros = None
+    preflag_manualflag_file = ''
+    preflag_manualflag_file_path = ''
     preflag_aoflagger = None
     preflag_aoflagger_bandpass = None
     preflag_aoflagger_fluxcal = None
@@ -412,6 +415,7 @@ class preflag(BaseModule):
         if self.preflag_manualflag:
             logger.info('Beam ' + self.beam + ': Manual flagging step started')
             self.manualflag_auto()
+            #self.manualflag_from_file()
             self.manualflag_antenna()
             self.manualflag_corr()
             self.manualflag_baseline()
@@ -516,6 +520,134 @@ class preflag(BaseModule):
         subs_param.add_param(self, pbeam + '_polcal_manualflag_auto', preflagpolcalmanualflagauto)
         subs_param.add_param(self, pbeam + '_targetbeams_manualflag_auto', preflagtargetbeamsmanualflagauto)
 
+    def manualflag_from_file(self):
+        """
+        Function to flag based on commands from a file
+        
+        This provides a way to input more complex flagging commands.
+        """
+        subs_setinit.setinitdirs(self)
+
+        pbeam = 'preflag_B' + str(self.beam).zfill(2)
+
+        # Create the parameters for the parameter file for the manualflag step to flag individual antennas
+
+        # Flagged already fluxcal this way?
+        preflag_fluxcal_manualflag_from_file = get_param_def(self, pbeam + '_fluxcal_manualflag_from_file', False)
+        # Flagged already polcal this way?
+        preflag_polcal_manualflag_from_file = get_param_def(self, pbeam + '_polcal_manualflag_from_file', False)
+        # Flagged already target this way?
+        preflag_targetbeams_manualflag_from_file = get_param_def(self, pbeam + '_targetbeams_manualflag_from_file', False)
+
+        # check if a file has been specified:
+        if self.preflag_manualflag_file != '':
+            # check if a path is set, if not assume the basedir
+            if self.preflag_manualflag_file_path != '':
+                file_location = os.path.join(self.preflag_manualflag_file_path, self.preflag_manualflag_file)
+            else:
+                file_location = os.path.join(self.basedir, self.preflag_manualflag_file)
+            
+            # check that the file exists
+            if os.path.exists(file_location):
+                logger.info("beam {0}: Reading flagging commands from file {1}".format(self.beam, file_location))
+
+                # read in the json file
+                with open(file_location, "r") as fp:
+                    flag_data = fp.read()
+                
+                # get the json dict
+                # need to catch exception in case the json file is wrong
+                try:
+                    flag_data_json = json.loads(flag_data)
+                except Exception as e:
+                    logger.error("Beam {}: Reading in json file failed. Abort flagging".format(self.beam))
+                    logger.exception(e)
+                else:
+                    logger.info("Beam {}: Successfully read in json file".format(self.beam))
+                
+                # set the key based on the given beam
+                beam_key = "beam_{0:02d}".format(self.beam)
+                #beam_flag_list = [int(beam.split("_")[-1]) for beam in flag_data_json['flaglist'].keys()]
+
+
+                # check that there are flags for the current beam
+                if flag_data_json['flaglist'].has_key(beam_key):
+                    logger.info("Beam {}: Found flag commands for this beam".format(self.beam))
+
+                    # get a list of flag commands based on the key
+                    flag_list = flag_data_json['flaglist'][beam_key].keys()
+
+                    # create a list of flag commands
+                    flag_command_list = []
+                    for flag_key  in flag_list:
+                        flag_command = flag_data_json['flaglist'][beam_key][flag_key]
+                        flag_command_list.append(str(flag_command))
+                    
+                    if len(flag_command_list) != 0:
+                        casa_flag_file = os.path.join(self.rawdir, "casa_flag_list.txt")
+                        # writing commands to file
+                        try:
+                            with open(casa_flag_file, "w") as fp:
+                                fp.writelines(flag_command_list)
+                        except Exception as e:
+                            logger.error("Beam {0}: Writing file {1} with casa flagging commands failed".format(self.beam, casa_flag_file))
+                            logger.exception(e)
+                        else:
+                            logger.info("Beam {0}: Successfully created file {1} with casa flag commands".format(self.beam, casa_flag_file))
+                        
+                        # now run casa for fluxcal
+                        if self.preflag_manualflag_fluxcal and os.path.isdir(self.get_fluxcal_path()):
+                            #flagdata(vis, mode='list', inpfile=['onlineflags.txt' ,'otherflags.txt'])
+                            flag_fluxcal = 'flagdata(vis="{0}", mode="list", inpfile="{1}", flagbackup=False)'.format(self.get_fluxcal_path(), casa_flag_file)
+                            #flag_fluxcal = 'flagdata(vis="' + self.get_fluxcal_path() + '", mode="list"' + '", inpfile="' + casa_flag_file + ")'
+                            lib.run_casa([flag_fluxcal])
+                            logger.info('Beam {}: Flagged flux calibrator'.format(self.beam))
+                            preflag_fluxcal_manualflag_from_file = True
+                        else:
+                            logger.warning('Beam {}: No flux calibrator dataset specified'.format(self.beam))
+
+                        # now run casa for polcal
+                        if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()):
+                            #flagdata(vis, mode='list', inpfile=['onlineflags.txt' ,'otherflags.txt'])
+                            flag_polcal = 'flagdata(vis="{0}", mode="list", inpfile="{1}", flagbackup=False)'.format(
+                                self.get_polcal_path(), casa_flag_file)
+                            lib.run_casa([flag_polcal])
+                            logger.info('Beam {}: Flagged pol calibrator'.format(self.beam))
+                            preflag_polcal_manualflag_from_file = True
+                        else:
+                            logger.warning('Beam {}: No pol calibrator dataset specified'.format(self.beam))
+                        
+                        # now run casa for target
+                        if self.preflag_manualflag_target and os.path.isdir(self.get_target_path()):
+                            #flagdata(vis, mode='list', inpfile=['onlineflags.txt' ,'otherflags.txt'])
+                            flag_target = 'flagdata(vis="{0}", mode="list", inpfile="{1}", flagbackup=False)'.format(
+                                self.get_target_path(), casa_flag_file)
+                            lib.run_casa([flag_target])
+                            logger.info(
+                                         'Beam {}: Flagged target'.format(self.beam))
+                            preflag_targetbeams_manualflag_from_file=True
+                        else:
+                            logger.warning(
+                                           'Beam {}: No target dataset specified'.format(self.beam))
+                    else:
+                        logger.warning("Beam {}: List of flag commands is empty.".format(self.beam))
+                else:
+                    logger.info("Beam {}: Did not find any flag commands for this beam. Moving on.".format(self.beam))
+            else:
+                # if it fails here, flagging should abort completey because it was set to use the flag file
+                error = "Beam {0}: Did not find specified flagging file {1}. Abort flagging".format(self.beam, file_location)
+                logger.error(error)
+                raise RuntimeError(error)
+        else:
+            logger.info("Beam  {}: Did not flag using flagging commands from file".format(self.beam))
+
+        # Save the derived parameters for the flagging from file to the parameter file
+        subs_param.add_param(
+            self, pbeam + '_fluxcal_manualflag_from_file', preflag_fluxcal_manualflag_from_file)
+        subs_param.add_param(
+            self, pbeam + '_polcal_manualflag_from_file', preflag_polcal_manualflag_from_file)
+        subs_param.add_param(
+            self, pbeam + '_targetbeams_manualflag_from_file', preflag_targetbeams_manualflag_from_file)
 
     def manualflag_antenna(self):
         """
@@ -1394,6 +1526,9 @@ class preflag(BaseModule):
         subs_param.del_param(self, pbeam + '_fluxcal_manualflag_auto')
         subs_param.del_param(self, pbeam + '_polcal_manualflag_auto')
         subs_param.del_param(self, pbeam + '_targetbeams_manualflag_auto')
+        subs_param.del_param(self, pbeam + '_fluxcal_manualflag_from_file')
+        subs_param.del_param(self, pbeam + '_polcal_manualflag_from_file')
+        subs_param.del_param(self, pbeam + '_targetbeams_manualflag_from_file')
         subs_param.del_param(self, pbeam + '_fluxcal_manualflag_antenna')
         subs_param.del_param(self, pbeam + '_polcal_manualflag_antenna')
         subs_param.del_param(self, pbeam + '_targetbeams_manualflag_antenna')
@@ -1462,6 +1597,9 @@ class preflag(BaseModule):
                 subs_param.del_param(self, pbeam + '_fluxcal_manualflag_auto')
                 subs_param.del_param(self, pbeam + '_polcal_manualflag_auto')
                 subs_param.del_param(self, pbeam + '_targetbeams_manualflag_auto')
+                subs_param.del_param(self, pbeam + '_fluxcal_manualflag_from_file')
+                subs_param.del_param(self, pbeam + '_polcal_manualflag_from_file')
+                subs_param.del_param(self, pbeam + '_targetbeams_manualflag_from_file')
                 subs_param.del_param(self, pbeam + '_fluxcal_manualflag_antenna')
                 subs_param.del_param(self, pbeam + '_polcal_manualflag_antenna')
                 subs_param.del_param(self, pbeam + '_targetbeams_manualflag_antenna')
