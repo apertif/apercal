@@ -2,14 +2,19 @@ def setinitdirs(self):
     """
     Creates the directory names for the subdirectories to make scripting easier
     """
-    self.rawdir = self.basedir + self.beam + '/' + self.rawsubdir
-    self.crosscaldir = self.basedir + self.beam + '/' + self.crosscalsubdir
-    self.selfcaldir = self.basedir + self.beam + '/' + self.selfcalsubdir
-    self.linedir = self.basedir + self.beam + '/' + self.linesubdir
-    self.contdir = self.basedir + self.beam + '/' + self.contsubdir
-    self.poldir = self.basedir + self.beam + '/' + self.polsubdir
+    self.rawdir = self.basedir + str(self.beam).zfill(2) + '/' + self.rawsubdir
+    self.crosscaldir = self.basedir + \
+        str(self.beam).zfill(2) + '/' + self.crosscalsubdir
+    self.selfcaldir = self.basedir + \
+        str(self.beam).zfill(2) + '/' + self.selfcalsubdir
+    self.linedir = self.basedir + \
+        str(self.beam).zfill(2) + '/' + self.linesubdir
+    self.contdir = self.basedir + \
+        str(self.beam).zfill(2) + '/' + self.contsubdir
+    self.poldir = self.basedir + str(self.beam).zfill(2) + '/' + self.polsubdir
     self.mosdir = self.basedir + self.mossubdir
-    self.transferdir = self.basedir + self.beam + '/' + self.transfersubdir
+    self.transferdir = self.basedir + \
+        str(self.beam).zfill(2) + '/' + self.transfersubdir
 
 
 def setdatasetnamestomiriad(self):
