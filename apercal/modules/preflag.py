@@ -566,7 +566,7 @@ class preflag(BaseModule):
                     logger.info("Beam {}: Successfully read in json file".format(self.beam))
                 
                 # set the key based on the given beam
-                beam_key = "beam_{0:02d}".format(self.beam)
+                beam_key = "beam_{}".format(str(self.beam).zfill(2))
                 #beam_flag_list = [int(beam.split("_")[-1]) for beam in flag_data_json['flaglist'].keys()]
 
 
