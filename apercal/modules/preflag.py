@@ -580,7 +580,7 @@ class preflag(BaseModule):
                     # create a list of flag commands
                     flag_command_list = []
                     for flag_key  in flag_list:
-                        flag_command = flag_data_json['flaglist'][beam_key][flag_key]
+                        flag_command = flag_data_json['flaglist'][beam_key][flag_key] + "\n"
                         flag_command_list.append(str(flag_command))
                     
                     if len(flag_command_list) != 0:
