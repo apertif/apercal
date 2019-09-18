@@ -598,7 +598,7 @@ class preflag(BaseModule):
                         # make sure there is a casa flag file
                         if os.path.exists(casa_flag_file):
                             # now run casa for fluxcal
-                            if self.preflag_manualflag_fluxcal and os.path.isdir(self.get_fluxcal_path()):
+                            if self.preflag_manualflag_fluxcal and os.path.isdir(self.get_fluxcal_path()) and self.fluxcal != '':
                                 #flagdata(vis, mode='list', inpfile=['onlineflags.txt' ,'otherflags.txt'])
                                 flag_fluxcal = 'flagdata(vis="{0}", mode="list", inpfile="{1}", flagbackup=False)'.format(self.get_fluxcal_path(), casa_flag_file)
                                 #flag_fluxcal = 'flagdata(vis="' + self.get_fluxcal_path() + '", mode="list"' + '", inpfile="' + casa_flag_file + ")'
@@ -609,7 +609,7 @@ class preflag(BaseModule):
                                 logger.warning('Beam {}: No flux calibrator dataset specified'.format(self.beam))
 
                             # now run casa for polcal
-                            if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()):
+                            if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()) and self.polcal != '':
                                 #flagdata(vis, mode='list', inpfile=['onlineflags.txt' ,'otherflags.txt'])
                                 flag_polcal = 'flagdata(vis="{0}", mode="list", inpfile="{1}", flagbackup=False)'.format(
                                     self.get_polcal_path(), casa_flag_file)
