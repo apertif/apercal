@@ -526,8 +526,12 @@ class preflag(BaseModule):
         
         This provides a way to input more complex flagging commands.
         """
+        logger.debug(self.beam)
+        logger.debug(self.rawdir)
         subs_setinit.setinitdirs(self)
-
+        logger.debug(self.beam)
+        logger.debug(self.rawdir)
+        
         pbeam = 'preflag_B' + str(self.beam).zfill(2)
 
         # Create the parameters for the parameter file for the manualflag step to flag individual antennas
@@ -597,40 +601,45 @@ class preflag(BaseModule):
                         else:
                             logger.info("Beam {0}: Successfully created file {1} with casa flag commands".format(self.beam, casa_flag_file))
                         
-                        # now run casa for fluxcal
-                        if self.preflag_manualflag_fluxcal and os.path.isdir(self.get_fluxcal_path()):
-                            #flagdata(vis, mode='list', inpfile=['onlineflags.txt' ,'otherflags.txt'])
-                            flag_fluxcal = 'flagdata(vis="{0}", mode="list", inpfile="{1}", flagbackup=False)'.format(self.get_fluxcal_path(), casa_flag_file)
-                            #flag_fluxcal = 'flagdata(vis="' + self.get_fluxcal_path() + '", mode="list"' + '", inpfile="' + casa_flag_file + ")'
-                            lib.run_casa([flag_fluxcal])
-                            logger.info('Beam {}: Flagged flux calibrator'.format(self.beam))
-                            preflag_fluxcal_manualflag_from_file = True
-                        else:
-                            logger.warning('Beam {}: No flux calibrator dataset specified'.format(self.beam))
+                        # make sure there is a casa flag file
+                        if os.path.exists(casa_flag_file):
+                            # now run casa for fluxcal
+                            if self.preflag_manualflag_fluxcal and os.path.isdir(self.get_fluxcal_path()):
+                                #flagdata(vis, mode='list', inpfile=['onlineflags.txt' ,'otherflags.txt'])
+                                flag_fluxcal = 'flagdata(vis="{0}", mode="list", inpfile="{1}", flagbackup=False)'.format(self.get_fluxcal_path(), casa_flag_file)
+                                #flag_fluxcal = 'flagdata(vis="' + self.get_fluxcal_path() + '", mode="list"' + '", inpfile="' + casa_flag_file + ")'
+                                lib.run_casa([flag_fluxcal])
+                                logger.info('Beam {}: Flagged flux calibrator'.format(self.beam))
+                                preflag_fluxcal_manualflag_from_file = True
+                            else:
+                                logger.warning('Beam {}: No flux calibrator dataset specified'.format(self.beam))
 
-                        # now run casa for polcal
-                        if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()):
-                            #flagdata(vis, mode='list', inpfile=['onlineflags.txt' ,'otherflags.txt'])
-                            flag_polcal = 'flagdata(vis="{0}", mode="list", inpfile="{1}", flagbackup=False)'.format(
-                                self.get_polcal_path(), casa_flag_file)
-                            lib.run_casa([flag_polcal])
-                            logger.info('Beam {}: Flagged pol calibrator'.format(self.beam))
-                            preflag_polcal_manualflag_from_file = True
-                        else:
-                            logger.warning('Beam {}: No pol calibrator dataset specified'.format(self.beam))
-                        
-                        # now run casa for target
-                        if self.preflag_manualflag_target and os.path.isdir(self.get_target_path()):
-                            #flagdata(vis, mode='list', inpfile=['onlineflags.txt' ,'otherflags.txt'])
-                            flag_target = 'flagdata(vis="{0}", mode="list", inpfile="{1}", flagbackup=False)'.format(
-                                self.get_target_path(), casa_flag_file)
-                            lib.run_casa([flag_target])
-                            logger.info(
-                                         'Beam {}: Flagged target'.format(self.beam))
-                            preflag_targetbeams_manualflag_from_file=True
+                            # now run casa for polcal
+                            if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()):
+                                #flagdata(vis, mode='list', inpfile=['onlineflags.txt' ,'otherflags.txt'])
+                                flag_polcal = 'flagdata(vis="{0}", mode="list", inpfile="{1}", flagbackup=False)'.format(
+                                    self.get_polcal_path(), casa_flag_file)
+                                lib.run_casa([flag_polcal])
+                                logger.info('Beam {}: Flagged pol calibrator'.format(self.beam))
+                                preflag_polcal_manualflag_from_file = True
+                            else:
+                                logger.warning('Beam {}: No pol calibrator dataset specified'.format(self.beam))
+                            
+                            # now run casa for target
+                            if self.preflag_manualflag_target and os.path.isdir(self.get_target_path()):
+                                #flagdata(vis, mode='list', inpfile=['onlineflags.txt' ,'otherflags.txt'])
+                                flag_target = 'flagdata(vis="{0}", mode="list", inpfile="{1}", flagbackup=False)'.format(
+                                    self.get_target_path(), casa_flag_file)
+                                lib.run_casa([flag_target])
+                                logger.info(
+                                            'Beam {}: Flagged target'.format(self.beam))
+                                preflag_targetbeams_manualflag_from_file=True
+                            else:
+                                logger.warning(
+                                            'Beam {}: No target dataset specified'.format(self.beam))
                         else:
                             logger.warning(
-                                           'Beam {}: No target dataset specified'.format(self.beam))
+                                "Beam {0}: Flag file {1} does not exists.".format(self.beam, casa_flag_file))
                     else:
                         logger.warning("Beam {}: List of flag commands is empty.".format(self.beam))
                 else:
