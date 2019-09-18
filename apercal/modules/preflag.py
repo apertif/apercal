@@ -526,12 +526,16 @@ class preflag(BaseModule):
         
         This provides a way to input more complex flagging commands.
         """
-        logger.debug(self.beam)
-        logger.debug(self.rawdir)
         subs_setinit.setinitdirs(self)
         logger.debug(self.beam)
         logger.debug(self.rawdir)
-        
+
+        self.rawdir = self.basedir + self.beam + '/' + self.rawsubdir
+
+        logger.debug(self.beam)
+        logger.debug(self.rawdir)
+
+
         pbeam = 'preflag_B' + str(self.beam).zfill(2)
 
         # Create the parameters for the parameter file for the manualflag step to flag individual antennas
