@@ -527,14 +527,6 @@ class preflag(BaseModule):
         This provides a way to input more complex flagging commands.
         """
         subs_setinit.setinitdirs(self)
-        logger.debug(self.beam)
-        logger.debug(self.rawdir)
-
-        self.rawdir = self.basedir + self.beam + '/' + self.rawsubdir
-
-        logger.debug(self.beam)
-        logger.debug(self.rawdir)
-
 
         pbeam = 'preflag_B' + str(self.beam).zfill(2)
 
@@ -592,8 +584,6 @@ class preflag(BaseModule):
                         flag_command_list.append(str(flag_command))
                     
                     if len(flag_command_list) != 0:
-                        logger.debug(self.beam)
-                        logger.debug(self.rawdir)
                         casa_flag_file = os.path.join(self.rawdir, "casa_flag_list.txt")
                         # writing commands to file
                         try:
