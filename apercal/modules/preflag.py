@@ -415,7 +415,7 @@ class preflag(BaseModule):
         if self.preflag_manualflag:
             logger.info('Beam ' + self.beam + ': Manual flagging step started')
             self.manualflag_auto()
-            #self.manualflag_from_file()
+            self.manualflag_from_file()
             self.manualflag_antenna()
             self.manualflag_corr()
             self.manualflag_baseline()
