@@ -549,7 +549,7 @@ class preflag(BaseModule):
             
             # check that the file exists
             if os.path.exists(file_location):
-                logger.info("beam {0}: Reading flagging commands from file {1}".format(self.beam, file_location))
+                logger.info("Beam {0}: Reading flagging commands from file {1}".format(self.beam, file_location))
 
                 # read in the json file
                 with open(file_location, "r") as fp:
@@ -584,6 +584,8 @@ class preflag(BaseModule):
                         flag_command_list.append(str(flag_command))
                     
                     if len(flag_command_list) != 0:
+                        logger.debug(self.beam)
+                        logger.debug(self.rawdir)
                         casa_flag_file = os.path.join(self.rawdir, "casa_flag_list.txt")
                         # writing commands to file
                         try:
