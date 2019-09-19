@@ -73,6 +73,7 @@ class line(BaseModule):
     line_image_restorbeam = None
     line_image_convolbeam = None
     line_always_cleanup = None
+    line_total_channel_numbers = None #not to be used in config file
 
     selfcaldir = None
     crosscaldir = None
@@ -327,6 +328,7 @@ class line(BaseModule):
                 subband_chunks = 1
 
             # some more logging messages for information
+            self.line_total_channel_numbers = numchan
             logger.info("(LINE) Number of channels found: {}".format(numchan))
             logger.info("(LINE) Frequency increment found: {}".format(finc))
             logger.info("(LINE) Total bandwidth: {}".format(subband_bw))
@@ -459,6 +461,8 @@ class line(BaseModule):
                             logger.warning('(LINE) Subtracted model from chunk ' + str(chunk) +
                                            ' (thread ' + str(p0.thread_num + 1) +
                                            ' out of ' + str(p0.num_threads) + ') ... Failed')
+                            subs_managefiles.director(self, 'rn', self.linedir + '/' + chunk + '/' + chunk + '_line.mir',
+                                                      file_=self.linedir + '/' + chunk + '/' + chunk + '.mir')
                             logger.exception(e)
                         else:
                             logger.info('(LINE) Subtracted model from chunk ' + str(chunk) +
@@ -486,17 +490,22 @@ class line(BaseModule):
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
 
-        # determine the output channel number based on the width of the output cube
-        binchan = round(self.line_splitdata_channelbandwidth / self.line_input_channelwidth)
+        # get the number of channels that were averaged
+        binchan = self.line_channelbinning
+        # Do not use the following line as it does not account for forced adjustment of the channel width
+        #binchan = round(self.line_splitdata_channelbandwidth / self.line_input_channelwidth)
+
+        # calculate the output start and end channel based on the inputs and channel averaging
         start_channel = self.line_single_cube_input_channels[0]
         end_channel = self.line_single_cube_input_channels[1]
-
         output_start_channel = int(start_channel / binchan)
         output_end_channel = int(end_channel / binchan)
 
         # put imaging channels into format used below to avoid changes
         self.line_image_channels = '{0:d},{1:d}'.format(output_start_channel,output_end_channel)
-
+        logger.info("(LINE) Channel range of cube before averaging: {0:d},{1:d}".format(
+            self.line_single_cube_input_channels[0], self.line_single_cube_input_channels[1]))
+        logger.info("(LINE) Channel range of cube after averaging: {0}".format(self.line_image_channels))
 
         if self.line_image:
             logger.info(' (LINE) Starting line imaging of dataset #')
@@ -514,7 +523,18 @@ class line(BaseModule):
                 if os.path.exists(self.linedir + '/' + chunk + '/' + chunk + '_line.mir/visdata'):
                     uv = aipy.miriad.UV(self.linedir + '/' + chunk + '/' + chunk + '_line.mir')
                     nchannel = uv['nschan']  # Number of channels in the dataset
+                    logger.info("  (LINE) Beam {0}, Chunk {1}: Found {2} channels in chunk".format(self.beam, chunk, nchannel) )
+                else:
+                    logger.warning(" (LINE) Beam {0}, Chunk {1}: No visibility data found".format(self.beam, chunk))
+                # nchannel cannot be 0, otherwise the counting below would not properly
+                # Calculating the channel number assumes that all cubes have the same number of channels
+                # This is the current state
+                if nchannel == 0:
+                    # take the number of channels averaged into account
+                    nchannel = int(round(self.line_total_channel_numbers / nchunks / binchan))
+                    logger.info("  (LINE) Found 0 number of channels. Calculate the correct number of channels of this chunk to be {}. (Assuming equal channel numbers of all chunks)".format(nchannel))
                 chunk_channels.append(nchannel)
+            logger.info(" (LINE) List of number of channels in chunks: {}".format(str(chunk_channels)))
             # old:
             # for chunk in self.list_chunks():
             # new:

@@ -6,6 +6,8 @@ import pandas as pd
 
 import casacore.tables as pt
 
+from ConfigParser import SafeConfigParser, ConfigParser
+
 from apercal.modules.base import BaseModule
 from apercal.subs import setinit as subs_setinit
 from apercal.subs import managefiles as subs_managefiles
@@ -40,11 +42,13 @@ class ccal(BaseModule):
     crosscal_transfer_to_cal = None
     crosscal_transfer_to_target = None
     crosscal_refant = None
-
+    crosscal_refant_exclude = ["RTC", "RTD"]
+    config_file_name = None
 
     def __init__(self, file_=None, **kwargs):
         self.default = lib.load_config(self, file_)
         subs_setinit.setinitdirs(self)
+        self.config_file_name = file_
 
     def go(self):
         """
@@ -61,6 +65,7 @@ class ccal(BaseModule):
         tranfer_to_target
         """
         logger.info("Starting CROSS CALIBRATION ")
+        self.check_ref_ant()
         self.setflux()
         self.initial_phase()
         self.global_delay()
@@ -72,6 +77,132 @@ class ccal(BaseModule):
         self.transfer_to_cal()
         self.transfer_to_target()
         logger.info("CROSS CALIBRATION done ")
+
+    def check_ref_ant(self):
+        """
+        Check that the default reference antenna.
+
+        This function tests whether the default reference antenna is 
+        available or not. If not, it uses the next antenna. It changes
+        the config file settings for crosscal and selfcal accordingly.
+        RTC and RTD have been excluded because of their performance. 
+        At the moment, the function only tests whether the entire reference
+        antenna is flagged.
+
+        Theses tests are based on the flux calibrator
+        """
+
+        # get the reference antenna
+        crosscal_refant = self.crosscal_refant
+        logger.info(
+            "Beam {0}: Checking reference antenna {1} set in config file".format(self.beam, crosscal_refant))
+
+        # get a list of antennas from the fluxcal MS file
+        query = "SELECT NAME FROM {}::ANTENNA".format(self.get_fluxcal_path())
+        query_result = pt.taql(query)
+        fluxcal_ant_list = np.array(query_result.getcol("NAME"))
+
+        if self.polcal != '':
+            # get a list of antennas from the polcal MS file
+            query = "SELECT NAME FROM {}::ANTENNA".format(self.get_polcal_path())
+            query_result = pt.taql(query)
+            polcal_ant_list = np.array(query_result.getcol("NAME"))
+        else:
+            polcal_ant_list = None
+
+        # check that the reference antenna is in the list of antennas
+        refant_in_fluxcal = crosscal_refant in fluxcal_ant_list
+
+        if refant_in_fluxcal:
+            logger.info("Beam {0}: Reference antenna {1} exists in flux calibrator".format(self.beam, crosscal_refant))
+        else:
+            # since the reference antenna does not exists, choose the first available one in the list
+            # this should not be RTC and RTD but just in case test it
+            for ant in fluxcal_ant_list:
+                if ant not in self.crosscal_refant_exclude:
+                    logger.info("Beam {0}: Could not find reference antenna {1} in flux calibrator. Chose {2} instead".format(self.beam, crosscal_refant, ant))
+                    crosscal_refant = ant
+                    refant_in_fluxcal = True
+                    break
+
+        # get the index of the reference antenna
+        refant_fluxcal_index = np.where(fluxcal_ant_list == crosscal_refant)[0][0]
+
+        # check if the entire referance antenna is flagged
+        # dropping "==0" would give the number of non-flagged data points
+        query = "SELECT GNFALSE(FLAG)==0 as all_flagged FROM {0} WHERE ANTENNA1=={1}".format(self.get_fluxcal_path(), refant_fluxcal_index)
+        query_result = pt.taql(query)
+
+        # if reference antenna is completely flagged, another one needs to be chosen
+        if query_result[0]['all_flagged']:
+            logger.info("Beam {0}: All visibilities of reference antenna {1} are flagged. Choosing another one".format(self.beam, crosscal_refant))
+            # go through the list of antennas
+            ant_name = ""
+            for ant_index in range(refant_fluxcal_index + 1, len(fluxcal_ant_list)):
+                # check if it completely flagged
+                query_ref_search = "SELECT GNFALSE(FLAG)==0 as all_flagged FROM {0} WHERE ANTENNA1=={1}".format(
+                    self.get_fluxcal_path(), ant_index)
+                query_ref_search_result = pt.taql(query_ref_search)
+                # if this one is not flagged
+                if not query_ref_search_result[0]['all_flagged']:
+                    # get the name
+                    ant_name = fluxcal_ant_list[ant_index]
+                    # check that it is not in the exclude list
+                    if ant_name not in self.crosscal_refant_exclude:
+                        logger.info(
+                            "Beam {0}: Choosing {1} as the reference antenna".format(self.beam, ant_name))
+                        crosscal_refant = ant_name
+                        refant_fluxcal_index = ant_index
+                        break
+            # not sure if this check is necessary
+            if ant_name == "":
+                error = "Beam {0}: Could not find a new reference antenna. Abort crosscal".format(self.beam)
+                logger.error(error)
+                raise RuntimeError(error)
+        # reference antenna is not completely flagged
+        else:
+            logger.info("Reference antenna {0} is not completely flagged. Keeping it.".format(crosscal_refant))
+
+        if crosscal_refant != self.crosscal_refant:
+            if self.config_file_name is not None:
+                logger.info("Beam {0}: Chosen reference antenna {1} is different from config file setting. Adjusting settings for crosscal and selfcal".format(self.beam, crosscal_refant))
+                # set config parser
+                config = ConfigParser()
+                # read the config file settings
+                with open(self.config_file_name, "r") as fp:
+                    config.readfp(fp)
+
+                # change the setting in crosscal
+                # not strictly necessary here, but good to make the config file consistent
+                config.set("CROSSCAL", "crosscal_refant", "'{}'".format(crosscal_refant))
+                self.crosscal_refant = crosscal_refant
+
+                # change the setting in selfcal
+                config.set("SELFCAL", "selfcal_refant", "'{}'".format(refant_fluxcal_index + 1))
+
+                # make a copy of old config file
+                logger.info("Beam {0}: Creating backup of config file before adjusting settings".format(self.beam))
+                subs_managefiles.director(
+                    self, 'rn', self.config_file_name.replace(".cfg", "_backup_wrong_refant.cfg"), file_=self.config_file_name, ignore_nonexistent=True)
+
+                # write changes to config file
+                logger.info("Beam {0}: Writing changes to config file {1}".format(self.beam, self.config_file_name))
+                with open(self.config_file_name, "w") as fp:
+                    config.write(fp)
+            else:
+                logger.info("Beam {0}: No config file was specified. Cannot adjust setting for selfcal. Changing reference antenna only for crosscal to {1}".format(self.beam, crosscal_refant))
+                self.crosscal_refant = crosscal_refant
+        else:
+            logger.info("Beam {0}: Reference antenna {1} set in config file is valid".format(self.beam, crosscal_refant))
+
+        # Checking polcal but not doing anything at the moment if it fails
+        refant_in_polcal = crosscal_refant in polcal_ant_list
+        if refant_in_polcal and self.polcal != '':
+            logger.info("Beam {0}: Reference antenna {1} exists in polarisation calibrator".format(
+                self.beam, crosscal_refant))
+        else:
+            logger.warning("Beam {0}: Reference antenna {1} does NOT exists in polarisation calibrator. Polarisation will probably fail.".format(
+                self.beam, crosscal_refant))
 
 
     def setflux(self):
@@ -837,7 +968,8 @@ class ccal(BaseModule):
                 subs_param.add_param(self, cbeam + '_fluxcal_transfer', ccalfluxcaltransfer)
                 subs_param.add_param(self, cbeam + '_polcal_transfer', ccalpolcaltransfer)
                 logger.error(error)
-                raise RuntimeError(error)
+                # do not raise exception as it prevents the pipeline from running with fluxcal-only
+                # raise RuntimeError(error)
 
         subs_param.add_param(self, cbeam + '_fluxcal_transfer', ccalfluxcaltransfer)
         subs_param.add_param(self, cbeam + '_polcal_transfer', ccalpolcaltransfer)

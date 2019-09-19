@@ -69,11 +69,12 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                                           exception', only for target steps. Please also read logs.
     """
     if steps is None:
-        steps = ["prepare", "preflag", "ccal",
+        steps = ["prepare", "split", "preflag", "ccal",
                  "convert", "scal", "continuum", "polarisation", "line", "transfer"]
 
     (taskid_target, name_target, beamlist_target) = targets
 
+    # set the base directory if none was provided
     if not basedir:
         basedir = '/data/apertif/{}/'.format(taskid_target)
     elif len(basedir) > 0 and basedir[-1] != '/':
@@ -89,9 +90,20 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                                       '&& git describe --tag; cd', shell=True).strip()
     logger.info("Apercal version: " + gitinfo)
 
-    logger.debug("start_apercal called with arguments targets={}; fluxcals={}; polcals={}".format(
+    logger.info("start_apercal called with arguments targets={}; fluxcals={}; polcals={}".format(
         targets, fluxcals, polcals))
-    logger.debug("steps = {}".format(steps))
+    logger.info("steps = {}".format(steps))
+
+    # get the default configfile if none was provided
+    if not configfilename:
+        logger.info("No config file provided, getting default config")
+        # set the config file name
+        configfilename = os.path.join(basedir, "{}_Apercal_settings.cfg".format(taskid_target))
+        # get the default config settings
+        config = lib.get_default_config()
+        with open(configfilename, "w") as fp:
+            config.write(fp)
+        logger.info("Config file saved to {}".format(configfilename))
 
     status = pymp.shared.dict({beamnr: [] for beamnr in beamlist_target})
 
@@ -112,19 +124,25 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
     if (fluxcals and fluxcals != '') and (polcals and polcals != ''):
         assert(len(fluxcals) == len(polcals))
 
+    # avoid symmetry bias, if there is only a polcal but no fluxcal, switch them
+    if fluxcals is None and polcals is not None:
+        logger.info(
+            "Only polcal was provided. Setting polcal {} to fluxcal".format(name_polcal))
+        fluxcals, polcals = polcals, fluxcals
+        name_polcal = ""
     # Exchange polcal and fluxcal if specified in the wrong order
-    if not subs_calmodels.is_polarised(name_polcal) and name_polcal != '':
+    elif not subs_calmodels.is_polarised(name_polcal) and name_polcal != '':
         if subs_calmodels.is_polarised(name_fluxcal):
-            logger.debug("Switching polcal and fluxcal because " + name_polcal +
+            logger.info("Switching polcal and fluxcal because " + name_polcal +
                          " is not polarised")
             fluxcals, polcals = polcals, fluxcals
             name_polcal = str(polcals[0][1]).strip()
         else:
-            logger.debug("Setting polcal to '' since " +
+            logger.info("Setting polcal to '' since " +
                          name_polcal + " is not polarised")
             name_polcal = ""
     elif name_polcal != '':
-        logger.debug("Polcal " + name_polcal + " is polarised, all good")
+        logger.info("Polcal " + name_polcal + " is polarised, all good")
 
     def name_to_ms(name):
         if not name:
@@ -737,6 +755,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     p6.paramfilename = 'param_{:02d}.npy'.format(beamnr)
                     p6.basedir = basedir
                     p6.beam = "{:02d}".format(beamnr)
+                    p6.polcal = name_to_mir(name_polcal)
                     p6.target = name_to_mir(name_target)
                     if "polarisation" in steps and not dry_run:
                         p6.go()
@@ -767,11 +786,6 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             lib.setup_logger('debug', logfile=logfilepath)
             logger.info("Running line")
             start_time_line = time()
-
-            # Because of the amount of information coming from line
-            # this module gets its own logfile
-            logfilepath = os.path.join(basedir, 'apercal_line.log')
-            lib.setup_logger('debug', logfile=logfilepath)
         else:
             logfilepath = os.path.join(basedir, 'apercal.log')
             lib.setup_logger('debug', logfile=logfilepath)
@@ -779,6 +793,11 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
 
 
         for beamnr in beamlist_target:
+
+            # Because of the amount of information coming from line
+            # this module gets its own logfile
+            logfilepath = os.path.join(basedir, 'apercal{:02d}_line.log'.format(beamnr))
+            lib.setup_logger('debug', logfile=logfilepath)
             try:
                 p7 = line(file_=configfilename)
                 if beamnr not in p7.line_beams:
