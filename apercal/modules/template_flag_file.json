@@ -1,0 +1,17 @@
+{
+    "title": "Apercal flagging file",
+    "description": "This file has to be used to provide Apercal with a list of casa flagging commands for the function preflag.manualflag_from_file(). This allows us to provide complex flag commands to casa. It creates a txt file for a given beam that casa's flagdata can read in list-mode",
+    "instructions": "Copy the template and edit it. DO NOT directly use the template in the Apercal git repository. The commands need to be specified for each beam separately and each command needs to get its own entry. The beam is specified by the two digits in the beam-key. It must match the beam for which the flags should be used. In order to use this file, change the corresponding settings in the config file to point to the flag file",
+    "taskid": 190101001,
+    "flaglist": {
+        "beam_00": {
+            "flags_0": "first flag command",
+            "flags_1": "second flag command"
+        },
+        "beam_02": {
+            "flags_0": "first flag command",
+            "flags_1": "second flag command",
+            "flags_2": "third flag command"
+        }
+    }
+}

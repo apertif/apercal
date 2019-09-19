@@ -2,6 +2,7 @@ import logging
 
 import numpy as np
 import pandas as pd
+import json
 import os
 from os import path
 from time import time
@@ -57,6 +58,8 @@ class preflag(BaseModule):
     preflag_manualflag_channel = None
     preflag_manualflag_time = None
     preflag_manualflag_clipzeros = None
+    preflag_manualflag_file = ''
+    preflag_manualflag_file_path = ''
     preflag_aoflagger = None
     preflag_aoflagger_bandpass = None
     preflag_aoflagger_fluxcal = None
@@ -412,6 +415,7 @@ class preflag(BaseModule):
         if self.preflag_manualflag:
             logger.info('Beam ' + self.beam + ': Manual flagging step started')
             self.manualflag_auto()
+            self.manualflag_from_file()
             self.manualflag_antenna()
             self.manualflag_corr()
             self.manualflag_baseline()
@@ -474,7 +478,7 @@ class preflag(BaseModule):
             if preflagfluxcalmanualflagauto and self.preflag_manualflag_fluxcal:
                 logger.info('Beam ' + self.beam + ': Auto-correlations for flux calibrator were already flagged')
             else:
-                if self.preflag_manualflag_fluxcal and os.path.isdir(self.get_fluxcal_path()):
+                if self.preflag_manualflag_fluxcal and os.path.isdir(self.get_fluxcal_path()) and self.fluxcal != '':
                     fc_auto = 'flagdata(vis="' + self.get_fluxcal_path() + '", autocorr=True, flagbackup=False)'
                     lib.run_casa([fc_auto])
                     logger.debug('Beam ' + self.beam + ': Flagged auto-correlations for flux calibrator')
@@ -487,7 +491,7 @@ class preflag(BaseModule):
             if preflagpolcalmanualflagauto and self.preflag_manualflag_polcal:
                 logger.info('Beam ' + self.beam + ': Auto-correlations for polarised calibrator were already flagged')
             else:
-                if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()):
+                if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()) and self.polcal != '':
                     pc_auto = 'flagdata(vis="' + self.get_polcal_path() + '", autocorr=True, flagbackup=False)'
                     lib.run_casa([pc_auto])
                     logger.debug('Beam ' + self.beam + ': Flagged auto-correlations for polarised calibrator')
@@ -516,6 +520,139 @@ class preflag(BaseModule):
         subs_param.add_param(self, pbeam + '_polcal_manualflag_auto', preflagpolcalmanualflagauto)
         subs_param.add_param(self, pbeam + '_targetbeams_manualflag_auto', preflagtargetbeamsmanualflagauto)
 
+    def manualflag_from_file(self):
+        """
+        Function to flag based on commands from a file
+        
+        This provides a way to input more complex flagging commands.
+        """
+        subs_setinit.setinitdirs(self)
+
+        pbeam = 'preflag_B' + str(self.beam).zfill(2)
+
+        # Create the parameters for the parameter file for the manualflag step to flag individual antennas
+
+        # Flagged already fluxcal this way?
+        preflag_fluxcal_manualflag_from_file = get_param_def(self, pbeam + '_fluxcal_manualflag_from_file', False)
+        # Flagged already polcal this way?
+        preflag_polcal_manualflag_from_file = get_param_def(self, pbeam + '_polcal_manualflag_from_file', False)
+        # Flagged already target this way?
+        preflag_targetbeams_manualflag_from_file = get_param_def(self, pbeam + '_targetbeams_manualflag_from_file', False)
+
+        # check if a file has been specified:
+        if self.preflag_manualflag_file != '':
+            # check if a path is set, if not assume the basedir
+            if self.preflag_manualflag_file_path != '':
+                file_location = os.path.join(self.preflag_manualflag_file_path, self.preflag_manualflag_file)
+            else:
+                file_location = os.path.join(self.basedir, self.preflag_manualflag_file)
+            
+            # check that the file exists
+            if os.path.exists(file_location):
+                logger.info("Beam {0}: Reading flagging commands from file {1}".format(self.beam, file_location))
+
+                # read in the json file
+                with open(file_location, "r") as fp:
+                    flag_data = fp.read()
+                
+                # get the json dict
+                # need to catch exception in case the json file is wrong
+                try:
+                    flag_data_json = json.loads(flag_data)
+                except Exception as e:
+                    logger.error("Beam {}: Reading in json file failed. Abort flagging".format(self.beam))
+                    logger.exception(e)
+                else:
+                    logger.info("Beam {}: Successfully read in json file".format(self.beam))
+                
+                # set the key based on the given beam
+                beam_key = "beam_{}".format(str(self.beam).zfill(2))
+                #beam_flag_list = [int(beam.split("_")[-1]) for beam in flag_data_json['flaglist'].keys()]
+
+
+                # check that there are flags for the current beam
+                if flag_data_json['flaglist'].has_key(beam_key):
+                    logger.info("Beam {}: Found flag commands for this beam".format(self.beam))
+
+                    # get a list of flag commands based on the key
+                    flag_list = flag_data_json['flaglist'][beam_key].keys()
+
+                    # create a list of flag commands
+                    flag_command_list = []
+                    for flag_key  in flag_list:
+                        flag_command = flag_data_json['flaglist'][beam_key][flag_key] + "\n"
+                        flag_command_list.append(str(flag_command))
+                    
+                    if len(flag_command_list) != 0:
+                        casa_flag_file = os.path.join(self.rawdir, "casa_flag_list.txt")
+                        # writing commands to file
+                        try:
+                            with open(casa_flag_file, "w") as fp:
+                                fp.writelines(flag_command_list)
+                        except Exception as e:
+                            logger.error("Beam {0}: Writing file {1} with casa flagging commands failed".format(self.beam, casa_flag_file))
+                            logger.exception(e)
+                        else:
+                            logger.info("Beam {0}: Successfully created file {1} with casa flag commands".format(self.beam, casa_flag_file))
+                        
+                        # make sure there is a casa flag file
+                        if os.path.exists(casa_flag_file):
+                            # now run casa for fluxcal
+                            if self.preflag_manualflag_fluxcal and os.path.isdir(self.get_fluxcal_path()) and self.fluxcal != '':
+                                #flagdata(vis, mode='list', inpfile=['onlineflags.txt' ,'otherflags.txt'])
+                                flag_fluxcal = 'flagdata(vis="{0}", mode="list", inpfile="{1}", flagbackup=False)'.format(self.get_fluxcal_path(), casa_flag_file)
+                                #flag_fluxcal = 'flagdata(vis="' + self.get_fluxcal_path() + '", mode="list"' + '", inpfile="' + casa_flag_file + ")'
+                                lib.run_casa([flag_fluxcal])
+                                logger.info('Beam {}: Flagged flux calibrator'.format(self.beam))
+                                preflag_fluxcal_manualflag_from_file = True
+                            else:
+                                logger.warning('Beam {}: No flux calibrator dataset specified'.format(self.beam))
+
+                            # now run casa for polcal
+                            if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()) and self.polcal != '':
+                                #flagdata(vis, mode='list', inpfile=['onlineflags.txt' ,'otherflags.txt'])
+                                flag_polcal = 'flagdata(vis="{0}", mode="list", inpfile="{1}", flagbackup=False)'.format(
+                                    self.get_polcal_path(), casa_flag_file)
+                                lib.run_casa([flag_polcal])
+                                logger.info('Beam {}: Flagged pol calibrator'.format(self.beam))
+                                preflag_polcal_manualflag_from_file = True
+                            else:
+                                logger.warning('Beam {}: No pol calibrator dataset specified'.format(self.beam))
+                            
+                            # now run casa for target
+                            if self.preflag_manualflag_target and os.path.isdir(self.get_target_path()):
+                                #flagdata(vis, mode='list', inpfile=['onlineflags.txt' ,'otherflags.txt'])
+                                flag_target = 'flagdata(vis="{0}", mode="list", inpfile="{1}", flagbackup=False)'.format(
+                                    self.get_target_path(), casa_flag_file)
+                                lib.run_casa([flag_target])
+                                logger.info(
+                                            'Beam {}: Flagged target'.format(self.beam))
+                                preflag_targetbeams_manualflag_from_file=True
+                            else:
+                                logger.warning(
+                                            'Beam {}: No target dataset specified'.format(self.beam))
+                        else:
+                            logger.warning(
+                                "Beam {0}: Flag file {1} does not exists.".format(self.beam, casa_flag_file))
+                    else:
+                        logger.warning("Beam {}: List of flag commands is empty.".format(self.beam))
+                else:
+                    logger.info("Beam {}: Did not find any flag commands for this beam. Moving on.".format(self.beam))
+            else:
+                # if it fails here, flagging should abort completey because it was set to use the flag file
+                error = "Beam {0}: Did not find specified flagging file {1}. Abort flagging".format(self.beam, file_location)
+                logger.error(error)
+                raise RuntimeError(error)
+        else:
+            logger.info("Beam  {}: Did not flag using flagging commands from file".format(self.beam))
+
+        # Save the derived parameters for the flagging from file to the parameter file
+        subs_param.add_param(
+            self, pbeam + '_fluxcal_manualflag_from_file', preflag_fluxcal_manualflag_from_file)
+        subs_param.add_param(
+            self, pbeam + '_polcal_manualflag_from_file', preflag_polcal_manualflag_from_file)
+        subs_param.add_param(
+            self, pbeam + '_targetbeams_manualflag_from_file', preflag_targetbeams_manualflag_from_file)
 
     def manualflag_antenna(self):
         """
@@ -542,7 +679,7 @@ class preflag(BaseModule):
             if preflagfluxcalmanualflagantenna[0] == self.preflag_manualflag_antenna and self.preflag_manualflag_fluxcal:
                 logger.info('Beam ' + self.beam + ': Antenna(s) ' + self.preflag_manualflag_antenna + ' for flux calibrator were already flagged')
             else:
-                if self.preflag_manualflag_fluxcal and os.path.isdir(self.get_fluxcal_path()):
+                if self.preflag_manualflag_fluxcal and os.path.isdir(self.get_fluxcal_path()) and self.fluxcal != '':
                     fc_ant = 'flagdata(vis="' + self.get_fluxcal_path() + '", antenna="' + self.preflag_manualflag_antenna + '", flagbackup=False)'
                     lib.run_casa([fc_ant])
                     logger.debug('Beam ' + self.beam + ': Flagged antenna(s) ' + self.preflag_manualflag_antenna + ' for flux calibrator')
@@ -559,7 +696,7 @@ class preflag(BaseModule):
             if preflagpolcalmanualflagantenna[0] == self.preflag_manualflag_antenna and self.preflag_manualflag_polcal:
                 logger.info('Beam ' + self.beam + ': Antenna(s) ' + self.preflag_manualflag_antenna + ' for polarised calibrator were already flagged')
             else:
-                if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()):
+                if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()) and self.polcal != '':
                     pc_ant = 'flagdata(vis="' + self.get_polcal_path() + '", antenna="' + self.preflag_manualflag_antenna + '", flagbackup=False)'
                     lib.run_casa([pc_ant])
                     logger.debug('Beam ' + self.beam + ': Flagged antenna(s) ' + self.preflag_manualflag_antenna + ' for polarised calibrator')
@@ -618,7 +755,7 @@ class preflag(BaseModule):
             if preflagfluxcalmanualflagcorr[0] == self.preflag_manualflag_corr and self.preflag_manualflag_fluxcal:
                 logger.info('Beam ' + self.beam + ': Correlation(s) ' + self.preflag_manualflag_corr + ' for flux calibrator were already flagged')
             else:
-                if self.preflag_manualflag_fluxcal and os.path.isdir(self.get_fluxcal_path()):
+                if self.preflag_manualflag_fluxcal and os.path.isdir(self.get_fluxcal_path()) and self.fluxcal != '':
                     subs_setinit.setinitdirs(self)
                     fc_corr = 'flagdata(vis="' + self.get_fluxcal_path() + '", correlation="' + self.preflag_manualflag_corr + '", flagbackup=False)'
                     lib.run_casa([fc_corr])
@@ -636,7 +773,7 @@ class preflag(BaseModule):
             if preflagpolcalmanualflagcorr[0] == self.preflag_manualflag_corr and self.preflag_manualflag_polcal:
                 logger.info('Beam ' + self.beam + ': Correlation(s) ' + self.preflag_manualflag_corr + ' for polarised calibrator were already flagged')
             else:
-                if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()):
+                if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()) and self.polcal != '':
                     subs_setinit.setinitdirs(self)
                     pc_corr = 'flagdata(vis="' + self.get_polcal_path() + '", correlation="' + self.preflag_manualflag_corr + '", flagbackup=False)'
                     lib.run_casa([pc_corr])
@@ -698,7 +835,7 @@ class preflag(BaseModule):
                 logger.info('Beam ' + self.beam + ': Baseline(s) ' + self.preflag_manualflag_baseline + ' for flux calibrator were already flagged')
             else:
                 if self.preflag_manualflag_fluxcal and os.path.isdir(
-                        self.get_fluxcal_path()):
+                        self.get_fluxcal_path()) and self.fluxcal != '':
                     fc_baseline = 'flagdata(vis="' + self.get_fluxcal_path() + '", antenna="' + self.preflag_manualflag_baseline + '", flagbackup=False)'
                     lib.run_casa([fc_baseline])
                     logger.debug('Beam ' + self.beam + ': Flagged baseline(s) ' + self.preflag_manualflag_baseline + ' for flux calibrator')
@@ -716,7 +853,7 @@ class preflag(BaseModule):
                     self.preflag_manualflag_polcal:
                 logger.info('Beam ' + self.beam + ': Baseline(s) ' + self.preflag_manualflag_baseline + ' for polarised calibrator were already flagged')
             else:
-                if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()):
+                if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()) and self.polcal != '':
                     pc_baseline = 'flagdata(vis="' + self.get_polcal_path() + '", antenna="' + self.preflag_manualflag_baseline + '", flagbackup=False)'
                     lib.run_casa([pc_baseline])
                     logger.debug('Beam ' + self.beam + ': Flagged baseline(s) ' + self.preflag_manualflag_baseline + ' for polarised calibrator')
@@ -775,7 +912,7 @@ class preflag(BaseModule):
             if preflagfluxcalmanualflagchannel[0] == self.preflag_manualflag_channel and self.preflag_manualflag_fluxcal:
                 logger.info('Beam ' + self.beam + ': Channel(s) ' + self.preflag_manualflag_channel + ' for flux calibrator were already flagged')
             else:
-                if self.preflag_manualflag_fluxcal and os.path.isdir(self.get_fluxcal_path()):
+                if self.preflag_manualflag_fluxcal and os.path.isdir(self.get_fluxcal_path()) and self.fluxcal != '':
                     fc_channel = 'flagdata(vis="' + self.get_fluxcal_path() + '", spw="0:' + self.preflag_manualflag_channel + '", flagbackup=False)'
                     lib.run_casa([fc_channel])
                     logger.debug('Beam ' + self.beam + ': Flagged channel(s) ' + self.preflag_manualflag_channel + ' for flux calibrator')
@@ -792,7 +929,7 @@ class preflag(BaseModule):
             if preflagpolcalmanualflagchannel[0] == self.preflag_manualflag_channel and self.preflag_manualflag_polcal:
                 logger.info('Beam ' + self.beam + ': Channel(s) ' + self.preflag_manualflag_channel + ' for polarised calibrator were already flagged')
             else:
-                if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()):
+                if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()) and self.polcal != '':
                     pc_channel = 'flagdata(vis="' + self.get_polcal_path() + '", spw="0:' + self.preflag_manualflag_channel + '", flagbackup=False)'
                     lib.run_casa([pc_channel])
                     logger.debug('Beam ' + self.beam + ': Flagged channel(s) ' + self.preflag_manualflag_channel + ' for polarised calibrator')
@@ -851,7 +988,7 @@ class preflag(BaseModule):
             if preflagfluxcalmanualflagtime[0] == self.preflag_manualflag_time and self.preflag_manualflag_fluxcal:
                 logger.info('Beam ' + self.beam + ': Time range ' + self.preflag_manualflag_time + ' for flux calibrator was already flagged')
             else:
-                if self.preflag_manualflag_fluxcal and os.path.isdir(self.get_fluxcal_path()):
+                if self.preflag_manualflag_fluxcal and os.path.isdir(self.get_fluxcal_path()) and self.fluxcal != '':
                     fc_time = 'flagdata(vis="' + self.get_fluxcal_path() + '", timerange="' + self.preflag_manualflag_time + '", flagbackup=False)'
                     lib.run_casa([fc_time])
                     logger.debug('Beam ' + self.beam + ': Flagged time range ' + self.preflag_manualflag_time + ' for flux calibrator')
@@ -869,7 +1006,7 @@ class preflag(BaseModule):
             if preflagpolcalmanualflagtime[0] == self.preflag_manualflag_time and self.preflag_manualflag_polcal:
                 logger.info('Time range ' + self.preflag_manualflag_time + ' for polarised calibrator was already flagged')
             else:
-                if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()):
+                if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()) and self.polcal != '':
                     pc_time = 'flagdata(vis="' + self.get_polcal_path() + '", timerange="' + self.preflag_manualflag_time + '", flagbackup=False)'
                     lib.run_casa([pc_time])
                     logger.debug('Beam ' + self.beam + ': Flagged time range ' + self.preflag_manualflag_time + ' for polarised calibrator')
@@ -931,7 +1068,7 @@ class preflag(BaseModule):
             if preflagfluxcalmanualflagclipzeros and self.preflag_manualflag_fluxcal:
                 logger.info('Beam ' + self.beam + ': Zero-valued data for flux calibrator were already flagged')
             else:
-                if self.preflag_manualflag_fluxcal and os.path.isdir(self.get_fluxcal_path()):
+                if self.preflag_manualflag_fluxcal and os.path.isdir(self.get_fluxcal_path()) and self.fluxcal != '':
                     fc_clipzeros = 'flagdata(vis="' + self.get_fluxcal_path() + '", mode="clip", clipzeros=True, flagbackup=False)'
                     lib.run_casa([fc_clipzeros])
                     logger.debug('Beam ' + self.beam + ': Flagged Zero-valued data for flux calibrator')
@@ -944,7 +1081,7 @@ class preflag(BaseModule):
             if preflagpolcalmanualflagclipzeros and self.preflag_manualflag_polcal:
                 logger.info('Beam ' + self.beam + ': Zero-values data for polarised calibrator were already flagged')
             else:
-                if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()):
+                if self.preflag_manualflag_polcal and os.path.isdir(self.get_polcal_path()) and self.polcal != '':
                     pc_clipzeros = 'flagdata(vis="' + self.get_polcal_path() + '", mode="clip", clipzeros=True, flagbackup=False)'
                     lib.run_casa([pc_clipzeros])
                     logger.debug('Beam ' + self.beam + ': Flagged Zero-valued data for polarised calibrator')
@@ -1394,6 +1531,9 @@ class preflag(BaseModule):
         subs_param.del_param(self, pbeam + '_fluxcal_manualflag_auto')
         subs_param.del_param(self, pbeam + '_polcal_manualflag_auto')
         subs_param.del_param(self, pbeam + '_targetbeams_manualflag_auto')
+        subs_param.del_param(self, pbeam + '_fluxcal_manualflag_from_file')
+        subs_param.del_param(self, pbeam + '_polcal_manualflag_from_file')
+        subs_param.del_param(self, pbeam + '_targetbeams_manualflag_from_file')
         subs_param.del_param(self, pbeam + '_fluxcal_manualflag_antenna')
         subs_param.del_param(self, pbeam + '_polcal_manualflag_antenna')
         subs_param.del_param(self, pbeam + '_targetbeams_manualflag_antenna')
@@ -1462,6 +1602,9 @@ class preflag(BaseModule):
                 subs_param.del_param(self, pbeam + '_fluxcal_manualflag_auto')
                 subs_param.del_param(self, pbeam + '_polcal_manualflag_auto')
                 subs_param.del_param(self, pbeam + '_targetbeams_manualflag_auto')
+                subs_param.del_param(self, pbeam + '_fluxcal_manualflag_from_file')
+                subs_param.del_param(self, pbeam + '_polcal_manualflag_from_file')
+                subs_param.del_param(self, pbeam + '_targetbeams_manualflag_from_file')
                 subs_param.del_param(self, pbeam + '_fluxcal_manualflag_antenna')
                 subs_param.del_param(self, pbeam + '_polcal_manualflag_antenna')
                 subs_param.del_param(self, pbeam + '_targetbeams_manualflag_antenna')

@@ -1,3 +1,6 @@
+import os
+
+
 def setinitdirs(self):
     """
     Creates the directory names for the subdirectories to make scripting easier
