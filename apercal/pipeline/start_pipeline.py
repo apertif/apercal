@@ -842,7 +842,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             logfilepath = os.path.join(basedir, 'apercal{:02d}_line.log'.format(beamnr))
             lib.setup_logger('debug', logfile=logfilepath)
             try:
-                p7 = line(file_=configfilename_list[beamlist_targe.index(beam_nr)])
+                p7 = line(file_=configfilename_list[beamlist_target.index(beamnr)])
                 if beamnr not in p7.line_beams:
                     logger.debug(
                         "Skipping line imaging for beam {}".format(beamnr))
