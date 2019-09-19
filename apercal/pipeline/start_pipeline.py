@@ -122,8 +122,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                 taskid_target, str(beam).zfill(2))) for beam in beamlist_target]
             # make the copies
             for config in configfilename_list:
-                director(
-                    p0, 'rn', config, file_=configfilename[0], ignore_nonexistent=True)
+                lib.basher("mv " + str(configfilename[0]) + " " + str(config))
         elif len(configfilename) == n_beams:
             logger.info("Number of config files and target beams match.")
             configfilename_list = configfilename
@@ -139,8 +138,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             taskid_target, str(beam).zfill(2))) for beam in beamlist_target]
         # make the copies
         for config in configfilename_list:
-            director(
-                p0, 'rn', config, file_=configfilename, ignore_nonexistent=True)
+            lib.basher("mv " + str(configfilename) + " " + str(config))
     else:
         error = "Unknown input for configfilename. Abort"
         logger.error(error)
