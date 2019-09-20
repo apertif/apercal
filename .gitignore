@@ -16,3 +16,4 @@ test/param.npy
 cwl/tmp/*
 cwl/cache/*
 cwl/output/*
+.vscode
