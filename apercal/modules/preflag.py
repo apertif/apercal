@@ -15,7 +15,7 @@ from apercal.subs.msutils import get_nchan
 from apercal.subs import managefiles as subs_managefiles
 from apercal.subs import param as subs_param
 from apercal.subs.param import get_param_def
-from apercal.subs.bandpass import create_bandpass
+from apercal.subs.bandpass import create_bandpass, create_bandpass_aaf
 from apercal.ao_strategies import ao_strategies
 from apercal.libs import lib
 from apercal.exceptions import ApercalException
@@ -46,6 +46,7 @@ class preflag(BaseModule):
 
     preflag_shadow = None
     preflag_edges = None
+    preflag_aaf_applied = None
     preflag_ghosts = None
     preflag_manualflag = None
     preflag_manualflag_fluxcal = None
@@ -236,6 +237,14 @@ class preflag(BaseModule):
         # Edges of target beams flagged?
         preflagtargetbeamsedges = get_param_def(self, pbeam + '_targetbeams_edges', False)
 
+        # to check if aaf filter was applied to the data
+        # check also using the config setting
+        abeam = 'aaf_B' + str(self.beam).zfill(2)
+        aaf_fluxcal_status = get_param_def(self, abeam + '_fluxcal_status', False)
+        aaf_polcal_status = get_param_def(self, abeam + '_polcal_status', False)
+        aaf_targetbeams_status = get_param_def(self, abeam + '_targetbeams_status', False)
+
+
         if self.preflag_edges:
             logger.info('Beam ' + self.beam + ': Flagging subband edges')
             # Flag the flux calibrator
@@ -245,14 +254,19 @@ class preflag(BaseModule):
                 if self.fluxcal != '' and os.path.isdir(
                         self.get_fluxcal_path()):
                     # Flag the subband edges of the flux calibrator data set
-                    logger.debug('Beam ' + self.beam + ': Flagging subband edges for flux calibrator')
+                    logger.info('Beam ' + self.beam + ': Flagging subband edges for flux calibrator')
                     # Get the number of channels of the flux calibrator data set
                     nchannel = get_nchan(self.get_fluxcal_path())
                     # Calculate the subband edges of the flux calibrator data set
                     a = range(0, nchannel, 64)
                     b = range(1, nchannel, 64)
                     c = range(63, nchannel, 64)
-                    l = a + b + c
+                    if self.preflag_aaf_applied or aaf_fluxcal_status:
+                        logger.info("Beam {}: Assuming AAF was performed on flux calibrator")
+                        l = a
+                    else:
+                        logger.info("Beam {}: Assuming AAF was NOT performed on flux calibrator")
+                        l = a + b + c
                     m = ';'.join(str(ch) for ch in l)
                     fc_edges_flagcmd = 'flagdata(vis="' + self.get_fluxcal_path() + '", spw="0:' + m + '", flagbackup=False)'
                     lib.run_casa([fc_edges_flagcmd])
@@ -274,7 +288,12 @@ class preflag(BaseModule):
                     a = range(0, nchannel, 64)
                     b = range(1, nchannel, 64)
                     c = range(63, nchannel, 64)
-                    l = a + b + c
+                    if self.preflag_aaf_applied or aaf_polcal_status:
+                        logger.info("Beam {}: Assuming AAF was performed on flux calibrator")
+                        l = a
+                    else:
+                        logger.info("Beam {}: Assuming AAF was NOT performed on pol calibrator")
+                        l = a + b + c
                     m = ';'.join(str(ch) for ch in l)
                     pc_edges_flagcmd = 'flagdata(vis="' + self.get_polcal_path() + '", spw="0:' + m + '", flagbackup=False)'
                     lib.run_casa([pc_edges_flagcmd])
@@ -294,7 +313,14 @@ class preflag(BaseModule):
                     a = range(0, nchannel, 64)
                     b = range(1, nchannel, 64)
                     c = range(63, nchannel, 64)
-                    l = a + b + c
+                    if self.preflag_aaf_applied or aaf_targetbeams_status:
+                        logger.info(
+                            "Beam {}: Assuming AAF was performed on target")
+                        l = a
+                    else:
+                        logger.info(
+                            "Beam {}: Assuming AAF was NOT performed on target")
+                        l = a + b + c
                     m = ';'.join(str(ch) for ch in l)
                     tg_edges_flagcmd = 'flagdata(vis="' + self.get_target_path() + '", spw="0:' + m + '", flagbackup=False)'
                     lib.run_casa([tg_edges_flagcmd])
@@ -1124,6 +1150,16 @@ class preflag(BaseModule):
         # Bandpass successfully derived
         preflagaoflaggerbandpassstatus = get_param_def(self, pbeam + '_aoflagger_bandpass_status', False)
 
+        # to check if aaf filter was applied to the data
+        # check also using the config setting
+        abeam = 'aaf_B' + str(self.beam).zfill(2)
+        aaf_fluxcal_status = get_param_def(
+            self, abeam + '_fluxcal_status', False)
+        aaf_polcal_status = get_param_def(
+            self, abeam + '_polcal_status', False)
+        aaf_targetbeams_status = get_param_def(
+            self, abeam + '_targetbeams_status', False)
+
         if self.preflag_aoflagger_bandpass:
             # Check if bandpass was already derived and bandpass table is available
             if os.path.isfile(self.get_bandpass_path()):
@@ -1132,13 +1168,23 @@ class preflag(BaseModule):
             # If not, calculate the bandpass for the setup of the observation using the flux calibrator
             elif not preflagaoflaggerbandpassstatus:
                 if self.fluxcal != '':
-                    create_bandpass(self.get_fluxcal_path(), self.get_bandpass_path())
+                    if self.preflag_aaf_applied or aaf_fluxcal_status
+                        create_bandpass_aaf(self.get_fluxcal_path(), self.get_bandpass_path())
+                    else:
+                        create_bandpass(self.get_fluxcal_path(),
+                                        self.get_bandpass_path())
                 elif self.polcal != '':
-                    create_bandpass(self.get_polcal_path(), self.get_bandpass_path())
+                    if self.preflag_aaf_applied or aaf_polcal_status:
+                        create_bandpass_aaf(self.get_polcal_path(), self.get_bandpass_path())
+                    else:
+                        create_bandpass(self.get_fluxcal_path(), self.get_bandpass_path())
                 else:
                     # logger.debug("self.get_target_path(str(self.beam).zfill(2))= {0}".format(str(self.get_target_path(str(self.beam).zfill(2)))))
                     # create_bandpass(self.get_target_path(str(self.beam).zfill(2)), self.get_bandpass_path())
-                    create_bandpass(self.get_target_path(self.beam), self.get_bandpass_path())
+                    if self.preflag_aaf_applied or aaf_targetbeams_status:
+                        create_bandpass_aaf(self.get_target_path(self.beam), self.get_bandpass_path())
+                    else:
+                        create_bandpass(self.get_fluxcal_path(), self.get_bandpass_path())
                 if os.path.isfile(self.get_bandpass_path()):
                     preflagaoflaggerbandpassstatus = True
                     logger.info('Beam ' + self.beam + ': Derived preliminary bandpass table for AOFlagging')

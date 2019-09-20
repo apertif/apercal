@@ -20,9 +20,7 @@ class aaf(BaseModule):
     """
     module_name = 'AAF'
 
-    aaf_fluxcal = None
-    aaf_polcal = None
-    aaf_target = None
+    aaf_apply = None
     aaf_tolerance = None
 
     def __init__(self, file_=None, **kwargs):
@@ -54,7 +52,7 @@ class aaf(BaseModule):
         aaf_targetbeams_status = get_param_def(
             self, abeam + '_targetbeams_status', False)
 
-        if self.aaf_fluxcal:
+        if self.aaf_apply:
             # check if aaf was run on fluxcal
             if aaf_fluxcal_status:
                 logger.info(
@@ -76,12 +74,7 @@ class aaf(BaseModule):
                     aaf_fluxcal_status = False
                     logger.warning(
                         'Beam ' + self.beam + ': Fluxcal not set or dataset not available! Cannot perform AAF on flux calibrator dataset!')
-        else:
-            aaf_fluxcal_status = False
-            logger.warning(
-                "Beam {}: Did not perform AAF on flux calibrator".format(self.beam))
 
-        if self.aaf_polcal
            # check if aaf was run on polcal
            if aaf_polcal_status:
                 logger.info(
@@ -103,12 +96,7 @@ class aaf(BaseModule):
                     aaf_polcal_status = False
                     logger.warning(
                         'Beam ' + self.beam + ': Polcal not set or dataset not available! Cannot perform AAF on pol calibrator dataset!')
-        else:
-            aaf_polcal_status = False
-            logger.warning(
-                "Beam {}: Did not perform AAF on pol calibrator".format(self.beam))
-
-        if self.aaf_target
+        
            # check if aaf was run on target
            if aaf_targetbeams_status:
                 logger.info(
@@ -130,9 +118,11 @@ class aaf(BaseModule):
                     logger.warning(
                         'Beam ' + self.beam + ': Target not set or dataset not available! Cannot perform AAF on target dataset!')
         else:
+            aaf_fluxcal_status = False
+            aaf_polcal_status
             aaf_targetbeams_status = False
             logger.info(
-                "Beam {}: Did not perform AAF on target".format(self.beam))
+                "Beam {}: Did not perform AAF on datasets".format(self.beam))
 
         subs_param.add_param(
             self, abeam + '_fluxcal_status', aaf_fluxcal_status)
