@@ -20,7 +20,7 @@ class aaf(BaseModule):
     """
     module_name = 'AAF'
 
-    aaf_filter = None
+    #aaf_filter = None
     aaf_tolerance = None
 
     def __init__(self, file_=None, **kwargs):
