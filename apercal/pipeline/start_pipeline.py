@@ -3,6 +3,7 @@
 from __future__ import print_function
 
 from apercal.modules.prepare import prepare
+from apercal.modules.aaf import aaf
 from apercal.modules.split import split
 from apercal.modules.preflag import preflag
 from apercal.modules.ccal import ccal
@@ -333,6 +334,55 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             director(
                 p0, 'rn', param_file.replace(".npy", "_prepare_{}.npy".format(name_target)), file_=param_file, ignore_nonexistent=True)
             
+        # ====
+        # AAF
+        # ====
+
+        # keep a start-finish record of step in the main log file
+        if "aaf" in steps:
+            logger.info("Running aaf")
+            start_time_aaf = time()
+        else:
+            logger.info("Skipping aaf")
+
+        # Run AAF
+        for beamnr in beamlist_target:
+
+            logfilepath = os.path.join(
+                basedir, 'apercal{:02d}_line.log'.format(beamnr))
+            lib.setup_logger('debug', logfile=logfilepath)
+            a0 = aaf(
+                file_=configfilename_list[beamlist_target.index(beamnr)])
+            a0.basedir = basedir
+            # set_files(a0)
+            a0.prepare_flip_ra = flip_ra
+            # the following two need to be empty strings for prepare
+            a0.fluxcal = name_to_ms(name_fluxcal)
+            a0.polcal = name_to_ms(name_polcal)
+            a0.target = name_to_ms(name_target)
+            s0.beam = "{:02d}".format(beamnr)
+            if "aaf" in steps and not dry_run:
+                try:
+                    a0.go()
+                except Exception as e:
+                    logger.warning("AAF failed for " +
+                                    str(taskid_target) + " beam " + str(beamnr))
+                    logger.exception(e)
+                    status[beamnr] += ['aaf']
+
+        # keep a start-finish record of step in the main log file
+        if "AAF" in steps:
+            logfilepath = os.path.join(basedir, 'apercal.log')
+            lib.setup_logger('debug', logfile=logfilepath)
+            logger = logging.getLogger(__name__)
+            logger.info("Running AAF ... Done ({0:.0f}s)".format(
+                time() - start_time_aaf))
+
+            # # copy the param file generated here
+            # param_file = os.path.join(basedir, 'param.npy')
+            # director(
+            #     p0, 'rn', param_file.replace(".npy", "_prepare_{}.npy".format(name_target)), file_=param_file, ignore_nonexistent=True)
+
 
         # =====
         # Split
