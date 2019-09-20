@@ -20,7 +20,7 @@ class aaf(BaseModule):
     """
     module_name = 'AAF'
 
-    # aaf_filter = None
+    aaf_run = None
     aaf_tolerance = None
 
     def __init__(self, file_=None, **kwargs):
@@ -52,72 +52,81 @@ class aaf(BaseModule):
         aaf_targetbeams_status = get_param_def(
             self, abeam + '_targetbeams_status', False)
 
-        # check if aaf was run on fluxcal
-        if aaf_fluxcal_status:
-            logger.info(
-                "Beam {}: AAF was alreay performed on flux calibrator".format(self.beam))
-        else:
-            if self.fluxcal != '' and os.path.isdir(self.get_fluxcal_path()):
-                logger.info("Runnin AAF on flux calibrator")
-                try:
-                    antialias_ms(self.get_fluxcal_path(), self.aaf_tolerance)
-                except Exception as e:
-                    logger.error("Running AAF on flux calibrator ... Failed")
-                    logger.exception(e)
-                else:
-                    logger.info("Running AAF on flux calibrator ... Done")
-                    aaf_fluxcal_status = True
+        if self.aaf_run:
+            # check if aaf was run on fluxcal
+            if aaf_fluxcal_status:
+                logger.info(
+                    "Beam {}: AAF was alreay performed on flux calibrator".format(self.beam))
             else:
-                aaf_fluxcal_status = False
-                logger.warning(
-                    'Beam ' + self.beam + ': Fluxcal not set or dataset not available! Cannot perform AAF on flux calibrator dataset!')
+                if self.fluxcal != '' and os.path.isdir(self.get_fluxcal_path()):
+                    logger.info("Runnin AAF on flux calibrator")
+                    try:
+                        antialias_ms(self.get_fluxcal_path(),
+                                     self.aaf_tolerance)
+                    except Exception as e:
+                        logger.error(
+                            "Running AAF on flux calibrator ... Failed")
+                        logger.exception(e)
+                    else:
+                        logger.info("Running AAF on flux calibrator ... Done")
+                        aaf_fluxcal_status = True
+                else:
+                    aaf_fluxcal_status = False
+                    logger.warning(
+                        'Beam ' + self.beam + ': Fluxcal not set or dataset not available! Cannot perform AAF on flux calibrator dataset!')
+
+            # check if aaf was run on polcal
+            if aaf_polcal_status:
+                logger.info(
+                    "Beam {}: AAF was alreay performed on pol calibrator".format(self.beam))
+            else:
+                if self.polcal != '' and os.path.isdir(self.get_polcal_path()):
+                    logger.info("Runnin AAF on pol calibrator")
+                    try:
+                        antialias_ms(self.get_polcal_path(),
+                                     self.aaf_tolerance)
+                    except Exception as e:
+                        logger.error(
+                            "Running AAF on pol calibrator ... Failed")
+                        logger.exception(e)
+                    else:
+                        logger.info("Running AAF on pol calibrator ... Done")
+                        aaf_polcal_status = True
+                else:
+                    aaf_polcal_status = False
+                    logger.warning(
+                        'Beam ' + self.beam + ': Polcal not set or dataset not available! Cannot perform AAF on pol calibrator dataset!')
+
+            # check if aaf was run on target
+            if aaf_targetbeams_status:
+                logger.info(
+                    "Beam {}: AAF was alreay performed on target".format(self.beam))
+            else:
+                if self.target != '' and os.path.isdir(self.get_target_path()):
+                    logger.info("Runnin AAF on target")
+                    try:
+                        antialias_ms(self.get_target_path(),
+                                     self.aaf_tolerance)
+                    except Exception as e:
+                        logger.error("Running AAF on target ... Failed")
+                        logger.exception(e)
+                    else:
+                        logger.info("Running AAF on target ... Done")
+                        aaf_targetbeams_status = True
+                else:
+                    aaf_targetbeams_status = False
+                    logger.warning(
+                        'Beam ' + self.beam + ': Target not set or dataset not available! Cannot perform AAF on target dataset!')
+        else:
+            aaf_fluxcal_status = False
+            aaf_polcal_status = False
+            aaf_targetbeams_status = False
+            logger.info("Beam {}: Did not perform AAF".format(self.beam))
 
         subs_param.add_param(
             self, abeam + '_fluxcal_status', aaf_fluxcal_status)
-
-        # check if aaf was run on polcal
-        if aaf_polcal_status:
-            logger.info(
-                "Beam {}: AAF was alreay performed on pol calibrator".format(self.beam))
-        else:
-            if self.polcal != '' and os.path.isdir(self.get_polcal_path()):
-                logger.info("Runnin AAF on pol calibrator")
-                try:
-                    antialias_ms(self.get_polcal_path(), self.aaf_tolerance)
-                except Exception as e:
-                    logger.error("Running AAF on pol calibrator ... Failed")
-                    logger.exception(e)
-                else:
-                    logger.info("Running AAF on pol calibrator ... Done")
-                    aaf_polcal_status = True
-            else:
-                aaf_polcal_status = False
-                logger.warning(
-                    'Beam ' + self.beam + ': Polcal not set or dataset not available! Cannot perform AAF on pol calibrator dataset!')
-
         subs_param.add_param(
             self, abeam + '_polcal_status', aaf_polcal_status)
-
-        # check if aaf was run on target
-        if aaf_targetbeams_status:
-            logger.info(
-                "Beam {}: AAF was alreay performed on target".format(self.beam))
-        else:
-            if self.target != '' and os.path.isdir(self.get_target_path()):
-                logger.info("Runnin AAF on target")
-                try:
-                    antialias_ms(self.get_target_path(), self.aaf_tolerance)
-                except Exception as e:
-                    logger.error("Running AAF on target ... Failed")
-                    logger.exception(e)
-                else:
-                    logger.info("Running AAF on target ... Done")
-                    aaf_targetbeams_status = True
-            else:
-                aaf_targetbeams_status = False
-                logger.warning(
-                    'Beam ' + self.beam + ': Target not set or dataset not available! Cannot perform AAF on target dataset!')
-
         subs_param.add_param(
             self, abeam + '_targetbeams_status', aaf_targetbeams_status)
 
