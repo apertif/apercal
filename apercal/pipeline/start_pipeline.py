@@ -304,7 +304,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             p0 = prepare(
                 file_=configfilename_list[beamlist_target.index(beamnr)])
             p0.basedir = basedir
-            #set_files(p0)
+            # set_files(p0)
             p0.prepare_flip_ra = flip_ra
             # the following two need to be empty strings for prepare
             p0.fluxcal = ''
