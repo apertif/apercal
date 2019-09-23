@@ -26,6 +26,7 @@ import logging
 from time import time
 from datetime import timedelta
 import pymp
+import numpy as np
 
 
 def validate_taskid(taskid_from_autocal):
