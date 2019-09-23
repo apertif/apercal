@@ -229,6 +229,13 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         # Check every target beam has a fluxcal beam
         for beamnr_target in beamlist_target:
             assert(beamnr_target in beamnrs_fluxcal)
+    
+    # creating a copy of the target beamlist as a normal array
+    # to avoid using np.where() for such a small thing
+    if type(beamlist_target) == np.ndarray:
+        beamlist_target_for_config = beamlist_target.to_list()
+    else:
+        beamlist_target_for_config = beamlist_target
 
     time_start = time()
     try:
@@ -245,7 +252,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
 
         # Prepare fluxcals
         for (taskid_fluxcal, name_fluxcal, beamnr_fluxcal) in fluxcals:
-            p0 = prepare(file_=configfilename_list[beamlist_target.index(beamnr_fluxcal)])
+            p0 = prepare(file_=configfilename_list[beamlist_target_for_config.index(beamnr_fluxcal)])
             p0.basedir = basedir
             #set_files(p0)
             p0.prepare_flip_ra = flip_ra
@@ -274,7 +281,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         # Prepare polcals
         if name_polcal != '':
             for (taskid_polcal, name_polcal, beamnr_polcal) in polcals:
-                p0 = prepare(file_=configfilename_list[beamlist_target.index(beamnr_polcal)])
+                p0 = prepare(file_=configfilename_list[beamlist_target_for_config.index(beamnr_polcal)])
                 p0.basedir = basedir
                 #set_files(p0)
                 p0.prepare_flip_ra = flip_ra
@@ -302,7 +309,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         # Prepare target
         for beamnr in beamlist_target:
             p0 = prepare(
-                file_=configfilename_list[beamlist_target.index(beamnr)])
+                file_=configfilename_list[beamlist_target_for_config.index(beamnr)])
             p0.basedir = basedir
             # set_files(p0)
             p0.prepare_flip_ra = flip_ra
@@ -840,7 +847,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             logfilepath = os.path.join(basedir, 'apercal{:02d}_line.log'.format(beamnr))
             lib.setup_logger('debug', logfile=logfilepath)
             try:
-                p7 = line(file_=configfilename_list[beamlist_target.index(beamnr)])
+                p7 = line(file_=configfilename_list[beamlist_target_for_config.index(beamnr)])
                 if beamnr not in p7.line_beams:
                     logger.debug(
                         "Skipping line imaging for beam {}".format(beamnr))
