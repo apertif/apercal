@@ -234,7 +234,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
     # creating a copy of the target beamlist as a normal array
     # to avoid using np.where() for such a small thing
     if type(beamlist_target) == np.ndarray:
-        beamlist_target_for_config = beamlist_target.to_list()
+        beamlist_target_for_config = beamlist_target.tolist()
     else:
         beamlist_target_for_config = beamlist_target
 
