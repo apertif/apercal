@@ -203,6 +203,7 @@ class ccal(BaseModule):
         """
 
         # get the reference antenna
+        self.get_antenna_list()
         crosscal_refant = self.crosscal_refant
         logger.info(
             "Beam {0}: Checking reference antenna {1} set in config file".format(self.beam, crosscal_refant))
