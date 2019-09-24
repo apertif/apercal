@@ -94,19 +94,21 @@ class ccal(BaseModule):
 
         # go through the number of tries or break loop if finished
         while self.crosscal_try_counter < 3 and not crosscal_finished:
-            logger.info("Beam {}: Attempt {} to run calibration taks of flux calibrator".format(self.beam))
+            logger.info("Beam {0}: Attempt {1} (out of {2}) to run calibration taks of flux calibrator".format(self.beam, self.crosscal_try_counter+1, self.crosscal_try_limit))
+
+            self.crosscal_try_restart = False
 
             # running initial phase calibration
             self.initial_phase()
             # if it fails, restart the loop after changing the reference antenna
             if self.crosscal_try_restart:
-                logger.warning("Beam {}: Attempt {} failed at initial phase calibration. Trying to restart with different reference antenna")
-                # set the counter up
-                self.crosscal_try_counter += 1
+                logger.warning("Beam {0}: Attempt {1} (out of {2}) failed at initial phase calibration. Trying to restart with different reference antenna".format(self.beam, self.crosscal_try_counter+1, self.crosscal_try_limit))
                 # reset first
                 self.reset()
                 # change refant
-                self.change_refant()
+                self.check_ref_ant(check_flags=False, change_ref_ant=True)
+                # set the counter up
+                self.crosscal_try_counter += 1
                 continue
 
             # running global delay calibration
@@ -114,13 +116,13 @@ class ccal(BaseModule):
             # if it fails, restart the loop after changing the reference antenna
             if self.crosscal_try_restart:
                 logger.warning(
-                    "Beam {}: Attempt {} failed at global delay calibration. Trying to restart with different reference antenna")
-                # set the counter up
-                self.crosscal_try_counter += 1
+                    "Beam {0}: Attempt {1} (out of {2}) failed at global delay calibration. Trying to restart with different reference antenna".format(self.beam, self.crosscal_try_counter+1, self.crosscal_try_limit))
                 # reset first
                 self.reset()
                 # change refant
                 self.check_ref_ant(check_flags=False, change_ref_ant=True)
+                # set the counter up
+                self.crosscal_try_counter += 1
                 continue
 
             # running bandpass calibraiton
@@ -128,26 +130,26 @@ class ccal(BaseModule):
             # if it fails, restart the loop after changing the reference antenna
             if self.crosscal_try_restart:
                 logger.warning(
-                    "Beam {}: Attempt {} failed at bandpass calibration. Trying to restart with different reference antenna")
-                # set the counter up
-                self.crosscal_try_counter += 1
+                    "Beam {0}: Attempt {1} (out of {2}) failed at bandpass calibration. Trying to restart with different reference antenna".format(self.beam, self.crosscal_try_counter+1, self.crosscal_try_limit))
                 # reset first
                 self.reset()
                 # change refant
                 self.check_ref_ant(check_flags=False, change_ref_ant=True)
+                # set the counter up
+                self.crosscal_try_counter += 1
                 continue
 
             self.gains()
             # if it fails, restart the loop after changing the reference antenna
             if self.crosscal_try_restart:
                 logger.warning(
-                    "Beam {}: Attempt {} failed at gain calibration. Trying to restart with different reference antenna")
-                # set the counter up
-                self.crosscal_try_counter += 1
+                    "Beam {0}: Attempt {1} (out of {2}) failed at gain calibration. Trying to restart with different reference antenna".format(self.beam, self.crosscal_try_counter+1, self.crosscal_try_limit))
                 # reset first
                 self.reset()
                 # change refant
                 self.check_ref_ant(check_flags=False, change_ref_ant=True)
+                # set the counter up
+                self.crosscal_try_counter += 1
                 continue
 
             # if this point is reached, crosscalibration should have worked
