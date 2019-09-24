@@ -43,7 +43,11 @@ class ccal(BaseModule):
     crosscal_transfer_to_target = None
     crosscal_refant = None
     crosscal_refant_exclude = ["RTC", "RTD"]
+    crosscal_ant_list = None
     config_file_name = None
+    crosscal_try_counter = 0
+    crosscal_try_limit = 3
+    crosscal_try_restart = False
 
     def __init__(self, file_=None, **kwargs):
         self.default = lib.load_config(self, file_)
@@ -67,18 +71,122 @@ class ccal(BaseModule):
         logger.info("Starting CROSS CALIBRATION ")
         self.check_ref_ant()
         self.setflux()
-        self.initial_phase()
-        self.global_delay()
-        self.bandpass()
-        self.gains()
+        
+        # fluxcal
+        self.calibrate_fluxcal()
+        
+        # polcal
+        self.calibrate_polcal()
+        
+        # apply solutions
+        self.apply_solutions()
+        logger.info("CROSS CALIBRATION done ")
+
+    def calibrate_fluxcal(self):
+        """
+        Running the calibration steps that are specific for the flux calibrator
+
+        In case one calibration
+        """
+
+        # in case crosscal finishes and all is well
+        crosscal_finished = False
+
+        # go through the number of tries or break loop if finished
+        while self.crosscal_try_counter < 3 and not crosscal_finished:
+            logger.info("Beam {}: Attempt {} to run calibration taks of flux calibrator".format(self.beam))
+
+            # running initial phase calibration
+            self.initial_phase()
+            # if it fails, restart the loop after changing the reference antenna
+            if self.crosscal_try_restart:
+                logger.warning("Beam {}: Attempt {} failed at initial phase calibration. Trying to restart with different reference antenna")
+                # set the counter up
+                self.crosscal_try_counter += 1
+                # reset first
+                self.reset()
+                # change refant
+                self.change_refant()
+                continue
+
+            # running global delay calibration
+            self.global_delay()
+            # if it fails, restart the loop after changing the reference antenna
+            if self.crosscal_try_restart:
+                logger.warning(
+                    "Beam {}: Attempt {} failed at global delay calibration. Trying to restart with different reference antenna")
+                # set the counter up
+                self.crosscal_try_counter += 1
+                # reset first
+                self.reset()
+                # change refant
+                self.check_ref_ant(check_flags=False, change_ref_ant=True)
+                continue
+
+            # running bandpass calibraiton
+            self.bandpass()
+            # if it fails, restart the loop after changing the reference antenna
+            if self.crosscal_try_restart:
+                logger.warning(
+                    "Beam {}: Attempt {} failed at bandpass calibration. Trying to restart with different reference antenna")
+                # set the counter up
+                self.crosscal_try_counter += 1
+                # reset first
+                self.reset()
+                # change refant
+                self.check_ref_ant(check_flags=False, change_ref_ant=True)
+                continue
+
+            self.gains()
+            # if it fails, restart the loop after changing the reference antenna
+            if self.crosscal_try_restart:
+                logger.warning(
+                    "Beam {}: Attempt {} failed at gain calibration. Trying to restart with different reference antenna")
+                # set the counter up
+                self.crosscal_try_counter += 1
+                # reset first
+                self.reset()
+                # change refant
+                self.check_ref_ant(check_flags=False, change_ref_ant=True)
+                continue
+
+            # if this point is reached, crosscalibration should have worked
+            crosscal_finished = True
+            # leave the loop
+            break
+        
+        if crosscal_finished:
+            logger.info("Beam {}: Calibration of flux calibrator successful. Continue with pol calibrator".format(self.beam))
+        else:
+            error = "Beam {}: Cross-calibration of flux calibrator was not successful. Abort".format(self.beam)
+            logger.error(error)
+            raise RuntimeError(error)
+    
+    def calibrate_polcal(self):
+        """
+        Running the calibration steps that are specific for the pol calibrator
+        """
+
         self.crosshand_delay()
         self.leakage()
         self.polarisation_angle()
+
+    def apply_solutions(self):
+        """
+        Apply the solutions to the calibrators and the target
+        """
+
         self.transfer_to_cal()
         self.transfer_to_target()
-        logger.info("CROSS CALIBRATION done ")
 
-    def check_ref_ant(self):
+    def get_antenna_list(self):
+
+        # get a list of antennas from the fluxcal MS file
+        query = "SELECT NAME FROM {}::ANTENNA".format(self.get_fluxcal_path())
+        query_result = pt.taql(query)
+        self.crosscal_ant_list = np.array(query_result.getcol("NAME"))
+
+    def check_ref_ant(self, check_flags=True, change_ref_ant = False):
         """
         Check that the default reference antenna.
 
@@ -97,11 +205,6 @@ class ccal(BaseModule):
         logger.info(
             "Beam {0}: Checking reference antenna {1} set in config file".format(self.beam, crosscal_refant))
 
-        # get a list of antennas from the fluxcal MS file
-        query = "SELECT NAME FROM {}::ANTENNA".format(self.get_fluxcal_path())
-        query_result = pt.taql(query)
-        fluxcal_ant_list = np.array(query_result.getcol("NAME"))
-
         if self.polcal != '':
             # get a list of antennas from the polcal MS file
             query = "SELECT NAME FROM {}::ANTENNA".format(self.get_polcal_path())
@@ -111,14 +214,14 @@ class ccal(BaseModule):
             polcal_ant_list = None
 
         # check that the reference antenna is in the list of antennas
-        refant_in_fluxcal = crosscal_refant in fluxcal_ant_list
+        refant_in_fluxcal = crosscal_refant in self.crosscal_ant_list
 
         if refant_in_fluxcal:
             logger.info("Beam {0}: Reference antenna {1} exists in flux calibrator".format(self.beam, crosscal_refant))
         else:
             # since the reference antenna does not exists, choose the first available one in the list
             # this should not be RTC and RTD but just in case test it
-            for ant in fluxcal_ant_list:
+            for ant in self.crosscal_ant_list:
                 if ant not in self.crosscal_refant_exclude:
                     logger.info("Beam {0}: Could not find reference antenna {1} in flux calibrator. Chose {2} instead".format(self.beam, crosscal_refant, ant))
                     crosscal_refant = ant
@@ -126,42 +229,59 @@ class ccal(BaseModule):
                     break
 
         # get the index of the reference antenna
-        refant_fluxcal_index = np.where(fluxcal_ant_list == crosscal_refant)[0][0]
+        refant_fluxcal_index = np.where(self.crosscal_ant_list == crosscal_refant)[0][0]
 
-        # check if the entire referance antenna is flagged
-        # dropping "==0" would give the number of non-flagged data points
-        query = "SELECT GNFALSE(FLAG)==0 as all_flagged FROM {0} WHERE ANTENNA1=={1}".format(self.get_fluxcal_path(), refant_fluxcal_index)
-        query_result = pt.taql(query)
+        if check_flags:
+            # check if the entire referance antenna is flagged
+            # dropping "==0" would give the number of non-flagged data points
+            query = "SELECT GNFALSE(FLAG)==0 as all_flagged FROM {0} WHERE ANTENNA1=={1}".format(self.get_fluxcal_path(), refant_fluxcal_index)
+            query_result = pt.taql(query)
 
-        # if reference antenna is completely flagged, another one needs to be chosen
-        if query_result[0]['all_flagged']:
-            logger.info("Beam {0}: All visibilities of reference antenna {1} are flagged. Choosing another one".format(self.beam, crosscal_refant))
-            # go through the list of antennas
-            ant_name = ""
-            for ant_index in range(refant_fluxcal_index + 1, len(fluxcal_ant_list)):
-                # check if it completely flagged
-                query_ref_search = "SELECT GNFALSE(FLAG)==0 as all_flagged FROM {0} WHERE ANTENNA1=={1}".format(
-                    self.get_fluxcal_path(), ant_index)
-                query_ref_search_result = pt.taql(query_ref_search)
-                # if this one is not flagged
-                if not query_ref_search_result[0]['all_flagged']:
-                    # get the name
-                    ant_name = fluxcal_ant_list[ant_index]
-                    # check that it is not in the exclude list
-                    if ant_name not in self.crosscal_refant_exclude:
-                        logger.info(
-                            "Beam {0}: Choosing {1} as the reference antenna".format(self.beam, ant_name))
-                        crosscal_refant = ant_name
-                        refant_fluxcal_index = ant_index
-                        break
-            # not sure if this check is necessary
-            if ant_name == "":
-                error = "Beam {0}: Could not find a new reference antenna. Abort crosscal".format(self.beam)
-                logger.error(error)
-                raise RuntimeError(error)
-        # reference antenna is not completely flagged
-        else:
-            logger.info("Reference antenna {0} is not completely flagged. Keeping it.".format(crosscal_refant))
+            # if reference antenna is completely flagged, another one needs to be chosen
+            if query_result[0]['all_flagged']:
+                logger.info("Beam {0}: All visibilities of reference antenna {1} are flagged. Choosing another one".format(self.beam, crosscal_refant))
+                # go through the list of antennas
+                ant_name = ""
+                for ant_index in range(refant_fluxcal_index + 1, len(self.crosscal_ant_list)):
+                    # check if it completely flagged
+                    query_ref_search = "SELECT GNFALSE(FLAG)==0 as all_flagged FROM {0} WHERE ANTENNA1=={1}".format(
+                        self.get_fluxcal_path(), ant_index)
+                    query_ref_search_result = pt.taql(query_ref_search)
+                    # if this one is not flagged
+                    if not query_ref_search_result[0]['all_flagged']:
+                        # get the name
+                        ant_name = self.crosscal_ant_list[ant_index]
+                        # check that it is not in the exclude list
+                        if ant_name not in self.crosscal_refant_exclude:
+                            logger.info(
+                                "Beam {0}: Choosing {1} as the reference antenna".format(self.beam, ant_name))
+                            crosscal_refant = ant_name
+                            refant_fluxcal_index = ant_index
+                            break
+                # not sure if this check is necessary
+                if ant_name == "":
+                    error = "Beam {0}: Could not find a new reference antenna. Abort crosscal".format(self.beam)
+                    logger.error(error)
+                    raise RuntimeError(error)
+            # reference antenna is not completely flagged
+            else:
+                logger.info("Reference antenna {0} is not completely flagged. Keeping it.".format(crosscal_refant))
+        
+        # another option is to just change the reference antenna
+        if change_ref_ant:
+            # only if it hasn't already been changed
+            if crosscal_refant == self.crosscal_refant:
+                # set the index of the reference antenna one up
+                refant_fluxcal_index += 1
+                # get the corresponding reference antenna
+                crosscal_refant = self.crosscal_ant_list[refant_fluxcal_index]
+                if crosscal_refant not in self.crosscal_refant_exclude:
+                     logger.info("Beam {0}: Changing reference antenna to {1}".format(self.beam, crosscal_refant))
+                else:
+                    # maybe a restart would be better, in case there is another antenna
+                    error = "Beam {0}: New reference antenna {1} should be excluded. Abort".format(self.beam, crosscal_refant)
+                    logger.error(error)
+                    raise RuntimeError(error)         
 
         if crosscal_refant != self.crosscal_refant:
             if self.config_file_name is not None:
@@ -326,8 +446,12 @@ class ccal(BaseModule):
                             ccalfluxcalinitialphase = False
                             error = 'Beam ' + self.beam + ': Initial phase calibration table for flux calibrator was not created successfully!'
                             logger.error(error)
-                            subs_param.add_param(self, cbeam + '_fluxcal_initialphase', ccalfluxcalinitialphase)
-                            raise RuntimeError(error)
+                            
+                            # leaving function in order to restart
+                            self.crosscal_try_restart = True
+                            return
+                            #subs_param.add_param(self, cbeam + '_fluxcal_initialphase', ccalfluxcalinitialphase)
+                            #raise RuntimeError(error)
                 else:
                     ccalfluxcalinitialphase = False
                     error = 'Beam ' + self.beam + ': Model for flux calibrator not ingested properly. Initial phase calibration not possible!'
@@ -391,6 +515,10 @@ class ccal(BaseModule):
                         else:
                             ccalfluxcalglobaldelay = False
                             logger.error('Beam ' + self.beam + ': Global delay correction table for flux calibrator was not created successfully!')
+                            
+                            # leaving function in order to restart
+                            self.crosscal_try_restart = True
+                            return
                 else:
                     ccalfluxcalglobaldelay = False
                     error = 'Beam ' + self.beam + ': Model for flux calibrator not ingested properly. Global delay calibration not possible!'
@@ -467,8 +595,12 @@ class ccal(BaseModule):
                             ccalfluxcalbandpass = False
                             error = 'Beam ' + self.beam + ': Initial bandpass calibration table for flux calibrator was not created successfully!'
                             logger.error(error)
-                            subs_param.add_param(self, cbeam + '_fluxcal_bandpass', ccalfluxcalbandpass)
-                            raise RuntimeError(error)
+
+                            # leaving function in order to restart
+                            self.crosscal_try_restart = True
+                            return
+                            #subs_param.add_param(self, cbeam + '_fluxcal_bandpass', ccalfluxcalbandpass)
+                            #raise RuntimeError(error)
                 else:
                     ccalfluxcalbandpass = False
                     error = 'Beam ' + self.beam + ': Model for flux calibrator not ingested properly. Bandpass calibration not possible!'
@@ -539,8 +671,13 @@ class ccal(BaseModule):
                             ccalfluxcalapgains = False
                             error = 'Beam ' + self.beam + ': Gain calibration table for flux calibrator was not created successfully!'
                             logger.error(error)
-                            subs_param.add_param(self, cbeam + '_fluxcal_apgains', ccalfluxcalapgains)
-                            raise RuntimeError(error)
+
+                            # leaving function in order to restart
+                            self.crosscal_try_restart = True
+                            return
+                            
+                            #subs_param.add_param(self, cbeam + '_fluxcal_apgains', ccalfluxcalapgains)
+                            #raise RuntimeError(error)
                 else:
                     ccalfluxcalapgains = False
                     error = 'Beam ' + self.beam + ': Model for flux calibrator not ingested properly. Gain calibration not possible!'
