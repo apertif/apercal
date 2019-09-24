@@ -104,7 +104,7 @@ class ccal(BaseModule):
             if self.crosscal_try_restart:
                 logger.warning("Beam {0}: Attempt {1} (out of {2}) failed at initial phase calibration. Trying to restart with different reference antenna".format(self.beam, self.crosscal_try_counter+1, self.crosscal_try_limit))
                 # reset first
-                self.reset()
+                self.reset(do_clearcal=False)
                 # change refant
                 self.check_ref_ant(check_flags=False, change_ref_ant=True)
                 # set the counter up
@@ -118,7 +118,7 @@ class ccal(BaseModule):
                 logger.warning(
                     "Beam {0}: Attempt {1} (out of {2}) failed at global delay calibration. Trying to restart with different reference antenna".format(self.beam, self.crosscal_try_counter+1, self.crosscal_try_limit))
                 # reset first
-                self.reset()
+                self.reset(do_clearcal=False)
                 # change refant
                 self.check_ref_ant(check_flags=False, change_ref_ant=True)
                 # set the counter up
@@ -132,7 +132,7 @@ class ccal(BaseModule):
                 logger.warning(
                     "Beam {0}: Attempt {1} (out of {2}) failed at bandpass calibration. Trying to restart with different reference antenna".format(self.beam, self.crosscal_try_counter+1, self.crosscal_try_limit))
                 # reset first
-                self.reset()
+                self.reset(do_clearcal=False)
                 # change refant
                 self.check_ref_ant(check_flags=False, change_ref_ant=True)
                 # set the counter up
@@ -145,7 +145,7 @@ class ccal(BaseModule):
                 logger.warning(
                     "Beam {0}: Attempt {1} (out of {2}) failed at gain calibration. Trying to restart with different reference antenna".format(self.beam, self.crosscal_try_counter+1, self.crosscal_try_limit))
                 # reset first
-                self.reset()
+                self.reset(do_clearcal=False)
                 # change refant
                 self.check_ref_ant(check_flags=False, change_ref_ant=True)
                 # set the counter up
@@ -1280,7 +1280,7 @@ class ccal(BaseModule):
         return df
 
 
-    def reset(self):
+    def reset(self, do_clearcal = True):
         """
         Function to reset the current step and clear all calibration from datasets as well as all calibration tables.
         """
@@ -1309,22 +1309,27 @@ class ccal(BaseModule):
         subs_managefiles.director(self, 'rm',
                                   self.get_polcal_path().rstrip('.MS') + '.Xf',
                                   ignore_nonexistent=True)
-        # Run a clearcal on all datasets and revert to the last flagversion
-        targetdatasets = glob.glob(self.get_target_path())
-        targetdatasets.append(self.get_fluxcal_path())
-        targetdatasets.append(self.get_polcal_path())
-        for dataset in sorted(targetdatasets):
-            try:
-                cc_dataset_clear = 'clearcal(vis = "' + dataset + '")'
-                cc_dataset_resetflags = 'flagmanager(vis = "' + dataset + '", mode = "restore", versionname = "ccal")'
-                cc_dataset_removeflagtable = 'flagmanager(vis = "' + dataset + '", mode = "delete", versionname = "ccal")'
-                lib.run_casa([cc_dataset_clear, cc_dataset_resetflags, cc_dataset_removeflagtable], timeout=10000)
-            except Exception:
-                logger.error('Beam ' + self.beam + ': Calibration could not completely be removed from ' + dataset + '. Flags might also not have been properly reset!')
+        if do_clearcal:
+            # Run a clearcal on all datasets and revert to the last flagversion
+            targetdatasets = glob.glob(self.get_target_path())
+            targetdatasets.append(self.get_fluxcal_path())
+            targetdatasets.append(self.get_polcal_path())
+            for dataset in sorted(targetdatasets):
+                try:
+                    cc_dataset_clear = 'clearcal(vis = "' + dataset + '")'
+                    cc_dataset_resetflags = 'flagmanager(vis = "' + dataset + '", mode = "restore", versionname = "ccal")'
+                    cc_dataset_removeflagtable = 'flagmanager(vis = "' + dataset + '", mode = "delete", versionname = "ccal")'
+                    lib.run_casa([cc_dataset_clear, cc_dataset_resetflags, cc_dataset_removeflagtable], timeout=10000)
+                except Exception:
+                    logger.error('Beam ' + self.beam + ': Calibration could not completely be removed from ' + dataset + '. Flags might also not have been properly reset!')
         # Remove the keywords in the parameter file
-        logger.warning('Beam ' + self.beam + ': Deleting all parameter file entries for CROSSCAL module')
-        subs_param.del_param(self, cbeam + '_fluxcal_model')
-        subs_param.del_param(self, cbeam + '_polcal_model')
+        if do_clearcal:
+            logger.warning('Beam ' + self.beam + ': Deleting all parameter file entries for CROSSCAL module')
+            subs_param.del_param(self, cbeam + '_fluxcal_model')
+            subs_param.del_param(self, cbeam + '_polcal_model')
+        else:
+            logger.warning(
+                'Beam ' + self.beam + ': Deleting all parameter file entries for CROSSCAL module except fluxcal and polcal model parameters')
         subs_param.del_param(self, cbeam + '_fluxcal_initialphase')
         subs_param.del_param(self, cbeam + '_fluxcal_globaldelay')
         subs_param.del_param(self, cbeam + '_fluxcal_bandpass')
