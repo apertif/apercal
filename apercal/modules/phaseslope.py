@@ -115,7 +115,8 @@ class phaseslope(BaseModule):
                                 phaseslope_fluxcal_status = True
                         else:
                             # this is an error because the fluxcal was specified, but no data was found
-                            error: "Beam {0}: Could not find data for flux calibrator ({1:.0f}s)".format(self.beam, time() - start_time_fluxcal)
+                            error = "Beam {0}: Could not find data for flux calibrator ({1:.0f}s)".format(
+                                self.beam, time() - start_time_fluxcal)
                             logger.error(error)
                             raise RuntimeError(error)
                     else:
@@ -152,7 +153,7 @@ class phaseslope(BaseModule):
                                 phaseslope_polcal_status = True
                         else:
                             # this is an error because the polarisation calibrator was specified, but no data was found
-                            error: "Beam {0}: Could not find data for polarisation calibrator ({1:.0f}s)".format(self.beam, time() - start_time_polcal)
+                            error = "Beam {0}: Could not find data for polarisation calibrator ({1:.0f}s)".format(self.beam, time() - start_time_polcal)
                             logger.error(error)
                             raise RuntimeError(error)
                     else:
@@ -189,7 +190,7 @@ class phaseslope(BaseModule):
                                 phaseslope_targetbeams_status = True
                         else:
                             # this is an error because the target was specified, but no data was found
-                            error: "Beam {0}: Could not find data for target ({1:.0f}s)".format(self.beam, time() - start_time_target)
+                            error = "Beam {0}: Could not find data for target ({1:.0f}s)".format(self.beam, time() - start_time_target)
                             logger.error(error)
                             raise RuntimeError(error)
                     else:
