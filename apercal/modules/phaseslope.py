@@ -68,143 +68,143 @@ class phaseslope(BaseModule):
 
         if self.phaseslope_correction:
             if socket.gethostname() == "happili-05":
+                # Initiating needs to be done on the console before running pipeline
                 # first, initiate Apertif software to run command
-                logger.info(
-                    "Beam {}: Initiating Apertif software".format(self.beam))
-                init_cmd = ". /data/schoenma/apertif/apertifinit.sh"
-                logger.debug(init_cmd)
-                apertif_software_init = False
-                try:
-                    subprocess.check_call(
-                        init_cmd, shell=True, stdout=self.FNULL, stderr=self.FNULL)
-                except Exception as e:
-                    error = "Beam {}: Initiating Apertif software ... Failed. Abort".format(
-                        self.beam)
-                    logger.error(error)
-                else:
-                    logger.info(
-                        "Beam {}: Initiating Apertif software ... Done".format(self.beam))
-                    apertif_software_init = True
-
+                # logger.info(
+                #     "Beam {}: Initiating Apertif software".format(self.beam))
+                # init_cmd = ". /data/schoenma/apertif/apertifinit.sh"
+                # logger.debug(init_cmd)
+                # apertif_software_init = False
+                # try:
+                #     subprocess.check_call(
+                #         init_cmd, shell=True, stdout=self.FNULL, stderr=self.FNULL)
+                # except Exception as e:
+                #     error = "Beam {}: Initiating Apertif software ... Failed. Abort".format(
+                #         self.beam)
+                #     logger.error(error)
+                # else:
+                #     logger.info(
+                #         "Beam {}: Initiating Apertif software ... Done".format(self.beam))
+                #     apertif_software_init = True
                 # if the apertif software has been initiate, we can continue
-                if apertif_software_init:
+                # if apertif_software_init:
 
-                    # Running phase slope correction for the flux calibrator
-                    # if one was specified
-                    if self.fluxcal != '':
-                        # to measure the processing time
-                        start_time_fluxcal = time()
-                        # and if the file exists
-                        if os.path.isdir(self.get_fluxcal_path()):
-                            logger.info(
-                                "Beam {}: Correcting phase slope for flux calibrator".format(self.beam))
+                # Running phase slope correction for the flux calibrator
+                # if one was specified
+                if self.fluxcal != '':
+                    # to measure the processing time
+                    start_time_fluxcal = time()
+                    # and if the file exists
+                    if os.path.isdir(self.get_fluxcal_path()):
+                        logger.info(
+                            "Beam {}: Correcting phase slope for flux calibrator".format(self.beam))
 
-                            # command for phase slope correction and run correction
-                            ps_cmd = "correct_subband_phaseslope {}".format(
-                                self.get_fluxcal_path())
-                            logger.debug(ps_cmd)
-                            try:
-                                subprocess.check_call(
-                                    ps_cmd, shell=True, stdout=self.FNULL, stderr=self.FNULL)
-                            except Exception as e:
-                                error = "Beam {0}: Correcting phase slope for flux calibrator ... Failed. Abort ({1:.0f}s)".format(
-                                    self.beam, time() - start_time_fluxcal)
-                                logger.error(error)
-                                logger.exception(e)
-                            else:
-                                logger.info(
-                                    "Beam {0}: Correcting phase slope for flux calibrator ... Done ({1:.0f}s)".format(self.beam, time() - start_time_fluxcal))
-                                phaseslope_fluxcal_status = True
-                        else:
-                            # this is an error because the fluxcal was specified, but no data was found
-                            error = "Beam {0}: Could not find data for flux calibrator ({1:.0f}s)".format(
+                        # command for phase slope correction and run correction
+                        ps_cmd = "correct_subband_phaseslope {}".format(
+                            self.get_fluxcal_path())
+                        logger.debug(ps_cmd)
+                        try:
+                            subprocess.check_call(
+                                ps_cmd, shell=True, stdout=self.FNULL, stderr=self.FNULL)
+                        except Exception as e:
+                            error = "Beam {0}: Correcting phase slope for flux calibrator ... Failed. Abort ({1:.0f}s)".format(
                                 self.beam, time() - start_time_fluxcal)
                             logger.error(error)
-                            raise RuntimeError(error)
+                            logger.exception(e)
+                        else:
+                            logger.info(
+                                "Beam {0}: Correcting phase slope for flux calibrator ... Done ({1:.0f}s)".format(self.beam, time() - start_time_fluxcal))
+                            phaseslope_fluxcal_status = True
                     else:
-                        # this is an error because there should always be at least a fluxcal
-                        error = "Beam {0}: No flux calibrator specified. Cannot correct the phase slope for the flux calibrator ({1:.0f}s)".format(
+                        # this is an error because the fluxcal was specified, but no data was found
+                        error = "Beam {0}: Could not find data for flux calibrator ({1:.0f}s)".format(
                             self.beam, time() - start_time_fluxcal)
                         logger.error(error)
                         raise RuntimeError(error)
+                else:
+                    # this is an error because there should always be at least a fluxcal
+                    error = "Beam {0}: No flux calibrator specified. Cannot correct the phase slope for the flux calibrator ({1:.0f}s)".format(
+                        self.beam, time() - start_time_fluxcal)
+                    logger.error(error)
+                    raise RuntimeError(error)
 
-                    # Running phase slope correction for the polcal
-                    # if one was specified
-                    if self.polcal != '':
-                        # to measure the processing time
-                        start_time_polcal = time()
-                        # and if the file exists
-                        if os.path.isdir(self.get_polcal_path()):
-                            logger.info(
-                                "Beam {}: Correcting phase slope for polcal".format(self.beam))
+                # Running phase slope correction for the polcal
+                # if one was specified
+                if self.polcal != '':
+                    # to measure the processing time
+                    start_time_polcal = time()
+                    # and if the file exists
+                    if os.path.isdir(self.get_polcal_path()):
+                        logger.info(
+                            "Beam {}: Correcting phase slope for polcal".format(self.beam))
 
-                            # command for phase slope correction and run correction
-                            ps_cmd = "correct_subband_phaseslope {}".format(
-                                self.get_polcal_path())
-                            logger.debug(ps_cmd)
-                            try:
-                                subprocess.check_call(
-                                    ps_cmd, shell=True, stdout=self.FNULL, stderr=self.FNULL)
-                            except Exception as e:
-                                error = "Beam {0}: Correcting phase slope for polarisation calibrator ... Failed. Abort ({1:.0f}s)".format(
-                                    self.beam, time() - start_time_polcal)
-                                logger.error(error)
-                                logger.exception(e)
-                            else:
-                                logger.info(
-                                    "Beam {0}: Correcting phase slope for polarisation calibrator ... Done ({1:.0f}s)".format(self.beam, time() - start_time_polcal))
-                                phaseslope_polcal_status = True
-                        else:
-                            # this is an error because the polarisation calibrator was specified, but no data was found
-                            error = "Beam {0}: Could not find data for polarisation calibrator ({1:.0f}s)".format(
+                        # command for phase slope correction and run correction
+                        ps_cmd = "correct_subband_phaseslope {}".format(
+                            self.get_polcal_path())
+                        logger.debug(ps_cmd)
+                        try:
+                            subprocess.check_call(
+                                ps_cmd, shell=True, stdout=self.FNULL, stderr=self.FNULL)
+                        except Exception as e:
+                            error = "Beam {0}: Correcting phase slope for polarisation calibrator ... Failed. Abort ({1:.0f}s)".format(
                                 self.beam, time() - start_time_polcal)
                             logger.error(error)
-                            raise RuntimeError(error)
+                            logger.exception(e)
+                        else:
+                            logger.info(
+                                "Beam {0}: Correcting phase slope for polarisation calibrator ... Done ({1:.0f}s)".format(self.beam, time() - start_time_polcal))
+                            phaseslope_polcal_status = True
                     else:
-                        # this is an error because there should always be at least a polcal
-                        error = "Beam {0}: No polarisation calibrator specified. Cannot correct the phase slope for the polarisation calibrator ({1:.0f}s)".format(
+                        # this is an error because the polarisation calibrator was specified, but no data was found
+                        error = "Beam {0}: Could not find data for polarisation calibrator ({1:.0f}s)".format(
                             self.beam, time() - start_time_polcal)
                         logger.error(error)
                         raise RuntimeError(error)
+                else:
+                    # this is an error because there should always be at least a polcal
+                    error = "Beam {0}: No polarisation calibrator specified. Cannot correct the phase slope for the polarisation calibrator ({1:.0f}s)".format(
+                        self.beam, time() - start_time_polcal)
+                    logger.error(error)
+                    raise RuntimeError(error)
 
-                    # Running phase slope correction for the target
-                    # if one was specified
-                    if self.target != '':
-                        # to measure the processing time
-                        start_time_target = time()
-                        # and if the file exists
-                        if os.path.isdir(self.get_target_path()):
-                            logger.info(
-                                "Beam {}: Correcting phase slope for target".format(self.beam))
+                # Running phase slope correction for the target
+                # if one was specified
+                if self.target != '':
+                    # to measure the processing time
+                    start_time_target = time()
+                    # and if the file exists
+                    if os.path.isdir(self.get_target_path()):
+                        logger.info(
+                            "Beam {}: Correcting phase slope for target".format(self.beam))
 
-                            # command for phase slope correction and run correction
-                            ps_cmd = "correct_subband_phaseslope {}".format(
-                                self.get_target_path())
-                            logger.debug(ps_cmd)
-                            try:
-                                subprocess.check_call(
-                                    ps_cmd, shell=True, stdout=self.FNULL, stderr=self.FNULL)
-                            except Exception as e:
-                                error = "Beam {0}: Correcting phase slope for target ... Failed. Abort ({1:.0f}s)".format(
-                                    self.beam, time() - start_time_target)
-                                logger.error(error)
-                                logger.exception(e)
-                            else:
-                                logger.info(
-                                    "Beam {0}: Correcting phase slope for target ... Done ({1:.0f}s)".format(self.beam, time() - start_time_target))
-                                phaseslope_targetbeams_status = True
-                        else:
-                            # this is an error because the target was specified, but no data was found
-                            error = "Beam {0}: Could not find data for target ({1:.0f}s)".format(
+                        # command for phase slope correction and run correction
+                        ps_cmd = "correct_subband_phaseslope {}".format(
+                            self.get_target_path())
+                        logger.debug(ps_cmd)
+                        try:
+                            subprocess.check_call(
+                                ps_cmd, shell=True, stdout=self.FNULL, stderr=self.FNULL)
+                        except Exception as e:
+                            error = "Beam {0}: Correcting phase slope for target ... Failed. Abort ({1:.0f}s)".format(
                                 self.beam, time() - start_time_target)
                             logger.error(error)
-                            raise RuntimeError(error)
+                            logger.exception(e)
+                        else:
+                            logger.info(
+                                "Beam {0}: Correcting phase slope for target ... Done ({1:.0f}s)".format(self.beam, time() - start_time_target))
+                            phaseslope_targetbeams_status = True
                     else:
-                        # this is an error because there should always be at least a target
-                        error = "Beam {0}: No target specified. Cannot correct the phase slope for the target ({1:.0f}s)".format(
+                        # this is an error because the target was specified, but no data was found
+                        error = "Beam {0}: Could not find data for target ({1:.0f}s)".format(
                             self.beam, time() - start_time_target)
                         logger.error(error)
                         raise RuntimeError(error)
+                else:
+                    # this is an error because there should always be at least a target
+                    error = "Beam {0}: No target specified. Cannot correct the phase slope for the target ({1:.0f}s)".format(
+                        self.beam, time() - start_time_target)
+                    logger.error(error)
+                    raise RuntimeError(error)
             else:
                 error = "Beam {}: Wrong host. Phase slope correction only works on happili-05. Abort".format(
                     self.beam)
