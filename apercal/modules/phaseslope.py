@@ -80,7 +80,6 @@ class phaseslope(BaseModule):
                     error = "Beam {}: Initiating Apertif software ... Failed. Abort".format(
                         self.beam)
                     logger.error(error)
-                    raise RuntimeError(error)
                 else:
                     logger.info(
                         "Beam {}: Initiating Apertif software ... Done".format(self.beam))
@@ -109,7 +108,7 @@ class phaseslope(BaseModule):
                                 error = "Beam {0}: Correcting phase slope for flux calibrator ... Failed. Abort ({1:.0f}s)".format(
                                     self.beam, time() - start_time_fluxcal)
                                 logger.error(error)
-                                raise RuntimeError(error)
+                                logger.exception(e)
                             else:
                                 logger.info(
                                     "Beam {0}: Correcting phase slope for flux calibrator ... Done ({1:.0f}s)".format(self.beam, time() - start_time_fluxcal))
@@ -146,7 +145,7 @@ class phaseslope(BaseModule):
                                 error = "Beam {0}: Correcting phase slope for polarisation calibrator ... Failed. Abort ({1:.0f}s)".format(
                                     self.beam, time() - start_time_polcal)
                                 logger.error(error)
-                                raise RuntimeError(error)
+                                logger.exception(e)
                             else:
                                 logger.info(
                                     "Beam {0}: Correcting phase slope for polarisation calibrator ... Done ({1:.0f}s)".format(self.beam, time() - start_time_polcal))
@@ -183,7 +182,7 @@ class phaseslope(BaseModule):
                                 error = "Beam {0}: Correcting phase slope for target ... Failed. Abort ({1:.0f}s)".format(
                                     self.beam, time() - start_time_target)
                                 logger.error(error)
-                                raise RuntimeError(error)
+                                logger.exception(e)
                             else:
                                 logger.info(
                                     "Beam {0}: Correcting phase slope for target ... Done ({1:.0f}s)".format(self.beam, time() - start_time_target))
