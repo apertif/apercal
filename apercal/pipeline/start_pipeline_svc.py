@@ -351,20 +351,63 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         else:
             logger.info("Skipping phase slope correction")
         
-        for beamnr in beamlist_target:
-            ps0 = phaseslope(
-                file_=configfilename_list[beamlist_target_for_config.index(beamnr)])
-            ps0.paramfilename = 'param_{:02d}.npy'.format(beamnr)
-            set_files(ps0)
-            # the following two need to be empty strings for prepare
-            ps0.beam = "{:02d}".format(beamnr)
-            if "phaseslope" in steps:
+        # parallel version
+        with pymp.Parallel(5) as p:
+            for beam_index in p.range(n_beams):
+                beamnr = beamlist_target[beam_index]
+
+                # individual logfiles for each process
+                logfilepath = os.path.join(
+                    basedir, 'apercal{:02d}.log'.format(beamnr))
+                lib.setup_logger('debug', logfile=logfilepath)
+                logger = logging.getLogger(__name__)
+
+                logger.debug("Starting logfile for beam " + str(beamnr))
+
                 try:
-                    ps0.go()
+                    ps0 = phaseslope(file_=configfilename_list[beam_index])
+                    ps0.paramfilename = 'param_{:02d}.npy'.format(beamnr)
+                    set_files(ps0)
+                    ps0.beam = "{:02d}".format(beamnr)
+                    if "phaseslope" in steps and not dry_run:
+                        ps0.go()
                 except Exception as e:
-                    logger.warning("Phase slope correction failed for beam {}".format(beamnr))
+                    logger.warning("Phase slope correction failed for {0} beam {1}".format(
+                        str(taskid_target), str(beamnr)))
                     logger.exception(e)
+                    # not sure if following line is necessary
                     status[beamnr] += ['phaseslope']
+
+        # for beamnr in beamlist_target:
+        #     ps0 = phaseslope(
+        #         file_=configfilename_list[beamlist_target_for_config.index(beamnr)])
+        #     ps0.paramfilename = 'param_{:02d}.npy'.format(beamnr)
+        #     set_files(ps0)
+        #     # the following two need to be empty strings for prepare
+        #     ps0.beam = "{:02d}".format(beamnr)
+        #     if "phaseslope" in steps:
+        #         try:
+        #             ps0.go()
+        #         except Exception as e:
+        #             logger.warning(
+        #                 "Phase slope correction failed for beam {}".format(beamnr))
+        #             logger.exception(e)
+        #             status[beamnr] += ['phaseslope']
+
+        # for beamnr in beamlist_target:
+        #     ps0 = phaseslope(
+        #         file_=configfilename_list[beamlist_target_for_config.index(beamnr)])
+        #     ps0.paramfilename = 'param_{:02d}.npy'.format(beamnr)
+        #     set_files(ps0)
+        #     # the following two need to be empty strings for prepare
+        #     ps0.beam = "{:02d}".format(beamnr)
+        #     if "phaseslope" in steps:
+        #         try:
+        #             ps0.go()
+        #         except Exception as e:
+        #             logger.warning("Phase slope correction failed for beam {}".format(beamnr))
+        #             logger.exception(e)
+        #             status[beamnr] += ['phaseslope']
 
         # keep a start-finish record of step in the main log file
         if "phaseslope" in steps:
