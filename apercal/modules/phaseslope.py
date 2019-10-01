@@ -72,6 +72,7 @@ class phaseslope(BaseModule):
                 logger.info(
                     "Beam {}: Initiating Apertif software".format(self.beam))
                 init_cmd = ". /data/schoenma/apertif/apertifinit.sh"
+                logger.debug(init_cmd)
                 apertif_software_init = False
                 try:
                     subprocess.check_call(
@@ -94,13 +95,14 @@ class phaseslope(BaseModule):
                         # to measure the processing time
                         start_time_fluxcal = time()
                         # and if the file exists
-                        if os.path.isdir(self.get_fluxcal_path):
+                        if os.path.isdir(self.get_fluxcal_path()):
                             logger.info(
                                 "Beam {}: Correcting phase slope for flux calibrator".format(self.beam))
 
                             # command for phase slope correction and run correction
                             ps_cmd = "correct_subband_phaseslope {}".format(
-                                self.get_fluxcal_path)
+                                self.get_fluxcal_path())
+                            logger.debug(ps_cmd)
                             try:
                                 subprocess.check_call(
                                     ps_cmd, shell=True, stdout=self.FNULL, stderr=self.FNULL)
@@ -132,13 +134,14 @@ class phaseslope(BaseModule):
                         # to measure the processing time
                         start_time_polcal = time()
                         # and if the file exists
-                        if os.path.isdir(self.get_polcal_path):
+                        if os.path.isdir(self.get_polcal_path()):
                             logger.info(
                                 "Beam {}: Correcting phase slope for polcal".format(self.beam))
 
                             # command for phase slope correction and run correction
                             ps_cmd = "correct_subband_phaseslope {}".format(
-                                self.get_polcal_path)
+                                self.get_polcal_path())
+                            logger.debug(ps_cmd)
                             try:
                                 subprocess.check_call(
                                     ps_cmd, shell=True, stdout=self.FNULL, stderr=self.FNULL)
@@ -153,7 +156,8 @@ class phaseslope(BaseModule):
                                 phaseslope_polcal_status = True
                         else:
                             # this is an error because the polarisation calibrator was specified, but no data was found
-                            error = "Beam {0}: Could not find data for polarisation calibrator ({1:.0f}s)".format(self.beam, time() - start_time_polcal)
+                            error = "Beam {0}: Could not find data for polarisation calibrator ({1:.0f}s)".format(
+                                self.beam, time() - start_time_polcal)
                             logger.error(error)
                             raise RuntimeError(error)
                     else:
@@ -169,13 +173,14 @@ class phaseslope(BaseModule):
                         # to measure the processing time
                         start_time_target = time()
                         # and if the file exists
-                        if os.path.isdir(self.get_target_path):
+                        if os.path.isdir(self.get_target_path()):
                             logger.info(
                                 "Beam {}: Correcting phase slope for target".format(self.beam))
 
                             # command for phase slope correction and run correction
                             ps_cmd = "correct_subband_phaseslope {}".format(
-                                self.get_target_path)
+                                self.get_target_path())
+                            logger.debug(ps_cmd)
                             try:
                                 subprocess.check_call(
                                     ps_cmd, shell=True, stdout=self.FNULL, stderr=self.FNULL)
@@ -190,7 +195,8 @@ class phaseslope(BaseModule):
                                 phaseslope_targetbeams_status = True
                         else:
                             # this is an error because the target was specified, but no data was found
-                            error = "Beam {0}: Could not find data for target ({1:.0f}s)".format(self.beam, time() - start_time_target)
+                            error = "Beam {0}: Could not find data for target ({1:.0f}s)".format(
+                                self.beam, time() - start_time_target)
                             logger.error(error)
                             raise RuntimeError(error)
                     else:
