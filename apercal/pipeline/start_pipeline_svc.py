@@ -321,8 +321,9 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             p0.target = name_to_ms(name_target)
             p0.prepare_date = str(taskid_target)[:6]
             p0.prepare_obsnum_target = validate_taskid(taskid_target)
-            p0.prepare_target_beams = ','.join(
-                ['{:02d}'.format(beamnr) for beamnr in beamlist_target])
+            # p0.prepare_target_beams = ','.join(
+            #     ['{:02d}'.format(beamnr) for beamnr in beamlist_target])
+            p0.prepare_target_beams = '{:02d}'.format(beamnr)
             if "prepare" in steps and not dry_run:
                 try:
                     p0.go()
