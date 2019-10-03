@@ -3,6 +3,8 @@ import logging
 import numpy as np
 import os
 import socket
+import subprocess
+import glob
 
 from apercal.modules.base import BaseModule
 from apercal.subs import setinit as subs_setinit
@@ -30,28 +32,74 @@ class mosaic(BaseModule):
 
     mosdir = None
 
+    mosaic_taskid = None
     mosaic_beams = None
     mosaic_continuum_image_files_dir = None
     mosaic_polarisation_input_files_dir = None
-    mosaic_projection_centre_type = None
-    mosaic_projection_centre_ra = None
-    mosaic_projection_centre_dec = None
-    mosaic_projection_centre_beam = None
-    mosaic_projection_centre_file = None
+    #mosaic_projection_centre_type = None
+    mosaic_projection_centre_ra = ''
+    mosaic_projection_centre_dec = ''
+    mosaic_projection_centre_beam = ''
+    mosaic_projection_centre_file = ''
     mosaic_primary_beam_type = None
     mosaic_primary_beam_files = None
     mosaic_continuum_mf = None
     mosaic_polarisation_v = None
 
     mosaic_continuum_subdir = None
-    mosaic_continuum_image_subdir = None
+    mosaic_continuum_images_subdir = None
     mosaic_continuum_beam_subdir = None
     mosaic_continuum_mosaic_subdir = None
+
+    FNULL = open(os.devnull, 'w')
 
     def __init__(self, file_=None, **kwargs):
         self.default = lib.load_config(self, file_)
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
+
+        # set some directories paths for the module
+        self.mosaic_continuum_dir = os.path.join(
+            self.mosdir, self.mosaic_continuum_subdir)
+        self.mosaic_continuum_images_dir = os.path.join(
+            self.mosdir, self.mosaic_continuum_subdir, self.mosaic_continuum_images_subdir)
+        self.mosaic_continuum_mosaic_dir = os.path.join(
+            self.mosdir, self.mosaic_continuum_subdir, self.mosaic_continuum_mosaic_subdir)
+        self.mosaic_continuum_beam_dir = os.path.join(
+            self.mosdir, self.mosaic_continuum_subdir, self.mosaic_continuum_beam_subdir)
+
+        # get the beams
+        # set the number of beams to process>
+        if self.mosaic_beams is None and self.mosaic_beams != '':
+            if self.mosaic_beams == "all":
+                self.mosaic_beam_list = [str(k).zfill(2)
+                                             for k in range(self.NBEAMS)]
+            else:
+                self.mosaic_beam_list = self.mosaic_beams.split(",")
+        else:
+            error = "No beams specified for making the mosaic."
+            logger.error(error)
+            raise RuntimeError(error)
+
+        self.mosaic_continuum_image_list = []
+
+    def abort_module(self, abort_msg):
+        """
+        Simple function to abort the module
+        """
+
+        logger.error(abort_msg)
+        logger.error("ABORT")
+        raise RuntimeError(abort_msg)
+
+    def check_alta_path(self, alta_path):
+        """
+        Function to quickly check the path exists on ALTA
+        """
+        alta_cmd = "ils {}".format(alta_path)
+        logger.debug(alta_cmd)
+        subprocess.check_call(alta_cmd, shell=True,
+                              stdout=self.FNULL, stderr=self.FNULL)
 
     def go(self):
         """
@@ -66,13 +114,7 @@ class mosaic(BaseModule):
         self.create_mosaic_continuum_mf()
         logger.info("MOSAICKING done ")
 
-    def get_target_path(self, beam=None):
-        if self.subdirification:
-            return os.path.join('../', self.selfcalsubdir, self.target)
-        else:
-            return self.target
-
-    def set_mosaic_subdirs(self, continuum = False):
+    def set_mosaic_subdirs(self, continuum=False):
         """
         Set the name of the subdirectories for the mosaic and create them
         """
@@ -84,10 +126,10 @@ class mosaic(BaseModule):
                 subs_managefiles.director(self, 'mk', os.path.join(
                     self.mosdir, self.mosaic_continuum_subdir))
             # create the sub-directory to store the continuum images
-            if not self.mosaic_continuum_image_subdir:
-                self.mosaic_continuum_image_subdir = 'images'
+            if not self.mosaic_continuum_images_subdir:
+                self.mosaic_continuum_images_subdir = 'images'
                 subs_managefiles.director(self, 'mk', os.path.join(
-                    self.mosdir, self.mosaic_continuum_subdir, self.mosaic_continuum_image_subdir))
+                    self.mosdir, self.mosaic_continuum_subdir, self.mosaic_continuum_images_subdir))
             # create the directory to store the beam maps
             if not self.mosaic_continuum_beam_subdir:
                 self.mosaic_continuum_beam_subdir = 'beams'
@@ -98,7 +140,7 @@ class mosaic(BaseModule):
                 self.mosaic_continuum_mosaic_subdir = 'mosaic'
                 subs_managefiles.director(self, 'mk', os.path.join(
                     self.mosdir, self.mosaic_continuum_subdir, self.mosaic_continuum_mosaic_subdir))
-    
+
     def get_mosaic_continuum_images(self):
         """
         Function to get the continuum images.
@@ -109,40 +151,248 @@ class mosaic(BaseModule):
         3. An existing directory with all fits files
         4. ALTA (default)
         """
-        # in case the data is in temporary storage as long as there is no ingest.
-        if self.mosaic_continuum_image_files_dir == "ALTA_temp":
-            logger.info("Assuming the data is on ALTA in temporary storage")
-        # in case the data is distributed over the happilis
-        elif: self.mosaic_continuum_image_files_dir == "happili":
-            logger.info("Assuming to get the data is on happili in the taskid directories")
-            if socket.gethostname() == "happili-01":
-                pass
+
+        # Status of the continuum mf mosaic
+        mosaic_continuum_images_status = get_param_def(
+            self, 'mosaic_continuum_images_status', False)
+
+        # collect here which beams failed
+        failed_beams = []
+
+        # check whether the fits files are already there:
+        if not mosaic_continuum_images_status:
+
+            # Maybe there should be an additional test of whether the continuum fits files are already there
+
+            # in case the data is in temporary storage as long as there is no ingest.
+            if self.mosaic_continuum_image_files_dir == "ALTA_temp":
+                logger.info(
+                    "Assuming the data is on ALTA in temporary storage")
+
+                # top-level temporary ALTA directory
+                main_alta_temp_dir = "/altaZone/home/apertif_main/early_results/temp_storage/"
+
+                # directory of the taskid on ALTA temporary storage
+                alta_taskid_dir = os.path.join(
+                    main_alta_temp_dir, self.mosaic_taskid)
+
+                # check that the directory exists (perhaps not the best way to do it)
+                try:
+                    self.check_alta_path(alta_taskid_dir)
+                except Exception as e:
+                    logger.error(
+                        "Could not find taskid on ALTA temporary storage. Abort")
+                    logger.exception(e)
+                    raise Exception(e)
+
+                # get the data for each beam
+                for beam in self.mosaic_beam_list:
+
+                    logger.info("Getting continuum image of beam {} from ALTA".format(beam))
+
+                    # Check first that the beam is available from ALTA
+                    alta_beam_dir = os.path.join(alta_taskid_dir, beam)
+                    try:
+                        self.check_alta_path(alta_beam_dir)
+                    except Exception as e:
+                        logger.warning(
+                            "Beam {} not available on ALTA".format(beam))
+                        failed_beams.append(beam)
+                        continue
+
+                    # look for the image file (not perhaps the best way with the current setup)
+                    continuum_image_name = ''
+                    alta_beam_image_path = ''
+                    for k in range(10):
+                        continuum_image_name = "image_mf_{02d}.fits".format(k)
+                        alta_beam_image_path = os.path.join(
+                            alta_beam_dir, continuum_image_name)
+                        try:
+                            self.check_alta_path(alta_beam_image_path)
+                        except:
+                            # if the last image was not found, set path back to empty
+                            if k == 10:
+                                continuum_image_name = ''
+                            continue
+                        else:
+                            break
+                    if continuum_image_name == '':
+                        logger.warning(
+                            "Beam {} not available on ALTA".format(beam))
+                        failed_beams.append(beam)
+                        continue
+
+                    # Create the local directory for the beam
+                    local_beam_dir = os.path.join(
+                        self.mosaic_continuum_images_dir, beam)
+                    subs_managefiles.director(self, 'mk', local_beam_dir)
+
+                    # set the irod files location
+                    irods_status_file = os.path.join(
+                        self.mosaic_continuum_dir, "{}_img-icat.irods-status".format(continuum_image_name.split(".")[0]))
+                    irods_status_lf_file = os.path.join(
+                        self.mosaic_continuum_subdir, "{}_img-icat.lf-irods-status".format(continuum_image_name.split(".")[0]))
+
+                    # get the file from alta
+                    alta_cmd = "iget -rfPIT -X {0} --lfrestart {1} --retries 5 {2} {3}".format(
+                        irods_status_file, irods_status_lf_file, alta_beam_image_path, local_beam_dir)
+                    logger.debug(alta_cmd)
+                    try:
+                        subprocess.check_call(alta_cmd, shell=True, stdout=self.FNULL, stderr=self.FNULL)
+                    except Exception as e:
+                        logger.warning("Getting continuum image of beam {} from ALTA ... Failed".format(beam))
+                        failed_beams.append(beam)
+                        continue
+                    else:
+                        logger.info("Getting continuum image of beam {} from ALTA ... Done".format(beam))
+
+            # in case the data is distributed over the happilis
+            elif self.mosaic_continuum_image_files_dir == "happili":
+                logger.info("Assuming to get the data is on happili in the taskid directories")
+                if socket.gethostname() == "happili-01":
+                    # abort as it is not finished
+                    self.abort_module("Using the default taskid directories to the continuum images has not been implemented yet.")
+                else:
+                    error = "This does not work from {}. It only works from happili 01. Abort".format(socket.gethostname())
+                    logger.error(error)
+                    raise RuntimeError(error)
+            # in case a directory has been specified
+            elif self.mosaic_continuum_image_files_dir != "":
+                # check that the directory exists
+                logger.info(
+                    "Assuming to get the data from a specific directory")
+                if os.path.isdir(self.mosaic_continuum_image_files_dir):
+                    
+                    # go through the beams
+                    for beam in self.mosaic_beam_list:
+
+                        logger.info("Getting continuum image of beam {}".format(beam))
+
+                        # check that a directory with the beam exists
+                        image_beam_dir = os.path.join(self.mosaic_continuum_image_files_dir, beam)
+                        if not os.path.isdir(image_beam_dir):
+                            logger.warning("Did not find beam {} to get continuum image.".format(beam))
+                            failed_beams.append(beam)
+                            continue
+
+                        # find the fits file
+                        image_beam_fits_path = os.path.join(image_beam_dir, "image_mf_??.fits")
+                        fits_files = glob.glob(image_beam_fits_path)
+                        fits_files.sort()
+                        if len(fits_files) == 0:
+                            logger.warning(
+                                "Did not find a continuum image 'image_mf_??.fits' for beam {}.".format(beam))
+                            failed_beams.append(beam)
+                            continue
+                        
+                        # get the highest number, though there should only be one
+                        fits_file = fits_files[-1]
+
+                        # create local beam dir
+                        local_beam_dir = os.path.join(self.mosaic_continuum_images_dir, beam)
+                        subs_managefiles.director(self, 'mk', local_beam_dir)
+
+                        # copy the fits file to the beam directory
+                        subs_managefiles.director(self, 'cp', os.path.join(local_beam_dir,os.path.basename(fits_file)), file_=fits_file)
+
+                        logger.info("Getting continuum image of beam {} ... Done".format(beam))
+                else:
+                    error = "The directory {} does not exists. Abort".format(self.mosaic_continuum_image_files_dir)
+                    logger.error(error)
+                    raise RuntimeError(error)
             else:
-                error = "This does not work from {}. It only works from happili 01. Abort".format(socket.gethostname())
-                logger.error(error)
-                raise RuntimeError(error)
-        # in case a directory has been specified
-        elif: self.mosaic_continuum_image_files_dir != "":
-            # check that the directory exists
-            logger.info(
-                "Assuming to get the data from a specific directory")
-            if os.path.isdir(self.mosaic_continuum_image_files_dir):
-                pass
-            else:
-                error = "The directory {} does not exists. Abort".format(self.mosaic_continuum_image_files_dir)
+                logger.info("Assuming the data is on ALTA")
+                error = "Cannot get data from ALTA yet. Abort"
                 logger.error(error)
                 raise RuntimeError(error)
         else:
-            logger.info("Assuming the data is on ALTA")
-            error = "Cannot get data from ALTA yet. Abort"
-            logger.error(error)
-            raise RuntimeError(error)
+            logger.info("Continuum image fits files are already available.")
+
+        # check the failed beams
+        if len(failed_beams) == self.mosaic_beam_list:
+            self.abort_module("Did not find continuum images for all beams.")
+        else:
+            logger.warning("Could not find continuum images for beams {}. Removing those beams".format(str(failed_beams)))
+            for beam in failed_beams:
+                self.mosaic_beam_list.remove(beam)
+            logger.warning("Will only process continuum images from {} beams".format(len(self.mosaic_beam_list)))
+
+            # setting parameter of getting continuum images to True
+            mosaic_continuum_images_status = True
         
+        subs_param.add_param(
+            self, 'mosaic_continuum_images_status', mosaic_continuum_images_status)
+
+    def get_mosaic_continuum_beams(self):
+        """
+        Getting the information for each beam if they are not already present
+        """
+
+        mosaic_continuum_beam_status = get_param_def(
+            self, 'mosaic_continuum_beam_status', False)
+
+
+        subs_param.add_param(
+            self, 'mosaic_continuum_beam_status', mosaic_continuum_beam_status)
+    
+    def get_mosaic_projection_centre(self):
+        """
+        Getting the information for the projection center
+        """
+
+        mosaic_projection_centre_status = get_param_def(
+            self, 'mosaic_projection_centre_status', False)
+
+        if self.mosaic_projection_centre_ra != '' and self.mosaic_projection_centre_dec != '':
+            logger.info("Using input projection center: RA={0} and DEC={1}".format(self.mosaic_projection_centre_ra, self.mosaic_projection_centre_dec))
+            mosaic_projection_centre_status = True
+        else:
+            if self.mosaic_projection_centre_beam != '':
+                logger.info("Using pointing centre of beam {} as the projection centre".format(self.mosaic_projection_centre_beam))
+                
+                # not available yet
+                self.abort_module("Getting projection centre from beam has not been implemented yet")
+            
+            if self.mosaic_projection_centre_file != '':
+                logger.info("Reading projection center from file {}".format(self.mosaic_projection_centre_file))
+
+                # not available yet
+                self.abort_module(
+                    "Reading projection center from file has not been implemented yet")
+
+        subs_param.add_param(
+            self, 'mosaic_projection_centre_status', mosaic_projection_centre_status)
+        
+    def convert_images_to_miriad(self):
+        """
+        Convert continuum images to miriad format
+        """
+
+        mosaic_continuum_convert_status = get_param_def(
+            self, 'mosaic_continuum_convert_status', False)
+
+        # change to directory of continuum images
+        subs_managefiles.director(self, 'ch', self.mosaic_continuum_images_dir)
+
+        # This function will import a FITS image into Miriad placing it in the mosaicdir
+        fits = lib.miriad('fits')
+        fits.op = 'xyin'
+        fits.in_ = '{}/image_mf_00.fits'.format(str(beam_num).zfill(2))
+        fits.out = imagedir+'image_{}.map'.format(str(beam_num).zfill(2))
+        fits.inp()
+        fits.go()
+
+        subs_param.add_param(
+            self, 'mosaic_continuum_convert_status', mosaic_continuum_convert_status)
 
     def create_mosaic_continuum_mf(self):
-        """Looks for all available stacked continuum images and mosaics them into one large image."""
+        """
+        Looks for all available multi-frequency continuum images and mosaics them into one large image.
+        """
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
+
+        
 
         ##########################################################################################################
         # Check if the parameter is already in the parameter file and load it otherwise create the needed arrays #
@@ -168,12 +418,27 @@ class mosaic(BaseModule):
 
             # if no mosaic has already been created
             if not mosaiccontinuummfstatus:
-                logger.info("Getting data for continuum mosaic")
+
+                # get the continuum images
+                # ========================
+                logger.info("Getting continuum images for continuum mosaic")
                 self.get_mosaic_continuum_images()
 
+                # get the beams
+                # =============
                 logger.info("Getting beam information for continuum mosaic")
+                self.get_mosaic_continuum_beams()
 
-                logger.info("Creating mosaic")
+                # set or check the projection center
+                # ==================================
+                self.get_mosaic_projection_centre()
+
+                # Converting images and beams into miriad
+                # =======================================
+                logger.info("Converting images and beams into miriad format")
+                self.convert_images_to_miriad()
+                
+                self.abort_module("Not finished")
 
                 logger.info('Mosaicking multi-frequency continuum images')
                 # Acquire the results and statistics from continuum mf imaging
