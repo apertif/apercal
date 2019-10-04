@@ -353,7 +353,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             logger.info("Skipping phase slope correction")
         
         # parallel version
-        with pymp.Parallel(5) as p:
+        with pymp.Parallel(10) as p:
             for beam_index in p.range(n_beams):
                 beamnr = beamlist_target[beam_index]
 
