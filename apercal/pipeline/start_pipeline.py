@@ -355,13 +355,12 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                 file_=configfilename_list[beamlist_target.index(beamnr)])
             a0.basedir = basedir
             # set_files(a0)
-            a0.prepare_flip_ra = flip_ra
             # the following two need to be empty strings for prepare
             a0.fluxcal = name_to_ms(name_fluxcal)
             a0.polcal = name_to_ms(name_polcal)
             a0.target = name_to_ms(name_target)
             a0.beam = "{:02d}".format(beamnr)
-            if "aaf" in steps and not dry_run:
+            if "aa_filter" in steps and not dry_run:
                 try:
                     a0.go()
                 except Exception as e:
