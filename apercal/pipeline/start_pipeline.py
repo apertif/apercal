@@ -349,7 +349,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         for beamnr in beamlist_target:
 
             logfilepath = os.path.join(
-                basedir, 'apercal{:02d}_line.log'.format(beamnr))
+                basedir, 'apercal{:02d}.log'.format(beamnr))
             lib.setup_logger('debug', logfile=logfilepath)
             a0 = aa_filter(
                 file_=configfilename_list[beamlist_target.index(beamnr)])
