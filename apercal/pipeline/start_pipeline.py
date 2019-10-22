@@ -3,7 +3,7 @@
 from __future__ import print_function
 
 from apercal.modules.prepare import prepare
-from apercal.modules.aaf import aaf
+from apercal.modules.aa_filter import aa_filter
 from apercal.modules.split import split
 from apercal.modules.preflag import preflag
 from apercal.modules.ccal import ccal
@@ -339,11 +339,11 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         # ====
 
         # keep a start-finish record of step in the main log file
-        if "aaf" in steps:
-            logger.info("Running aaf")
+        if "aa_filter" in steps:
+            logger.info("Running aa-filter")
             start_time_aaf = time()
         else:
-            logger.info("Skipping aaf")
+            logger.info("Skipping aa-filter")
 
         # Run AAF
         for beamnr in beamlist_target:
@@ -351,7 +351,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             logfilepath = os.path.join(
                 basedir, 'apercal{:02d}_line.log'.format(beamnr))
             lib.setup_logger('debug', logfile=logfilepath)
-            a0 = aaf(
+            a0 = aa_filter(
                 file_=configfilename_list[beamlist_target.index(beamnr)])
             a0.basedir = basedir
             # set_files(a0)
@@ -360,22 +360,22 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             a0.fluxcal = name_to_ms(name_fluxcal)
             a0.polcal = name_to_ms(name_polcal)
             a0.target = name_to_ms(name_target)
-            s0.beam = "{:02d}".format(beamnr)
+            a0.beam = "{:02d}".format(beamnr)
             if "aaf" in steps and not dry_run:
                 try:
                     a0.go()
                 except Exception as e:
-                    logger.warning("AAF failed for " +
+                    logger.warning("AA-filter failed for " +
                                     str(taskid_target) + " beam " + str(beamnr))
                     logger.exception(e)
-                    status[beamnr] += ['aaf']
+                    status[beamnr] += ['aa_filter']
 
         # keep a start-finish record of step in the main log file
-        if "AAF" in steps:
+        if "aa_filter" in steps:
             logfilepath = os.path.join(basedir, 'apercal.log')
             lib.setup_logger('debug', logfile=logfilepath)
             logger = logging.getLogger(__name__)
-            logger.info("Running AAF ... Done ({0:.0f}s)".format(
+            logger.info("Running aa-filter ... Done ({0:.0f}s)".format(
                 time() - start_time_aaf))
 
             # # copy the param file generated here

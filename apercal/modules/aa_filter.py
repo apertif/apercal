@@ -13,12 +13,12 @@ from aaf.aaf import antialias_ms
 logger = logging.getLogger(__name__)
 
 
-class aaf(BaseModule):
+class aa_filter(BaseModule):
 
     """
-    AAF class. For running the AAF filter on Apertif data
+    AA-Filter class. For running the anti-aliasing filter on Apertif data
     """
-    module_name = 'AAF'
+    module_name = 'AA_FILTER'
 
     aaf_apply = None
     aaf_tolerance = None
