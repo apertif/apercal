@@ -34,8 +34,8 @@ class mosaic(BaseModule):
 
     mosaic_taskid = None
     mosaic_beams = None
-    mosaic_continuum_image_files_dir = None
-    mosaic_polarisation_input_files_dir = None
+    mosaic_continuum_image_origin = None
+    mosaic_polarisation_input_origin = None
     #mosaic_projection_centre_type = None
     mosaic_projection_centre_ra = ''
     mosaic_projection_centre_dec = ''
@@ -146,10 +146,9 @@ class mosaic(BaseModule):
         Function to get the continuum images.
 
         Possible locations are
-        1. ALTA_temp (just temporarily, will be removed)
-        2. The directories of the taskids on happili, but only if run from happili-01
-        3. An existing directory with all fits files
-        4. ALTA (default)
+        1. The directories of the taskids on happili, but only if run from happili-01
+        2. An existing directory with all fits files
+        3. ALTA (default)
         """
 
         # Status of the continuum mf mosaic
@@ -164,90 +163,90 @@ class mosaic(BaseModule):
 
             # Maybe there should be an additional test of whether the continuum fits files are already there
 
-            # in case the data is in temporary storage as long as there is no ingest.
-            if self.mosaic_continuum_image_files_dir == "ALTA_temp":
-                logger.info(
-                    "Assuming the data is on ALTA in temporary storage")
+            # # in case the data is in temporary storage as long as there is no ingest.
+            # if self.mosaic_continuum_image_files_dir == "ALTA_temp":
+            #     logger.info(
+            #         "Assuming the data is on ALTA in temporary storage")
 
-                # top-level temporary ALTA directory
-                main_alta_temp_dir = "/altaZone/home/apertif_main/early_results/temp_storage/"
+            #     # top-level temporary ALTA directory
+            #     main_alta_temp_dir = "/altaZone/home/apertif_main/early_results/temp_storage/"
 
-                # directory of the taskid on ALTA temporary storage
-                alta_taskid_dir = os.path.join(
-                    main_alta_temp_dir, self.mosaic_taskid)
+            #     # directory of the taskid on ALTA temporary storage
+            #     alta_taskid_dir = os.path.join(
+            #         main_alta_temp_dir, self.mosaic_taskid)
 
-                # check that the directory exists (perhaps not the best way to do it)
-                try:
-                    self.check_alta_path(alta_taskid_dir)
-                except Exception as e:
-                    logger.error(
-                        "Could not find taskid on ALTA temporary storage. Abort")
-                    logger.exception(e)
-                    raise Exception(e)
+            #     # check that the directory exists (perhaps not the best way to do it)
+            #     try:
+            #         self.check_alta_path(alta_taskid_dir)
+            #     except Exception as e:
+            #         logger.error(
+            #             "Could not find taskid on ALTA temporary storage. Abort")
+            #         logger.exception(e)
+            #         raise Exception(e)
 
-                # get the data for each beam
-                for beam in self.mosaic_beam_list:
+            #     # get the data for each beam
+            #     for beam in self.mosaic_beam_list:
 
-                    logger.info("Getting continuum image of beam {} from ALTA".format(beam))
+            #         logger.info("Getting continuum image of beam {} from ALTA".format(beam))
 
-                    # Check first that the beam is available from ALTA
-                    alta_beam_dir = os.path.join(alta_taskid_dir, beam)
-                    try:
-                        self.check_alta_path(alta_beam_dir)
-                    except Exception as e:
-                        logger.warning(
-                            "Beam {} not available on ALTA".format(beam))
-                        failed_beams.append(beam)
-                        continue
+            #         # Check first that the beam is available from ALTA
+            #         alta_beam_dir = os.path.join(alta_taskid_dir, beam)
+            #         try:
+            #             self.check_alta_path(alta_beam_dir)
+            #         except Exception as e:
+            #             logger.warning(
+            #                 "Beam {} not available on ALTA".format(beam))
+            #             failed_beams.append(beam)
+            #             continue
 
-                    # look for the image file (not perhaps the best way with the current setup)
-                    continuum_image_name = ''
-                    alta_beam_image_path = ''
-                    for k in range(10):
-                        continuum_image_name = "image_mf_{02d}.fits".format(k)
-                        alta_beam_image_path = os.path.join(
-                            alta_beam_dir, continuum_image_name)
-                        try:
-                            self.check_alta_path(alta_beam_image_path)
-                        except:
-                            # if the last image was not found, set path back to empty
-                            if k == 10:
-                                continuum_image_name = ''
-                            continue
-                        else:
-                            break
-                    if continuum_image_name == '':
-                        logger.warning(
-                            "Beam {} not available on ALTA".format(beam))
-                        failed_beams.append(beam)
-                        continue
+            #         # look for the image file (not perhaps the best way with the current setup)
+            #         continuum_image_name = ''
+            #         alta_beam_image_path = ''
+            #         for k in range(10):
+            #             continuum_image_name = "image_mf_{02d}.fits".format(k)
+            #             alta_beam_image_path = os.path.join(
+            #                 alta_beam_dir, continuum_image_name)
+            #             try:
+            #                 self.check_alta_path(alta_beam_image_path)
+            #             except:
+            #                 # if the last image was not found, set path back to empty
+            #                 if k == 10:
+            #                     continuum_image_name = ''
+            #                 continue
+            #             else:
+            #                 break
+            #         if continuum_image_name == '':
+            #             logger.warning(
+            #                 "Beam {} not available on ALTA".format(beam))
+            #             failed_beams.append(beam)
+            #             continue
 
-                    # Create the local directory for the beam
-                    local_beam_dir = os.path.join(
-                        self.mosaic_continuum_images_dir, beam)
-                    subs_managefiles.director(self, 'mk', local_beam_dir)
+            #         # Create the local directory for the beam
+            #         local_beam_dir = os.path.join(
+            #             self.mosaic_continuum_images_dir, beam)
+            #         subs_managefiles.director(self, 'mk', local_beam_dir)
 
-                    # set the irod files location
-                    irods_status_file = os.path.join(
-                        self.mosaic_continuum_dir, "{}_img-icat.irods-status".format(continuum_image_name.split(".")[0]))
-                    irods_status_lf_file = os.path.join(
-                        self.mosaic_continuum_subdir, "{}_img-icat.lf-irods-status".format(continuum_image_name.split(".")[0]))
+            #         # set the irod files location
+            #         irods_status_file = os.path.join(
+            #             self.mosaic_continuum_dir, "{}_img-icat.irods-status".format(continuum_image_name.split(".")[0]))
+            #         irods_status_lf_file = os.path.join(
+            #             self.mosaic_continuum_subdir, "{}_img-icat.lf-irods-status".format(continuum_image_name.split(".")[0]))
 
-                    # get the file from alta
-                    alta_cmd = "iget -rfPIT -X {0} --lfrestart {1} --retries 5 {2} {3}".format(
-                        irods_status_file, irods_status_lf_file, alta_beam_image_path, local_beam_dir)
-                    logger.debug(alta_cmd)
-                    try:
-                        subprocess.check_call(alta_cmd, shell=True, stdout=self.FNULL, stderr=self.FNULL)
-                    except Exception as e:
-                        logger.warning("Getting continuum image of beam {} from ALTA ... Failed".format(beam))
-                        failed_beams.append(beam)
-                        continue
-                    else:
-                        logger.info("Getting continuum image of beam {} from ALTA ... Done".format(beam))
+            #         # get the file from alta
+            #         alta_cmd = "iget -rfPIT -X {0} --lfrestart {1} --retries 5 {2} {3}".format(
+            #             irods_status_file, irods_status_lf_file, alta_beam_image_path, local_beam_dir)
+            #         logger.debug(alta_cmd)
+            #         try:
+            #             subprocess.check_call(alta_cmd, shell=True, stdout=self.FNULL, stderr=self.FNULL)
+            #         except Exception as e:
+            #             logger.warning("Getting continuum image of beam {} from ALTA ... Failed".format(beam))
+            #             failed_beams.append(beam)
+            #             continue
+            #         else:
+            #             logger.info("Getting continuum image of beam {} from ALTA ... Done".format(beam))
 
             # in case the data is distributed over the happilis
-            elif self.mosaic_continuum_image_files_dir == "happili":
+            if self.mosaic_continuum_image_origin == "happili":
                 logger.info("Assuming to get the data is on happili in the taskid directories")
                 if socket.gethostname() == "happili-01":
                     # abort as it is not finished
@@ -256,12 +255,18 @@ class mosaic(BaseModule):
                     error = "This does not work from {}. It only works from happili 01. Abort".format(socket.gethostname())
                     logger.error(error)
                     raise RuntimeError(error)
+            if self.mosaic_continuum_image_origin == "alta":
+                logger.info(
+                    "Assuming to get the data is from ALTA")
+                # abort as it is not finished
+                self.abort_module(
+                    "Getting the continuum images from ALTA storage has not been implemented yet.")
             # in case a directory has been specified
-            elif self.mosaic_continuum_image_files_dir != "":
+            elif self.mosaic_continuum_image_origin != "":
                 # check that the directory exists
                 logger.info(
                     "Assuming to get the data from a specific directory")
-                if os.path.isdir(self.mosaic_continuum_image_files_dir):
+                if os.path.isdir(self.mosaic_continuum_image_origin):
                     
                     # go through the beams
                     for beam in self.mosaic_beam_list:
@@ -269,7 +274,7 @@ class mosaic(BaseModule):
                         logger.info("Getting continuum image of beam {}".format(beam))
 
                         # check that a directory with the beam exists
-                        image_beam_dir = os.path.join(self.mosaic_continuum_image_files_dir, beam)
+                        image_beam_dir = os.path.join(self.mosaic_continuum_image_origin, beam)
                         if not os.path.isdir(image_beam_dir):
                             logger.warning("Did not find beam {} to get continuum image.".format(beam))
                             failed_beams.append(beam)
@@ -288,12 +293,15 @@ class mosaic(BaseModule):
                         # get the highest number, though there should only be one
                         fits_file = fits_files[-1]
 
-                        # create local beam dir
+                        # create local beam dir only if it doesn't already exists
                         local_beam_dir = os.path.join(self.mosaic_continuum_images_dir, beam)
-                        subs_managefiles.director(self, 'mk', local_beam_dir)
+                        if local_beam_dir != image_beam_dir:
+                            subs_managefiles.director(self, 'mk', local_beam_dir)
 
-                        # copy the fits file to the beam directory
-                        subs_managefiles.director(self, 'cp', os.path.join(local_beam_dir,os.path.basename(fits_file)), file_=fits_file)
+                            # copy the fits file to the beam directory
+                            subs_managefiles.director(self, 'cp', os.path.join(local_beam_dir,os.path.basename(fits_file)), file_=fits_file)
+                        else:
+                            logger.info("Continuum file of beam {} is already available".format(beam))
 
                         logger.info("Getting continuum image of beam {} ... Done".format(beam))
                 else:
@@ -311,12 +319,16 @@ class mosaic(BaseModule):
         # check the failed beams
         if len(failed_beams) == self.mosaic_beam_list:
             self.abort_module("Did not find continuum images for all beams.")
-        else:
+        elif len(failed_beams) != 0:
             logger.warning("Could not find continuum images for beams {}. Removing those beams".format(str(failed_beams)))
             for beam in failed_beams:
                 self.mosaic_beam_list.remove(beam)
             logger.warning("Will only process continuum images from {} beams".format(len(self.mosaic_beam_list)))
 
+            # setting parameter of getting continuum images to True
+            mosaic_continuum_images_status = True
+        else:
+            logger.info("Found images for all beams")
             # setting parameter of getting continuum images to True
             mosaic_continuum_images_status = True
         
