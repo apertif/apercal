@@ -59,7 +59,7 @@ class aaf(BaseModule):
                     "Beam {}: AAF was alreay performed on flux calibrator".format(self.beam))
             else:
                 if self.fluxcal != '' and os.path.isdir(self.get_fluxcal_path()):
-                    logger.info("Runnin AAF on flux calibrator")
+                    logger.info("Running AAF on flux calibrator")
                     try:
                         antialias_ms(self.get_fluxcal_path(),
                                      self.aaf_tolerance)
@@ -75,13 +75,13 @@ class aaf(BaseModule):
                     logger.warning(
                         'Beam ' + self.beam + ': Fluxcal not set or dataset not available! Cannot perform AAF on flux calibrator dataset!')
 
-           # check if aaf was run on polcal
-           if aaf_polcal_status:
+            # check if aaf was run on polcal
+            if aaf_polcal_status:
                 logger.info(
                     "Beam {}: AAF was alreay performed on pol calibrator".format(self.beam))
             else:
                 if self.polcal != '' and os.path.isdir(self.get_polcal_path()):
-                    logger.info("Runnin AAF on pol calibrator")
+                    logger.info("Running AAF on pol calibrator")
                     try:
                         antialias_ms(self.get_polcal_path(),
                                      self.aaf_tolerance)
@@ -96,14 +96,14 @@ class aaf(BaseModule):
                     aaf_polcal_status = False
                     logger.warning(
                         'Beam ' + self.beam + ': Polcal not set or dataset not available! Cannot perform AAF on pol calibrator dataset!')
-        
-           # check if aaf was run on target
-           if aaf_targetbeams_status:
+
+            # check if aaf was run on target
+            if aaf_targetbeams_status:
                 logger.info(
                     "Beam {}: AAF was alreay performed on target".format(self.beam))
             else:
                 if self.target != '' and os.path.isdir(self.get_target_path()):
-                    logger.info("Runnin AAF on target")
+                    logger.info("Running AAF on target")
                     try:
                         antialias_ms(self.get_target_path(),
                                      self.aaf_tolerance)

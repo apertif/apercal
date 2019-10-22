@@ -262,10 +262,10 @@ class preflag(BaseModule):
                     b = range(1, nchannel, 64)
                     c = range(63, nchannel, 64)
                     if self.preflag_aaf_applied or aaf_fluxcal_status:
-                        logger.info("Beam {}: Assuming AAF was performed on flux calibrator")
+                        logger.info("Beam {}: Assuming AAF was performed on flux calibrator".format(self.beam))
                         l = a
                     else:
-                        logger.info("Beam {}: Assuming AAF was NOT performed on flux calibrator")
+                        logger.info("Beam {}: Assuming AAF was NOT performed on flux calibrator".format(self.beam))
                         l = a + b + c
                     m = ';'.join(str(ch) for ch in l)
                     fc_edges_flagcmd = 'flagdata(vis="' + self.get_fluxcal_path() + '", spw="0:' + m + '", flagbackup=False)'
@@ -289,10 +289,11 @@ class preflag(BaseModule):
                     b = range(1, nchannel, 64)
                     c = range(63, nchannel, 64)
                     if self.preflag_aaf_applied or aaf_polcal_status:
-                        logger.info("Beam {}: Assuming AAF was performed on flux calibrator")
+                        logger.info("Beam {}: Assuming AAF was performed on flux calibrator".format(self.beam))
                         l = a
                     else:
-                        logger.info("Beam {}: Assuming AAF was NOT performed on pol calibrator")
+                        logger.info(
+                            "Beam {}: Assuming AAF was NOT performed on pol calibrator".format(self.beam))
                         l = a + b + c
                     m = ';'.join(str(ch) for ch in l)
                     pc_edges_flagcmd = 'flagdata(vis="' + self.get_polcal_path() + '", spw="0:' + m + '", flagbackup=False)'
@@ -315,11 +316,11 @@ class preflag(BaseModule):
                     c = range(63, nchannel, 64)
                     if self.preflag_aaf_applied or aaf_targetbeams_status:
                         logger.info(
-                            "Beam {}: Assuming AAF was performed on target")
+                            "Beam {}: Assuming AAF was performed on target".format(self.beam))
                         l = a
                     else:
                         logger.info(
-                            "Beam {}: Assuming AAF was NOT performed on target")
+                            "Beam {}: Assuming AAF was NOT performed on target".format(self.beam))
                         l = a + b + c
                     m = ';'.join(str(ch) for ch in l)
                     tg_edges_flagcmd = 'flagdata(vis="' + self.get_target_path() + '", spw="0:' + m + '", flagbackup=False)'
@@ -1168,22 +1169,30 @@ class preflag(BaseModule):
             # If not, calculate the bandpass for the setup of the observation using the flux calibrator
             elif not preflagaoflaggerbandpassstatus:
                 if self.fluxcal != '':
-                    if self.preflag_aaf_applied or aaf_fluxcal_status
+                    if self.preflag_aaf_applied or aaf_fluxcal_status:
+                        logger.info("Creating AAF-specific bandpass table for AOFlagger")
                         create_bandpass_aaf(self.get_fluxcal_path(), self.get_bandpass_path())
                     else:
+                        logger.info(
+                            "Creating bandpass table for AOFlagger")
                         create_bandpass(self.get_fluxcal_path(),
                                         self.get_bandpass_path())
                 elif self.polcal != '':
                     if self.preflag_aaf_applied or aaf_polcal_status:
+                        logger.info("Creating AAF-specific bandpass table for AOFlagger")
                         create_bandpass_aaf(self.get_polcal_path(), self.get_bandpass_path())
                     else:
+                        logger.info("Creating bandpass table for AOFlagger")
                         create_bandpass(self.get_fluxcal_path(), self.get_bandpass_path())
                 else:
                     # logger.debug("self.get_target_path(str(self.beam).zfill(2))= {0}".format(str(self.get_target_path(str(self.beam).zfill(2)))))
                     # create_bandpass(self.get_target_path(str(self.beam).zfill(2)), self.get_bandpass_path())
                     if self.preflag_aaf_applied or aaf_targetbeams_status:
+                        logger.info("Creating AAF-specific bandpass table for AOFlagger")
                         create_bandpass_aaf(self.get_target_path(self.beam), self.get_bandpass_path())
                     else:
+                        logger.info(
+                            "Creating bandpass table for AOFlagger")
                         create_bandpass(self.get_fluxcal_path(), self.get_bandpass_path())
                 if os.path.isfile(self.get_bandpass_path()):
                     preflagaoflaggerbandpassstatus = True
