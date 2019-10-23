@@ -45,9 +45,15 @@ class ccal(BaseModule):
     crosscal_refant_exclude = ["RTC", "RTD"]
     crosscal_ant_list = None
     config_file_name = None
+    crosscal_check_bandpass = None
+    crosscal_check_autocorrelation = None
     crosscal_try_counter = 0
-    crosscal_try_limit = 3
+    crosscal_try_limit = 2
     crosscal_try_restart = False
+    crosscal_flag_limit = 4
+    crosscal_fluxcal_try_counter = 0
+    crosscal_fluxcal_try_limit = 3
+    crosscal_fluxcal_try_restart = False
 
     def __init__(self, file_=None, **kwargs):
         self.default = lib.load_config(self, file_)
@@ -69,95 +75,180 @@ class ccal(BaseModule):
         tranfer_to_target
         """
         logger.info("Starting CROSS CALIBRATION ")
+
         self.check_ref_ant()
-        self.setflux()
         
-        # fluxcal
-        self.calibrate_fluxcal()
-        
-        # polcal
-        self.calibrate_polcal()
-        
-        # apply solutions
-        self.apply_solutions()
+        self.calibrate_calibrators()
+            
+        self.transfer_to_target()
         logger.info("CROSS CALIBRATION done ")
+
+    def calibrate_calibrators(self):
+        """
+        Function to manage the adaptive calibration of the calibrators.
+        """
+
+        cbeam = 'ccal_B' + str(self.beam).zfill(2)
+        ccal_calibration_restart = get_param_def(self, cbeam + '_calibration_restart', False)
+        ccal_calibration_try_counter = get_param_def(self, cbeam + '_calibration_try_counter', 0)
+
+        # to break the crosscal loop before the limit
+        crosscal_finished = False
+
+        # loop for restarting all of cross-calibration
+        while self.crosscal_try_counter < self.crosscal_try_limit and not crosscal_finished:
+
+            logger.info("Beam {0}: Running cross-calibration attempt {1} (out of {2})".format(
+                self.beam, self.crosscal_fluxcal_try_counter+1, self.crosscal_fluxcal_try_limit))
+
+            self.crosscal_try_restart = False
+
+            # set the model
+            self.setflux()
+
+            # fluxcal
+            self.calibrate_fluxcal()
+
+            # polcal
+            self.calibrate_polcal()
+
+            # apply solutions
+            #self.apply_solutions()
+            self.transfer_to_cal()
+            if self.crosscal_check_autocorrelation:
+                self.check_autocorrelation()
+
+            if self.crosscal_try_restart:
+                logger.warning("Beam {0}: Running cross-calibration attempt {1} (out of {2}) failed autocorrelation check. Restarting".format(
+                    self.beam, self.crosscal_try_counter+1, self.crosscal_try_limit))
+                # checking the number of antennas flagged
+                ccal_flag_list = subs_param.get_param_def(
+                    self, cbeam + '_flag_list', None)
+                if ccal_flag_list is not None:
+                    logger.info("Beam {0}: Autocorrelation check applied the following flags: {1}".format(self.beam, ccal_flag_list))
+                    # get a list flagged polarisation
+                    pol_flag_list = np.array([flag[1] for flag in ccal_flag_list])
+                    # get the flags that have both polarisation flagged
+                    n_full_poll_flags = len(np.where(pol_flag_list == "XX,YY")[0])
+                    if len(n_full_poll_flags) > self.crosscal_flag_limit:
+                        error = "Beam {0}: Number of antennas with XX and YY flagged ({1}) exceeds defined limit {2}".format(self.beam, n_full_poll_flags, self.crosscal_flag_limit)
+                        logger.error(error)
+                        raise RuntimeError(error)
+
+                # reset first (only fluxcal and polcal need to have theire calibration reset)
+                self.reset(do_clearcal=False, do_clearcal_fluxcal=True, do_clearcal_polcal=True)
+                # set the counter up
+                self.crosscal_try_counter += 1
+                # set the status parameter
+                ccal_calibration_restart = self.crosscal_try_restart
+                continue
+            else:
+                logger.info("Beam {0}: Running cross-calibration attempt {1} (out of {2}) passed autocorrelation check. Continuing".format(
+                    self.beam, self.crosscal_try_counter+1, self.crosscal_try_limit))
 
     def calibrate_fluxcal(self):
         """
         Running the calibration steps that are specific for the flux calibrator
 
-        In case one calibration
+        In case one of the calibration steps fails, the function restarts
+        and tries to calibrate the flux calibrator with a different reference
+        antenna
         """
 
         # in case crosscal finishes and all is well
-        crosscal_finished = False
+        crosscal_fluxcal_finished = False
+
+        # Status parameters to save if restarted and which try it finished
+        cbeam = 'ccal_B' + str(self.beam).zfill(2)
+        # Status of model of the flux and polarisation calibrator
+        ccal_fluxcal_calibration_restart = get_param_def(self, cbeam + '_fluxcal_calibration_restart', False)
+        ccal_fluxcal_calibration_try_counter = get_param_def(self, cbeam + '_fluxcal_calibration_try_counter', 0)
 
         # go through the number of tries or break loop if finished
-        while self.crosscal_try_counter < 3 and not crosscal_finished:
-            logger.info("Beam {0}: Attempt {1} (out of {2}) to run calibration taks of flux calibrator".format(self.beam, self.crosscal_try_counter+1, self.crosscal_try_limit))
+        while self.crosscal_fluxcal_try_counter < self.crosscal_fluxcal_try_limit and not crosscal_fluxcal_finished:
+            logger.info("Beam {0}: Attempt {1} (out of {2}) to run calibration taks of flux calibrator".format(self.beam, self.crosscal_fluxcal_try_counter+1, self.crosscal_fluxcal_try_limit))
 
-            self.crosscal_try_restart = False
+            self.crosscal_fluxcal_try_restart = False
 
             # running initial phase calibration
             self.initial_phase()
             # if it fails, restart the loop after changing the reference antenna
-            if self.crosscal_try_restart:
-                logger.warning("Beam {0}: Attempt {1} (out of {2}) failed at initial phase calibration. Trying to restart with different reference antenna".format(self.beam, self.crosscal_try_counter+1, self.crosscal_try_limit))
+            if self.crosscal_fluxcal_try_restart:
+                logger.warning("Beam {0}: Attempt {1} (out of {2}) failed at initial phase calibration. Trying to restart with different reference antenna".format(self.beam, self.crosscal_fluxcal_try_counter+1, self.crosscal_fluxcal_try_limit))
                 # reset first
                 self.reset(do_clearcal=False)
                 # change refant
                 self.check_ref_ant(check_flags=False, change_ref_ant=True)
                 # set the counter up
-                self.crosscal_try_counter += 1
+                self.crosscal_fluxcal_try_counter += 1
+                # set the status parameter
+                ccal_fluxcal_calibration_restart = self.crosscal_fluxcal_try_restart
                 continue
 
             # running global delay calibration
             self.global_delay()
             # if it fails, restart the loop after changing the reference antenna
-            if self.crosscal_try_restart:
+            if self.crosscal_fluxcal_try_restart:
                 logger.warning(
-                    "Beam {0}: Attempt {1} (out of {2}) failed at global delay calibration. Trying to restart with different reference antenna".format(self.beam, self.crosscal_try_counter+1, self.crosscal_try_limit))
+                    "Beam {0}: Attempt {1} (out of {2}) failed at global delay calibration. Trying to restart with different reference antenna".format(self.beam, self.crosscal_fluxcal_try_counter+1, self.crosscal_fluxcal_try_limit))
                 # reset first
                 self.reset(do_clearcal=False)
                 # change refant
                 self.check_ref_ant(check_flags=False, change_ref_ant=True)
                 # set the counter up
-                self.crosscal_try_counter += 1
+                self.crosscal_fluxcal_try_counter += 1
+                # set the status parameter
+                ccal_fluxcal_calibration_restart = self.crosscal_fluxcal_try_restart
                 continue
 
             # running bandpass calibraiton
             self.bandpass()
+            if self.crosscal_check_bandpass:
+                logger.info("Beam {}: Checking bandpass solutions".format(self.beam))
+                self.check_bandpass()
+            else:
+                logger.info("Beam {}: Did not check bandpass solutions".format(self.beam))
             # if it fails, restart the loop after changing the reference antenna
-            if self.crosscal_try_restart:
+            if self.crosscal_fluxcal_try_restart:
                 logger.warning(
-                    "Beam {0}: Attempt {1} (out of {2}) failed at bandpass calibration. Trying to restart with different reference antenna".format(self.beam, self.crosscal_try_counter+1, self.crosscal_try_limit))
+                    "Beam {0}: Attempt {1} (out of {2}) failed at bandpass calibration. Trying to restart with different reference antenna".format(self.beam, self.crosscal_fluxcal_try_counter+1, self.crosscal_fluxcal_try_limit))
                 # reset first
                 self.reset(do_clearcal=False)
                 # change refant
                 self.check_ref_ant(check_flags=False, change_ref_ant=True)
                 # set the counter up
-                self.crosscal_try_counter += 1
+                self.crosscal_fluxcal_try_counter += 1
+                # set the status parameter
+                ccal_fluxcal_calibration_restart = self.crosscal_fluxcal_try_restart
                 continue
 
             self.gains()
             # if it fails, restart the loop after changing the reference antenna
-            if self.crosscal_try_restart:
+            if self.crosscal_fluxcal_try_restart:
                 logger.warning(
-                    "Beam {0}: Attempt {1} (out of {2}) failed at gain calibration. Trying to restart with different reference antenna".format(self.beam, self.crosscal_try_counter+1, self.crosscal_try_limit))
+                    "Beam {0}: Attempt {1} (out of {2}) failed at gain calibration. Trying to restart with different reference antenna".format(self.beam, self.crosscal_fluxcal_try_counter+1, self.crosscal_fluxcal_try_limit))
                 # reset first
                 self.reset(do_clearcal=False)
                 # change refant
                 self.check_ref_ant(check_flags=False, change_ref_ant=True)
                 # set the counter up
-                self.crosscal_try_counter += 1
+                self.crosscal_fluxcal_try_counter += 1
+                # set the status parameter
+                ccal_fluxcal_calibration_restart = self.crosscal_fluxcal_try_restart
                 continue
 
             # if this point is reached, crosscalibration should have worked
-            crosscal_finished = True
+            crosscal_fluxcal_finished = True
             # leave the loop
             break
         
-        if crosscal_finished:
+        # save parameters
+        subs_param.add_param(
+            self, cbeam + '_fluxcal_calibration_restart', ccal_fluxcal_calibration_restart)
+        subs_param.add_param(
+            self, cbeam + '_fluxcal_calibration_try_counter', ccal_fluxcal_calibration_try_counter)
+
+        if crosscal_fluxcal_finished:
             logger.info("Beam {}: Calibration of flux calibrator successful. Continue with pol calibrator".format(self.beam))
         else:
             error = "Beam {}: Cross-calibration of flux calibrator was not successful. Abort".format(self.beam)
@@ -619,6 +710,12 @@ class ccal(BaseModule):
 
         subs_param.add_param(self, cbeam + '_fluxcal_bandpass', ccalfluxcalbandpass)
 
+    def check_bandpass(self):
+        """
+        Function to check the quality of the bandpass phase solutions
+        """
+
+        logger.info("Beam {}: Nothing to check yet".format(self.beam))
 
     def gains(self):
         """
@@ -1201,6 +1298,118 @@ class ccal(BaseModule):
 
         subs_param.add_param(self, cbeam + '_targetbeams_transfer', ccaltargetbeamstransfer)
 
+    def check_autocorrelation(self):
+        """
+        Check the autocorrelation in relation to expected values and flag data
+        if necessary.
+
+        The function will check the autocorrelation for each telescope in XX and YY
+        with respect to an expected distribution. It will check the relative offset 
+        and the to some extent the shape of the autocorrelation. If one or the other
+        shows an issue, the polarisation of this telescope will get flagged
+        """
+
+        # check only the flux calibrator
+        msfile = self.get_fluxcal_path()
+
+        # get the names of all antennas
+        taql_antnames = "SELECT NAME FROM {0}::ANTENNA".format(msfile)
+        try:
+            t = pt.taql(taql_antnames)
+        except Exception as e:
+            logger.exception(e)
+            raise RuntimeError(e)
+        ant_names = t.getcol("NAME")
+        if ant_names is None:
+            error = "No antenna names available from the MS file. Abort"
+            logger.error(error)
+            raise RuntimeError(error)
+
+        #then get frequencies:
+        taql_freq = "SELECT CHAN_FREQ FROM {0}::SPECTRAL_WINDOW".format(
+            msfile)
+        try:
+            t = pt.taql(taql_freq)
+        except Exception as e:
+            logger.exception(e)
+            raise RuntimeError(e)
+        freqs = t.getcol('CHAN_FREQ')[0, :]
+        if freqs is None:
+            error = "No frequency information available from the MS file. Abort"
+            logger.error(error)
+            raise RuntimeError(error)
+
+        #and number of stokes params
+        taql_stokes = "SELECT abs(DATA) AS amp from {0} limit 1" .format(
+            msfile)
+        try:
+            t_pol = pt.taql(taql_stokes)
+        except Exception as e:
+            logger.exception(e)
+            raise RuntimeError(e)
+        pol_array = t_pol.getcol('amp')
+        if pol_array is None:
+            error = "No polarisation information available from the MS file. Abort"
+            logger.error(error)
+            raise RuntimeError(error)
+        
+        n_stokes = pol_array.shape[2]  # shape is time, one, nstokes
+    
+        #take MS file and get calibrated data
+        # amp_ant_array = np.empty(
+        #     (len(ant_names), len(freqs), n_stokes), dtype=np.float64)        
+        for ant, ant_name in enumerate(ant_names):
+            try:
+                taql_command = ("SELECT abs(gmeans(CORRECTED_DATA[FLAG])) AS amp "
+                                "FROM {0} "
+                                "WHERE ANTENNA1==ANTENNA2 && (ANTENNA1={1} || ANTENNA2={1})").format(msfile, ant)
+                t = pt.taql(taql_command)
+                test = t.getcol('amp')
+                amp_ant = t.getcol('amp')[0, :, :]
+            except Exception as e:
+                logger.warning("Beam {}: Could not get autocorrelation information for antenna {}".format(self.beam, ant_name))
+                logger.exception(e)
+            
+            # get XX and YY
+            amp_XX = amp_ant[:, 0]
+            amp_YY = amp_ant[:, 3]
+            freqs_XX_selected = freqs[np.where(amp_XX != 0)[0]]
+            amp_XX_selected = amp_XX[np.where(amp_XX != 0)[0]]
+            freqs_YY_selected = freqs[np.where(amp_YY != 0)[0]]
+            amp_YY_selected = amp_YY[np.where(amp_YY != 0)[0]]
+        
+            # call function for comparison
+            flag_list = []
+
+            if len(flag_list) != 0:
+                # call function for flagging
+                self.crosscal_try_restart = True
+
+    def flag_data(self, polarisation = '', antenna = ''):
+        """
+        Function to flag a polarisation for a given antenna
+        """
+
+        cbeam = 'ccal_B' + str(self.beam).zfill(2)
+        ccal_flag_list = subs_param.get_param_def(
+            self, cbeam + '_flag_list', None)
+
+        if polarisation != '' and antenna != '':
+            logger.info("Beam {0}: Flagging polarisation {1} for antenna {2}".format(self.beam, polarisation, antenna))
+            flag_cmd = 'flagdata(vis="{0}", mode="list", inpfile=[antenna="{1}" corr="{2}"], flagbackup=False)'.format(self.get_fluxcal_path(), antenna, polarisation)
+            lib.run_casa([flag_cmd])
+            logger.info("Beam {0}: Flagging ... Done".format(self.beam))
+            # check if there is already a flag list
+            if ccal_flag_list is None:
+                # if not create a dictionary
+                ccal_flag_list = np.array([[antenna, polarisation]])
+            else:
+                # if yes, just append
+                ccal_flag_list = np.append(ccal_flag_list, [antenna, polarisation])
+
+        subs_param.add_param(self, cbeam + '_flag_list', ccal_flag_list)
+
+            
 
     def summary(self):
         """
@@ -1280,7 +1489,7 @@ class ccal(BaseModule):
         return df
 
 
-    def reset(self, do_clearcal = True):
+    def reset(self, do_clearcal = True, do_clearcal_fluxcal = False, do_clearcal_polcal=False, do_clearcal_target=False):
         """
         Function to reset the current step and clear all calibration from datasets as well as all calibration tables.
         """
@@ -1309,24 +1518,51 @@ class ccal(BaseModule):
         subs_managefiles.director(self, 'rm',
                                   self.get_polcal_path().rstrip('.MS') + '.Xf',
                                   ignore_nonexistent=True)
-        if do_clearcal:
-            # Run a clearcal on all datasets and revert to the last flagversion
-            targetdatasets = glob.glob(self.get_target_path())
-            targetdatasets.append(self.get_fluxcal_path())
-            targetdatasets.append(self.get_polcal_path())
-            for dataset in sorted(targetdatasets):
-                try:
-                    cc_dataset_clear = 'clearcal(vis = "' + dataset + '")'
-                    cc_dataset_resetflags = 'flagmanager(vis = "' + dataset + '", mode = "restore", versionname = "ccal")'
-                    cc_dataset_removeflagtable = 'flagmanager(vis = "' + dataset + '", mode = "delete", versionname = "ccal")'
-                    lib.run_casa([cc_dataset_clear, cc_dataset_resetflags, cc_dataset_removeflagtable], timeout=10000)
-                except Exception:
-                    logger.error('Beam ' + self.beam + ': Calibration could not completely be removed from ' + dataset + '. Flags might also not have been properly reset!')
+        if do_clearcal or do_clearcal_fluxcal:
+            # Run a clearcal on the fluxcal and revert to the last flagversion
+            logger.info("Beam {}: Removing calibration from flux calibrator".format(self.beam))
+            dataset = self.get_fluxcal_path()
+            try:
+                cc_dataset_clear = 'clearcal(vis = "' + dataset + '")'
+                cc_dataset_resetflags = 'flagmanager(vis = "' + dataset + '", mode = "restore", versionname = "ccal")'
+                cc_dataset_removeflagtable = 'flagmanager(vis = "' + dataset + '", mode = "delete", versionname = "ccal")'
+                lib.run_casa([cc_dataset_clear, cc_dataset_resetflags, cc_dataset_removeflagtable], timeout=10000)
+            except Exception:
+                logger.error('Beam ' + self.beam + ': Calibration could not completely be removed from ' + dataset + '. Flags might also not have been properly reset!')
+        if do_clearcal or do_clearcal_polcal:
+            # Run a clearcal on the polcal and revert to the last flagversion
+            logger.info("Beam {}: Removing calibration from polarisation calibrator".format(self.beam))
+            dataset = self.get_polcal_path()
+            try:
+                cc_dataset_clear = 'clearcal(vis = "' + dataset + '")'
+                cc_dataset_resetflags = 'flagmanager(vis = "' + dataset + '", mode = "restore", versionname = "ccal")'
+                cc_dataset_removeflagtable = 'flagmanager(vis = "' + dataset + '", mode = "delete", versionname = "ccal")'
+                lib.run_casa([cc_dataset_clear, cc_dataset_resetflags, cc_dataset_removeflagtable], timeout=10000)
+            except Exception:
+                logger.error('Beam ' + self.beam + ': Calibration could not completely be removed from ' + dataset + '. Flags might also not have been properly reset!')
+        if do_clearcal or do_clearcal_target:
+            # Run a clearcal on the target and revert to the last flagversion
+            logger.info(
+                "Beam {}: Removing calibration from target".format(self.beam))
+            dataset = self.get_target_path()
+            try:
+                cc_dataset_clear = 'clearcal(vis = "' + dataset + '")'
+                cc_dataset_resetflags = 'flagmanager(vis = "' + \
+                    dataset + '", mode = "restore", versionname = "ccal")'
+                cc_dataset_removeflagtable = 'flagmanager(vis = "' + \
+                    dataset + '", mode = "delete", versionname = "ccal")'
+                lib.run_casa([cc_dataset_clear, cc_dataset_resetflags,
+                                cc_dataset_removeflagtable], timeout=10000)
+            except Exception:
+                logger.error('Beam ' + self.beam + ': Calibration could not completely be removed from ' +
+                                dataset + '. Flags might also not have been properly reset!')
         # Remove the keywords in the parameter file
         if do_clearcal:
             logger.warning('Beam ' + self.beam + ': Deleting all parameter file entries for CROSSCAL module')
-            subs_param.del_param(self, cbeam + '_fluxcal_model')
-            subs_param.del_param(self, cbeam + '_polcal_model')
+            if do_clearcal_fluxcal:
+                subs_param.del_param(self, cbeam + '_fluxcal_model')
+            if do_clearcal_polcal:
+                subs_param.del_param(self, cbeam + '_polcal_model')
         else:
             logger.warning(
                 'Beam ' + self.beam + ': Deleting all parameter file entries for CROSSCAL module except fluxcal and polcal model parameters')
