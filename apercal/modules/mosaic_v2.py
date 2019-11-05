@@ -16,6 +16,7 @@ from apercal.subs import param as subs_param
 from apercal.subs import combim as subs_combim
 from apercal.subs.param import get_param_def
 from apercal.libs import lib
+import apercal.subs.mosaic_utils as mosaic_utils
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +28,22 @@ class mosaic(BaseModule):
     Implementation is based on scripts written by DJ Pisano.
     Currently, the module can only create mosaics of continuum and polarisation images.
     Line mosaics are not yet possible.
+
+    It also only works for a single pointing but will be updated to be able to use different
+    pointings
+
+    The directory structure for the continuum mosaic is going to look like this:
+        basedir
+         |-> mosaic
+          |-> continuum (for the continuum mosaic)
+           |-> images (location of the continuum images, fits and miriad)
+            |-> 01 (location of fits images)
+            |-> ...
+            |-> 39
+           |-> beams  (location of the beam images)
+           |-> mosaic (location of the output mosaic)
     """
+
     module_name = 'MOSAIC'
 
     mosdir = None
@@ -83,27 +99,13 @@ class mosaic(BaseModule):
 
         self.mosaic_continuum_image_list = []
 
-    def abort_module(self, abort_msg):
-        """
-        Simple function to abort the module
-        """
-
-        logger.error(abort_msg)
-        logger.error("ABORT")
-        raise RuntimeError(abort_msg)
-
-    def check_alta_path(self, alta_path):
-        """
-        Function to quickly check the path exists on ALTA
-        """
-        alta_cmd = "ils {}".format(alta_path)
-        logger.debug(alta_cmd)
-        subprocess.check_call(alta_cmd, shell=True,
-                              stdout=self.FNULL, stderr=self.FNULL)
-
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
+    # The main function for the module
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
     def go(self):
         """
         Executes the mosaicing process in the following order
+
         mosaic_continuum_mf
         mosaic_continuum_chunk
         mosaic_continuum_line
@@ -114,12 +116,41 @@ class mosaic(BaseModule):
         self.create_mosaic_continuum_mf()
         logger.info("MOSAICKING done ")
 
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
+    # Just a small helper function to abort the module
+    # when unfinished features are being executed
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    def abort_module(self, abort_msg):
+        """
+        Simple function to abort the module
+        """
+
+        logger.error(abort_msg)
+        logger.error("ABORT")
+        raise RuntimeError(abort_msg)
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
+    # Function to check if path on ALTA exist
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    def check_alta_path(self, alta_path):
+        """
+        Function to quickly check the path exists on ALTA
+        """
+        alta_cmd = "ils {}".format(alta_path)
+        logger.debug(alta_cmd)
+        subprocess.check_call(alta_cmd, shell=True,
+                              stdout=self.FNULL, stderr=self.FNULL)
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
+    # Create all the sub-directories for the mosaic
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++           
     def set_mosaic_subdirs(self, continuum=False):
         """
         Set the name of the subdirectories for the mosaic and create them
+
         """
 
-        if continuum:
+        if self.mosaic_continuum_mf:
             # create the directory for the continuunm mosaic
             if not self.mosaic_continuum_subdir:
                 self.mosaic_continuum_subdir = 'continuum'
@@ -141,6 +172,10 @@ class mosaic(BaseModule):
                 subs_managefiles.director(self, 'mk', os.path.join(
                     self.mosdir, self.mosaic_continuum_subdir, self.mosaic_continuum_mosaic_subdir))
 
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
+    # Function to get the continuum images from different
+    # locations depending on the config
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
     def get_mosaic_continuum_images(self):
         """
         Function to get the continuum images.
@@ -149,6 +184,8 @@ class mosaic(BaseModule):
         1. The directories of the taskids on happili, but only if run from happili-01
         2. An existing directory with all fits files
         3. ALTA (default)
+
+        Continuum images are put into
         """
 
         # Status of the continuum mf mosaic
@@ -335,18 +372,40 @@ class mosaic(BaseModule):
         subs_param.add_param(
             self, 'mosaic_continuum_images_status', mosaic_continuum_images_status)
 
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
+    # Function to get the beam maps
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
     def get_mosaic_continuum_beams(self):
         """
         Getting the information for each beam if they are not already present
         """
 
+        logger.info("Creating beam maps")
+
         mosaic_continuum_beam_status = get_param_def(
             self, 'mosaic_continuum_beam_status', False)
 
+        # change to directory of continuum images
+        subs_managefiles.director(self, 'ch', self.mosaic_continuum_beam_dir)
+
+        try:
+            mosaic_utils.create_beams(self.mosaic_beam_list.copy(), self.mosaic_continuum_beam_subdir)
+        except Exception as e:
+            error = "Creating beam maps ... Failed. Check log"
+            logger.warning(error)
+            logger.exception(e)
+            raise RuntimeError(error)
+        else:
+            logger.info("Creating beam maps ... Successfull")
+            mosaic_continuum_beam_status = True
 
         subs_param.add_param(
             self, 'mosaic_continuum_beam_status', mosaic_continuum_beam_status)
     
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
+    # Function to get the projection centre based on
+    # the config
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
     def get_mosaic_projection_centre(self):
         """
         Getting the information for the projection center
@@ -374,37 +433,220 @@ class mosaic(BaseModule):
 
         subs_param.add_param(
             self, 'mosaic_projection_centre_status', mosaic_projection_centre_status)
-        
+    
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
+    # Function to convert images to miriad
+    # Can be moved to mosaic_utils.py
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
     def convert_images_to_miriad(self):
         """
-        Convert continuum images to miriad format
+        Convert continuum fits images to miriad format
+
+        Based on notebook function import_image(beam_num)
+
+        At the moment the function is only successful
+        if all beams were successfully.
+
+        TODO:
+            Conversion should be parallelised.
         """
 
-        mosaic_continuum_convert_status = get_param_def(
-            self, 'mosaic_continuum_convert_status', False)
+        logger.info("Converting fits images to miriad images")
+
+        mosaic_continuum_convert_fits_images_status = get_param_def(
+            self, 'mosaic_continuum_convert_fits_images_status', False)
 
         # change to directory of continuum images
         subs_managefiles.director(self, 'ch', self.mosaic_continuum_images_dir)
 
-        # This function will import a FITS image into Miriad placing it in the mosaicdir
-        fits = lib.miriad('fits')
-        fits.op = 'xyin'
-        fits.in_ = '{}/image_mf_00.fits'.format(str(beam_num).zfill(2))
-        fits.out = imagedir+'image_{}.map'.format(str(beam_num).zfill(2))
-        fits.inp()
-        fits.go()
+        # go through the list of beams
+        for beam in self.mosaic_beam_list:
+            # This function will import a FITS image into Miriad placing it in the mosaicdir
+            fits = lib.miriad('fits')
+            fits.op = 'xyin'
+            fits.in_ = '{}/image_mf_00.fits'.format(beam)
+            fits.out = '{0}/image_{0}.map'.format(beam)
+            fits.inp()
+            try:
+                fits.go()
+            except Exception as e:
+                mosaic_continuum_convert_fits_images_status = False
+                logger.warning("Converting fits image of beam {} to miriad image ... Failed".format(beam))
+                logger.exception(e)
+            else:
+                mosaic_continuum_convert_fits_images_status = True
+                logger.debug("Converting fits image of beam {} to miriad image ... Successfull".format(beam))
+
+        if mosaic_continuum_convert_fits_images_status:
+            logger.info("Converting fits images to miriad images ... Successful")
+        else:
+            logger.warning("Converting fits images to miriad images ... Failed for at least one beam. Please check the log")
+            
+        subs_param.add_param(
+            self, 'mosaic_continuum_convert_fits_images_status', mosaic_continuum_convert_fits_images_status)
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
+    # Function to convert beam maps from fits to miriad
+    # May not be necessary in the end.
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    def convert_beams_to_miriad(self):
+        """
+        Convert beam fits images to miriad format
+
+        Based on notebook function import_beam(beam_num)
+
+        At the moment the function is only successful
+        if all beams were successfully.
+
+        TODO:
+            Conversion should be parallelised.
+            Could be moved to submodule taking care of creating beam maps
+        """
+
+        logger.info("Converting fits beam images to miriad images")
+
+        mosaic_continuum_convert_fits_beam_status = get_param_def(
+            self, 'mosaic_continuum_convert_fits_beam_status', False)
+
+        # change to directory of continuum images
+        subs_managefiles.director(self, 'ch', self.mosaic_continuum_beam_dir)
+
+        for beam in self.mosaic_beam_list:
+            # This function will import the FITS image of a beam into Miriad format, placing it in the mosaicdir
+            fits = lib.miriad('fits')
+            fits.op = 'xyin'
+            fits.in_ = 'beam_{}.fits'.format(beam)
+            fits.out = 'beam_{}.map'.format(beam)
+            fits.inp()
+            try:
+                fits.go()
+            except Exception as e:
+                mosaic_continuum_convert_fits_beam_status = False
+                logger.warning("Converting fits image of beam {} to miriad image ... Failed".format(beam))
+                logger.exception(e)
+            else:
+                mosaic_continuum_convert_fits_beam_status = True
+                logger.debug("Converting fits image of beam {} to miriad image ... Successfull".format(beam))
+
+        if mosaic_continuum_convert_fits_beam_status:
+            logger.info("Converting fits images to miriad images ... Successful")
+        else:
+            logger.warning("Converting fits images to miriad images ... Failed for at least one beam. Please check the log")
+            
+        subs_param.add_param(
+            self, 'mosaic_continuum_convert_fits_beam_status', mosaic_continuum_convert_fits_beam_status)
+
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
+    # Function to get the image noise for a specific beam
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    def get_beam_noise(self, beam):
+        """
+        Function to get the image noise for a specific beam
+
+        Based on beam_noise(beam_num) from the notebook)            
+        """
+
+        # change to directory of continuum images
+        subs_managefiles.director(self, 'ch', self.mosaic_continuum_image_dir)
+
+        sigest = lib.miriad('sigest')
+        sigest.in_ = '{0}/image_{0}.map'.format(str(beam).zfill(2))
+
+        return sigest.go()
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
+    # Function to get the correlation matrix
+    # This should go to mosaic_utils
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    def get_inverted_covariance_matrix(self):
+        """
+        Function to get the covariance matrix
+
+        Based on the cell that reads-in the correlation matrix
+        """
+
+        logger.info("Getting covariance matrix")
+
+        mosaic_continuum_write_covariance_matrix_status = get_param_def(
+            self, 'mosaic_continuum_write_covariance_matrix_status', False)
+
+        mosaic_continuum_read_covariance_matrix_status = get_param_def(
+            self, 'mosaic_continuum_read_covariance_matrix_status', False)
+
+
+        if not mosaic_continuum_write_covariance_matrix_status:
+            logger.info("Writing covariance matrix")
+            try:
+                mosaic_utils.create_correlation_matrix(self.mosaic_continuum_dir)
+            except Exception as e:
+                error = "Writing covariance matrix ... Failed"
+                logger.error(error)
+                logger.exception(e)
+                raise RuntimeError(error)
+            else:
+                logger.info("Writing covariance matrix ... Successfull")
+                mosaic_continuum_write_covariance_matrix_status = True
+
+        logger.info("Reading covariance matrix")
+
+        # Read in noise correlation matrix 
+        try:
+            noise_cor=np.loadtxt(os.path.join(self.mosaic_continuum_dir,'correlation.txt'),dtype='f')
+        except Exception as e:
+            error = "Reading covariance matrix ... Failed"
+            logger.error(error)
+            logger.exception(e)
+            raise RuntimeError(error)
+        else:
+            mosaic_continuum_read_covariance_matrix_status = True
+
+        # Initialize covariance matrix
+        noise_cov=noise_cor
+
+        # Measure noise in the image for each beam
+        sigma_beam=np.zeros(self.NBEAMS,float)
+
+        # number of beams
+        n_beams = len(self.mosaic_beam_list)
+        for bm in range(n_beams):
+            sigma_beam[bm]=float(self.get_beam_noise(bm)[4].lstrip('Estimated rms is '))
+            
+        for a in range(n_beams):
+            for b in range(n_beams):
+                noise_cov[a,b]=noise_cor[a,b]*sigma_beam[a]*sigma_beam[b]  # The noise covariance matrix is 
+    
+        # Only the inverse of this matrix is ever used:
+        inv_cov=np.linalg.inv(noise_cov)
 
         subs_param.add_param(
-            self, 'mosaic_continuum_convert_status', mosaic_continuum_convert_status)
+            self, 'mosaic_continuum_write_covariance_matrix_status', mosaic_continuum_write_covariance_matrix_status)
+        
+        subs_param.add_param(
+            self, 'mosaic_continuum_read_covariance_matrix_status', mosaic_continuum_read_covariance_matrix_status)        
 
+        logger.info("Getting covariance matrix ... Successfull")
+
+        return inv_cov
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
+    # Function to transfer image coordinates to beam maps
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    def transfer_coordinates(self):
+
+        
+    
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
+    # Function to create the continuum mosaic
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
     def create_mosaic_continuum_mf(self):
         """
-        Looks for all available multi-frequency continuum images and mosaics them into one large image.
+        Function to create the continuum mosaic
         """
         subs_setinit.setinitdirs(self)
         subs_setinit.setdatasetnamestomiriad(self)
 
-        
 
         ##########################################################################################################
         # Check if the parameter is already in the parameter file and load it otherwise create the needed arrays #
@@ -449,92 +691,9 @@ class mosaic(BaseModule):
                 # =======================================
                 logger.info("Converting images and beams into miriad format")
                 self.convert_images_to_miriad()
+                self.convert_beams_to_miriad()
                 
                 self.abort_module("Not finished")
-
-                logger.info('Mosaicking multi-frequency continuum images')
-                # Acquire the results and statistics from continuum mf imaging
-                for b in range(self.NBEAMS):
-                    mosaiccontinuummfcontinuumstatus[b] = get_param_def(
-                        self, 'continuum_B' + str(b).zfill(2) + '_targetbeams_mf_status', False)
-                    if mosaiccontinuummfcontinuumstatus[b]:
-                        finalminor = get_param_def(
-                            self, 'continuum_B' + str(b).zfill(2) + '_targetbeams_mf_final_minorcycle', np.nan)
-                        subs_managefiles.director(self, 'cp', str(b).zfill(2) + '.fits', file_=self.basedir + str(
-                            b).zfill(2) + '/' + self.contsubdir + '/' + 'image_mf_' + str(finalminor).zfill(2) + '.fits')
-                        if os.path.isfile(str(b).zfill(2) + '.fits'):
-                            mosaiccontinuummfcopystatus[b] = True
-                            subs_convim.fitstomir(str(b).zfill(
-                                2) + '.fits', str(b).zfill(2))
-                            subs_managefiles.director(
-                                self, 'rm', str(b).zfill(2) + '.fits')
-                        else:
-                            mosaiccontinuummfcopystatus[b] = False
-                            logger.warning(
-                                'Beam ' + str(b).zfill(2) + ' was not copied successfully!')
-                # Copy the images over to the mosaic directory
-                for b in range(self.NBEAMS):
-                    if mosaiccontinuummfcontinuumstatus[b] and mosaiccontinuummfcopystatus[b]:
-                        # Get the image beam parameters and the image statistics
-                        mosaiccontinuummfcontinuumimagestats[b, :] = subs_imstats.getimagestats(
-                            self, str(b).zfill(2))
-                        mosaiccontinuummfcontinuumbeamparams[b, :] = subs_readmirhead.getbeamimage(
-                            str(b).zfill(2))
-                    else:
-                        logger.warning('Skipping Beam ' + str(b).zfill(
-                            2) + '! Continuum mf-imaging was not successful or continuum image not available!')
-                # Calculate the synthesised beam and reject outliers (algorithm needs to be updated)
-                rejbeams, beamparams = subs_combim.calc_synbeam(
-                    mosaiccontinuummfcontinuumbeamparams)
-                # Convolve all the images to the calculated beam
-                for b in range(self.NBEAMS):
-                    if mosaiccontinuummfcontinuumstatus[b] and mosaiccontinuummfcopystatus[b]:
-                        try:
-                            convol = lib.miriad('convol')
-                            convol.map = str(b).zfill(2)
-                            convol.fwhm = str(
-                                beamparams[0]) + ',' + str(beamparams[1])
-                            convol.pa = str(beamparams[2])
-                            convol.options = 'final'
-                            convol.out = str(b).zfill(2) + '_cv'
-                            convol.go()
-                            if os.path.isdir(str(b).zfill(2) + '_cv'):
-                                mosaiccontinuummfconvolstatus[b] = True
-                            else:
-                                mosaiccontinuummfconvolstatus[b] = False
-                                logger.warning('Beam ' + str(b).zfill(
-                                    2) + ' could not be convolved to the calculated beam size! File not there!')
-                        except:
-                            mosaiccontinuummfconvolstatus[b] = False
-                            logger.warning(
-                                'Beam ' + str(b).zfill(2) + ' could not be convolved to the calculated beam size!')
-                # Combine all the images using linmos (needs to be updated with proper primary beam model)
-                linmosimages = ''
-                linmosrms = ''
-                for b in range(self.NBEAMS):
-                    if mosaiccontinuummfcontinuumstatus[b] and mosaiccontinuummfcopystatus[b] and mosaiccontinuummfconvolstatus[b]:
-                        linmosimages = linmosimages + str(b).zfill(2) + '_cv,'
-                        linmosrms = linmosrms + \
-                            str(subs_imstats.getimagestats(self, str(b).zfill(2) + '_cv')[2]) + ','
-                linmos = lib.miriad('linmos')
-                linmos.in_ = linmosimages.rstrip(',')
-                linmos.rms = linmosrms.rstrip(',')
-                linmos.out = self.target.rstrip('.MS') + '_mf'
-                linmos.go()
-                if os.path.isdir(self.target.rstrip('.MS') + '_mf'):
-                    mosaiccontinuummfstatus = True
-                    subs_convim.mirtofits(self.target.rstrip(
-                        '.MS') + '_mf', self.target.rstrip('.MS') + '_mf.fits')
-                    logger.info(
-                        'Mosaicking of multi-frequency image successful!')
-                else:
-                    mosaiccontinuummfstatus = False
-                    logger.error(
-                        'Multi-freqeuncy mosaic was not created successfully!')
-            else:
-                mosaiccontinuummfstatus = True
-                logger.info(
-                    'Multi-frequency continuum mosaic was already successfully created!')
 
         # Save the derived parameters to the parameter file
 
