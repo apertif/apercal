@@ -319,13 +319,14 @@ class ccal(BaseModule):
             logger.info("Beam {0}: Reference antenna {1} set in config file is valid".format(self.beam, crosscal_refant))
 
         # Checking polcal but not doing anything at the moment if it fails
-        refant_in_polcal = crosscal_refant in polcal_ant_list
-        if refant_in_polcal and self.polcal != '':
-            logger.info("Beam {0}: Reference antenna {1} exists in polarisation calibrator".format(
-                self.beam, crosscal_refant))
-        else:
-            logger.warning("Beam {0}: Reference antenna {1} does NOT exists in polarisation calibrator. Polarisation will probably fail.".format(
-                self.beam, crosscal_refant))
+        if self.polcal != '' and os.path.isdir(self.get_polcal_path()):
+            refant_in_polcal = crosscal_refant in polcal_ant_list
+            if refant_in_polcal:
+                logger.info("Beam {0}: Reference antenna {1} exists in polarisation calibrator".format(
+                    self.beam, crosscal_refant))
+            else:
+                logger.warning("Beam {0}: Reference antenna {1} does NOT exists in polarisation calibrator. Polarisation will probably fail.".format(
+                    self.beam, crosscal_refant))
 
 
     def setflux(self):
