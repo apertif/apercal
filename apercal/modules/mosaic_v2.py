@@ -59,6 +59,7 @@ class mosaic(BaseModule):
     mosaic_projection_centre_file = ''
     mosaic_primary_beam_type = None
     mosaic_primary_beam_files = None
+    mosaic_common_beam_type = ''
     mosaic_continuum_mf = None
     mosaic_polarisation_v = None
 
@@ -580,10 +581,9 @@ class mosaic(BaseModule):
             try:
                 mosaic_utils.create_correlation_matrix(self.mosaic_continuum_dir)
             except Exception as e:
-                error = "Writing covariance matrix ... Failed"
-                logger.error(error)
+                warning = "Writing covariance matrix ... Failed"
+                logger.warning(warning)
                 logger.exception(e)
-                raise RuntimeError(error)
             else:
                 logger.info("Writing covariance matrix ... Successfull")
                 mosaic_continuum_write_covariance_matrix_status = True
@@ -594,10 +594,9 @@ class mosaic(BaseModule):
         try:
             noise_cor=np.loadtxt(os.path.join(self.mosaic_continuum_dir,'correlation.txt'),dtype='f')
         except Exception as e:
-            error = "Reading covariance matrix ... Failed"
-            logger.error(error)
+            warning = "Reading covariance matrix ... Failed"
+            logger.warning(warning)
             logger.exception(e)
-            raise RuntimeError(error)
         else:
             mosaic_continuum_read_covariance_matrix_status = True
 
@@ -633,9 +632,119 @@ class mosaic(BaseModule):
     # Function to transfer image coordinates to beam maps
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
     def transfer_coordinates(self):
+        """
+        Function to transfer image coordinates to beam maps
+
+        Based on the notebook cell
+        """
+
+        logger.info("Transfer image coordinates to beam maps")
+
+        mosaic_transfer_coordinates_to_beam_status = get_param_def(
+            self, 'mosaic_transfer_coordinates_to_beam_status', False)
+
+        for beam in self.mosaic_beam_list:
+
+            # get RA
+            gethd = lib.miriad('gethd')
+            gethd.in_ = os.path.join(self.mosaic_continuum_images_subdir,'image_{}.map/crval1'.format(beam))
+            try:
+                ra1=gethd.go()
+            except Exception as e:
+                mosaic_transfer_coordinates_to_beam_status = False
+                warning = "Reading RA of beam {} failed".format(beam)
+                logger.warning(warning)
+                logger.exception(e)
+            else:
+                mosaic_transfer_coordinates_to_beam_status = True
+        
+            # write RA
+            puthd = lib.miriad('puthd')
+            puthd.in_ = os.path.join(self.mosaic_continuum_beam_subdir,'beam_{}.map/crval1'.format(beam))
+            puthd.value = float(ra1[0])
+            try:
+                puthd.go()
+            except Exception as e:
+                mosaic_transfer_coordinates_to_beam_status = False
+                warning = "Writing RA of beam {} failed".format(beam)
+                logger.warning(warning)
+                logger.exception(e)
+            else:
+                mosaic_transfer_coordinates_to_beam_status = True
+        
+            # get DEC
+            gethd.in_ = os.path.join(self.mosaic_continuum_images_subdir,'image_{}.map/crval2'.format(beam))
+            try:
+                dec1=gethd.go()
+            except Exception as e:
+                mosaic_transfer_coordinates_to_beam_status = False
+                warning = "Reading DEC of beam {} failed".format(beam)
+                logger.warning(warning)
+                logger.exception(e)
+            else:
+                mosaic_transfer_coordinates_to_beam_status = True
+            
+            # write DEC
+            puthd.in_ = os.path.join(self.mosaic_continuum_beam_subdir,'beam_{}.map/crval2'.format(beam))
+            puthd.value = float(dec1[0])
+            try:
+                puthd.go()
+            except Exception as e:
+                mosaic_transfer_coordinates_to_beam_status = False
+                warning = "Writing DEC of beam {} failed".format(beam)
+                logger.warning(warning)
+                logger.exception(e)
+            else:
+                mosaic_transfer_coordinates_to_beam_status = True
+
+        if mosaic_transfer_coordinates_to_beam_status:
+            logger.info("Transfer image coordinates to beam maps ... Successfull")
+        else:
+            logger.info("Transfer image coordinates to beam maps ... Failed")
+
+        subs_param.add_param(
+            self, 'mosaic_transfer_coordinates_to_beam_status', mosaic_transfer_coordinates_to_beam_status)        
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
+    # Function to calculate a common beam to convolve images
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    def get_common_beam(self):
+        """
+        Function to calculate a common beam to convolve images
+
+        Based on the cell on the same synthesized beam.
+
+        There are several options
+        1. Calculate the maximum beam
+        2. Calculate a circular beam (default)
+        """
 
         
-    
+        bmaj=[]
+        bmin=[]
+        bpa=[]
+        for beam in beams:
+            gethd = lib.miriad('gethd')
+            gethd.in_ = imagedir+'image_{}.map/bmaj'.format(str(beam).zfill(2))
+            bmaj.append(gethd.go())
+            gethd.in_ = imagedir+'image_{}.map/bmin'.format(str(beam).zfill(2))
+            bmin.append(gethd.go())
+            gethd.in_ = imagedir+'image_{}.map/bpa'.format(str(beam).zfill(2))
+            bpa.append(gethd.go())
+            
+        # Calculate maximum bmaj and bmin and median bpa for final convolved beam shape
+        bmajor = [float(x[0]) for x in bmaj]
+        bmajor = 3600.*np.degrees(bmajor)
+
+        bminor = [float(x[0]) for x in bmin]
+        bminor = 3600.*np.degrees(bminor)
+
+        bangle = [float(x[0]) for x in bpa]
+        bangle = np.degrees(bangle)
+
+        c_beam = [1.05*np.nanmax(bmajor),1.05*np.nanmax(bminor),np.nanmedian(bangle)]
+        print('The final, convolved, synthesized beam has bmaj, bmin, bpa of: ',c_beam) 
+        
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
     # Function to create the continuum mosaic
