@@ -719,32 +719,53 @@ class mosaic(BaseModule):
         2. Calculate a circular beam (default)
         """
 
+        logger.info("Calculate common beam for convolution")
+
+        mosaic_common_beam_status = get_param_def(
+            self, 'mosaic_common_beam_status', False)
         
-        bmaj=[]
-        bmin=[]
-        bpa=[]
-        for beam in beams:
-            gethd = lib.miriad('gethd')
-            gethd.in_ = imagedir+'image_{}.map/bmaj'.format(str(beam).zfill(2))
-            bmaj.append(gethd.go())
-            gethd.in_ = imagedir+'image_{}.map/bmin'.format(str(beam).zfill(2))
-            bmin.append(gethd.go())
-            gethd.in_ = imagedir+'image_{}.map/bpa'.format(str(beam).zfill(2))
-            bpa.append(gethd.go())
+        mosaic_common_beam_values = get_param_def(
+            self, 'mosaic_common_beam_status', np.zeros(3))
+
+            if not mosaic_common_beam_status:
+            # this is where the beam information will be stored
+            bmaj=[]
+            bmin=[]
+            bpa=[]
+
+            # go through the beams and get the information
+            for beam in self.mosaic_beam_list:
+                gethd = lib.miriad('gethd')
+                gethd.in_ = '{0}/image_{0}.map/bmaj'.format(beam)
+                bmaj.append(gethd.go())
+                gethd.in_ = '{0}/image_{0}.map/bmin'.format(beam)
+                bmin.append(gethd.go())
+                gethd.in_ = '{0}/image_{0}.map/bpa'.format(beam)
+                bpa.append(gethd.go())
+                
+            # Calculate maximum bmaj and bmin and median bpa for final convolved beam shape
+            bmajor = [float(x[0]) for x in bmaj]
+            bmajor = 3600.*np.degrees(bmajor)
+
+            bminor = [float(x[0]) for x in bmin]
+            bminor = 3600.*np.degrees(bminor)
+
+            bangle = [float(x[0]) for x in bpa]
+            bangle = np.degrees(bangle)
+
+            c_beam = [1.05*np.nanmax(bmajor),1.05*np.nanmax(bminor),np.nanmedian(bangle)]
+
+            logger.info('The final, convolved, synthesized beam has bmaj, bmin, bpa of: {}'.format(str(c_beam))
             
-        # Calculate maximum bmaj and bmin and median bpa for final convolved beam shape
-        bmajor = [float(x[0]) for x in bmaj]
-        bmajor = 3600.*np.degrees(bmajor)
+            mosaic_common_beam_type = True
+        else:
+            logger.info("Common beam already available as bmaj, bmin, bpa of: {}".format(str(mosaic_common_beam_values)))
 
-        bminor = [float(x[0]) for x in bmin]
-        bminor = 3600.*np.degrees(bminor)
-
-        bangle = [float(x[0]) for x in bpa]
-        bangle = np.degrees(bangle)
-
-        c_beam = [1.05*np.nanmax(bmajor),1.05*np.nanmax(bminor),np.nanmedian(bangle)]
-        print('The final, convolved, synthesized beam has bmaj, bmin, bpa of: ',c_beam) 
+        subs_param.add_param(
+            self, 'mosaic_common_beam_status', mosaic_common_beam_status)  
         
+        subs_param.add_param(
+            self, 'mosaic_common_beam_values', mosaic_common_beam_values)  
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
     # Function to create the continuum mosaic
