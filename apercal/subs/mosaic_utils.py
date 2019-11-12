@@ -1,6 +1,7 @@
 import numpy as np
 from apercal.libs import lib
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +15,8 @@ in the Apertif-comissioning repository
 # ++++++++++++++++++++++++++++++++++++++++
 # Functions to create the beam maps
 # ++++++++++++++++++++++++++++++++++++++++
-def create_beam(beam_list, beam_map_dir, type = 'Gaussian'):
+def create_beam(beam_list, beam_map_dir, corrtype = 'Gaussian',
+                bm_size=3073,cell=4.0,fwhm=1950.0, cutoff=0.25):
     """
     Function to create beam maps with miriad
     
@@ -25,10 +27,113 @@ def create_beam(beam_list, beam_map_dir, type = 'Gaussian'):
     Args:
         beam_list (list(str)): list of beams
         beam_map_dir (str): output directory for the beam maps
-        type (str): 'Gaussian' (simple case from notebook) or 'Correct' (final use case)
+        corrtype (str): 'Gaussian' (simple case from notebook) or 'Correct' (final use case)
+        bm_size (int): Number of pixels in map (default 3073, continuum mfs images)
+        cell (float): Cell size of a pixel in arcsec (default 4, continuum mfs images)
+        fwhm (float): FWHM in arcsec for type='Gaussian' (default 32.5*60)
+        cutoff (float): Relative power level to cut beam off at
     """
+    #iterate through beams:
+    for beam,beamdir in zip(beam_list,beam_map_dir):
+        #first define output name (goes in outdir)
+        #use beam integer in name
+        beamoutname = 'beam_{}.map'.format(beam.zfill(2))
+        #then test type and proceed for different types
+        if corrtype == 'Gaussian':
+            make_gaussian_beam(beamdir,beamoutname,bm_size,cell,fwhm,cutoff)
+        elif corrtype == 'Correct':
+            error='Measured PB maps not yet supported'
+            logger.error(error)
+            raise ApercalException(error)
+        else:
+            error='Type of beam map not supported'
+            logger.error(error)
+            raise ApercalException(error)
+
+def make_gaussian_beam(beamdir,beamoutname,bm_size,cell,fwhm,cutoff):
+    """
+    Function to create Gaussian beam
+
+    Args:
+        beamdir (str): destination directory for beam map
+        beamoutname (str): name for beam map, based on beam number
+        bm_size (integer): number of pixels for reference map
+        cell (float): cell size of a pixel in arcsec
+        fwhm (float): FWHM of Gaussian in arcsec
+        cutoff (float): Relative level to cut beam off at
+    """
+    #use a temp beam name because you have to apply a cutoff and then clean up
+    tmpbeamname = beamoutname+'_tmp'
+    #set peak level to 1 and PA = 0, plus arbitrary reference pixel
+    pk = 1.
+    bpa = 0.
+    pos = [0., 60.]
+    #set up imgen parameters
+    imgen = lib.miriad('imgen')
+    imgen.out = '{0}/{1}'.format(beamdir,tmpbeamname)
+    imgen.imsize = bm_size
+    imgen.cell = cell
+    imgen.object = 'gaussian'
+    imgen.spar = '{0},{1},{2},{3},{4},{5}'.format(str(pk),str(0),str(0),
+                                                  str(fwhm),str(fwhm),str(bpa))
+    imgen.radec = '{0},{1}'.format(str(pos[0]),str(pos[1]))
+    #create image
+    imgen.go()
+
+    #apply beam cutoff
+    beam_cutoff(beamoutname,tmpbeamname,beamdir,cutoff)
+
+    #fix header
+    fixheader(beamoutname,beamdir)
 
 
+def beam_cutoff(beamname,tmpbeamname,beamdir,cutoff):
+    """
+    Function to apply a beam cutoff value
+
+    Args:
+        beamname (str): final name for beam map
+        tmpbeamname (str): name of temporary map, to be deleted
+        beamdir (str): output directory for beam map
+        cutoff (float): relative level at which beam map should be cut off
+    """
+    #load maths
+    maths = lib.miriad('maths')
+    #expression is just beam map to have cutoff value applied
+    #Use brackets to guard against formatting issues
+    maths.exp = "'<{0}/{1}>'".format(beamdir,tmpbeamname)
+    #Apply cutoff value as mask, using miriad formatting, brackets around image name
+    maths.mask = "'<{0}/{1}>.gt.{2}'".format(beamdir,tmpbeamname,cutoff)
+    maths.out = '{0}/{1}'.format(beamdir,beamname)
+    #run
+    maths.go()
+
+    #clean up temp file
+    os.system('rm -rf {0}/{1}'.format(beamdir,tmpbeamname))
+
+
+def fixheader(beamname,beamdir):
+    """
+    Generation of Gaussian beam maps results in the Gaussian
+    parameters included as the "beam"
+    This function removes those values
+
+    Args:
+        beamname (str): name of beam map
+        beamdir (str): location of beam map
+    """
+    #load function to delete header information
+    delhd = lib.miriad('delhd')
+    #delete bmaj
+    delhd.in_ = '{0}/{1}/bmaj'.format(beamdir,beamname)
+    delhd.go()
+    #delete bmin
+    delhd.in_ = '{0}/{1}/bmin'.format(beamdir,beamname)
+    delhd.go()
+    #delete bmpa
+    delhd.in_ = '{0}/{1}/bpa'.format(beamdir,beamname)
+    delhd.go()
+    
 # ++++++++++++++++++++++++++++++++++++++++
 # Functions to create a correlation matrix
 # ++++++++++++++++++++++++++++++++++++++++
