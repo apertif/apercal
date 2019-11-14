@@ -1106,10 +1106,10 @@ class mosaic(BaseModule):
 
         mosaic_variance_map_status = True
         subs_param.add_param(
-            self, 'mosaic_variance_map_status', True) 
+            self, 'mosaic_variance_map_status', True)
         
     # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
-    # Function to create the continuum mosaic
+    # Function to calculate the beam  matrix multiplied by the noise matrix
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
