@@ -1002,10 +1002,10 @@ class mosaic(BaseModule):
         Function to multiply the transpose of the beam matrix by the covariance matrix
         """
 
-        logger.info("Regridding beam maps")
+        logger.info("Multiplying beam matrix by covariance matrix")
 
         mosaic_product_beam_covariance_matrix_status = get_param_def(
-            self, 'product_beam_covariance_matrix_status', False)
+            self, 'mosaic_product_beam_covariance_matrix_status', False)
 
         # switch to mosaic directory
         subs_managefiles.director(self, 'ch', self.mosaic_contiuum_dir)
@@ -1058,11 +1058,59 @@ class mosaic(BaseModule):
             # for fl in glob.glob(mosaicdir+'sum_*.map'):
             #     shutil.rmtree(fl)
         
-        logger.info("Regridding beam maps ... Done")
+        logger.info("Multiplying beam matrix by covariance matrix ... Done")
 
         mosaic_product_beam_covariance_matrix_status = True
         subs_param.add_param(
             self, 'mosaic_product_beam_covariance_matrix_status', True) 
+    
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
+    # Function to calculate the variance map
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    def calculate_variance_map(self):
+        """
+        Function to calculate the variance map
+        """
+
+        logger.info("Calculate variance map")
+
+        mosaic_variance_map_status = get_param_def(
+            self, 'mosaic_variance_map_status', False)
+
+        # switch to mosaic directory
+        subs_managefiles.director(self, 'ch', self.mosaic_contiuum_dir)
+
+        # Calculate variance map (using beams and noise covariance matrix over entire map)
+        # This is the denominator for I(mosaic)
+
+        maths = lib.miriad('maths')
+        i=0
+        for beam in self.mosaic_beam_list:
+            if os.path.isdir(self.mosaic_continuum_mosaic_subdir+"/btci_{}.map>".format(beam)) and os.path.isdir(self.mosaic_continuum_beam_subdir+"/beam_{}_mos.map".format(beam)):
+                operate="'<"+self.mosaic_continuum_mosaic_subdir+"/btci_{}.map>*<".format(beam)+self.mosaic_continuum_beam_subdir+"/beam_{}_mos.map>'".format(beam)
+                if beam != self.mosaic_beam_list[0]:
+                    operate=operate[:-1]+"+<"+self.mosaic_continuum_mosaic_subdir+"/out_{}_mos.map>'".format(str(i).zfill(2))
+                i+=1
+                maths.out = self.mosaic_continuum_mosaic_subdir+"/out_{}_mos.map".format(str(i).zfill(2))
+                maths.exp = operate
+                maths.options='unmask'
+                maths.inp()
+                maths.go()
+            else:
+                logger.warning("Could not find btci_{0}.map or bea_{0}_mos.map for beam {0}".format(beam))
+
+        subs_managefiles.director(self, 'rn', os.path.join(self.mosaic_continuum_mosaic_subdir,'variance_mos.map'), file_=os.path.join(self.mosaic_continuum_mosaic_subdir, 'out_{}_mos.map'.format(str(i).zfill(2))))
+        #os.rename(mosaicdir+'out_{}_mos.map'.format(str(i).zfill(2)),mosaicdir+'variance_mos.map')
+
+        logger.info("Calculate variance map ... Done")
+
+        mosaic_variance_map_status = True
+        subs_param.add_param(
+            self, 'mosaic_variance_map_status', True) 
+        
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
+    # Function to create the continuum mosaic
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
     # Function to create the continuum mosaic
