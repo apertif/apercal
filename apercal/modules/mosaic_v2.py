@@ -67,6 +67,8 @@ class mosaic(BaseModule):
     mosaic_continuum_images_subdir = None
     mosaic_continuum_beam_subdir = None
     mosaic_continuum_mosaic_subdir = None
+    mosaic_continuum_imsize = 5121
+    mosaic_continuum_cellsize = 4
 
     FNULL = open(os.devnull, 'w')
 
@@ -397,7 +399,7 @@ class mosaic(BaseModule):
             logger.exception(e)
             raise RuntimeError(error)
         else:
-            logger.info("Creating beam maps ... Successfull")
+            logger.info("Creating beam maps ... Done")
             mosaic_continuum_beam_status = True
 
         subs_param.add_param(
@@ -414,6 +416,10 @@ class mosaic(BaseModule):
 
         mosaic_projection_centre_status = get_param_def(
             self, 'mosaic_projection_centre_status', False)
+        
+        mosaic_projection_centre_values = get_param_def(
+            self, 'mosaic_projection_centre_values', ['', ''])
+
 
         if self.mosaic_projection_centre_ra != '' and self.mosaic_projection_centre_dec != '':
             logger.info("Using input projection center: RA={0} and DEC={1}".format(self.mosaic_projection_centre_ra, self.mosaic_projection_centre_dec))
@@ -422,9 +428,27 @@ class mosaic(BaseModule):
             if self.mosaic_projection_centre_beam != '':
                 logger.info("Using pointing centre of beam {} as the projection centre".format(self.mosaic_projection_centre_beam))
                 
-                # not available yet
-                self.abort_module("Getting projection centre from beam has not been implemented yet")
-            
+                # change to directory of continuum images
+                subs_managefiles.director(self, 'ch', self.mosaic_continuum_images_dir)
+
+                # Extract central RA and Dec for Apertif pointing from a chosen beam
+                if self.mosaic_projection_centre_beam in self.mosaic_beam_list:
+                    gethd = lib.miriad('gethd')
+                    gethd.in_ = '{0}/image_{0}.map/crval1'.format(str(beam).zfill(2))
+                    gethd.format = 'hms'
+                    ra_ref=gethd.go()
+                    gethd.in_ = '{0}/image_{0}.map/crval2'.format(str(beam).zfill(2))
+                    gethd.format = 'dms'
+                    dec_ref=gethd.go()
+                else:
+                    error = "Failed reading projection centre from beam {}".format(beam)
+                    logger.error(error)
+                    raise RuntimeError(error)
+
+                # assigning ra and dec
+                self.mosaic_projection_centre_ra = ra_ref[0]
+                self.mosaic_projection_centre_dec = dec_ref[0]
+
             if self.mosaic_projection_centre_file != '':
                 logger.info("Reading projection center from file {}".format(self.mosaic_projection_centre_file))
 
@@ -432,8 +456,12 @@ class mosaic(BaseModule):
                 self.abort_module(
                     "Reading projection center from file has not been implemented yet")
 
+        logger.info("Projection centre will be RA={0} and DEC={1}".format(self.mosaic_projection_centre_ra, self.mosaic_projection_centre_dec))
+
         subs_param.add_param(
             self, 'mosaic_projection_centre_status', mosaic_projection_centre_status)
+        subs_param.add_param(
+            self, 'mosaic_projection_centre_values', [self.mosaic_projection_centre_ra, self.mosaic_projection_centre_dec])
     
     # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
     # Function to convert images to miriad
@@ -476,7 +504,7 @@ class mosaic(BaseModule):
                 logger.exception(e)
             else:
                 mosaic_continuum_convert_fits_images_status = True
-                logger.debug("Converting fits image of beam {} to miriad image ... Successfull".format(beam))
+                logger.debug("Converting fits image of beam {} to miriad image ... Done".format(beam))
 
         if mosaic_continuum_convert_fits_images_status:
             logger.info("Converting fits images to miriad images ... Successful")
@@ -527,7 +555,7 @@ class mosaic(BaseModule):
                 logger.exception(e)
             else:
                 mosaic_continuum_convert_fits_beam_status = True
-                logger.debug("Converting fits image of beam {} to miriad image ... Successfull".format(beam))
+                logger.debug("Converting fits image of beam {} to miriad image ... Done".format(beam))
 
         if mosaic_continuum_convert_fits_beam_status:
             logger.info("Converting fits images to miriad images ... Successful")
@@ -585,7 +613,7 @@ class mosaic(BaseModule):
                 logger.warning(warning)
                 logger.exception(e)
             else:
-                logger.info("Writing covariance matrix ... Successfull")
+                logger.info("Writing covariance matrix ... Done")
                 mosaic_continuum_write_covariance_matrix_status = True
 
         logger.info("Reading covariance matrix")
@@ -624,7 +652,7 @@ class mosaic(BaseModule):
         subs_param.add_param(
             self, 'mosaic_continuum_read_covariance_matrix_status', mosaic_continuum_read_covariance_matrix_status)        
 
-        logger.info("Getting covariance matrix ... Successfull")
+        logger.info("Getting covariance matrix ... Done")
 
         return inv_cov
 
@@ -698,7 +726,7 @@ class mosaic(BaseModule):
                 mosaic_transfer_coordinates_to_beam_status = True
 
         if mosaic_transfer_coordinates_to_beam_status:
-            logger.info("Transfer image coordinates to beam maps ... Successfull")
+            logger.info("Transfer image coordinates to beam maps ... Done")
         else:
             logger.info("Transfer image coordinates to beam maps ... Failed")
 
@@ -715,8 +743,8 @@ class mosaic(BaseModule):
         Based on the cell on the same synthesized beam.
 
         There are several options
-        1. Calculate the maximum beam
-        2. Calculate a circular beam (default)
+        1. Calculate a circular beam (default)
+        2. Calculate the maximum beam
         """
 
         logger.info("Calculate common beam for convolution")
@@ -726,6 +754,9 @@ class mosaic(BaseModule):
         
         mosaic_common_beam_values = get_param_def(
             self, 'mosaic_common_beam_status', np.zeros(3))
+
+        # change to directory of continuum images
+        subs_managefiles.director(self, 'ch', self.mosaic_continuum_image_dir)
 
             if not mosaic_common_beam_status:
             # this is where the beam information will be stored
@@ -753,11 +784,20 @@ class mosaic(BaseModule):
             bangle = [float(x[0]) for x in bpa]
             bangle = np.degrees(bangle)
 
-            c_beam = [1.05*np.nanmax(bmajor),1.05*np.nanmax(bminor),np.nanmedian(bangle)]
+            if self.mosaic_common_beam_type == 'circular' or self.mosaic_common_beam_type == '':
+                max_axis = np.nanmax([bmajor, bminor])
+                c_beam = [1.05*max_axis,1.05*max_axis,0.]
+            elif self.mosaic_common_beam_type == "maximum":    
+                c_beam = [1.05*np.nanmax(bmajor),1.05*np.nanmax(bminor),np.nanmedian(bangle)]
+            else:
+                error = "Unknown type of common beam requested. Abort"
+                logger.error(error)
+                raise RuntimeError(error)
 
-            logger.info('The final, convolved, synthesized beam has bmaj, bmin, bpa of: {}'.format(str(c_beam))
+            logger.info('The final, convolved, synthesized beam has bmaj, bmin, bpa of: {}'.format(str(c_beam)))
             
             mosaic_common_beam_type = True
+            mosaic_common_beam_values = c_beam
         else:
             logger.info("Common beam already available as bmaj, bmin, bpa of: {}".format(str(mosaic_common_beam_values)))
 
@@ -766,6 +806,263 @@ class mosaic(BaseModule):
         
         subs_param.add_param(
             self, 'mosaic_common_beam_values', mosaic_common_beam_values)  
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
+    # Function to convolve images
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    def mosaic_convolve_images(self):
+        """
+        Function to convolve images with the common beam
+
+        Should be executed after gridding
+
+        Note:
+            Could be moved
+        """
+
+        logger.info("Convolving images with common beam")
+
+        mosaic_convolve_images_status = get_param_def(
+            self, 'mosaic_convolve_images_status', False)
+        
+        mosaic_common_beam_values = get_param_def(
+            self, 'mosaic_common_beam_status', np.zeros(3))
+
+        # change to directory of continuum images
+        subs_managefiles.director(self, 'ch', self.mosaic_continuum_dir)
+
+        for beam in self.mosaic_beam_list:
+            convol=lib.miriad('convol')
+            convol.map = os.path.join(self.mosaic_continuum_images_subdir,'{0}/image_{0}.map'.format(beam))
+            convol.out = os.path.join(self.mosaic_continuum_mosaic_subdir, 'image_{}_convol.map'.format(beam))
+            convol.fwhm = '{0},{1}'.format(str(c_beam[0]),str(c_beam[1]))
+            convol.pa = c_beam[2]
+            convol.options = 'final'
+            convol.inp()
+            try:
+                convol.go()
+            except Exception as e:
+                error = "Failed convolving image of beam {}".format(beam)
+                logger.error(error)
+                logger.exception(e)
+                
+        subs_param.add_param(
+            self, 'mosaic_convolve_images_status', True)  
+
+        logger.info("Convolving images with common beam ... Done")
+    
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
+    # Function to create template mosaic
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    def create_mosaic():
+        """
+        Create an template mosaic to be filled in later
+        """
+
+        logger.info("Creating template mosaic")
+
+        mosaic_template_mosaic_status = get_param_def(
+            self, 'mosaic_template_mosaic_status', False)
+
+        # switch to mosaic directory
+        subs_managefiles.director(self, 'ch', self.mosaic_contiuum_mosaic_dir)
+
+        # This will create a template for the mosaic using "imgen" in Miriad
+        # number of pixels of mosaic maps
+        imsize=self.mosaic_continuum_imsize
+        # cell size in arcsec
+        cell=self.mosaic_continuum_cellsize
+
+        # create template prior to changing projection
+        imgen = lib.miriad('imgen')
+        imgen.out = 'mosaic_temp_preproj.map'
+        imgen.imsize = imsize
+        imgen.cell = cell
+        imgen.object = 'level'
+        imgen.spar = '0.'
+        imgen.radec = '{0},{1}'.format(str(self.mosaic_projection_centre_ra),str(self.mosaic_projection_centre_dec))
+        imgen.inp()
+        try:
+            imgen.go()
+        except Exception as e:
+            error = "Error creating template mosaic image"
+            logger.error(error)
+            logger.exception(e)
+            
+        # Now change projection to NCP
+        regrid = lib.miriad('regrid')
+        regrid.in_ = 'mosaic_temp_preproj.map'
+        regrid.out = 'mosaic_template.map'
+        regrid.project='NCP'
+        try:
+            regrid.go()
+        except Exception as e:
+            error = "Error changing projection to NCP"
+            logger.error(error)
+            logger.exception(e)
+            #raise RuntimeError(error)
+
+        # remove (moved to cleanup function)
+        #shutil.rmtree(mosaicdir+'mosaic_temp.map')
+        #subs_managefiles.director(self, 'rm', 'mosaic_temp_preproj.map')
+
+        logger.info("Creating template mosaic ... Done")
+
+        mosaic_template_mosaic_status = True
+        subs_param.add_param(
+            self, 'mosaic_template_mosaic_status', mosaic_template_mosaic_status) 
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
+    # Function to regrid images based on mosaic template
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    def regrid_images(self):
+        """
+        Function to regrid images using the template mosaic
+        """
+
+        logger.info("Regridding images")
+
+        mosaic_regrid_images_status = get_param_def(
+            self, 'mosaic_regrid_images_status', False)
+
+        # switch to mosaic directory
+        subs_managefiles.director(self, 'ch', self.mosaic_contiuum_mosaic_dir)
+
+        # Put images on mosaic template grid
+        for beam in self.mosaic_beam_list:
+            regrid = lib.miriad('regrid')
+            if os.path.isdir('image_{}_convol.map'.format(beam)):
+                regrid.in_ = 'image_{}_convol.map'.format(beam)
+                regrid.out = 'image_{}_mos.map'.format(beam)
+                regrid.tin = 'mosaic_template.map'
+                regrid.axes = '1,2'
+                regrid.inp()
+                try:
+                    regrid.go()
+                except Exception as e:
+                    warning = "Failed regridding image of beam {}".format(beam)
+                    logger.warning(warning)
+                    logger.exception(e)
+                    #raise RuntimeError(error)
+            else:
+                logger.warning("Did not find convolved image for beam {}".format(beam))
+            
+        logger.info("Regridding images ... Done")
+
+        mosaic_regrid_images_status = True
+        subs_param.add_param(
+            self, 'mosaic_regrid_images_status', mosaic_regrid_images_status)
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
+    # Function to regrid beam maps based on mosaic template
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    def regrid_beam_maps(self):
+        """
+        Function to regrid beam images using the template mosaic
+        """
+
+        logger.info("Regridding beam maps")
+
+        mosaic_regrid_beam_maps_status = get_param_def(
+            self, 'mosaic_regrid_beam_maps_status', False)
+
+        # switch to mosaic directory
+        subs_managefiles.director(self, 'ch', self.mosaic_contiuum_dir)
+
+        # Put images on mosaic template grid
+        for beam in self.mosaic_beam_list:
+            regrid = lib.miriad('regrid')
+            if os.path.isdir(os.path.join(self.mosaic_continuum_beam_subdir,'beam_{}.map'.format(beam))):
+                regrid.in_ = os.path.join(self.mosaic_continuum_beam_subdir,'beam_{}.map'.format(beam))
+                regrid.out = os.path.join(self.mosaic_continuum_beam_subdir,'beam_{}_mos.map'.format(beam))
+                regrid.tin = os.path.join(self.mosaic_continuum_mosaic_subdir,'mosaic_template.map'.format(beam))
+                regrid.axes = '1,2'  
+                regrid.inp()
+                try:
+                    regrid.go()
+                except Exception as e:
+                    warning = "Failed regridding beam_maps of beam {}".format(beam)
+                    logger.warning(warning)
+                    logger.exception(e)
+                    #raise RuntimeError(error)
+            else:
+                logger.warning("Did not find beam map for beam {}".format(beam))
+            
+        logger.info("Regridding beam maps ... Done")
+
+        mosaic_regrid_beam_maps_status = True
+        subs_param.add_param(
+            self, 'mosaic_regrid_beam_maps_status', mosaic_regrid_beam_maps_status)
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
+    # Function to calculate the product of beam matrix and covariance matrix
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    def multiply_beam_and_covariance_matrix(self):
+        """
+        Function to multiply the transpose of the beam matrix by the covariance matrix
+        """
+
+        logger.info("Regridding beam maps")
+
+        mosaic_product_beam_covariance_matrix_status = get_param_def(
+            self, 'product_beam_covariance_matrix_status', False)
+
+        # switch to mosaic directory
+        subs_managefiles.director(self, 'ch', self.mosaic_contiuum_dir)
+
+        # First calculate transpose of beam matrix multiplied by the inverse covariance matrix
+        # Will use *maths* in Miriad
+
+        # Using "beams" list to account for missing beams/images
+        # Only doing math where inv_cov value is non-zero
+        maths = lib.miriad('maths')
+        for bm in self.mosaic_beam_list:
+            for b in self.mosaic_beam_list:
+                maths.out =os.path.join(self.mosaic_continuum_mosaic_subdir,'tmp_{}.map'.format(b))
+                # since the beam list is made of strings, need to convert to integers
+                if os.path.isdir(os.path.join(self.mosaic_continuum_beam_subdir, "beam_{0}_mos.map".format(b))):
+                    if inv_cov[int(b),int(bm)]!=0.:
+                            operate+="<"+self.mosaic_continuum_beam_subdir+"/beam_{0}_mos.map>*{1}+".format(b,inv_cov[int(b),int(bm)])
+                    maths.exp = operate
+                    maths.options='unmask'
+                    maths.inp()
+                    maths.go()
+                else:
+                    logger.warning("Could not find mosaic beam map for beam {}".format(b))
+            i=1
+            while i<len(self.mosaic_beam_list):
+                if os.path.isdir(os.path.join(self.mosaic_continuum_mosaic_subdir, "tmp_{}.map".format(self.mosaic_beam_list[i-1]))) and os.path.isdir(os.path.join(self.mosaic_continuum_mosaic_subdir, "tmp_{}.map".format(self.mosaic_beam_list[i])))
+                    if i==1:
+                        operate = "'<"+self.mosaic_continuum_mosaic_subdir+"/tmp_{}.map>+<".format(str(self.mosaic_beam_list[i-1]))+self.mosaic_continuum_mosaic_subdir+"/tmp_{}.map>'".format(str(self.mosaic_beam_list[i]))
+                    else:
+                        operate="'<"+self.mosaic_continuum_mosaic_subdir+"/tmp_{}.map>".format(str(self.mosaic_beam_list[i]))+"+<"+self.mosaic_continuum_mosaic_subdir+"/sum_{}.map>'".format(str(self.mosaic_beam_list[i-1]))
+                    maths.out = self.mosaic_continuum_mosaic_subdir+'/sum_{}.map'.format(str(self.mosaic_beam_list[i]))
+                    maths.exp = operate
+                    maths.options='unmask'
+                    maths.inp()
+                    maths.go()
+                else:
+                    logger.warning("Could not find temporary maps for beam {0} or beam {1}".format(self.mosaic_beam_list[i-1], self.mosaic_beam_list[i]))
+                i+=1
+            
+            if os.path.isdir(os.path.join(self.mosaic_continuum_mosaic_subdir, 'sum_{}.map'.format(self.mosaic_beam_list[i-1]))):
+                subs_managefiles.director(self, 'ch', self.mosaic_continuum_mosaic_subdir+'/btci_{}.map'.format(bm), file_=self.mosaic_continuum_mosaic_subdir+'/sum_{}.map'.format(str(self.mosaic_beam_list[i-1])))
+                #os.rename(,self.mosaic_continuum_mosaic_subdir+'/btci_{}.map'.format(bm))
+            else:
+                logger.warning("Could not find temporary sum map for beam {}".format(self.mosaic_beam_list[i-1])))
+
+            # remove the scratch files
+            # done in cleanup function
+            # for fl in glob.glob(mosaicdir+'tmp_*.map'):
+            #     shutil.rmtree(fl)
+            # for fl in glob.glob(mosaicdir+'sum_*.map'):
+            #     shutil.rmtree(fl)
+        
+        logger.info("Regridding beam maps ... Done")
+
+        mosaic_product_beam_covariance_matrix_status = True
+        subs_param.add_param(
+            self, 'mosaic_product_beam_covariance_matrix_status', True) 
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
     # Function to create the continuum mosaic
@@ -842,6 +1139,23 @@ class mosaic(BaseModule):
 
     def show(self, showall=False):
         lib.show(self, 'MOSAIC', showall)
+
+    def clean_up (self):
+        """
+        Function to remove scratch files
+        """
+        #subs_setinit.setinitdirs(self)
+
+        # remove file from creating template mosaic
+        #shutil.rmtree(mosaicdir+'mosaic_temp.map')
+        subs_managefiles.director(self, 'ch', self.mosaic_continuum_mosaic_dir)
+        subs_managefiles.director(self, 'rm', 'mosaic_temp_preproj.map')
+
+        # remove files from matrix product
+        for fl in glob.glob('tmp_*.map'):
+            subs_managefiles.director(self, 'rm', fl)
+        for fl in glob.glob('sum_*.map'):
+            subs_managefiles.director(self, 'rm', fl)
 
     def reset(self):
         """
