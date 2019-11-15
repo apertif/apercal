@@ -1097,7 +1097,7 @@ class mosaic(BaseModule):
                 maths.inp()
                 maths.go()
             else:
-                logger.warning("Could not find btci_{0}.map or bea_{0}_mos.map for beam {0}".format(beam))
+                logger.warning("Could not find the necessary files for beam {0}".format(beam))
 
         subs_managefiles.director(self, 'rn', os.path.join(self.mosaic_continuum_mosaic_subdir,'variance_mos.map'), file_=os.path.join(self.mosaic_continuum_mosaic_subdir, 'out_{}_mos.map'.format(str(i).zfill(2))))
         #os.rename(mosaicdir+'out_{}_mos.map'.format(str(i).zfill(2)),mosaicdir+'variance_mos.map')
@@ -1109,8 +1109,57 @@ class mosaic(BaseModule):
             self, 'mosaic_variance_map_status', True)
         
     # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
-    # Function to calculate the beam  matrix multiplied by the noise matrix
+    # Function to calculate the beam  matrix multiplied by the covariance matrix
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    def multiply_beam_matrix_by_covariance_matrx_and_image(self)
+        """
+        Function to muliply the beam matrix by covariance matrix and image 
+        """
+
+        logger.info("Multiplying beam matrix by covariance matrix and image")
+
+        mosaic_product_beam_covariance_matrix_image_status = get_param_def(
+            self, 'mosaic_product_beam_covariance_matrix_image_status', False)
+
+        # switch to mosaic directory
+        subs_managefiles.director(self, 'ch', self.mosaic_contiuum_mosaic_dir)
+
+        # Calculate transpose of beam matrix multiplied by noise_cov multiplied by image from each beam for each position
+        # in the final image
+
+        maths = lib.miriad('maths')
+        i=0
+        for bm in self.mosaic_beam_list:
+            if os.path.isdir("image_{}_mos.map".format(bm)) and os.path.isdir("btci_{}.map".format(bm)) and os.path.isdir("mos_{}.map>".format(str(i).zfill(2))):
+                operate="'<"+"image_{}_mos.map>*<".format(bm)+"btci_{}.map>'".format(bm)
+                if bm!=self.mosaic_beam_list[0]:
+                    operate=operate[:-1]+"+<"+"mos_{}.map>'".format(str(i).zfill(2))
+                i+=1
+                maths.out = "mos_{}.map".format(str(i).zfill(2))
+                maths.exp = operate
+                maths.options='unmask,grow'
+                maths.inp()
+                maths.go()
+            else:
+                logger.warning("Could not find the necessary files for beam {}".format(bm))
+        
+        subs_managefiles.director(self, 'rn', 'mosaic_im.map', file_='mos_{}.map'.format(str(i).zfill(2)))
+        #os.rename('mos_{}.map'.format(str(i).zfill(2)),'mosaic_im.map')
+
+        logger.info("Multiplying beam matrix by covariance matrix and image ... Done")
+
+        mosaic_product_beam_covariance_matrix_image_status = True
+        subs_param.add_param(
+            self, 'mosaic_product_beam_covariance_matrix_image_status', True)
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
+    # Function to find maximum of variance map
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    def get_max_variance_map(self):
+        """
+        Function to determine the maximum of the variance map
+        """
+        
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
     # Function to create the continuum mosaic
