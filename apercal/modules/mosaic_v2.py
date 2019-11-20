@@ -50,6 +50,7 @@ class mosaic(BaseModule):
 
     mosaic_taskid = None
     mosaic_beams = None
+    mosaic_name = None
     mosaic_continuum_image_origin = None
     mosaic_polarisation_input_origin = None
     #mosaic_projection_centre_type = None
@@ -58,7 +59,7 @@ class mosaic(BaseModule):
     mosaic_projection_centre_beam = ''
     mosaic_projection_centre_file = ''
     mosaic_primary_beam_type = None
-    mosaic_primary_beam_files = None
+    mosaic_primary_beam_shape_files_location = None
     mosaic_common_beam_type = ''
     mosaic_continuum_mf = None
     mosaic_polarisation_v = None
@@ -664,6 +665,10 @@ class mosaic(BaseModule):
         Function to transfer image coordinates to beam maps
 
         Based on the notebook cell
+
+        For the proper beam maps, this should be done by the 
+        function make the proper beam maps. Probably best to
+        move this function there for the simple beam maps, too
         """
 
         logger.info("Transfer image coordinates to beam maps")
@@ -854,7 +859,7 @@ class mosaic(BaseModule):
     # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
     # Function to create template mosaic
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    def create_mosaic():
+    def create_template_mosaic():
         """
         Create an template mosaic to be filled in later
         """
@@ -997,7 +1002,7 @@ class mosaic(BaseModule):
     # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
     # Function to calculate the product of beam matrix and covariance matrix
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    def multiply_beam_and_covariance_matrix(self):
+    def math_multiply_beam_and_covariance_matrix(self):
         """
         Function to multiply the transpose of the beam matrix by the covariance matrix
         """
@@ -1062,12 +1067,12 @@ class mosaic(BaseModule):
 
         mosaic_product_beam_covariance_matrix_status = True
         subs_param.add_param(
-            self, 'mosaic_product_beam_covariance_matrix_status', True) 
+            self, 'mosaic_product_beam_covariance_matrix_status', mosaic_product_beam_covariance_matrix_status) 
     
     # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
     # Function to calculate the variance map
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    def calculate_variance_map(self):
+    def math_calculate_variance_map(self):
         """
         Function to calculate the variance map
         """
@@ -1106,12 +1111,12 @@ class mosaic(BaseModule):
 
         mosaic_variance_map_status = True
         subs_param.add_param(
-            self, 'mosaic_variance_map_status', True)
+            self, 'mosaic_variance_map_status', mosaic_variance_map_status)
         
     # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
     # Function to calculate the beam  matrix multiplied by the covariance matrix
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    def multiply_beam_matrix_by_covariance_matrx_and_image(self)
+    def math_multiply_beam_matrix_by_covariance_matrx_and_image(self)
         """
         Function to muliply the beam matrix by covariance matrix and image 
         """
@@ -1150,16 +1155,231 @@ class mosaic(BaseModule):
 
         mosaic_product_beam_covariance_matrix_image_status = True
         subs_param.add_param(
-            self, 'mosaic_product_beam_covariance_matrix_image_status', True)
+            self, 'mosaic_product_beam_covariance_matrix_image_status', mosaic_product_beam_covariance_matrix_image_status)
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
     # Function to find maximum of variance map
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    def get_max_variance_map(self):
+    def math_get_max_variance_map(self):
         """
         Function to determine the maximum of the variance map
         """
+
+        logger.info("Getting maximum of variance map")
+
+        mosaic_get_max_variance_status = get_param_def(
+            self, 'mosaic_get_max_variance_status', False)
+
+        mosaic_max_variance = get_param_def(
+            self, 'mosaic_beam_max_variance', 0.)
+
+        # switch to mosaic directory
+        subs_managefiles.director(self, 'ch', self.mosaic_contiuum_mosaic_dir)
+
+        # Find maximum value of variance map
+        imstat = lib.miriad('imstat')
+        imstat.in_="'variance_mos.map'"
+        imstat.region="'quarter(1)'"
+        imstat.axes="'x,y'"
+        try:
+            a=imstat.go()
+        except Exception as e:
+            error = "Getting maximum of varianc map ... Failed"
+            logger.error(error)
+            logger.exception(e)
+            raise RuntimeError(error)
+
+        # Always outputs max value at same point
+        var_max=a[10].split(" ")[-3]
+
+        logger.info("Maximum of variance map is {}".format(var_max))
+
+        logger.info("Getting maximum of variance map ... Done")
+
+        mosaic_get_max_variance_status = True
+        subs_param.add_param(
+            self, 'mosaic_get_max_variance_status', mosaic_get_max_variance_status)
         
+        mosaic_max_variance = var_max
+        subs_param.add_param(
+            self, 'mosaic_max_variance', mosaic_max_variance)
+    
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
+    # Function to divide image by variance map
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    def math_divide_image_by_variance_map(self):
+        """
+        Function to divide the image by the variance map
+        """
+
+        logger.info("Dividing image by variance map")
+
+        mosaic_divide_image_variance_status = get_param_def(
+            self, 'mosaic_divide_image_variance_status', False)
+
+        mosaic_max_variance = get_param_def(
+            self, 'mosaic_beam_max_variance', 0.)
+
+        # switch to mosaic directory
+        subs_managefiles.director(self, 'ch', self.mosaic_contiuum_mosaic_dir)
+
+        # Divide image by variance map
+        maths = lib.miriad('maths')
+        maths.out = 'mosaic_final.map'
+        maths.exp="'<mosaic_im.map>/<variance_mos.map>'"
+        maths.mask="'<variance_mos.map>.gt.0.01*"+str(mosaic_max_variance)+"'"
+        maths.inp()
+        try:
+            math.go()
+        except Exception as e:
+            error = "Dividing image by variance map ... Failed"
+            logger.error(error)
+            logger.exception(e)
+            raise RuntimeError(error)
+
+        logger.info("Dividing image by variance map ... Done")
+
+        mosaic_divide_image_variance_status = True
+        subs_param.add_param(
+            self, 'mosaic_divide_image_variance_status', mosaic_divide_image_variance_status)
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
+    # Function to get mosaic noise map
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    def get_mosaic_noise_map(self):
+        """
+        Function to get the mosaic noise map
+        """
+
+        logger.info("Getting mosaic noise map")
+
+        mosaic_get mosaic_noise_map_status = get_param_def(
+            self, 'mosaic_get mosaic_noise_map_status', False)
+
+        mosaic_max_variance = get_param_def(
+            self, 'mosaic_beam_max_variance', 0.)
+
+        # switch to mosaic directory
+        subs_managefiles.director(self, 'ch', self.mosaic_contiuum_mosaic_dir)
+
+        # Produce mosaic noise map
+        maths = lib.miriad('maths')
+        maths.out = 'mosaic_noise.map'
+        maths.exp="'1./sqrt(<variance_mos.map>)'"
+        maths.mask="'<variance_mos.map>.gt.0.01*"+str(mosaic_max_variance)+"'"
+        maths.inp()
+        try:
+            math.go()
+        except Exception as e:
+            error = "Calculating mosaic noise map ... Failed"
+            logger.error(error)
+            logger.exception(e)
+            raise RuntimeError(error)
+
+        puthd = lib.miriad('puthd')
+        puthd.in_='mosaic_noise.map/bunit'
+        puthd.value='JY/BEAM'
+        try:
+            puthd.go()
+        except Exception as e:
+            error = "Adding noise map unit ... Failed"
+            logger.error(error)
+            logger.exception(e)
+            raise RuntimeError(error)
+
+        mosaic_get_mosaic_noise_map_status = True
+        subs_param.add_param(
+            self, 'mosaic_get_mosaic_noise_map_status', mosaic_get_mosaic_noise_map_status)
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
+    # Function to write out the mosaic FITS files
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    def write_mosaic_fits_files(self):
+        """
+        Function to write out the mosaic fits files
+        """
+
+        logger.info("Writing mosaic fits files")
+
+        mosaic_write_mosaic_fits_files_status = get_param_def(
+            self, 'mosaic_write_mosaic_fits_files_status', False)
+
+        # switch to mosaic directory
+        subs_managefiles.director(self, 'ch', self.mosaic_contiuum_mosaic_dir)
+
+        # set the mosaic name
+        if not self.mosaic_name:
+            self.mosaic_name = "{}_mosaic.fits".format(self.mosaic_taskid)
+        
+        # name of the noise map    
+        mosaic_noise_name = self.mosaic_name.replace(".fits", "_noise.fits")
+
+
+        # Write out FITS files
+        # main image
+        fits = lib.miriad('fits')
+        fits.op='xyout'
+        fits.in_='mosaic_final.map'
+        fits.out=self.mosaic_name
+        fits.inp()
+        try:
+            fits.go()
+        except Exception as e:
+            error = "Writing mosaic fits file ... Failed"
+            logger.error(error)
+            logger.exception(e)
+            raise RuntimeError(error)
+
+        # noise map
+        fits.in_='mosaic_noise.map'
+        fits.out=mosaic_noise_name
+        fits.inp()
+        try:
+            fits.go()          
+        except Exception as e:
+            error = "Writing mosaic noise mape fits file ... Failed"
+            logger.error(error)
+            logger.exception(e)
+            raise RuntimeError(error)
+
+        logger.info("Writing mosaic fits files ... Done")
+
+        mosaic_write_mosaic_fits_files_status = True
+        subs_param.add_param(
+            self, 'mosaic_write_mosaic_fits_files_status', mosaic_write_mosaic_fits_files_status)
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
+    # Function to run validation tool
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    def run_image_validation(self):
+        """
+        Function to run image validation
+        """
+
+        mosaic_run_image_validation_status = get_param_def(
+            self, 'mosaic_run_image_validation_status', False)
+
+        if self.mosaic_run_image_validation:
+            # optional step, so only do the import here
+            import dataqa
+            from dataqa.continuum.validation_tool import validation
+
+            logger.info("Running image validation")
+
+            # Validate final continuum mosaic
+
+            finder = 'pybdsf'
+            start_time_validation = time.time()
+
+            validation.run(self.mosaic_name, finder=finder)
+            
+            logger.info("Writing mosaic fits files ... Done ({0:.0f}s)".format(time.time() - start_time_validation))
+        else:
+            logger.warning("Did not run image validation")
+
+        mosaic_run_image_validation_status = True
+        subs_param.add_param(
+            self, 'mosaic_run_image_validation_status', mosaic_run_image_validation_status)
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
     # Function to create the continuum mosaic
@@ -1169,20 +1389,9 @@ class mosaic(BaseModule):
         Function to create the continuum mosaic
         """
         subs_setinit.setinitdirs(self)
-        subs_setinit.setdatasetnamestomiriad(self)
-
-
-        ##########################################################################################################
-        # Check if the parameter is already in the parameter file and load it otherwise create the needed arrays #
-        ##########################################################################################################
-
-        mosaiccontinuummfstatus = get_param_def(self, 'mosaic_continuum_mf_status', False)  # Status of the continuum mf mosaic
-        mosaiccontinuummfcontinuumstatus = get_param_def(self, 'mosaic_continuum_mf_continuumstatus', np.full(self.NBEAMS, False))  # Status of the continuum imaging
-        mosaiccontinuummfcopystatus = get_param_def(self, 'mosaic_continuum_mf_copystatus', np.full(self.NBEAMS, False))  # Status of the copy of the images
-        mosaiccontinuummfconvolstatus = get_param_def(self, 'mosaic_continuum_mf_convolstatus', np.full(self.NBEAMS, False))  # Status of the convolved images
-        mosaiccontinuummfcontinuumbeamparams = get_param_def(self, 'mosaic_continuum_mf_continuumbeamparams', np.full((self.NBEAMS, 3), np.nan))  # Beam sizes of the input images
-        mosaiccontinuummfcontinuumimagestats = get_param_def(self, 'mosaic_continuum_mf_continuumimagestats', np.full((self.NBEAMS, 3), np.nan))  # Image statistics of the input images
-
+        
+        mosaic_continuummf_status = get_param_def(self, 'mosaic_continuum_mf_status', False)
+        
         # Start the mosaicking of the stacked continuum images
         if self.mosaic_continuum_mf:
             subs_setinit.setinitdirs(self)
@@ -1213,26 +1422,47 @@ class mosaic(BaseModule):
 
                 # Converting images and beams into miriad
                 # =======================================
-                logger.info("Converting images and beams into miriad format")
                 self.convert_images_to_miriad()
                 self.convert_beams_to_miriad()
+
+                # Get correlation matrix
+                # ======================
+                self.get_inverted_covariance_matrix()
+
+                # Transfer image coordinates
+                # ==========================
+                self.transfer_coordinates()
+                
+                # Create a template mosaic
+                # ========================
+                self.create_template_mosaic()
+                
+                # Regrid images
+                # =============
+                self.regrid_images()
+
+                # Regrid beam maps
+                # ================
+                self.regrid_beam_maps()
+                
+                # Determing common beam for convolution
+                # =====================================
+                self.get_common_beam()
+
+                # Convolve images
+                # ===============
+                self.mosaic_convolve_images()
+
+                # Regrid images
+                # =============
+
+                
                 
                 self.abort_module("Not finished")
 
         # Save the derived parameters to the parameter file
-
         subs_param.add_param(
-            self, 'mosaic_continuum_mf_status', mosaiccontinuummfstatus)
-        subs_param.add_param(
-            self, 'mosaic_continuum_mf_continuumstatus', mosaiccontinuummfcontinuumstatus)
-        subs_param.add_param(
-            self, 'mosaic_continuum_mf_copystatus', mosaiccontinuummfcopystatus)
-        subs_param.add_param(
-            self, 'mosaic_continuum_mf_convolstatus', mosaiccontinuummfconvolstatus)
-        subs_param.add_param(
-            self, 'mosaic_continuum_mf_continuumbeamparams', mosaiccontinuummfcontinuumbeamparams)
-        subs_param.add_param(
-            self, 'mosaic_continuum_mf_continuumimagestats', mosaiccontinuummfcontinuumimagestats)
+            self, 'mosaic_continuum_mf_status', mosaic_continuummf_status)
 
     def show(self, showall=False):
         lib.show(self, 'MOSAIC', showall)
