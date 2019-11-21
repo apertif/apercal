@@ -92,7 +92,7 @@ def measured_beam_maps(beam, image_path, beam_map_path, output_name):
 
 	Args:
 		input: 
-		beam = beam #
+		beam = beam number (int, e.g. 01)
 		image_path = path to mir image
 		beam_map_path = path to measured beam
 		output_name = output name of regridded beam map
