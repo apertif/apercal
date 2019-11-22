@@ -1129,7 +1129,7 @@ class mosaic(BaseModule):
                     logger.warning("Could not find mosaic beam map for beam {}".format(b))
             i=1
             while i<len(self.mosaic_beam_list):
-                if os.path.isdir(os.path.join(self.mosaic_continuum_mosaic_subdir, "tmp_{}.map".format(self.mosaic_beam_list[i-1]))) and os.path.isdir(os.path.join(self.mosaic_continuum_mosaic_subdir, "tmp_{}.map".format(self.mosaic_beam_list[i])))
+                if os.path.isdir(os.path.join(self.mosaic_continuum_mosaic_subdir, "tmp_{}.map".format(self.mosaic_beam_list[i-1]))) and os.path.isdir(os.path.join(self.mosaic_continuum_mosaic_subdir, "tmp_{}.map".format(self.mosaic_beam_list[i]))):
                     if i==1:
                         operate = "'<"+self.mosaic_continuum_mosaic_subdir+"/tmp_{}.map>+<".format(str(self.mosaic_beam_list[i-1]))+self.mosaic_continuum_mosaic_subdir+"/tmp_{}.map>'".format(str(self.mosaic_beam_list[i]))
                     else:
