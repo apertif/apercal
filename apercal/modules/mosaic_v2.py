@@ -1346,7 +1346,7 @@ class mosaic(BaseModule):
 
         logger.info("Getting mosaic noise map")
 
-        mosaic_get mosaic_noise_map_status = get_param_def(
+        mosaic_get_mosaic_noise_map_status = get_param_def(
             self, 'mosaic_get mosaic_noise_map_status', False)
 
         mosaic_max_variance = get_param_def(
