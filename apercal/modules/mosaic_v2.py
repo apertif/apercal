@@ -1147,7 +1147,7 @@ class mosaic(BaseModule):
                 subs_managefiles.director(self, 'ch', self.mosaic_continuum_mosaic_subdir+'/btci_{}.map'.format(bm), file_=self.mosaic_continuum_mosaic_subdir+'/sum_{}.map'.format(str(self.mosaic_beam_list[i-1])))
                 #os.rename(,self.mosaic_continuum_mosaic_subdir+'/btci_{}.map'.format(bm))
             else:
-                logger.warning("Could not find temporary sum map for beam {}".format(self.mosaic_beam_list[i-1])))
+                logger.warning("Could not find temporary sum map for beam {}".format(self.mosaic_beam_list[i-1]))
 
             # remove the scratch files
             # done in cleanup function
