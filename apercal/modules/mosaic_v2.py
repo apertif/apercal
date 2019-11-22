@@ -856,7 +856,7 @@ class mosaic(BaseModule):
         # change to directory of continuum images
         subs_managefiles.director(self, 'ch', self.mosaic_continuum_image_dir)
 
-            if not mosaic_common_beam_status:
+        if not mosaic_common_beam_status:
             # this is where the beam information will be stored
             bmaj=[]
             bmin=[]
