@@ -91,18 +91,7 @@ class mosaic(BaseModule):
         self.mosdir = self.basedir
 
         subs_setinit.setinitdirs(self)
-        
-        # set some directories paths for the module
-        self.mosaic_continuum_dir = os.path.join(
-            self.mosdir, self.mosaic_continuum_subdir)
-        self.mosaic_continuum_images_dir = os.path.join(
-            self.mosdir, self.mosaic_continuum_subdir, self.mosaic_continuum_images_subdir)
-        self.mosaic_continuum_mosaic_dir = os.path.join(
-            self.mosdir, self.mosaic_continuum_subdir, self.mosaic_continuum_mosaic_subdir)
-        self.mosaic_continuum_beam_dir = os.path.join(
-            self.mosdir, self.mosaic_continuum_subdir, self.mosaic_continuum_beam_subdir)
-
-        
+            
         # get the beams
         # set the number of beams to process>
         if self.mosaic_beams is None or self.mosaic_beams != '':
@@ -198,23 +187,33 @@ class mosaic(BaseModule):
             # create the directory for the continuunm mosaic
             if not self.mosaic_continuum_subdir:
                 self.mosaic_continuum_subdir = 'continuum'
-                subs_managefiles.director(self, 'mk', os.path.join(
-                    self.mosdir, self.mosaic_continuum_subdir))
+            self.mosaic_continuum_dir = os.path.join(self.mosdir, self.mosaic_continuum_subdir)
+            subs_managefiles.director(self, 'mk', os.path.join(
+                self.mosdir, self.mosaic_continuum_subdir))
+
             # create the sub-directory to store the continuum images
             if not self.mosaic_continuum_images_subdir:
                 self.mosaic_continuum_images_subdir = 'images'
-                subs_managefiles.director(self, 'mk', os.path.join(
-                    self.mosdir, self.mosaic_continuum_subdir, self.mosaic_continuum_images_subdir))
+            self.mosaic_continuum_images_dir = os.path.join(
+                self.mosdir, self.mosaic_continuum_subdir, self.mosaic_continuum_images_subdir)
+            subs_managefiles.director(self, 'mk', os.path.join(
+                self.mosdir, self.mosaic_continuum_subdir, self.mosaic_continuum_images_subdir))
+
             # create the directory to store the beam maps
             if not self.mosaic_continuum_beam_subdir:
                 self.mosaic_continuum_beam_subdir = 'beams'
-                subs_managefiles.director(self, 'mk', os.path.join(
-                    self.mosdir, self.mosaic_continuum_subdir, self.mosaic_continuum_beam_subdir))
+            self.mosaic_continuum_beam_dir = os.path.join(
+                self.mosdir, self.mosaic_continuum_subdir, self.mosaic_continuum_beam_subdir)
+            subs_managefiles.director(self, 'mk', os.path.join(
+                self.mosdir, self.mosaic_continuum_subdir, self.mosaic_continuum_beam_subdir))
+
             # create the directory to store the actual mosaic
             if not self.mosaic_continuum_mosaic_subdir:
                 self.mosaic_continuum_mosaic_subdir = 'mosaic'
-                subs_managefiles.director(self, 'mk', os.path.join(
-                    self.mosdir, self.mosaic_continuum_subdir, self.mosaic_continuum_mosaic_subdir))
+            self.mosaic_continuum_mosaic_dir = os.path.join(
+                self.mosdir, self.mosaic_continuum_subdir, self.mosaic_continuum_mosaic_subdir)
+            subs_managefiles.director(self, 'mk', os.path.join(
+                self.mosdir, self.mosaic_continuum_subdir, self.mosaic_continuum_mosaic_subdir))
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
     # Function to get the continuum images from different
