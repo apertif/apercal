@@ -86,6 +86,76 @@ def make_gaussian_beam(beamdir,beamoutname,bm_size,cell,fwhm,cutoff):
     #fix header
     fixheader(beamoutname,beamdir)
 
+def measured_beam_maps(beam, image_path, beam_map_path, output_name):
+	"""
+	Function to create beam map from drift scans
+
+	Args:
+		input: 
+		beam = beam number (int, e.g. 01)
+		image_path = path to mir image
+		beam_map_path = path to the directory with measured beam maps (/data5/apertif/driftscans/fits_files/191023/)
+		output_name = output name of regridded beam map
+	"""
+	
+	work_dir = os.getcwd()
+	
+	# copy beam model to work directory
+	os.system('cp -r {0}191023_{1}_I_model.fits {2}/beam_model_{1}_temp.fits'.format(beam_map_path, beam, work_dir)) 
+	
+	
+	# convert beam model to mir file
+	if os.path.isdir('./beam_model_{0}_temp.mir'.format(beam)) == False:
+		fits = lib.miriad('fits')
+		fits.in_ = './beam_model_{0}_temp.fits'.format(beam)
+		fits.op = 'xyin'
+		fits.out = './beam_model_{0}_temp.mir'.format(beam)
+		fits.go()
+	
+	if os.path.isdir('{}.mir'.format(image_path[:-5])) == False:
+		fits = lib.miriad('fits')
+		fits.in_ = image_path
+		fits.op = 'xyin'
+		fits.out = '{}.mir'.format(image_path[:-5])
+		fits.go()
+	
+	
+	# replace centre of beam_model
+	
+	gethd = lib.miriad('gethd')
+	gethd.in_ = '{0}.mir/crval1'.format(image_path[:-5])
+	ra_ref=gethd.go()
+	gethd.in_ = '{0}.mir/crval2'.format(image_path[:-5])
+	dec_ref=gethd.go()
+	
+	print(ra_ref, dec_ref)
+	
+	puthd = lib.miriad('puthd')
+	puthd.in_ = './beam_model_{0}_temp.mir/crval1'.format(beam)
+	puthd.value = ra_ref[0]
+	puthd.type = 'double'
+	puthd.go()
+	puthd.in_ = './beam_model_{0}_temp.mir/crval2'.format(beam)
+	puthd.value = dec_ref[0]
+	puthd.type = 'double'
+	puthd.go()
+
+	
+	# regrid beam model
+	if os.path.isdir('./beam_model_{0}.mir'.format(beam)) == False:
+		regrid = lib.miriad('regrid')
+		regrid.in_ = './beam_model_{0}_temp.mir'.format(beam)
+		regrid.out = './{0}_{1}.mir'.format(output_name, beam)
+		regrid.axes = '1,2'
+		regrid.tin = '{0}.mir'.format(image_path[:-5])
+		regrid.go()
+	
+	print('DONE')
+	
+	# clean temp file 
+	
+	os.system('rm -r ./*{}_temp.*'.format(beam))
+
 
 def beam_cutoff(beamname,tmpbeamname,beamdir,cutoff):
     """
