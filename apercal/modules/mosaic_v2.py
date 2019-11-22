@@ -96,7 +96,7 @@ class mosaic(BaseModule):
         # set the number of beams to process>
         if self.mosaic_beams is None or self.mosaic_beams != '':
             if self.mosaic_beams == "all" or self.mosaic_beams is None:
-                logger.info("No list of beams specified for mosaic, assume all beams should be used")
+                logger.info("No list of beams specified for mosaic. Using all beams")
                 self.mosaic_beam_list = [str(k).zfill(2)
                                              for k in range(self.NBEAMS)]
             else:
@@ -343,7 +343,7 @@ class mosaic(BaseModule):
                     raise RuntimeError(error)
             # in case the data is on ALTA
             # ===========================
-            elif self.mosaic_continuum_image_origin == "alta":
+            elif self.mosaic_continuum_image_origin == "alta" or self.mosaic_continuum_image_origin is None:
                 logger.info(
                     "Assuming to get the data from ALTA")
 
