@@ -183,6 +183,8 @@ class mosaic(BaseModule):
 
         """
 
+        logger.info("Creating sub-directories for mosaic")
+
         if self.mosaic_continuum_mf:
             # create the directory for the continuunm mosaic
             if not self.mosaic_continuum_subdir:
@@ -214,6 +216,8 @@ class mosaic(BaseModule):
                 self.mosdir, self.mosaic_continuum_subdir, self.mosaic_continuum_mosaic_subdir)
             subs_managefiles.director(self, 'mk', os.path.join(
                 self.mosdir, self.mosaic_continuum_subdir, self.mosaic_continuum_mosaic_subdir))
+        
+        logger.info("Creating sub-directories for mosaic ... Done")
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
     # Function to get the continuum images from different
