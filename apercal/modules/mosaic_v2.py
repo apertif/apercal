@@ -364,7 +364,7 @@ class mosaic(BaseModule):
                         continuum_image_name = ''
                         alta_beam_image_path = ''
                         for k in range(10):
-                            continuum_image_name = "image_mf_{02d}.fits".format(k)
+                            continuum_image_name = "image_mf_{0:02d}.fits".format(k)
                             alta_beam_image_path = os.path.join(
                                 alta_taskid_beam_dir, continuum_image_name)
                             if self.check_alta_path(alta_beam_image_path) == 0:
