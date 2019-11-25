@@ -188,7 +188,7 @@ class mosaic(BaseModule):
         mosaic_create_subdirs_status = get_param_def(
             self, 'mosaic_create_subdirs_status', False)
 
-        if not mosaic_create_subdirs_status
+        if not mosaic_create_subdirs_status:
 
             if self.mosaic_continuum_mf:
                 # create the directory for the continuunm mosaic
