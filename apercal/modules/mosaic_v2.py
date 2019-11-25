@@ -382,13 +382,17 @@ class mosaic(BaseModule):
                             if not os.path.exists(continuum_image_beam_dir):
                                 subs_managefiles.director(self, 'mk', continuum_image_beam_dir)
                             
-                            # copy the continuum image to this directory
-                            return_msg = self.getdata_from_alta(alta_beam_image_path, continuum_image_beam_dir)
-                            if return_msg == 0:
-                                logger.info("Getting image of beam {0} of taskid {1} ... Done".format(beam, self.mosaic_taskid))
+                            # check whether file already there:
+                            if not os.path.exists(os.path.join(continuum_image_beam_dir, os.path.basename(alta_beam_image_path))):
+                                # copy the continuum image to this directory
+                                return_msg = self.getdata_from_alta(alta_beam_image_path, continuum_image_beam_dir)
+                                if return_msg == 0:
+                                    logger.info("Getting image of beam {0} of taskid {1} ... Done".format(beam, self.mosaic_taskid))
+                                else:
+                                    logger.warning("Getting image of beam {0} of taskid {1} ... Failed".format(beam, self.mosaic_taskid))
+                                    failed_beams.append(beam)
                             else:
-                                logger.warning("Getting image of beam {0} of taskid {1} ... Failed".format(beam, self.mosaic_taskid))
-                                failed_beams.append(beam)
+                                logger.info("Image of beam {0} of taskid {1} already on disk".format(beam, self.mosaic_taskid))
                     else:
                         logger.warning("Did not find beam {0} of taskid {1}".format(beam, self.mosaic_taskid))
                         # remove the beam
