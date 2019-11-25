@@ -396,7 +396,7 @@ class mosaic(BaseModule):
                     else:
                         logger.warning("Did not find beam {0} of taskid {1}".format(beam, self.mosaic_taskid))
                         # remove the beam
-                        failed_beams.append(beams)
+                        failed_beams.append(beam)
 
             # in case a directory has been specified
             # (not stable)
