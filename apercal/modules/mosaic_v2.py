@@ -148,9 +148,8 @@ class mosaic(BaseModule):
         """
         alta_cmd = "ils {}".format(alta_path)
         logger.debug(alta_cmd)
-        return_msg = subprocess.check_call(alta_cmd, shell=True,
-                              stdout=self.FNULL, stderr=self.FNULL)
-        
+        return_msg = subprocess.call(alta_cmd, shell=True,
+                                stdout=self.FNULL, stderr=self.FNULL)
         return return_msg
 
     def getdata_from_alta(self, alta_file_name, output_path):
