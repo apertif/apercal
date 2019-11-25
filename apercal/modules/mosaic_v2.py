@@ -161,7 +161,7 @@ class mosaic(BaseModule):
 
         # set the irod files location
         irods_status_file = os.path.join(
-            os.getcwd(), "transfer_{}_img-icat.irods-status".format(os.path.basename(atla_file_name).split(".")[0]))
+            os.getcwd(), "transfer_{}_img-icat.irods-status".format(os.path.basename(alta_file_name).split(".")[0]))
         irods_status_lf_file = os.path.join(
             os.getcwd(), "transfer_{}_img-icat.lf-irods-status".format(os.path.basename(alta_file_name).split(".")[0]))
 
