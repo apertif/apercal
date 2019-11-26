@@ -250,7 +250,7 @@ class mosaic(BaseModule):
             self, 'mosaic_continuum_images_status', False)
         
         mosaic_failed_beams = get_param_def(
-            self, 'mosaic_continuum_images_status', [])
+            self, 'mosaic_failed_beams', [])
 
         # collect here which beams failed
         failed_beams = []
