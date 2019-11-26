@@ -1703,6 +1703,12 @@ class mosaic(BaseModule):
         # Clean up files
         for fl in glob.glob('*_regrid.map'):
             subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
+        subs_param.del_param(
+            self, 'mosaic_regrid_images_status')
+        subs_param.del_param(
+            self, 'mosaic_regrid_beam_maps_status')
+        subs_param.del_param(
+            self, 'mosaic_convolve_images_status')
         
         subs_managefiles.director(
             self, 'rm', 'mosaic_im.map', ignore_nonexistent=True)
