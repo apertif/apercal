@@ -885,7 +885,7 @@ class mosaic(BaseModule):
 
             logger.info('The final, convolved, synthesized beam has bmaj, bmin, bpa of: {}'.format(str(c_beam)))
             
-            mosaic_common_beam_type = True
+            mosaic_common_beam_status = True
             mosaic_common_beam_values = c_beam
         else:
             logger.info("Common beam already available as bmaj, bmin, bpa of: {}".format(str(mosaic_common_beam_values)))
