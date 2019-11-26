@@ -752,68 +752,72 @@ class mosaic(BaseModule):
         # change to directory of continuum images
         subs_managefiles.director(self, 'ch', self.mosaic_continuum_dir)
 
-        for beam in self.mosaic_beam_list:
+        if not mosaic_transfer_coordinates_to_beam_status:
 
-            logger.info("Processing beam {}".format(beam))
+            for beam in self.mosaic_beam_list:
 
-            # get RA
-            gethd = lib.miriad('gethd')
-            gethd.in_ = os.path.join(self.mosaic_continuum_images_subdir,'{0}/image_{0}.map/crval1'.format(beam))
-            try:
-                ra1=gethd.go()
-            except Exception as e:
-                mosaic_transfer_coordinates_to_beam_status = False
-                warning = "Reading RA of beam {} failed".format(beam)
-                logger.warning(warning)
-                logger.exception(e)
-            else:
-                mosaic_transfer_coordinates_to_beam_status = True
-        
-            # write RA
-            puthd = lib.miriad('puthd')
-            puthd.in_ = os.path.join(self.mosaic_continuum_beam_subdir,'beam_{}.map/crval1'.format(beam))
-            puthd.value = float(ra1[0])
-            try:
-                puthd.go()
-            except Exception as e:
-                mosaic_transfer_coordinates_to_beam_status = False
-                warning = "Writing RA of beam {} failed".format(beam)
-                logger.warning(warning)
-                logger.exception(e)
-            else:
-                mosaic_transfer_coordinates_to_beam_status = True
-        
-            # get DEC
-            gethd.in_ = os.path.join(self.mosaic_continuum_images_subdir,'{0}/image_{0}.map/crval2'.format(beam))
-            try:
-                dec1=gethd.go()
-            except Exception as e:
-                mosaic_transfer_coordinates_to_beam_status = False
-                warning = "Reading DEC of beam {} failed".format(beam)
-                logger.warning(warning)
-                logger.exception(e)
-            else:
-                mosaic_transfer_coordinates_to_beam_status = True
+                logger.info("Processing beam {}".format(beam))
+
+                # get RA
+                gethd = lib.miriad('gethd')
+                gethd.in_ = os.path.join(self.mosaic_continuum_images_subdir,'{0}/image_{0}.map/crval1'.format(beam))
+                try:
+                    ra1=gethd.go()
+                except Exception as e:
+                    mosaic_transfer_coordinates_to_beam_status = False
+                    warning = "Reading RA of beam {} failed".format(beam)
+                    logger.warning(warning)
+                    logger.exception(e)
+                else:
+                    mosaic_transfer_coordinates_to_beam_status = True
             
-            # write DEC
-            puthd.in_ = os.path.join(self.mosaic_continuum_beam_subdir,'beam_{}.map/crval2'.format(beam))
-            puthd.value = float(dec1[0])
-            try:
-                puthd.go()
-            except Exception as e:
-                mosaic_transfer_coordinates_to_beam_status = False
-                warning = "Writing DEC of beam {} failed".format(beam)
-                logger.warning(warning)
-                logger.exception(e)
+                # write RA
+                puthd = lib.miriad('puthd')
+                puthd.in_ = os.path.join(self.mosaic_continuum_beam_subdir,'beam_{}.map/crval1'.format(beam))
+                puthd.value = float(ra1[0])
+                try:
+                    puthd.go()
+                except Exception as e:
+                    mosaic_transfer_coordinates_to_beam_status = False
+                    warning = "Writing RA of beam {} failed".format(beam)
+                    logger.warning(warning)
+                    logger.exception(e)
+                else:
+                    mosaic_transfer_coordinates_to_beam_status = True
+            
+                # get DEC
+                gethd.in_ = os.path.join(self.mosaic_continuum_images_subdir,'{0}/image_{0}.map/crval2'.format(beam))
+                try:
+                    dec1=gethd.go()
+                except Exception as e:
+                    mosaic_transfer_coordinates_to_beam_status = False
+                    warning = "Reading DEC of beam {} failed".format(beam)
+                    logger.warning(warning)
+                    logger.exception(e)
+                else:
+                    mosaic_transfer_coordinates_to_beam_status = True
+                
+                # write DEC
+                puthd.in_ = os.path.join(self.mosaic_continuum_beam_subdir,'beam_{}.map/crval2'.format(beam))
+                puthd.value = float(dec1[0])
+                try:
+                    puthd.go()
+                except Exception as e:
+                    mosaic_transfer_coordinates_to_beam_status = False
+                    warning = "Writing DEC of beam {} failed".format(beam)
+                    logger.warning(warning)
+                    logger.exception(e)
+                else:
+                    mosaic_transfer_coordinates_to_beam_status = True
+
+                logger.info("Processing beam {} ... Done".format(beam))
+
+            if mosaic_transfer_coordinates_to_beam_status:
+                logger.info("Transfer image coordinates to beam maps ... Done")
             else:
-                mosaic_transfer_coordinates_to_beam_status = True
-
-            logger.info("Processing beam {} ... Done".format(beam))
-
-        if mosaic_transfer_coordinates_to_beam_status:
-            logger.info("Transfer image coordinates to beam maps ... Done")
+                logger.info("Transfer image coordinates to beam maps ... Failed")
         else:
-            logger.info("Transfer image coordinates to beam maps ... Failed")
+            logger.info("Image coordinates have already been transferred")
 
         subs_param.add_param(
             self, 'mosaic_transfer_coordinates_to_beam_status', mosaic_transfer_coordinates_to_beam_status)        
