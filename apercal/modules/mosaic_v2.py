@@ -656,7 +656,7 @@ class mosaic(BaseModule):
             else:
                 logger.warning("Converting fits images to miriad images ... Failed for at least one beam. Please check the log")
         else:
-            logger.info("Image of bam {} have already been converted.".format(beam))
+            logger.info("Images have already been converted.")
             
         subs_param.add_param(
             self, 'mosaic_continuum_convert_fits_images_status', mosaic_continuum_convert_fits_images_status)
