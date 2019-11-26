@@ -1567,11 +1567,10 @@ class mosaic(BaseModule):
                 # ==================================
                 self.get_mosaic_projection_centre()
 
-                # Converting images and beams into miriad
+                # Converting images into miriad
                 # =======================================
                 self.convert_images_to_miriad()
-                self.convert_beams_to_miriad()
-
+                
                 # Get correlation matrix
                 # ======================
                 self.get_inverted_covariance_matrix()
