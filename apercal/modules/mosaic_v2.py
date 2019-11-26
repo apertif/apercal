@@ -552,7 +552,6 @@ class mosaic(BaseModule):
         mosaic_projection_centre_values = get_param_def(
             self, 'mosaic_projection_centre_values', ['', ''])
 
-
         if self.mosaic_projection_centre_ra is not None and self.mosaic_projection_centre_dec is not None:
             logger.info("Using input projection center: RA={0} and DEC={1}".format(self.mosaic_projection_centre_ra, self.mosaic_projection_centre_dec))
             mosaic_projection_centre_status = True
@@ -565,14 +564,14 @@ class mosaic(BaseModule):
             # Extract central RA and Dec for Apertif pointing from a chosen beam
             if self.mosaic_projection_centre_beam in self.mosaic_beam_list:
                 gethd = lib.miriad('gethd')
-                gethd.in_ = '{0}/image_{0}.map/crval1'.format(str(beam).zfill(2))
+                gethd.in_ = '{0}/image_{0}.map/crval1'.format(str(self.mosaic_projection_centre_beam).zfill(2))
                 gethd.format = 'hms'
                 ra_ref=gethd.go()
-                gethd.in_ = '{0}/image_{0}.map/crval2'.format(str(beam).zfill(2))
+                gethd.in_ = '{0}/image_{0}.map/crval2'.format(str(self.mosaic_projection_centre_beam).zfill(2))
                 gethd.format = 'dms'
                 dec_ref=gethd.go()
             else:
-                error = "Failed reading projection centre from beam {}. Beam not available".format(beam)
+                error = "Failed reading projection centre from beam {}. Beam not available".format(self.mosaic_projection_centre_beam)
                 logger.error(error)
                 raise RuntimeError(error)
 
