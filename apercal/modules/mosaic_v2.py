@@ -1217,12 +1217,13 @@ class mosaic(BaseModule):
         mosaic_product_beam_covariance_matrix_status = get_param_def(
             self, 'mosaic_product_beam_covariance_matrix_status', False)
 
-        # switch to mosaic directory
-        subs_managefiles.director(self, 'ch', self.mosaic_continuum_dir)
-
         # get covariance matrix
         inv_cov = self.get_inverted_covariance_matrix()
 
+        # switch to mosaic directory
+        # important because previous step switched to a different dir
+        subs_managefiles.director(self, 'ch', self.mosaic_continuum_dir)
+        
         # First calculate transpose of beam matrix multiplied by the inverse covariance matrix
         # Will use *maths* in Miriad
 
@@ -1241,7 +1242,9 @@ class mosaic(BaseModule):
                     maths.inp()
                     maths.go()
                 else:
-                    logger.warning("Could not find mosaic beam map for beam {}".format(b))
+                    error = "Could not find mosaic beam map for beam {}".format(b)
+                    logger.error(error)
+                    raise RuntimeError(error)
             i=1
             while i<len(self.mosaic_beam_list):
                 if os.path.isdir(os.path.join(self.mosaic_continuum_mosaic_subdir, "tmp_{}.map".format(self.mosaic_beam_list[i-1]))) and os.path.isdir(os.path.join(self.mosaic_continuum_mosaic_subdir, "tmp_{}.map".format(self.mosaic_beam_list[i]))):
@@ -1255,14 +1258,18 @@ class mosaic(BaseModule):
                     maths.inp()
                     maths.go()
                 else:
-                    logger.warning("Could not find temporary maps for beam {0} or beam {1}".format(self.mosaic_beam_list[i-1], self.mosaic_beam_list[i]))
+                    error = "Could not find temporary maps for beam {0} or beam {1}".format(self.mosaic_beam_list[i-1], self.mosaic_beam_list[i])
+                    logger.error(error)
+                    raise RuntimeError(error)
                 i+=1
             
             if os.path.isdir(os.path.join(self.mosaic_continuum_mosaic_subdir, 'sum_{}.map'.format(self.mosaic_beam_list[i-1]))):
                 subs_managefiles.director(self, 'ch', self.mosaic_continuum_mosaic_subdir+'/btci_{}.map'.format(bm), file_=self.mosaic_continuum_mosaic_subdir+'/sum_{}.map'.format(str(self.mosaic_beam_list[i-1])))
                 #os.rename(,self.mosaic_continuum_mosaic_subdir+'/btci_{}.map'.format(bm))
             else:
-                logger.warning("Could not find temporary sum map for beam {}".format(self.mosaic_beam_list[i-1]))
+                error = "Could not find temporary sum map for beam {}".format(self.mosaic_beam_list[i-1])
+                logger.error(error)
+                raise RuntimeError(error)
 
             # remove the scratch files
             # done in cleanup function
