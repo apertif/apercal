@@ -508,19 +508,22 @@ class mosaic(BaseModule):
         mosaic_continuum_beam_status = get_param_def(
             self, 'mosaic_continuum_beam_status', False)
 
-        # change to directory of continuum images
-        subs_managefiles.director(self, 'ch', self.mosaic_continuum_beam_dir)
+        if not mosaic_continuum_beam_status:
+            # change to directory of continuum images
+            subs_managefiles.director(self, 'ch', self.mosaic_continuum_dir)
 
-        try:
-            mosaic_utils.create_beams(self.mosaic_beam_list.copy(), self.mosaic_continuum_beam_subdir)
-        except Exception as e:
-            error = "Creating beam maps ... Failed. Check log"
-            logger.warning(error)
-            logger.exception(e)
-            raise RuntimeError(error)
+            try:
+                mosaic_utils.create_beams(self.mosaic_beam_list.copy(), self.mosaic_continuum_beam_subdir, corrtype=self.mosaic_primary_beam_type, primary_beam_path=self.mosaic_primary_beam_shape_files_location)
+            except Exception as e:
+                error = "Creating beam maps ... Failed. Check log"
+                logger.warning(error)
+                logger.exception(e)
+                raise RuntimeError(error)
+            else:
+                logger.info("Creating beam maps ... Done")
+                mosaic_continuum_beam_status = True
         else:
-            logger.info("Creating beam maps ... Done")
-            mosaic_continuum_beam_status = True
+            logger.info("Beam maps are already available.")
 
         subs_param.add_param(
             self, 'mosaic_continuum_beam_status', mosaic_continuum_beam_status)
