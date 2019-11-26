@@ -1138,7 +1138,7 @@ class mosaic(BaseModule):
             self, 'mosaic_continuum_read_covariance_matrix_status', False)
 
         mosaic_continuum_inverse_covariance_matrix = get_param_def(
-            self, 'mosaic_continuum_inverse_covariance_matrix_matrix', [])
+            self, 'mosaic_continuum_inverse_covariance_matrix', [])
 
 
         correlation_matrix_file = os.path.join(self.mosaic_continuum_dir,'correlation.txt')
@@ -1159,7 +1159,7 @@ class mosaic(BaseModule):
             logger.info("Covariance matrix already available on file.")
 
 
-        if len(mosaic_continuum_inverse_covariance_matrix) != 0:
+        if len(mosaic_continuum_inverse_covariance_matrix) == 0:
             
             logger.info("Reading covariance matrix")
             # Read in noise correlation matrix 
