@@ -915,7 +915,7 @@ class mosaic(BaseModule):
             logger.info("Template mosaic already exists")
         else:
             # switch to mosaic directory
-            subs_managefiles.director(self, 'ch', self.mosaic_contiuum_mosaic_dir)
+            subs_managefiles.director(self, 'ch', self.mosaic_continuum_mosaic_dir)
 
             # This will create a template for the mosaic using "imgen" in Miriad
             # number of pixels of mosaic maps
