@@ -842,7 +842,7 @@ class mosaic(BaseModule):
             self, 'mosaic_common_beam_status', False)
         
         mosaic_common_beam_values = get_param_def(
-            self, 'mosaic_common_beam_status', np.zeros(3))
+            self, 'mosaic_common_beam_values', np.zeros(3))
 
         # change to directory of continuum images
         subs_managefiles.director(self, 'ch', self.mosaic_continuum_images_dir)
@@ -895,50 +895,6 @@ class mosaic(BaseModule):
         
         subs_param.add_param(
             self, 'mosaic_common_beam_values', mosaic_common_beam_values)  
-
-    # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
-    # Function to convolve images
-    # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    def mosaic_convolve_images(self):
-        """
-        Function to convolve images with the common beam
-
-        Should be executed after gridding
-
-        Note:
-            Could be moved
-        """
-
-        logger.info("Convolving images with common beam")
-
-        mosaic_convolve_images_status = get_param_def(
-            self, 'mosaic_convolve_images_status', False)
-        
-        mosaic_common_beam_values = get_param_def(
-            self, 'mosaic_common_beam_status', np.zeros(3))
-
-        # change to directory of continuum images
-        subs_managefiles.director(self, 'ch', self.mosaic_continuum_dir)
-
-        for beam in self.mosaic_beam_list:
-            convol=lib.miriad('convol')
-            convol.map = os.path.join(self.mosaic_continuum_images_subdir,'{0}/image_{0}.map'.format(beam))
-            convol.out = os.path.join(self.mosaic_continuum_mosaic_subdir, 'image_{}_convol.map'.format(beam))
-            convol.fwhm = '{0},{1}'.format(str(c_beam[0]),str(c_beam[1]))
-            convol.pa = c_beam[2]
-            convol.options = 'final'
-            convol.inp()
-            try:
-                convol.go()
-            except Exception as e:
-                error = "Failed convolving image of beam {}".format(beam)
-                logger.error(error)
-                logger.exception(e)
-                
-        subs_param.add_param(
-            self, 'mosaic_convolve_images_status', True)  
-
-        logger.info("Convolving images with common beam ... Done")
     
     # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
     # Function to create template mosaic
@@ -953,51 +909,56 @@ class mosaic(BaseModule):
         mosaic_template_mosaic_status = get_param_def(
             self, 'mosaic_template_mosaic_status', False)
 
-        # switch to mosaic directory
-        subs_managefiles.director(self, 'ch', self.mosaic_contiuum_mosaic_dir)
+        template_mosaic_name = "mosaic_template.map"
 
-        # This will create a template for the mosaic using "imgen" in Miriad
-        # number of pixels of mosaic maps
-        imsize=self.mosaic_continuum_imsize
-        # cell size in arcsec
-        cell=self.mosaic_continuum_cellsize
+        if mosaic_template_mosaic_status and os.path.isdir(template_mosaic_name):
+            logger.info("Template mosaic already exists")
+        else:
+            # switch to mosaic directory
+            subs_managefiles.director(self, 'ch', self.mosaic_contiuum_mosaic_dir)
 
-        # create template prior to changing projection
-        imgen = lib.miriad('imgen')
-        imgen.out = 'mosaic_temp_preproj.map'
-        imgen.imsize = imsize
-        imgen.cell = cell
-        imgen.object = 'level'
-        imgen.spar = '0.'
-        imgen.radec = '{0},{1}'.format(str(self.mosaic_projection_centre_ra),str(self.mosaic_projection_centre_dec))
-        imgen.inp()
-        try:
-            imgen.go()
-        except Exception as e:
-            error = "Error creating template mosaic image"
-            logger.error(error)
-            logger.exception(e)
-            
-        # Now change projection to NCP
-        regrid = lib.miriad('regrid')
-        regrid.in_ = 'mosaic_temp_preproj.map'
-        regrid.out = 'mosaic_template.map'
-        regrid.project='NCP'
-        try:
-            regrid.go()
-        except Exception as e:
-            error = "Error changing projection to NCP"
-            logger.error(error)
-            logger.exception(e)
-            #raise RuntimeError(error)
+            # This will create a template for the mosaic using "imgen" in Miriad
+            # number of pixels of mosaic maps
+            imsize=self.mosaic_continuum_imsize
+            # cell size in arcsec
+            cell=self.mosaic_continuum_cellsize
 
-        # remove (moved to cleanup function)
-        #shutil.rmtree(mosaicdir+'mosaic_temp.map')
-        #subs_managefiles.director(self, 'rm', 'mosaic_temp_preproj.map')
+            # create template prior to changing projection
+            imgen = lib.miriad('imgen')
+            imgen.out = 'mosaic_temp_preproj.map'
+            imgen.imsize = imsize
+            imgen.cell = cell
+            imgen.object = 'level'
+            imgen.spar = '0.'
+            imgen.radec = '{0},{1}'.format(str(self.mosaic_projection_centre_ra),str(self.mosaic_projection_centre_dec))
+            imgen.inp()
+            try:
+                imgen.go()
+            except Exception as e:
+                error = "Error creating template mosaic image"
+                logger.error(error)
+                logger.exception(e)
+                
+            # Now change projection to NCP
+            regrid = lib.miriad('regrid')
+            regrid.in_ = 'mosaic_temp_preproj.map'
+            regrid.out = template_mosaic_name
+            regrid.project='NCP'
+            try:
+                regrid.go()
+            except Exception as e:
+                error = "Error changing projection to NCP"
+                logger.error(error)
+                logger.exception(e)
+                #raise RuntimeError(error)
 
-        logger.info("Creating template mosaic ... Done")
+            # remove (moved to cleanup function)
+            #shutil.rmtree(mosaicdir+'mosaic_temp.map')
+            #subs_managefiles.director(self, 'rm', 'mosaic_temp_preproj.map')
 
-        mosaic_template_mosaic_status = True
+            logger.info("Creating template mosaic ... Done")
+            mosaic_template_mosaic_status = True
+
         subs_param.add_param(
             self, 'mosaic_template_mosaic_status', mosaic_template_mosaic_status) 
 
@@ -1014,31 +975,35 @@ class mosaic(BaseModule):
         mosaic_regrid_images_status = get_param_def(
             self, 'mosaic_regrid_images_status', False)
 
-        # switch to mosaic directory
-        subs_managefiles.director(self, 'ch', self.mosaic_contiuum_mosaic_dir)
+        if not mosaic_regrid_images_status:
+            # switch to mosaic directory
+            subs_managefiles.director(self, 'ch', self.mosaic_contiuum_images_dir)
 
-        # Put images on mosaic template grid
-        for beam in self.mosaic_beam_list:
-            regrid = lib.miriad('regrid')
-            if os.path.isdir('image_{}_convol.map'.format(beam)):
-                regrid.in_ = 'image_{}_convol.map'.format(beam)
-                regrid.out = 'image_{}_mos.map'.format(beam)
-                regrid.tin = 'mosaic_template.map'
-                regrid.axes = '1,2'
-                regrid.inp()
-                try:
-                    regrid.go()
-                except Exception as e:
-                    warning = "Failed regridding image of beam {}".format(beam)
-                    logger.warning(warning)
-                    logger.exception(e)
-                    #raise RuntimeError(error)
-            else:
-                logger.warning("Did not find convolved image for beam {}".format(beam))
-            
-        logger.info("Regridding images ... Done")
+            # Put images on mosaic template grid
+            for beam in self.mosaic_beam_list:
+                logger.info("Regridding beam {}".format(beam))
+                regrid = lib.miriad('regrid')
+                if os.path.isdir('{0}/image_{0}.map'.format(beam)):
+                    regrid.in_ = '{0}/image_{0}.map'.format(beam)
+                    regrid.out = 'image_{}_regrid.map'.format(beam)
+                    regrid.tin = 'mosaic_template.map'
+                    regrid.axes = '1,2'
+                    regrid.inp()
+                    try:
+                        regrid.go()
+                    except Exception as e:
+                        warning = "Failed regridding image of beam {}".format(beam)
+                        logger.warning(warning)
+                        logger.exception(e)
+                        #raise RuntimeError(error)
+                else:
+                    logger.warning("Did not find convolved image for beam {}".format(beam))
+                
+            logger.info("Regridding images ... Done")
+            mosaic_regrid_images_status = True
+        else:
+            logger.info("Images have alreayd been regridded")
 
-        mosaic_regrid_images_status = True
         subs_param.add_param(
             self, 'mosaic_regrid_images_status', mosaic_regrid_images_status)
 
@@ -1082,6 +1047,52 @@ class mosaic(BaseModule):
         mosaic_regrid_beam_maps_status = True
         subs_param.add_param(
             self, 'mosaic_regrid_beam_maps_status', mosaic_regrid_beam_maps_status)
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Function to convolve images
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    def mosaic_convolve_images(self):
+        """
+        Function to convolve images with the common beam
+
+        Should be executed after gridding
+
+        Note:
+            Could be moved
+        """
+
+        logger.info("Convolving images with common beam")
+
+        mosaic_convolve_images_status = get_param_def(
+            self, 'mosaic_convolve_images_status', False)
+
+        mosaic_common_beam_values = get_param_def(
+            self, 'mosaic_common_beam_status', np.zeros(3))
+
+        # change to directory of continuum images
+        subs_managefiles.director(self, 'ch', self.mosaic_continuum_dir)
+
+        for beam in self.mosaic_beam_list:
+            convol = lib.miriad('convol')
+            convol.map = os.path.join(
+                self.mosaic_continuum_images_subdir, 'image_{0}_regrid.map'.format(beam))
+            convol.out = os.path.join(
+                self.mosaic_continuum_mosaic_subdir, 'image_{0}_mos.map'.format(beam))
+            convol.fwhm = '{0},{1}'.format(str(c_beam[0]), str(c_beam[1]))
+            convol.pa = c_beam[2]
+            convol.options = 'final'
+            convol.inp()
+            try:
+                convol.go()
+            except Exception as e:
+                error = "Failed convolving image of beam {}".format(beam)
+                logger.error(error)
+                logger.exception(e)
+
+        subs_param.add_param(
+            self, 'mosaic_convolve_images_status', True)
+
+        logger.info("Convolving images with common beam ... Done")
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
     # Function to get the correlation matrix
@@ -1610,8 +1621,8 @@ class mosaic(BaseModule):
                 # Regrid beam maps
                 # ================
                 self.regrid_beam_maps()
-                # Determing common beam for convolution
                 
+                # Determing common beam for convolution
                 # =====================================
                 self.get_common_beam()
 
@@ -1685,6 +1696,9 @@ class mosaic(BaseModule):
         
         # Clean up files
         for fl in glob.glob(mosaicdir+'*_convol.map'):
+            subs_managefiles.director(self, 'rm', fl)
+        # Clean up files
+        for fl in glob.glob(mosaicdir+'*_regrid.map'):
             subs_managefiles.director(self, 'rm', fl)
         
         subs_managefiles.director(self, 'rm', 'mosaic_im.map')
