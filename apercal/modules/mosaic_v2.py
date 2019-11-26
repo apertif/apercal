@@ -1129,7 +1129,7 @@ class mosaic(BaseModule):
         Based on the cell that reads-in the correlation matrix
         """
 
-        logger.info("Getting covariance matrix")
+        logger.info("Calculating inverse covariance matrix")
 
         mosaic_continuum_write_covariance_matrix_status = get_param_def(
             self, 'mosaic_continuum_write_covariance_matrix_status', False)
@@ -1205,6 +1205,8 @@ class mosaic(BaseModule):
             logger.info("Getting inverse of covariance matrix")
             mosaic_continuum_inverse_covariance_matrix = np.linalg.inv(noise_cov)
             logger.info("Getting inverse of covariance matrix ... Done")
+            
+            logger.info("Calculating inverse covariance matrix ... Done")
         else:
             logger.info("Inverse of covariance matrix is already available")
 
@@ -1217,7 +1219,6 @@ class mosaic(BaseModule):
         subs_param.add_param(
             self, 'mosaic_continuum_inverse_covariance_matrix', mosaic_continuum_inverse_covariance_matrix)
 
-        logger.info("Getting covariance matrix ... Done")
 
         #return inv_cov
 
@@ -1236,7 +1237,7 @@ class mosaic(BaseModule):
 
         # get covariance matrix from numpy file
         mosaic_continuum_inverse_covariance_matrix = get_param_def(
-            self, 'mosaic_continuum_inverse_covariance_matrix_matrix', [])
+            self, 'mosaic_continuum_inverse_covariance_matrix', [])
         if len(mosaic_continuum_inverse_covariance_matrix) == 0:
             error = "Inverse covariance matrix is not available"
             logger.error(error)
