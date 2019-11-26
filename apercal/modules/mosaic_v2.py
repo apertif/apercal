@@ -845,7 +845,7 @@ class mosaic(BaseModule):
             self, 'mosaic_common_beam_status', np.zeros(3))
 
         # change to directory of continuum images
-        subs_managefiles.director(self, 'ch', self.mosaic_continuum_image_dir)
+        subs_managefiles.director(self, 'ch', self.mosaic_continuum_images_dir)
 
         if not mosaic_common_beam_status:
             # this is where the beam information will be stored
