@@ -222,7 +222,7 @@ def correlation_matrix_symmetrize(a):
 
     return a + a.T - np.diag(a.diagonal())
 
-def create_correlation_matrix(output_dir):
+def create_correlation_matrix(output_file):
     """
     This function creates a correlation matrix for 39 independent beams (i.e. an identity matrix)
     and writes it out to a file
@@ -328,4 +328,4 @@ def create_correlation_matrix(output_dir):
     C[37,38]=0.11
     C[38,39]=0.11
     C = correlation_matrix_symmetrize(C)
-    np.savetxt(os.path.join(output_dir,'correlation.txt'),C,fmt='%f')
+    np.savetxt(output_file,C,fmt='%f')
