@@ -514,7 +514,7 @@ class mosaic(BaseModule):
                 subs_managefiles.director(self, 'ch', self.mosaic_continuum_dir)
 
                 try:
-                    mosaic_utils.create_beam(copy.deepcopy(self.mosaic_beam_list), self.mosaic_continuum_beam_subdir, corrtype=self.mosaic_primary_beam_type, primary_beam_path=self.mosaic_primary_beam_shape_files_location)
+                    mosaic_utils.create_beam(beam, self.mosaic_continuum_beam_subdir, corrtype=self.mosaic_primary_beam_type, primary_beam_path=self.mosaic_primary_beam_shape_files_location)
                 except Exception as e:
                     error = "Creating map of beam {} ... Failed".format(beam)
                     logger.warning(error)
