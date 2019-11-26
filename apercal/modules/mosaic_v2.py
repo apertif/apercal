@@ -749,6 +749,9 @@ class mosaic(BaseModule):
         mosaic_transfer_coordinates_to_beam_status = get_param_def(
             self, 'mosaic_transfer_coordinates_to_beam_status', False)
 
+        # change to directory of continuum images
+        subs_managefiles.director(self, 'ch', self.mosaic_continuum_dir)
+
         for beam in self.mosaic_beam_list:
 
             logger.info("Processing beam {}".format(beam))
