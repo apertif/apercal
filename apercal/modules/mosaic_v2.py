@@ -1218,7 +1218,7 @@ class mosaic(BaseModule):
             self, 'mosaic_product_beam_covariance_matrix_status', False)
 
         # switch to mosaic directory
-        subs_managefiles.director(self, 'ch', self.mosaic_contiuum_dir)
+        subs_managefiles.director(self, 'ch', self.mosaic_continuum_dir)
 
         # get covariance matrix
         inv_cov = self.get_inverted_covariance_matrix()
@@ -1291,7 +1291,7 @@ class mosaic(BaseModule):
             self, 'mosaic_variance_map_status', False)
 
         # switch to mosaic directory
-        subs_managefiles.director(self, 'ch', self.mosaic_contiuum_dir)
+        subs_managefiles.director(self, 'ch', self.mosaic_continuum_dir)
 
         # Calculate variance map (using beams and noise covariance matrix over entire map)
         # This is the denominator for I(mosaic)
@@ -1335,7 +1335,7 @@ class mosaic(BaseModule):
             self, 'mosaic_product_beam_covariance_matrix_image_status', False)
 
         # switch to mosaic directory
-        subs_managefiles.director(self, 'ch', self.mosaic_contiuum_mosaic_dir)
+        subs_managefiles.director(self, 'ch', self.mosaic_continuum_mosaic_dir)
 
         # Calculate transpose of beam matrix multiplied by noise_cov multiplied by image from each beam for each position
         # in the final image
@@ -1382,7 +1382,7 @@ class mosaic(BaseModule):
             self, 'mosaic_beam_max_variance', 0.)
 
         # switch to mosaic directory
-        subs_managefiles.director(self, 'ch', self.mosaic_contiuum_mosaic_dir)
+        subs_managefiles.director(self, 'ch', self.mosaic_continuum_mosaic_dir)
 
         # Find maximum value of variance map
         imstat = lib.miriad('imstat')
@@ -1429,7 +1429,7 @@ class mosaic(BaseModule):
             self, 'mosaic_beam_max_variance', 0.)
 
         # switch to mosaic directory
-        subs_managefiles.director(self, 'ch', self.mosaic_contiuum_mosaic_dir)
+        subs_managefiles.director(self, 'ch', self.mosaic_continuum_mosaic_dir)
 
         # Divide image by variance map
         maths = lib.miriad('maths')
@@ -1468,7 +1468,7 @@ class mosaic(BaseModule):
             self, 'mosaic_beam_max_variance', 0.)
 
         # switch to mosaic directory
-        subs_managefiles.director(self, 'ch', self.mosaic_contiuum_mosaic_dir)
+        subs_managefiles.director(self, 'ch', self.mosaic_continuum_mosaic_dir)
 
         # Produce mosaic noise map
         maths = lib.miriad('maths')
@@ -1513,7 +1513,7 @@ class mosaic(BaseModule):
             self, 'mosaic_write_mosaic_fits_files_status', False)
 
         # switch to mosaic directory
-        subs_managefiles.director(self, 'ch', self.mosaic_contiuum_mosaic_dir)
+        subs_managefiles.director(self, 'ch', self.mosaic_continuum_mosaic_dir)
 
         # set the mosaic name
         if not self.mosaic_name:
