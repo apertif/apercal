@@ -15,7 +15,7 @@ in the Apertif-comissioning repository
 # ++++++++++++++++++++++++++++++++++++++++
 # Functions to create the beam maps
 # ++++++++++++++++++++++++++++++++++++++++
-def create_beam(beam_list, beam_map_dir, corrtype = 'Gaussian',
+def create_beam(beam, beam_map_dir, corrtype = 'Gaussian', primary_beam_path = None,
                 bm_size=3073,cell=4.0,fwhm=1950.0, cutoff=0.25):
     """
     Function to create beam maps with miriad
@@ -34,21 +34,23 @@ def create_beam(beam_list, beam_map_dir, corrtype = 'Gaussian',
         cutoff (float): Relative power level to cut beam off at
     """
     #iterate through beams:
-    for beam,beamdir in zip(beam_list,beam_map_dir):
-        #first define output name (goes in outdir)
-        #use beam integer in name
-        beamoutname = 'beam_{}.map'.format(beam.zfill(2))
-        #then test type and proceed for different types
-        if corrtype == 'Gaussian':
-            make_gaussian_beam(beamdir,beamoutname,bm_size,cell,fwhm,cutoff)
-        elif corrtype == 'Correct':
-            error='Measured PB maps not yet supported'
-            logger.error(error)
-            raise ApercalException(error)
-        else:
-            error='Type of beam map not supported'
-            logger.error(error)
-            raise ApercalException(error)
+    #for beam,beamdir in zip(beam_list,beam_map_dir):
+        
+    #first define output name (goes in outdir)
+    #use beam integer in name
+    beamoutname = 'beam_{}.map'.format(beam.zfill(2))
+    #then test type and proceed for different types
+    if corrtype == 'Gaussian':
+        make_gaussian_beam(beamdir,beamoutname,bm_size,cell,fwhm,cutoff)
+    elif corrtype == 'Correct':
+        error='Measured PB maps not yet supported'
+        logger.error(error)
+        raise ApercalException(error)
+        get_measured_beam_maps(beam, beam_map_dir, primary_beam_path)
+    else:
+        error='Type of beam map not supported'
+        logger.error(error)
+        raise ApercalException(error)
 
 def make_gaussian_beam(beamdir,beamoutname,bm_size,cell,fwhm,cutoff):
     """
@@ -86,7 +88,7 @@ def make_gaussian_beam(beamdir,beamoutname,bm_size,cell,fwhm,cutoff):
     #fix header
     fixheader(beamoutname,beamdir)
 
-def measured_beam_maps(beam, image_path, beam_map_path, output_name):
+def get_measured_beam_maps(beam, image_path, beam_map_path, output_name):
 	"""
 	Function to create beam map from drift scans
 
