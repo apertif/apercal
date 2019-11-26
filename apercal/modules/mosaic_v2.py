@@ -876,7 +876,7 @@ class mosaic(BaseModule):
             if self.mosaic_common_beam_type == 'circular' or self.mosaic_common_beam_type == '':
                 max_axis = np.nanmax([bmajor, bminor])
                 c_beam = [1.05*max_axis,1.05*max_axis,0.]
-            elif self.mosaic_common_beam_type == "maximum":    
+            elif self.mosaic_common_beam_type == "elliptical":    
                 c_beam = [1.05*np.nanmax(bmajor),1.05*np.nanmax(bminor),np.nanmedian(bangle)]
             else:
                 error = "Unknown type of common beam requested. Abort"
