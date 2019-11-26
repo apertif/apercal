@@ -616,6 +616,7 @@ class mosaic(BaseModule):
 
         # go through the list of beams
         for beam in self.mosaic_beam_list:
+            logger.info("Converting fits image of beam {} to miriad image".format(beam))
             # This function will import a FITS image into Miriad placing it in the mosaicdir
             fits = lib.miriad('fits')
             fits.op = 'xyin'
