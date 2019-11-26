@@ -1174,17 +1174,21 @@ class mosaic(BaseModule):
         sigma_beam=np.zeros(self.NBEAMS,float)
 
         # number of beams used to go through beam list using indices
+        # no need to use indices because the beams are indices themselves
         n_beams = len(self.mosaic_beam_list)
-        for bm in range(n_beams):
-            noise_val = self.get_beam_noise(self.mosaic_beam_list[bm])
-            sigma_beam[int(self.mosaic_beam_list[bm])]=float(noise_val[4].lstrip('Estimated rms is '))
+        #for bm in range(n_beams):
+        for bm in self.mosaic_beam_list:
+            noise_val = self.get_beam_noise(bm)
+            sigma_beam[int(bm)]=float(noise_val[4].lstrip('Estimated rms is '))
         
         # write the matrix
         # take into account that there are not always 40 beams
-        for k in range(n_beams):
-            for m in range(n_beams):
-                a = int(self.mosaic_beam_list[k])
-                b = int(self.mosaic_beam_list[k])
+        # for k in range(n_beams):
+        #     for m in range(n_beams):
+        for k in self.mosaic_beam_list:
+            for m in self.mosaic_beam_list:
+                a = int(k)
+                b = int(m)
                 noise_cov[a,b]=noise_cor[a,b]*sigma_beam[a]*sigma_beam[b]  # The noise covariance matrix is 
     
         # Only the inverse of this matrix is ever used:
@@ -1231,7 +1235,7 @@ class mosaic(BaseModule):
                 # since the beam list is made of strings, need to convert to integers
                 if os.path.isdir(os.path.join(self.mosaic_continuum_beam_subdir, "beam_{0}_mos.map".format(b))):
                     if inv_cov[int(b),int(bm)]!=0.:
-                            operate+="<"+self.mosaic_continuum_beam_subdir+"/beam_{0}_mos.map>*{1}+".format(b,inv_cov[int(b),int(bm)])
+                            operate+="<"+self.mosaic_continuum_beam_subdir+"/beam_{0}_mos.map>*{1}+".format(int(b),inv_cov[int(b),int(bm)])
                     maths.exp = operate
                     maths.options='unmask'
                     maths.inp()
