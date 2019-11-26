@@ -1137,6 +1137,10 @@ class mosaic(BaseModule):
         mosaic_continuum_read_covariance_matrix_status = get_param_def(
             self, 'mosaic_continuum_read_covariance_matrix_status', False)
 
+        mosaic_continuum_inverse_covariance_matrix = get_param_def(
+            self, 'mosaic_continuum_inverse_covariance_matrix_matrix', [])
+
+
         correlation_matrix_file = os.path.join(self.mosaic_continuum_dir,'correlation.txt')
 
         if not mosaic_continuum_write_covariance_matrix_status:
@@ -1154,55 +1158,68 @@ class mosaic(BaseModule):
         else:
             logger.info("Covariance matrix already available on file.")
 
-        logger.info("Reading covariance matrix")
 
-        # Read in noise correlation matrix 
-        try:
-            noise_cor=np.loadtxt(correlation_matrix_file,dtype='f')
-        except Exception as e:
-            warning = "Reading covariance matrix ... Failed"
-            logger.warning(warning)
-            logger.exception(e)
-        else:
-            mosaic_continuum_read_covariance_matrix_status = True
+        if len(mosaic_continuum_inverse_covariance_matrix) != 0:
+            
+            logger.info("Reading covariance matrix")
+            # Read in noise correlation matrix 
+            try:
+                noise_cor=np.loadtxt(correlation_matrix_file,dtype='f')
+            except Exception as e:
+                warning = "Reading covariance matrix ... Failed"
+                logger.warning(warning)
+                logger.exception(e)
+            else:
+                mosaic_continuum_read_covariance_matrix_status = True
 
-        # Initialize covariance matrix
-        noise_cov=noise_cor
+            logger.info("Getting covariance matrix ...")
 
-        # Measure noise in the image for each beam
-        # same size as the correlation matrix
-        sigma_beam=np.zeros(self.NBEAMS,float)
+            # Initialize covariance matrix
+            noise_cov=noise_cor
 
-        # number of beams used to go through beam list using indices
-        # no need to use indices because the beams are indices themselves
-        n_beams = len(self.mosaic_beam_list)
-        #for bm in range(n_beams):
-        for bm in self.mosaic_beam_list:
-            noise_val = self.get_beam_noise(bm)
-            sigma_beam[int(bm)]=float(noise_val[4].lstrip('Estimated rms is '))
+            # Measure noise in the image for each beam
+            # same size as the correlation matrix
+            sigma_beam=np.zeros(self.NBEAMS,float)
+
+            # number of beams used to go through beam list using indices
+            # no need to use indices because the beams are indices themselves
+            n_beams = len(self.mosaic_beam_list)
+            #for bm in range(n_beams):
+            for bm in self.mosaic_beam_list:
+                noise_val = self.get_beam_noise(bm)
+                sigma_beam[int(bm)]=float(noise_val[4].lstrip('Estimated rms is '))
+            
+            # write the matrix
+            # take into account that there are not always 40 beams
+            # for k in range(n_beams):
+            #     for m in range(n_beams):
+            for k in self.mosaic_beam_list:
+                for m in self.mosaic_beam_list:
+                    a = int(k)
+                    b = int(m)
+                    noise_cov[a,b]=noise_cor[a,b]*sigma_beam[a]*sigma_beam[b]  # The noise covariance matrix is 
+            
+            logger.info("Getting covariance matrix ... Done")
         
-        # write the matrix
-        # take into account that there are not always 40 beams
-        # for k in range(n_beams):
-        #     for m in range(n_beams):
-        for k in self.mosaic_beam_list:
-            for m in self.mosaic_beam_list:
-                a = int(k)
-                b = int(m)
-                noise_cov[a,b]=noise_cor[a,b]*sigma_beam[a]*sigma_beam[b]  # The noise covariance matrix is 
-    
-        # Only the inverse of this matrix is ever used:
-        inv_cov=np.linalg.inv(noise_cov)
+            # Only the inverse of this matrix is ever used:
+            logger.info("Getting inverse of covariance matrix")
+            mosaic_continuum_inverse_covariance_matrix = np.linalg.inv(noise_cov)
+            logger.info("Getting inverse of covariance matrix ... Done")
+        else:
+            logger.info("Inverse of covariance matrix is already available")
 
         subs_param.add_param(
             self, 'mosaic_continuum_write_covariance_matrix_status', mosaic_continuum_write_covariance_matrix_status)
         
         subs_param.add_param(
-            self, 'mosaic_continuum_read_covariance_matrix_status', mosaic_continuum_read_covariance_matrix_status)        
+            self, 'mosaic_continuum_read_covariance_matrix_status', mosaic_continuum_read_covariance_matrix_status)
+
+        subs_param.add_param(
+            self, 'mosaic_continuum_inverse_covariance_matrix', mosaic_continuum_inverse_covariance_matrix)
 
         logger.info("Getting covariance matrix ... Done")
 
-        return inv_cov
+        #return inv_cov
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
     # Function to calculate the product of beam matrix and covariance matrix
@@ -1217,13 +1234,20 @@ class mosaic(BaseModule):
         mosaic_product_beam_covariance_matrix_status = get_param_def(
             self, 'mosaic_product_beam_covariance_matrix_status', False)
 
-        # get covariance matrix
-        inv_cov = self.get_inverted_covariance_matrix()
+        # get covariance matrix from numpy file
+        mosaic_continuum_inverse_covariance_matrix = get_param_def(
+            self, 'mosaic_continuum_inverse_covariance_matrix_matrix', [])
+        if len(mosaic_continuum_inverse_covariance_matrix) == 0:
+            error = "Inverse covariance matrix is not available"
+            logger.error(error)
+            raise RuntimeError(error)
+        else:
+            inv_cov = mosaic_continuum_inverse_covariance_matrix
 
         # switch to mosaic directory
         # important because previous step switched to a different dir
         subs_managefiles.director(self, 'ch', self.mosaic_continuum_dir)
-        
+
         # First calculate transpose of beam matrix multiplied by the inverse covariance matrix
         # Will use *maths* in Miriad
 
