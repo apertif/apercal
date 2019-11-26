@@ -466,10 +466,10 @@ class mosaic(BaseModule):
                 error = "Cannot get data from ALTA yet. Abort"
                 logger.error(error)
                 raise RuntimeError(error)
+    
+            mosaic_failed_beams = failed_beams
         else:
             logger.info("Continuum image fits files are already available.")
-
-        mosaic_failed_beams = failed_beams
 
         # check the failed beams
         if len(failed_beams) == len(self.mosaic_beam_list):
