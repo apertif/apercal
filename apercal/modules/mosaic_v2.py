@@ -1135,7 +1135,7 @@ class mosaic(BaseModule):
         n_beams = len(self.mosaic_beam_list)
         for bm in range(n_beams):
             noise_val = self.get_beam_noise(self.mosaic_beam_list[bm])
-            sigma_beam[int(self.mosaic_beam_list[bm])]=float(noise_val[4].lstrip('Estimated rms is ')
+            sigma_beam[int(self.mosaic_beam_list[bm])]=float(noise_val[4].lstrip('Estimated rms is '))
         
         # write the matrix
         # take into account that there are not always 40 beams
