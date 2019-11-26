@@ -977,7 +977,7 @@ class mosaic(BaseModule):
 
         if not mosaic_regrid_images_status:
             # switch to mosaic directory
-            subs_managefiles.director(self, 'ch', self.mosaic_contiuum_images_dir)
+            subs_managefiles.director(self, 'ch', self.mosaic_continuum_images_dir)
 
             # Put images on mosaic template grid
             for beam in self.mosaic_beam_list:
@@ -1021,7 +1021,7 @@ class mosaic(BaseModule):
             self, 'mosaic_regrid_beam_maps_status', False)
 
         # switch to mosaic directory
-        subs_managefiles.director(self, 'ch', self.mosaic_contiuum_dir)
+        subs_managefiles.director(self, 'ch', self.mosaic_continuum_dir)
 
         # Put images on mosaic template grid
         for beam in self.mosaic_beam_list:
