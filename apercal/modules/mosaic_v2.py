@@ -1023,31 +1023,35 @@ class mosaic(BaseModule):
         mosaic_regrid_beam_maps_status = get_param_def(
             self, 'mosaic_regrid_beam_maps_status', False)
 
-        # switch to mosaic directory
-        subs_managefiles.director(self, 'ch', self.mosaic_continuum_dir)
+        if not mosaic_regrid_beam_maps_status:
+            # switch to mosaic directory
+            subs_managefiles.director(self, 'ch', self.mosaic_continuum_dir)
 
-        # Put images on mosaic template grid
-        for beam in self.mosaic_beam_list:
-            regrid = lib.miriad('regrid')
-            if os.path.isdir(os.path.join(self.mosaic_continuum_beam_subdir,'beam_{}.map'.format(beam))):
-                regrid.in_ = os.path.join(self.mosaic_continuum_beam_subdir,'beam_{}.map'.format(beam))
-                regrid.out = os.path.join(self.mosaic_continuum_beam_subdir,'beam_{}_mos.map'.format(beam))
-                regrid.tin = os.path.join(self.mosaic_continuum_mosaic_subdir,'mosaic_template.map'.format(beam))
-                regrid.axes = '1,2'  
-                regrid.inp()
-                try:
-                    regrid.go()
-                except Exception as e:
-                    warning = "Failed regridding beam_maps of beam {}".format(beam)
-                    logger.warning(warning)
-                    logger.exception(e)
-                    #raise RuntimeError(error)
-            else:
-                logger.warning("Did not find beam map for beam {}".format(beam))
+            # Put images on mosaic template grid
+            for beam in self.mosaic_beam_list:
+                regrid = lib.miriad('regrid')
+                if os.path.isdir(os.path.join(self.mosaic_continuum_beam_subdir,'beam_{}.map'.format(beam))):
+                    regrid.in_ = os.path.join(self.mosaic_continuum_beam_subdir,'beam_{}.map'.format(beam))
+                    regrid.out = os.path.join(self.mosaic_continuum_beam_subdir,'beam_{}_mos.map'.format(beam))
+                    regrid.tin = os.path.join(self.mosaic_continuum_mosaic_subdir,'mosaic_template.map'.format(beam))
+                    regrid.axes = '1,2'  
+                    regrid.inp()
+                    try:
+                        regrid.go()
+                    except Exception as e:
+                        warning = "Failed regridding beam_maps of beam {}".format(beam)
+                        logger.warning(warning)
+                        logger.exception(e)
+                        #raise RuntimeError(error)
+                else:
+                    logger.warning("Did not find beam map for beam {}".format(beam))
+                
+            logger.info("Regridding beam maps ... Done")
+
+            mosaic_regrid_beam_maps_status = True
+        else:
+            logger.info("Regridding of beam maps has already been done")
             
-        logger.info("Regridding beam maps ... Done")
-
-        mosaic_regrid_beam_maps_status = True
         subs_param.add_param(
             self, 'mosaic_regrid_beam_maps_status', mosaic_regrid_beam_maps_status)
 
