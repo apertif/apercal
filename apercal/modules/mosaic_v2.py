@@ -911,12 +911,12 @@ class mosaic(BaseModule):
 
         template_mosaic_name = "mosaic_template.map"
 
+        # switch to mosaic directory
+        subs_managefiles.director(self, 'ch', self.mosaic_continuum_mosaic_dir)
+        
         if mosaic_template_mosaic_status and os.path.isdir(template_mosaic_name):
             logger.info("Template mosaic already exists")
         else:
-            # switch to mosaic directory
-            subs_managefiles.director(self, 'ch', self.mosaic_continuum_mosaic_dir)
-
             # This will create a template for the mosaic using "imgen" in Miriad
             # number of pixels of mosaic maps
             imsize=self.mosaic_continuum_imsize
