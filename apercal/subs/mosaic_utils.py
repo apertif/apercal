@@ -41,7 +41,7 @@ def create_beam(beam, beam_map_dir, corrtype = 'Gaussian', primary_beam_path = N
     beamoutname = 'beam_{}.map'.format(beam.zfill(2))
     #then test type and proceed for different types
     if corrtype == 'Gaussian':
-        make_gaussian_beam(beamdir,beamoutname,bm_size,cell,fwhm,cutoff)
+        make_gaussian_beam(beam_map_dir,beamoutname,bm_size,cell,fwhm,cutoff)
     elif corrtype == 'Correct':
         error='Measured PB maps not yet supported'
         logger.error(error)
@@ -72,7 +72,7 @@ def make_gaussian_beam(beamdir,beamoutname,bm_size,cell,fwhm,cutoff):
     pos = [0., 60.]
     #set up imgen parameters
     imgen = lib.miriad('imgen')
-    imgen.out = '{0}/{1}'.format(beamdir,tmpbeamname)
+    imgen.out = os.path.join(beamdir, tmpbeamname)
     imgen.imsize = bm_size
     imgen.cell = cell
     imgen.object = 'gaussian'
