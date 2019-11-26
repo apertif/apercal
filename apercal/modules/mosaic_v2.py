@@ -977,25 +977,28 @@ class mosaic(BaseModule):
 
         if not mosaic_regrid_images_status:
             # switch to mosaic directory
-            subs_managefiles.director(self, 'ch', self.mosaic_continuum_images_dir)
+            subs_managefiles.director(self, 'ch', self.mosaic_continuum_dir)
 
             # Put images on mosaic template grid
             for beam in self.mosaic_beam_list:
                 logger.info("Regridding beam {}".format(beam))
                 regrid = lib.miriad('regrid')
-                if os.path.isdir('{0}/image_{0}.map'.format(beam)):
-                    regrid.in_ = '{0}/image_{0}.map'.format(beam)
-                    regrid.out = 'image_{}_regrid.map'.format(beam)
-                    regrid.tin = 'mosaic_template.map'
+                input_file = os.path.join(self.mosaic_continuum_images_subdir, '{0}/image_{0}.map'.format(beam))
+                output_file = os.path.join(self.mosaic_continuum_mosaic_subdir, 'image_{}_regrid.map'.format(beam))
+                template_mosaic_file = os.path.join(self.mosaic_continuum_mosaic_subdir, "mosaic_template.map")
+                if os.path.isdir(input_file):
+                    regrid.in_ = input_file
+                    regrid.out = output_file
+                    regrid.tin = template_mosaic_file
                     regrid.axes = '1,2'
                     regrid.inp()
                     try:
                         regrid.go()
                     except Exception as e:
-                        warning = "Failed regridding image of beam {}".format(beam)
-                        logger.warning(warning)
+                        error = "Failed regridding image of beam {}".format(beam)
+                        logger.error(error)
                         logger.exception(e)
-                        #raise RuntimeError(error)
+                        raise RuntimeError(error)
                 else:
                     logger.warning("Did not find convolved image for beam {}".format(beam))
                 
