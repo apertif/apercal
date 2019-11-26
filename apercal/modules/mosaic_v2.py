@@ -55,10 +55,10 @@ class mosaic(BaseModule):
     mosaic_continuum_image_origin = None
     mosaic_polarisation_input_origin = None
     #mosaic_projection_centre_type = None
-    mosaic_projection_centre_ra = ''
-    mosaic_projection_centre_dec = ''
-    mosaic_projection_centre_beam = ''
-    mosaic_projection_centre_file = ''
+    mosaic_projection_centre_ra = None
+    mosaic_projection_centre_dec = None
+    mosaic_projection_centre_beam = None
+    mosaic_projection_centre_file = None
     mosaic_primary_beam_type = None
     mosaic_primary_beam_shape_files_location = None
     mosaic_common_beam_type = ''
