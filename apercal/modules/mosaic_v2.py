@@ -1051,7 +1051,7 @@ class mosaic(BaseModule):
             mosaic_regrid_beam_maps_status = True
         else:
             logger.info("Regridding of beam maps has already been done")
-            
+
         subs_param.add_param(
             self, 'mosaic_regrid_beam_maps_status', mosaic_regrid_beam_maps_status)
 
@@ -1068,7 +1068,6 @@ class mosaic(BaseModule):
             Could be moved
         """
 
-        logger.info("Convolving images with common beam")
 
         mosaic_convolve_images_status = get_param_def(
             self, 'mosaic_convolve_images_status', False)
@@ -1076,30 +1075,48 @@ class mosaic(BaseModule):
         mosaic_common_beam_values = get_param_def(
             self, 'mosaic_common_beam_status', np.zeros(3))
 
+        logger.info("Convolving images with common beam with beam {}".format(mosaic_common_beam_values))
+
         # change to directory of continuum images
         subs_managefiles.director(self, 'ch', self.mosaic_continuum_dir)
 
-        for beam in self.mosaic_beam_list:
-            convol = lib.miriad('convol')
-            convol.map = os.path.join(
-                self.mosaic_continuum_images_subdir, 'image_{0}_regrid.map'.format(beam))
-            convol.out = os.path.join(
-                self.mosaic_continuum_mosaic_subdir, 'image_{0}_mos.map'.format(beam))
-            convol.fwhm = '{0},{1}'.format(str(c_beam[0]), str(c_beam[1]))
-            convol.pa = c_beam[2]
-            convol.options = 'final'
-            convol.inp()
-            try:
-                convol.go()
-            except Exception as e:
-                error = "Failed convolving image of beam {}".format(beam)
-                logger.error(error)
-                logger.exception(e)
+        if not mosaic_convolve_images_status:
+
+            for beam in self.mosaic_beam_list:
+                logger.info("Convolving image of beam {}".format(beam))
+
+                if not os.path.isdir(os.path.join(
+                    self.mosaic_continuum_mosaic_subdir, 'image_{0}_mos.map'.format(beam))):
+                    convol = lib.miriad('convol')
+                    convol.map = os.path.join(
+                        self.mosaic_continuum_images_subdir, 'image_{0}_regrid.map'.format(beam))
+                    convol.out = os.path.join(
+                        self.mosaic_continuum_mosaic_subdir, 'image_{0}_mos.map'.format(beam))
+                    convol.fwhm = '{0},{1}'.format(str(c_beam[0]), str(c_beam[1]))
+                    convol.pa = c_beam[2]
+                    convol.options = 'final'
+                    convol.inp()
+                    try:
+                        convol.go()
+                    except Exception as e:
+                        error = "Convolving image of beam {} ... Failed".format(beam)
+                        logger.error(error)
+                        logger.exception(e)
+                        raise RuntimeError(error)
+                    else:
+                        logger.info("Convolving image of beam {} ... Done".format(beam))
+                else:
+                    logger.info("Convolved image of beam {} already exists".format(beam))
+            
+            mosaic_common_beam_values = True
+
+            logger.info("Convolving images with common beam ... Done")
+        else:
+            logger.info("Images have already been convolved")
 
         subs_param.add_param(
-            self, 'mosaic_convolve_images_status', True)
+            self, 'mosaic_convolve_images_status', mosaic_common_beam_values)
 
-        logger.info("Convolving images with common beam ... Done")
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
     # Function to get the correlation matrix
