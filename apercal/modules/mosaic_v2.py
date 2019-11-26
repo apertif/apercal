@@ -188,46 +188,44 @@ class mosaic(BaseModule):
         mosaic_create_subdirs_status = get_param_def(
             self, 'mosaic_create_subdirs_status', False)
 
-        if not mosaic_create_subdirs_status:
+        if self.mosaic_continuum_mf:
+            # create the directory for the continuunm mosaic
+            if not self.mosaic_continuum_subdir:
+                self.mosaic_continuum_subdir = 'continuum'
+            self.mosaic_continuum_dir = os.path.join(self.mosdir, self.mosaic_continuum_subdir)
+            if not os.path.exists(self.mosaic_continuum_dir):
+                subs_managefiles.director(self, 'mk', self.mosaic_continuum_dir)
 
-            if self.mosaic_continuum_mf:
-                # create the directory for the continuunm mosaic
-                if not self.mosaic_continuum_subdir:
-                    self.mosaic_continuum_subdir = 'continuum'
-                self.mosaic_continuum_dir = os.path.join(self.mosdir, self.mosaic_continuum_subdir)
-                subs_managefiles.director(self, 'mk', os.path.join(
-                    self.mosdir, self.mosaic_continuum_subdir))
+            # create the sub-directory to store the continuum images
+            if not self.mosaic_continuum_images_subdir:
+                self.mosaic_continuum_images_subdir = 'images'
+            self.mosaic_continuum_images_dir = os.path.join(
+                self.mosdir, self.mosaic_continuum_subdir, self.mosaic_continuum_images_subdir)
+            if not os.path.exist(self.mosaic_continuum_images_dir):
+                subs_managefiles.director(self, 'mk', self.mosaic_continuum_images_dir)
 
-                # create the sub-directory to store the continuum images
-                if not self.mosaic_continuum_images_subdir:
-                    self.mosaic_continuum_images_subdir = 'images'
-                self.mosaic_continuum_images_dir = os.path.join(
-                    self.mosdir, self.mosaic_continuum_subdir, self.mosaic_continuum_images_subdir)
-                subs_managefiles.director(self, 'mk', os.path.join(
-                    self.mosdir, self.mosaic_continuum_subdir, self.mosaic_continuum_images_subdir))
+            # create the directory to store the beam maps
+            if not self.mosaic_continuum_beam_subdir:
+                self.mosaic_continuum_beam_subdir = 'beams'
+            self.mosaic_continuum_beam_dir = os.path.join(
+                self.mosdir, self.mosaic_continuum_subdir, self.mosaic_continuum_beam_subdir)
+            if not os.path.exists(self.mosaic_continuum_beam_dir):
+                subs_managefiles.director(self, 'mk', self.mosaic_continuum_beam_dir)
 
-                # create the directory to store the beam maps
-                if not self.mosaic_continuum_beam_subdir:
-                    self.mosaic_continuum_beam_subdir = 'beams'
-                self.mosaic_continuum_beam_dir = os.path.join(
-                    self.mosdir, self.mosaic_continuum_subdir, self.mosaic_continuum_beam_subdir)
-                subs_managefiles.director(self, 'mk', os.path.join(
-                    self.mosdir, self.mosaic_continuum_subdir, self.mosaic_continuum_beam_subdir))
-
-                # create the directory to store the actual mosaic
-                if not self.mosaic_continuum_mosaic_subdir:
-                    self.mosaic_continuum_mosaic_subdir = 'mosaic'
-                self.mosaic_continuum_mosaic_dir = os.path.join(
-                    self.mosdir, self.mosaic_continuum_subdir, self.mosaic_continuum_mosaic_subdir)
-                subs_managefiles.director(self, 'mk', os.path.join(
-                    self.mosdir, self.mosaic_continuum_subdir, self.mosaic_continuum_mosaic_subdir))
-            
+            # create the directory to store the actual mosaic
+            if not self.mosaic_continuum_mosaic_subdir:
+                self.mosaic_continuum_mosaic_subdir = 'mosaic'
+            self.mosaic_continuum_mosaic_dir = os.path.join(
+                self.mosdir, self.mosaic_continuum_subdir, self.mosaic_continuum_mosaic_subdir)
+            if not os.path.exists(self.mosaic_continuum_mosaic_dir):
+                subs_managefiles.director(self, 'mk', self.mosaic_continuum_mosaic_dir)
+        
             logger.info("Creating sub-directories for mosaic ... Done")
             
             mosaic_create_subdirs_status = True
         else:
-            logger.info("Creating sub-directories for mosaic already done")
-
+            pass
+            
         subs_param.add_param(
             self, 'mosaic_create_subdirs_status', mosaic_create_subdirs_status)
 
