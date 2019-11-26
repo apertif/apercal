@@ -467,9 +467,11 @@ class mosaic(BaseModule):
                 logger.error(error)
                 raise RuntimeError(error)
     
-            mosaic_failed_beams = failed_beams
         else:
             logger.info("Continuum image fits files are already available.")
+
+        if len(mosaic_failed_beams) == 0:
+            mosaic_failed_beams = failed_beams
 
         # check the failed beams
         if len(failed_beams) == len(self.mosaic_beam_list):
