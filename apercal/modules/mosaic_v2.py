@@ -755,7 +755,7 @@ class mosaic(BaseModule):
 
             # get RA
             gethd = lib.miriad('gethd')
-            gethd.in_ = os.path.join(self.mosaic_continuum_images_subdir,'{}/image_{}.map/crval1'.format(beam))
+            gethd.in_ = os.path.join(self.mosaic_continuum_images_subdir,'{0}/image_{0}.map/crval1'.format(beam))
             try:
                 ra1=gethd.go()
             except Exception as e:
@@ -781,7 +781,7 @@ class mosaic(BaseModule):
                 mosaic_transfer_coordinates_to_beam_status = True
         
             # get DEC
-            gethd.in_ = os.path.join(self.mosaic_continuum_images_subdir,'{}/image_{}.map/crval2'.format(beam))
+            gethd.in_ = os.path.join(self.mosaic_continuum_images_subdir,'{0}/image_{0}.map/crval2'.format(beam))
             try:
                 dec1=gethd.go()
             except Exception as e:
