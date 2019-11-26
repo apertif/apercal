@@ -470,8 +470,12 @@ class mosaic(BaseModule):
         else:
             logger.info("Continuum image fits files are already available.")
 
+        # assign list of failed beams to variable that will be stored
         if len(mosaic_failed_beams) == 0:
             mosaic_failed_beams = failed_beams
+        # or the other way round in case of a restart
+        else:
+            failed_beams = mosaic_failed_beams
 
         # check the failed beams
         if len(failed_beams) == len(self.mosaic_beam_list):
