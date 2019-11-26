@@ -723,7 +723,7 @@ class mosaic(BaseModule):
         """
 
         # change to directory of continuum images
-        subs_managefiles.director(self, 'ch', self.mosaic_continuum_image_dir)
+        subs_managefiles.director(self, 'ch', self.mosaic_continuum_images_dir)
 
         sigest = lib.miriad('sigest')
         sigest.in_ = '{0}/image_{0}.map'.format(str(beam).zfill(2))
@@ -749,11 +749,13 @@ class mosaic(BaseModule):
         mosaic_continuum_read_covariance_matrix_status = get_param_def(
             self, 'mosaic_continuum_read_covariance_matrix_status', False)
 
+        correlation_matrix_file = os.path.join(self.mosaic_continuum_dir,'correlation.txt')
 
         if not mosaic_continuum_write_covariance_matrix_status:
+
             logger.info("Writing covariance matrix")
             try:
-                mosaic_utils.create_correlation_matrix(self.mosaic_continuum_dir)
+                mosaic_utils.create_correlation_matrix(correlation_matrix_file)
             except Exception as e:
                 warning = "Writing covariance matrix ... Failed"
                 logger.warning(warning)
@@ -761,12 +763,14 @@ class mosaic(BaseModule):
             else:
                 logger.info("Writing covariance matrix ... Done")
                 mosaic_continuum_write_covariance_matrix_status = True
+        else:
+            logger.info("Covariance matrix already available on file.")
 
         logger.info("Reading covariance matrix")
 
         # Read in noise correlation matrix 
         try:
-            noise_cor=np.loadtxt(os.path.join(self.mosaic_continuum_dir,'correlation.txt'),dtype='f')
+            noise_cor=np.loadtxt(correlation_matrix_file,dtype='f')
         except Exception as e:
             warning = "Reading covariance matrix ... Failed"
             logger.warning(warning)
