@@ -1695,10 +1695,10 @@ class mosaic(BaseModule):
             subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
         
         # Clean up files
-        for fl in glob.glob(mosaicdir+'*_convol.map'):
+        for fl in glob.glob('*_convol.map'):
             subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
         # Clean up files
-        for fl in glob.glob(mosaicdir+'*_regrid.map'):
+        for fl in glob.glob('*_regrid.map'):
             subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
         
         subs_managefiles.director(
@@ -1706,10 +1706,10 @@ class mosaic(BaseModule):
 
         #shutil.rmtree(mosaicdir+'mosaic_im.map')
 
-        for fl in glob.glob(mosaicdir+'mos_*.map'):
+        for fl in glob.glob('mos_*.map'):
             subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
             
-        for fl in glob.glob(mosaicdir+'btci_*.map'):
+        for fl in glob.glob('btci_*.map'):
             subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
 
         logger.info("Removing scratch files ... Done")
