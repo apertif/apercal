@@ -1686,30 +1686,31 @@ class mosaic(BaseModule):
         # remove file from creating template mosaic
         #shutil.rmtree(mosaicdir+'mosaic_temp.map')
         subs_managefiles.director(self, 'ch', self.mosaic_continuum_mosaic_dir)
-        subs_managefiles.director(self, 'rm', 'mosaic_temp_preproj.map')
+        subs_managefiles.director(self, 'rm', 'mosaic_temp_preproj.map', ignore_nonexistent=True)
 
         # remove files from matrix product
         for fl in glob.glob('tmp_*.map'):
-            subs_managefiles.director(self, 'rm', fl)
+            subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
         for fl in glob.glob('sum_*.map'):
-            subs_managefiles.director(self, 'rm', fl)
+            subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
         
         # Clean up files
         for fl in glob.glob(mosaicdir+'*_convol.map'):
-            subs_managefiles.director(self, 'rm', fl)
+            subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
         # Clean up files
         for fl in glob.glob(mosaicdir+'*_regrid.map'):
-            subs_managefiles.director(self, 'rm', fl)
+            subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
         
-        subs_managefiles.director(self, 'rm', 'mosaic_im.map')
+        subs_managefiles.director(
+            self, 'rm', 'mosaic_im.map', ignore_nonexistent=True)
 
         #shutil.rmtree(mosaicdir+'mosaic_im.map')
 
         for fl in glob.glob(mosaicdir+'mos_*.map'):
-            subs_managefiles.director(self, 'rm', fl)
+            subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
             
         for fl in glob.glob(mosaicdir+'btci_*.map'):
-            subs_managefiles.director(self, 'rm', fl)
+            subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
 
         logger.info("Removing scratch files ... Done")
             
