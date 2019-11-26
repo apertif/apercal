@@ -1256,6 +1256,8 @@ class mosaic(BaseModule):
         # Only doing math where inv_cov value is non-zero
         maths = lib.miriad('maths')
         for bm in self.mosaic_beam_list:
+            # Are you it should be here ????
+            operate = ""
             for b in self.mosaic_beam_list:
                 maths.out =os.path.join(self.mosaic_continuum_mosaic_subdir,'tmp_{}.map'.format(b))
                 # since the beam list is made of strings, need to convert to integers
