@@ -65,6 +65,7 @@ class mosaic(BaseModule):
     mosaic_continuum_mf = None
     mosaic_polarisation_v = None
     mosaic_clean_up = None
+    mosaic_overwrite
 
     mosaic_continuum_subdir = None
     mosaic_continuum_images_subdir = None
@@ -614,30 +615,43 @@ class mosaic(BaseModule):
         # change to directory of continuum images
         subs_managefiles.director(self, 'ch', self.mosaic_continuum_images_dir)
 
-        # go through the list of beams
-        for beam in self.mosaic_beam_list:
-            logger.info("Converting fits image of beam {} to miriad image".format(beam))
-            # This function will import a FITS image into Miriad placing it in the mosaicdir
-            fits = lib.miriad('fits')
-            fits.op = 'xyin'
-            #fits.in_ = '{}/image_mf_00.fits'.format(beam)
-            fits.in_ = glob.glob(os.path.join(beam,"image_mf_0?.fits"))[0]
-            fits.out = '{0}/image_{0}.map'.format(beam)
-            fits.inp()
-            try:
-                fits.go()
-            except Exception as e:
-                mosaic_continuum_convert_fits_images_status = False
-                logger.warning("Converting fits image of beam {} to miriad image ... Failed".format(beam))
-                logger.exception(e)
-            else:
-                mosaic_continuum_convert_fits_images_status = True
-                logger.debug("Converting fits image of beam {} to miriad image ... Done".format(beam))
+        if not mosaic_continuum_convert_fits_images_status:
 
-        if mosaic_continuum_convert_fits_images_status:
-            logger.info("Converting fits images to miriad images ... Successful")
+            # go through the list of beams
+            for beam in self.mosaic_beam_list:
+
+                logger.info("Converting fits image of beam {} to miriad image".format(beam))
+
+                mir_map_name = '{0}/image_{0}.map'.format(beam)
+
+                if not os.path.isdir(mir_map_name):
+                    # This function will import a FITS image into Miriad placing it in the mosaicdir
+                    fits = lib.miriad('fits')
+                    fits.op = 'xyin'
+                    #fits.in_ = '{}/image_mf_00.fits'.format(beam)
+                    fits.in_ = glob.glob(os.path.join(beam,"image_mf_0?.fits"))[0]
+                    fits.out = '{0}/image_{0}.map'.format(beam)
+                    fits.inp()
+                    try:
+                        fits.go()
+                    except Exception as e:
+                        mosaic_continuum_convert_fits_images_status = False
+                        logger.warning("Converting fits image of beam {} to miriad image ... Failed".format(beam))
+                        logger.exception(e)
+                    else:
+                        mosaic_continuum_convert_fits_images_status = True
+                        logger.debug("Converting fits image of beam {} to miriad image ... Done".format(beam))
+                
+                else:
+                    logger.warning("Miriad continuum image already exists for beam {}. Did not convert from fits again".format(beam))
+                    mosaic_continuum_convert_fits_images_status = True
+
+            if mosaic_continuum_convert_fits_images_status:
+                logger.info("Converting fits images to miriad images ... Successful")
+            else:
+                logger.warning("Converting fits images to miriad images ... Failed for at least one beam. Please check the log")
         else:
-            logger.warning("Converting fits images to miriad images ... Failed for at least one beam. Please check the log")
+            logger.info("Image of bam {} have already been converted.".format(beam))
             
         subs_param.add_param(
             self, 'mosaic_continuum_convert_fits_images_status', mosaic_continuum_convert_fits_images_status)
