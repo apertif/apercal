@@ -620,7 +620,7 @@ class mosaic(BaseModule):
             fits = lib.miriad('fits')
             fits.op = 'xyin'
             #fits.in_ = '{}/image_mf_00.fits'.format(beam)
-            fits.in_ = '{0}/{1}'.format(beam, glob.glob(os.path.join(beam,"image_mf_0?.fits"))[0])
+            fits.in_ = glob.glob(os.path.join(beam,"image_mf_0?.fits"))[0]
             fits.out = '{0}/image_{0}.map'.format(beam)
             fits.inp()
             try:
