@@ -39,18 +39,23 @@ def create_beam(beam, beam_map_dir, corrtype = 'Gaussian', primary_beam_path = N
     #first define output name (goes in outdir)
     #use beam integer in name
     beamoutname = 'beam_{}.map'.format(beam.zfill(2))
-    #then test type and proceed for different types
-    if corrtype == 'Gaussian':
-        make_gaussian_beam(beam_map_dir,beamoutname,bm_size,cell,fwhm,cutoff)
-    elif corrtype == 'Correct':
-        error='Measured PB maps not yet supported'
-        logger.error(error)
-        raise ApercalException(error)
-        get_measured_beam_maps(beam, beam_map_dir, primary_beam_path)
+
+    # check if file exists:
+    if os.path.isdir(beamoutname):
+        #then test type and proceed for different types
+        if corrtype == 'Gaussian':
+            make_gaussian_beam(beam_map_dir,beamoutname,bm_size,cell,fwhm,cutoff)
+        elif corrtype == 'Correct':
+            error='Measured PB maps not yet supported'
+            logger.error(error)
+            raise ApercalException(error)
+            get_measured_beam_maps(beam, beam_map_dir, primary_beam_path)
+        else:
+            error='Type of beam map not supported'
+            logger.error(error)
+            raise ApercalException(error)
     else:
-        error='Type of beam map not supported'
-        logger.error(error)
-        raise ApercalException(error)
+        logger.warning("Beam map for beam {} already exists. Did not create it again".format(beam))
 
 def make_gaussian_beam(beamdir,beamoutname,bm_size,cell,fwhm,cutoff):
     """
