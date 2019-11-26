@@ -327,5 +327,5 @@ def create_correlation_matrix(output_dir):
     C[36,37]=0.11
     C[37,38]=0.11
     C[38,39]=0.11
-    C=symmetrize(C)
+    C = correlation_matrix_symmetrize(C)
     np.savetxt(os.path.join(output_dir,'correlation.txt'),C,fmt='%f')
