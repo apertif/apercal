@@ -899,7 +899,7 @@ class mosaic(BaseModule):
     # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
     # Function to create template mosaic
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    def create_template_mosaic():
+    def create_template_mosaic(self):
         """
         Create an template mosaic to be filled in later
         """
