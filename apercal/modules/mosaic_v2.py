@@ -547,40 +547,40 @@ class mosaic(BaseModule):
             self, 'mosaic_projection_centre_values', ['', ''])
 
 
-        if self.mosaic_projection_centre_ra != '' and self.mosaic_projection_centre_dec != '':
+        if self.mosaic_projection_centre_ra is not None and self.mosaic_projection_centre_dec is not None:
             logger.info("Using input projection center: RA={0} and DEC={1}".format(self.mosaic_projection_centre_ra, self.mosaic_projection_centre_dec))
             mosaic_projection_centre_status = True
+        elif self.mosaic_projection_centre_beam is not None:
+            logger.info("Using pointing centre of beam {} as the projection centre".format(self.mosaic_projection_centre_beam))
+            
+            # change to directory of continuum images
+            subs_managefiles.director(self, 'ch', self.mosaic_continuum_images_dir)
+
+            # Extract central RA and Dec for Apertif pointing from a chosen beam
+            if self.mosaic_projection_centre_beam in self.mosaic_beam_list:
+                gethd = lib.miriad('gethd')
+                gethd.in_ = '{0}/image_{0}.map/crval1'.format(str(beam).zfill(2))
+                gethd.format = 'hms'
+                ra_ref=gethd.go()
+                gethd.in_ = '{0}/image_{0}.map/crval2'.format(str(beam).zfill(2))
+                gethd.format = 'dms'
+                dec_ref=gethd.go()
+            else:
+                error = "Failed reading projection centre from beam {}. Beam not available".format(beam)
+                logger.error(error)
+                raise RuntimeError(error)
+
+            # assigning ra and dec
+            self.mosaic_projection_centre_ra = ra_ref[0]
+            self.mosaic_projection_centre_dec = dec_ref[0]
+        elif self.mosaic_projection_centre_file != '':
+            logger.info("Reading projection center from file {}".format(self.mosaic_projection_centre_file))
+
+            # not available yet
+            self.abort_module(
+                "Reading projection center from file has not been implemented yet")
         else:
-            if self.mosaic_projection_centre_beam != '':
-                logger.info("Using pointing centre of beam {} as the projection centre".format(self.mosaic_projection_centre_beam))
-                
-                # change to directory of continuum images
-                subs_managefiles.director(self, 'ch', self.mosaic_continuum_images_dir)
-
-                # Extract central RA and Dec for Apertif pointing from a chosen beam
-                if self.mosaic_projection_centre_beam in self.mosaic_beam_list:
-                    gethd = lib.miriad('gethd')
-                    gethd.in_ = '{0}/image_{0}.map/crval1'.format(str(beam).zfill(2))
-                    gethd.format = 'hms'
-                    ra_ref=gethd.go()
-                    gethd.in_ = '{0}/image_{0}.map/crval2'.format(str(beam).zfill(2))
-                    gethd.format = 'dms'
-                    dec_ref=gethd.go()
-                else:
-                    error = "Failed reading projection centre from beam {}".format(beam)
-                    logger.error(error)
-                    raise RuntimeError(error)
-
-                # assigning ra and dec
-                self.mosaic_projection_centre_ra = ra_ref[0]
-                self.mosaic_projection_centre_dec = dec_ref[0]
-
-            if self.mosaic_projection_centre_file != '':
-                logger.info("Reading projection center from file {}".format(self.mosaic_projection_centre_file))
-
-                # not available yet
-                self.abort_module(
-                    "Reading projection center from file has not been implemented yet")
+            self.abort_module("Did not recognise projection centre option")
 
         logger.info("Projection centre will be RA={0} and DEC={1}".format(self.mosaic_projection_centre_ra, self.mosaic_projection_centre_dec))
 
