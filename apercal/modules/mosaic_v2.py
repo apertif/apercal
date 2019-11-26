@@ -65,7 +65,6 @@ class mosaic(BaseModule):
     mosaic_continuum_mf = None
     mosaic_polarisation_v = None
     mosaic_clean_up = None
-    mosaic_overwrite
 
     mosaic_continuum_subdir = None
     mosaic_continuum_images_subdir = None
