@@ -201,7 +201,7 @@ class mosaic(BaseModule):
                 self.mosaic_continuum_images_subdir = 'images'
             self.mosaic_continuum_images_dir = os.path.join(
                 self.mosdir, self.mosaic_continuum_subdir, self.mosaic_continuum_images_subdir)
-            if not os.path.exist(self.mosaic_continuum_images_dir):
+            if not os.path.exists(self.mosaic_continuum_images_dir):
                 subs_managefiles.director(self, 'mk', self.mosaic_continuum_images_dir)
 
             # create the directory to store the beam maps
