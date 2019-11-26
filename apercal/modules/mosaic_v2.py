@@ -1073,7 +1073,7 @@ class mosaic(BaseModule):
             self, 'mosaic_convolve_images_status', False)
 
         mosaic_common_beam_values = get_param_def(
-            self, 'mosaic_common_beam_status', np.zeros(3))
+            self, 'mosaic_common_beam_values', np.zeros(3))
 
         logger.info("Convolving images with common beam with beam {}".format(mosaic_common_beam_values))
 
@@ -1092,8 +1092,8 @@ class mosaic(BaseModule):
                         self.mosaic_continuum_images_subdir, 'image_{0}_regrid.map'.format(beam))
                     convol.out = os.path.join(
                         self.mosaic_continuum_mosaic_subdir, 'image_{0}_mos.map'.format(beam))
-                    convol.fwhm = '{0},{1}'.format(str(c_beam[0]), str(c_beam[1]))
-                    convol.pa = c_beam[2]
+                    convol.fwhm = '{0},{1}'.format(str(mosaic_common_beam_values[0]), str(mosaic_common_beam_values[1]))
+                    convol.pa = mosaic_common_beam_values[2]
                     convol.options = 'final'
                     convol.inp()
                     try:
