@@ -731,82 +731,6 @@ class mosaic(BaseModule):
         return sigest.go()
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
-    # Function to get the correlation matrix
-    # This should go to mosaic_utils
-    # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    def get_inverted_covariance_matrix(self):
-        """
-        Function to get the covariance matrix
-
-        Based on the cell that reads-in the correlation matrix
-        """
-
-        logger.info("Getting covariance matrix")
-
-        mosaic_continuum_write_covariance_matrix_status = get_param_def(
-            self, 'mosaic_continuum_write_covariance_matrix_status', False)
-
-        mosaic_continuum_read_covariance_matrix_status = get_param_def(
-            self, 'mosaic_continuum_read_covariance_matrix_status', False)
-
-        correlation_matrix_file = os.path.join(self.mosaic_continuum_dir,'correlation.txt')
-
-        if not mosaic_continuum_write_covariance_matrix_status:
-
-            logger.info("Writing covariance matrix")
-            try:
-                mosaic_utils.create_correlation_matrix(correlation_matrix_file)
-            except Exception as e:
-                warning = "Writing covariance matrix ... Failed"
-                logger.warning(warning)
-                logger.exception(e)
-            else:
-                logger.info("Writing covariance matrix ... Done")
-                mosaic_continuum_write_covariance_matrix_status = True
-        else:
-            logger.info("Covariance matrix already available on file.")
-
-        logger.info("Reading covariance matrix")
-
-        # Read in noise correlation matrix 
-        try:
-            noise_cor=np.loadtxt(correlation_matrix_file,dtype='f')
-        except Exception as e:
-            warning = "Reading covariance matrix ... Failed"
-            logger.warning(warning)
-            logger.exception(e)
-        else:
-            mosaic_continuum_read_covariance_matrix_status = True
-
-        # Initialize covariance matrix
-        noise_cov=noise_cor
-
-        # Measure noise in the image for each beam
-        sigma_beam=np.zeros(self.NBEAMS,float)
-
-        # number of beams
-        n_beams = len(self.mosaic_beam_list)
-        for bm in range(n_beams):
-            sigma_beam[bm]=float(self.get_beam_noise(bm)[4].lstrip('Estimated rms is '))
-            
-        for a in range(n_beams):
-            for b in range(n_beams):
-                noise_cov[a,b]=noise_cor[a,b]*sigma_beam[a]*sigma_beam[b]  # The noise covariance matrix is 
-    
-        # Only the inverse of this matrix is ever used:
-        inv_cov=np.linalg.inv(noise_cov)
-
-        subs_param.add_param(
-            self, 'mosaic_continuum_write_covariance_matrix_status', mosaic_continuum_write_covariance_matrix_status)
-        
-        subs_param.add_param(
-            self, 'mosaic_continuum_read_covariance_matrix_status', mosaic_continuum_read_covariance_matrix_status)        
-
-        logger.info("Getting covariance matrix ... Done")
-
-        return inv_cov
-
-    # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
     # Function to transfer image coordinates to beam maps
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
     def transfer_coordinates(self):
@@ -826,6 +750,8 @@ class mosaic(BaseModule):
             self, 'mosaic_transfer_coordinates_to_beam_status', False)
 
         for beam in self.mosaic_beam_list:
+
+            logger.info("Processing beam {}".format(beam))
 
             # get RA
             gethd = lib.miriad('gethd')
@@ -878,6 +804,8 @@ class mosaic(BaseModule):
                 logger.exception(e)
             else:
                 mosaic_transfer_coordinates_to_beam_status = True
+
+            logger.info("Processing beam {} ... Done".format(beam))
 
         if mosaic_transfer_coordinates_to_beam_status:
             logger.info("Transfer image coordinates to beam maps ... Done")
@@ -1149,6 +1077,88 @@ class mosaic(BaseModule):
             self, 'mosaic_regrid_beam_maps_status', mosaic_regrid_beam_maps_status)
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
+    # Function to get the correlation matrix
+    # This should go to mosaic_utils
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    def get_inverted_covariance_matrix(self):
+        """
+        Function to get the covariance matrix
+
+        Based on the cell that reads-in the correlation matrix
+        """
+
+        logger.info("Getting covariance matrix")
+
+        mosaic_continuum_write_covariance_matrix_status = get_param_def(
+            self, 'mosaic_continuum_write_covariance_matrix_status', False)
+
+        mosaic_continuum_read_covariance_matrix_status = get_param_def(
+            self, 'mosaic_continuum_read_covariance_matrix_status', False)
+
+        correlation_matrix_file = os.path.join(self.mosaic_continuum_dir,'correlation.txt')
+
+        if not mosaic_continuum_write_covariance_matrix_status:
+
+            logger.info("Writing covariance matrix")
+            try:
+                mosaic_utils.create_correlation_matrix(correlation_matrix_file)
+            except Exception as e:
+                warning = "Writing covariance matrix ... Failed"
+                logger.warning(warning)
+                logger.exception(e)
+            else:
+                logger.info("Writing covariance matrix ... Done")
+                mosaic_continuum_write_covariance_matrix_status = True
+        else:
+            logger.info("Covariance matrix already available on file.")
+
+        logger.info("Reading covariance matrix")
+
+        # Read in noise correlation matrix 
+        try:
+            noise_cor=np.loadtxt(correlation_matrix_file,dtype='f')
+        except Exception as e:
+            warning = "Reading covariance matrix ... Failed"
+            logger.warning(warning)
+            logger.exception(e)
+        else:
+            mosaic_continuum_read_covariance_matrix_status = True
+
+        # Initialize covariance matrix
+        noise_cov=noise_cor
+
+        # Measure noise in the image for each beam
+        # same size as the correlation matrix
+        sigma_beam=np.zeros(self.NBEAMS,float)
+
+        # number of beams used to go through beam list using indices
+        n_beams = len(self.mosaic_beam_list)
+        for bm in range(n_beams):
+            noise_val = self.get_beam_noise(self.mosaic_beam_list[bm])
+            sigma_beam[int(self.mosaic_beam_list[bm])]=float(noise_val)[4].lstrip('Estimated rms is '))
+        
+        # write the matrix
+        # take into account that there are not always 40 beams
+        for k in range(n_beams):
+            for m in range(n_beams):
+                a = int(self.mosaic_beam_list[k])
+                b = int(self.mosaic_beam_list[k])
+                noise_cov[a,b]=noise_cor[a,b]*sigma_beam[a]*sigma_beam[b]  # The noise covariance matrix is 
+    
+        # Only the inverse of this matrix is ever used:
+        inv_cov=np.linalg.inv(noise_cov)
+
+        subs_param.add_param(
+            self, 'mosaic_continuum_write_covariance_matrix_status', mosaic_continuum_write_covariance_matrix_status)
+        
+        subs_param.add_param(
+            self, 'mosaic_continuum_read_covariance_matrix_status', mosaic_continuum_read_covariance_matrix_status)        
+
+        logger.info("Getting covariance matrix ... Done")
+
+        return inv_cov
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
     # Function to calculate the product of beam matrix and covariance matrix
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
     def math_multiply_beam_and_covariance_matrix(self):
@@ -1163,6 +1173,9 @@ class mosaic(BaseModule):
 
         # switch to mosaic directory
         subs_managefiles.director(self, 'ch', self.mosaic_contiuum_dir)
+
+        # get covariance matrix
+        inv_cov = self.get_inverted_covariance_matrix()
 
         # First calculate transpose of beam matrix multiplied by the inverse covariance matrix
         # Will use *maths* in Miriad
@@ -1575,10 +1588,6 @@ class mosaic(BaseModule):
                 # =======================================
                 self.convert_images_to_miriad()
                 
-                # Get correlation matrix
-                # ======================
-                self.get_inverted_covariance_matrix()
-
                 # Transfer image coordinates
                 # ==========================
                 self.transfer_coordinates()
