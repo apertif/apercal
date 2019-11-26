@@ -984,7 +984,7 @@ class mosaic(BaseModule):
                 logger.info("Regridding beam {}".format(beam))
                 regrid = lib.miriad('regrid')
                 input_file = os.path.join(self.mosaic_continuum_images_subdir, '{0}/image_{0}.map'.format(beam))
-                output_file = os.path.join(self.mosaic_continuum_mosaic_subdir, 'image_{}_regrid.map'.format(beam))
+                output_file = os.path.join(self.mosaic_continuum_images_subdir, 'image_{}_regrid.map'.format(beam))
                 template_mosaic_file = os.path.join(self.mosaic_continuum_mosaic_subdir, "mosaic_template.map")
                 if os.path.isdir(input_file):
                     regrid.in_ = input_file
