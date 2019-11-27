@@ -1317,12 +1317,11 @@ class mosaic(BaseModule):
                 raise RuntimeError(error)
 
             # remove the scratch files
-            # done in cleanup function
-            # for fl in glob.glob(mosaicdir+'tmp_*.map'):
-            #     shutil.rmtree(fl)
-            # for fl in glob.glob(mosaicdir+'sum_*.map'):
-            #     shutil.rmtree(fl)
-        
+            for fl in glob.glob(os.path.join(self.mosaic_continuum_mosaic_subdir,'tmp_*.map')):
+                subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
+            for fl in glob.glob(os.path.join(self.mosaic_continuum_mosaic_subdir,'sum_*.map')):
+                subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
+
         logger.info("Multiplying beam matrix by covariance matrix ... Done")
 
         mosaic_product_beam_covariance_matrix_status = True
@@ -1768,12 +1767,6 @@ class mosaic(BaseModule):
         subs_managefiles.director(self, 'ch', self.mosaic_continuum_mosaic_dir)
         subs_managefiles.director(self, 'rm', 'mosaic_temp_preproj.map', ignore_nonexistent=True)
 
-        # remove files from matrix product
-        for fl in glob.glob('tmp_*.map'):
-            subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
-        for fl in glob.glob('sum_*.map'):
-            subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
-        
         # Clean up files
         for fl in glob.glob('*_convol.map'):
             subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
