@@ -995,28 +995,31 @@ class mosaic(BaseModule):
                 input_file = os.path.join(self.mosaic_continuum_images_subdir, '{0}/image_{0}.map'.format(beam))
                 output_file = os.path.join(self.mosaic_continuum_images_subdir, 'image_{}_regrid.map'.format(beam))
                 template_mosaic_file = os.path.join(self.mosaic_continuum_mosaic_subdir, "mosaic_template.map")
-                if os.path.isdir(input_file):
-                    regrid.in_ = input_file
-                    regrid.out = output_file
-                    regrid.tin = template_mosaic_file
-                    regrid.axes = '1,2'
-                    regrid.inp()
-                    try:
-                        regrid.go()
-                    except Exception as e:
-                        error = "Failed regridding image of beam {}".format(beam)
+                if os.path.dir(output_file):
+                    if os.path.isdir(input_file):
+                        regrid.in_ = input_file
+                        regrid.out = output_file
+                        regrid.tin = template_mosaic_file
+                        regrid.axes = '1,2'
+                        regrid.inp()
+                        try:
+                            regrid.go()
+                        except Exception as e:
+                            error = "Failed regridding image of beam {}".format(beam)
+                            logger.error(error)
+                            logger.exception(e)
+                            raise RuntimeError(error)
+                    else:
+                        error = "Did not find convolved image for beam {}".format(beam)
                         logger.error(error)
-                        logger.exception(e)
                         raise RuntimeError(error)
                 else:
-                    error = "Did not find convolved image for beam {}".format(beam)
-                    logger.error(error)
-                    raise RuntimeError(error)
+                    logger.warning("Regridded image of beam {} already exists".format(beam))
                 
             logger.info("Regridding images ... Done")
             mosaic_regrid_images_status = True
         else:
-            logger.info("Images have alreayd been regridded")
+            logger.info("Images have already been regridded")
 
         subs_param.add_param(
             self, 'mosaic_regrid_images_status', mosaic_regrid_images_status)
