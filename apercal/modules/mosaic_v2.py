@@ -640,8 +640,10 @@ class mosaic(BaseModule):
                         fits.go()
                     except Exception as e:
                         mosaic_continuum_convert_fits_images_status = False
-                        logger.warning("Converting fits image of beam {} to miriad image ... Failed".format(beam))
+                        error = "Converting fits image of beam {} to miriad image ... Failed".format(beam)
+                        logger.error(error)
                         logger.exception(e)
+                        raise RuntimeError(error)
                     else:
                         mosaic_continuum_convert_fits_images_status = True
                         logger.debug("Converting fits image of beam {} to miriad image ... Done".format(beam))
@@ -697,8 +699,10 @@ class mosaic(BaseModule):
                 fits.go()
             except Exception as e:
                 mosaic_continuum_convert_fits_beam_status = False
-                logger.warning("Converting fits image of beam {} to miriad image ... Failed".format(beam))
+                error="Converting fits image of beam {} to miriad image ... Failed".format(beam)
+                logger.error(error)
                 logger.exception(e)
+                raise RuntimeError(error)
             else:
                 mosaic_continuum_convert_fits_beam_status = True
                 logger.debug("Converting fits image of beam {} to miriad image ... Done".format(beam))
@@ -765,9 +769,10 @@ class mosaic(BaseModule):
                     ra1=gethd.go()
                 except Exception as e:
                     mosaic_transfer_coordinates_to_beam_status = False
-                    warning = "Reading RA of beam {} failed".format(beam)
-                    logger.warning(warning)
+                    error = "Reading RA of beam {} failed".format(beam)
+                    logger.error(error)
                     logger.exception(e)
+                    raise RuntimeError(error)
                 else:
                     mosaic_transfer_coordinates_to_beam_status = True
             
@@ -779,9 +784,10 @@ class mosaic(BaseModule):
                     puthd.go()
                 except Exception as e:
                     mosaic_transfer_coordinates_to_beam_status = False
-                    warning = "Writing RA of beam {} failed".format(beam)
-                    logger.warning(warning)
+                    error = "Writing RA of beam {} failed".format(beam)
+                    logger.error(error)
                     logger.exception(e)
+                    raise RuntimeError(error)
                 else:
                     mosaic_transfer_coordinates_to_beam_status = True
             
@@ -791,9 +797,10 @@ class mosaic(BaseModule):
                     dec1=gethd.go()
                 except Exception as e:
                     mosaic_transfer_coordinates_to_beam_status = False
-                    warning = "Reading DEC of beam {} failed".format(beam)
-                    logger.warning(warning)
+                    error = "Reading DEC of beam {} failed".format(beam)
+                    logger.error(error)
                     logger.exception(e)
+                    raise RuntimeError(error)
                 else:
                     mosaic_transfer_coordinates_to_beam_status = True
                 
@@ -804,9 +811,10 @@ class mosaic(BaseModule):
                     puthd.go()
                 except Exception as e:
                     mosaic_transfer_coordinates_to_beam_status = False
-                    warning = "Writing DEC of beam {} failed".format(beam)
-                    logger.warning(warning)
+                    error = "Writing DEC of beam {} failed".format(beam)
+                    logger.error(error)
                     logger.exception(e)
+                    raise RuntimeError(error)
                 else:
                     mosaic_transfer_coordinates_to_beam_status = True
 
@@ -938,6 +946,7 @@ class mosaic(BaseModule):
                 error = "Error creating template mosaic image"
                 logger.error(error)
                 logger.exception(e)
+                raise RuntimeError(error)
                 
             # Now change projection to NCP
             regrid = lib.miriad('regrid')
@@ -950,7 +959,7 @@ class mosaic(BaseModule):
                 error = "Error changing projection to NCP"
                 logger.error(error)
                 logger.exception(e)
-                #raise RuntimeError(error)
+                raise RuntimeError(error)
 
             # remove (moved to cleanup function)
             #shutil.rmtree(mosaicdir+'mosaic_temp.map')
@@ -1000,7 +1009,9 @@ class mosaic(BaseModule):
                         logger.exception(e)
                         raise RuntimeError(error)
                 else:
-                    logger.warning("Did not find convolved image for beam {}".format(beam))
+                    error = "Did not find convolved image for beam {}".format(beam)
+                    logger.error(error)
+                    raise RuntimeError(error)
                 
             logger.info("Regridding images ... Done")
             mosaic_regrid_images_status = True
@@ -1039,12 +1050,14 @@ class mosaic(BaseModule):
                     try:
                         regrid.go()
                     except Exception as e:
-                        warning = "Failed regridding beam_maps of beam {}".format(beam)
-                        logger.warning(warning)
+                        error = "Failed regridding beam_maps of beam {}".format(beam)
+                        logger.error(error)
                         logger.exception(e)
-                        #raise RuntimeError(error)
+                        raise RuntimeError(error)
                 else:
-                    logger.warning("Did not find beam map for beam {}".format(beam))
+                    error = "Did not find beam map for beam {}".format(beam)
+                    logger.error(error)
+                    raise RuntimeError(error)
                 
             logger.info("Regridding beam maps ... Done")
 
@@ -1106,7 +1119,7 @@ class mosaic(BaseModule):
                     else:
                         logger.info("Convolving image of beam {} ... Done".format(beam))
                 else:
-                    logger.info("Convolved image of beam {} already exists".format(beam))
+                    logger.warning("Convolved image of beam {} already exists".format(beam))
             
             mosaic_common_beam_values = True
 
