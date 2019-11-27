@@ -1321,7 +1321,7 @@ class mosaic(BaseModule):
                 i+=1
             
             if os.path.isdir(os.path.join(self.mosaic_continuum_mosaic_subdir, 'sum_{}.map'.format(self.mosaic_beam_list[i-1]))):
-                subs_managefiles.director(self, 'ch', self.mosaic_continuum_mosaic_subdir+'/btci_{}.map'.format(bm), file_=self.mosaic_continuum_mosaic_subdir+'/sum_{}.map'.format(str(self.mosaic_beam_list[i-1])))
+                subs_managefiles.director(self, 'rn', self.mosaic_continuum_mosaic_subdir+'/btci_{}.map'.format(bm), file_=self.mosaic_continuum_mosaic_subdir+'/sum_{}.map'.format(str(self.mosaic_beam_list[i-1])))
                 #os.rename(,self.mosaic_continuum_mosaic_subdir+'/btci_{}.map'.format(bm))
             else:
                 error = "Could not find temporary sum map for beam {}".format(self.mosaic_beam_list[i-1])
@@ -1330,9 +1330,7 @@ class mosaic(BaseModule):
 
             # remove the scratch files
             logger.info("Removing scratch files")
-            logger.debug(glob.glob(os.path.join(self.mosaic_continuum_mosaic_dir, 'tmp_*.map')))
             for fl in glob.glob(os.path.join(self.mosaic_continuum_mosaic_dir,'tmp_*.map')):
-                logger.debug(fl)
                 subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
             for fl in glob.glob(os.path.join(self.mosaic_continuum_mosaic_dir,'sum_*.map')):
                 subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
