@@ -1256,7 +1256,9 @@ class mosaic(BaseModule):
         # Only doing math where inv_cov value is non-zero
         maths = lib.miriad('maths')
         for bm in self.mosaic_beam_list:
-            # Are you it should be here ????
+            logger.info("Processing beam {}".format(bm))
+            # This was not in the notebook.
+            # Are you it should be here ???? Yes, according to DJ
             operate = ""
             for b in self.mosaic_beam_list:
                 maths.out =os.path.join(self.mosaic_continuum_mosaic_subdir,'tmp_{}.map'.format(b))
@@ -1264,6 +1266,7 @@ class mosaic(BaseModule):
                 if os.path.isdir(os.path.join(self.mosaic_continuum_beam_subdir, "beam_{0}_mos.map".format(b))):
                     if inv_cov[int(b),int(bm)]!=0.:
                             operate+="<"+self.mosaic_continuum_beam_subdir+"/beam_{0}_mos.map>*{1}+".format(b,inv_cov[int(b),int(bm)])
+                    logger.debug("operate = {}".format(operate))
                     maths.exp = operate
                     maths.options='unmask'
                     maths.inp()
