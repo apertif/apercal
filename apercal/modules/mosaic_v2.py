@@ -1266,7 +1266,7 @@ class mosaic(BaseModule):
                 if os.path.isdir(os.path.join(self.mosaic_continuum_beam_subdir, "beam_{0}_mos.map".format(b))):
                     if inv_cov[int(b),int(bm)]!=0.:
                         #operate+="<"+self.mosaic_continuum_beam_subdir+"/beam_{0}_mos.map>*{1}+".format(b,inv_cov[int(b),int(bm)])
-                        operate="<"+self.mosaic_continuum_beam_subdir+"/beam_{0}_mos.map>*{1}+".format(b,inv_cov[int(b),int(bm)])
+                        operate="<"+self.mosaic_continuum_beam_subdir+"/beam_{0}_mos.map>*{1}".format(b,inv_cov[int(b),int(bm)])
                     logger.debug("operate = {}".format(operate))
                     maths.exp = operate
                     maths.options='unmask'
