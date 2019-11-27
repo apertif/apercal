@@ -41,7 +41,7 @@ def create_beam(beam, beam_map_dir, corrtype = 'Gaussian', primary_beam_path = N
     beamoutname = 'beam_{}.map'.format(beam.zfill(2))
 
     # check if file exists:
-    if os.path.isdir(beamoutname):
+    if not os.path.isdir(beamoutname):
         #then test type and proceed for different types
         if corrtype == 'Gaussian':
             make_gaussian_beam(beam_map_dir,beamoutname,bm_size,cell,fwhm,cutoff)
