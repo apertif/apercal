@@ -1267,7 +1267,7 @@ class mosaic(BaseModule):
                 if os.path.isdir(beam_map):
                     if inv_cov[int(b),int(bm)]!=0.:
                         #operate+="<"+self.mosaic_continuum_beam_subdir+"/beam_{0}_mos.map>*{1}+".format(b,inv_cov[int(b),int(bm)])
-                        operate="'<{0}>*{1}'".format(beam_map,inv_cov[int(b),int(bm)])
+                        operate="'<{0}>*({1})'".format(beam_map,inv_cov[int(b),int(bm)])
                     logger.debug("for beam combination {0},{1}: operate = {2}".format(bm, b, operate))
                     maths.exp = operate
                     maths.options='unmask'
