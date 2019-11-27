@@ -1043,25 +1043,34 @@ class mosaic(BaseModule):
 
             # Put images on mosaic template grid
             for beam in self.mosaic_beam_list:
+                input_file = os.path.join(
+                    self.mosaic_continuum_images_subdir, '{0}/image_{0}.map'.format(beam))
+                output_file = os.path.join(
+                    self.mosaic_continuum_images_subdir, 'image_{}_regrid.map'.format(beam))
+                template_mosaic_file = os.path.join(
+                    self.mosaic_continuum_mosaic_subdir, "mosaic_template.map")
                 regrid = lib.miriad('regrid')
-                if os.path.isdir(os.path.join(self.mosaic_continuum_beam_subdir,'beam_{}.map'.format(beam))):
-                    regrid.in_ = os.path.join(self.mosaic_continuum_beam_subdir,'beam_{}.map'.format(beam))
-                    regrid.out = os.path.join(self.mosaic_continuum_beam_subdir,'beam_{}_mos.map'.format(beam))
-                    regrid.tin = os.path.join(self.mosaic_continuum_mosaic_subdir,'mosaic_template.map'.format(beam))
-                    regrid.axes = '1,2'  
-                    regrid.inp()
-                    try:
-                        regrid.go()
-                    except Exception as e:
-                        error = "Failed regridding beam_maps of beam {}".format(beam)
+                if os.path.isdir(output_file):
+                    if os.path.isdir(input_file):
+                        regrid.in_ = input_file
+                        regrid.out = output_file
+                        regrid.tin = template_mosaic_file
+                        regrid.axes = '1,2'  
+                        regrid.inp()
+                        try:
+                            regrid.go()
+                        except Exception as e:
+                            error = "Failed regridding beam_maps of beam {}".format(beam)
+                            logger.error(error)
+                            logger.exception(e)
+                            raise RuntimeError(error)
+                    else:
+                        error = "Did not find beam map for beam {}".format(beam)
                         logger.error(error)
-                        logger.exception(e)
                         raise RuntimeError(error)
                 else:
-                    error = "Did not find beam map for beam {}".format(beam)
-                    logger.error(error)
-                    raise RuntimeError(error)
-                
+                    logger.warning("Regridded beam map of beam {} already exists".format(beam))
+
             logger.info("Regridding beam maps ... Done")
 
             mosaic_regrid_beam_maps_status = True
