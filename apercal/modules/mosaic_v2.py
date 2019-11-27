@@ -1330,7 +1330,7 @@ class mosaic(BaseModule):
 
             # remove the scratch files
             logger.info("Removing scratch files")
-            logger.debug(glob.glob(os.path.join(self.mosaic_continuum_mosaic_subdir, 'tmp_*.map'))
+            logger.debug(glob.glob(os.path.join(self.mosaic_continuum_mosaic_subdir, 'tmp_*.map')))
             for fl in glob.glob(os.path.join(self.mosaic_continuum_mosaic_subdir,'tmp_*.map')):
                 logger.debug(fl)
                 subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
