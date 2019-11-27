@@ -1330,11 +1330,11 @@ class mosaic(BaseModule):
 
             # remove the scratch files
             logger.info("Removing scratch files")
-            logger.debug(glob.glob(os.path.join(self.mosaic_continuum_mosaic_subdir, 'tmp_*.map')))
-            for fl in glob.glob(os.path.join(self.mosaic_continuum_mosaic_subdir,'tmp_*.map')):
+            logger.debug(glob.glob(os.path.join(self.mosaic_continuum_mosaic_dir, 'tmp_*.map')))
+            for fl in glob.glob(os.path.join(self.mosaic_continuum_mosaic_dir,'tmp_*.map')):
                 logger.debug(fl)
                 subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
-            for fl in glob.glob(os.path.join(self.mosaic_continuum_mosaic_subdir,'sum_*.map')):
+            for fl in glob.glob(os.path.join(self.mosaic_continuum_mosaic_dir,'sum_*.map')):
                 subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
 
         logger.info("Multiplying beam matrix by covariance matrix ... Done")
