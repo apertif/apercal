@@ -1274,7 +1274,7 @@ class mosaic(BaseModule):
         # important because previous step switched to a different dir
         subs_managefiles.director(self, 'ch', self.mosaic_continuum_dir)
 
-            if not mosaic_product_beam_covariance_matrix_status:
+        if not mosaic_product_beam_covariance_matrix_status:
             # First calculate transpose of beam matrix multiplied by the inverse covariance matrix
             # Will use *maths* in Miriad
 
@@ -1340,7 +1340,7 @@ class mosaic(BaseModule):
             mosaic_product_beam_covariance_matrix_status = True
         else:
             logger.info("Multiplying beam matrix by covariance matrix has already been done.")
-            
+
         subs_param.add_param(
             self, 'mosaic_product_beam_covariance_matrix_status', mosaic_product_beam_covariance_matrix_status) 
     
