@@ -1286,7 +1286,7 @@ class mosaic(BaseModule):
             # Are you it should be here ???? Yes, according to DJ
             operate = ""
             for b in self.mosaic_beam_list:
-                maths.out =os.path.join(self.mosaic_continuum_mosaic_subdir,'tmp_{}.map'.format(b))
+                maths.out = os.path.join(self.mosaic_continuum_mosaic_subdir,'tmp_{}.map'.format(b))
                 # since the beam list is made of strings, need to convert to integers
                 beam_map = os.path.join(self.mosaic_continuum_beam_subdir, "beam_{0}_mos.map".format(b))
                 if os.path.isdir(beam_map):
@@ -1329,10 +1329,11 @@ class mosaic(BaseModule):
                 raise RuntimeError(error)
 
             # remove the scratch files
+            logger.info("Removing scratch files")
             for fl in glob.glob(os.path.join(self.mosaic_continuum_mosaic_subdir,'tmp_*.map')):
-                subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
+                subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=False)
             for fl in glob.glob(os.path.join(self.mosaic_continuum_mosaic_subdir,'sum_*.map')):
-                subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
+                subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=False)
 
         logger.info("Multiplying beam matrix by covariance matrix ... Done")
 
