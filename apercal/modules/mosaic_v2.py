@@ -1274,70 +1274,73 @@ class mosaic(BaseModule):
         # important because previous step switched to a different dir
         subs_managefiles.director(self, 'ch', self.mosaic_continuum_dir)
 
-        # First calculate transpose of beam matrix multiplied by the inverse covariance matrix
-        # Will use *maths* in Miriad
+            if not mosaic_product_beam_covariance_matrix_status:
+            # First calculate transpose of beam matrix multiplied by the inverse covariance matrix
+            # Will use *maths* in Miriad
 
-        # Using "beams" list to account for missing beams/images
-        # Only doing math where inv_cov value is non-zero
-        maths = lib.miriad('maths')
-        for bm in self.mosaic_beam_list:
-            logger.info("Processing beam {}".format(bm))
-            # This was not in the notebook.
-            # Are you it should be here ???? Yes, according to DJ
-            operate = ""
-            for b in self.mosaic_beam_list:
-                maths.out = os.path.join(self.mosaic_continuum_mosaic_subdir,'tmp_{}.map'.format(b))
-                # since the beam list is made of strings, need to convert to integers
-                beam_map = os.path.join(self.mosaic_continuum_beam_subdir, "beam_{0}_mos.map".format(b))
-                if os.path.isdir(beam_map):
-                    if inv_cov[int(b),int(bm)]!=0.:
-                        #operate+="<"+self.mosaic_continuum_beam_subdir+"/beam_{0}_mos.map>*{1}+".format(b,inv_cov[int(b),int(bm)])
-                        operate="'<{0}>*({1})'".format(beam_map,inv_cov[int(b),int(bm)])
-                    logger.debug("for beam combination {0},{1}: operate = {2}".format(bm, b, operate))
-                    maths.exp = operate
-                    maths.options='unmask'
-                    maths.inp()
-                    maths.go()
-                else:
-                    error = "Could not find mosaic beam map for beam {}".format(b)
-                    logger.error(error)
-                    raise RuntimeError(error)
-            i=1
-            while i<len(self.mosaic_beam_list):
-                if os.path.isdir(os.path.join(self.mosaic_continuum_mosaic_subdir, "tmp_{}.map".format(self.mosaic_beam_list[i-1]))) and os.path.isdir(os.path.join(self.mosaic_continuum_mosaic_subdir, "tmp_{}.map".format(self.mosaic_beam_list[i]))):
-                    if i==1:
-                        operate = "'<"+self.mosaic_continuum_mosaic_subdir+"/tmp_{}.map>+<".format(str(self.mosaic_beam_list[i-1]))+self.mosaic_continuum_mosaic_subdir+"/tmp_{}.map>'".format(str(self.mosaic_beam_list[i]))
+            # Using "beams" list to account for missing beams/images
+            # Only doing math where inv_cov value is non-zero
+            maths = lib.miriad('maths')
+            for bm in self.mosaic_beam_list:
+                logger.info("Processing beam {}".format(bm))
+                # This was not in the notebook.
+                # Are you it should be here ???? Yes, according to DJ
+                operate = ""
+                for b in self.mosaic_beam_list:
+                    maths.out = os.path.join(self.mosaic_continuum_mosaic_subdir,'tmp_{}.map'.format(b))
+                    # since the beam list is made of strings, need to convert to integers
+                    beam_map = os.path.join(self.mosaic_continuum_beam_subdir, "beam_{0}_mos.map".format(b))
+                    if os.path.isdir(beam_map):
+                        if inv_cov[int(b),int(bm)]!=0.:
+                            #operate+="<"+self.mosaic_continuum_beam_subdir+"/beam_{0}_mos.map>*{1}+".format(b,inv_cov[int(b),int(bm)])
+                            operate="'<{0}>*({1})'".format(beam_map,inv_cov[int(b),int(bm)])
+                        logger.debug("for beam combination {0},{1}: operate = {2}".format(bm, b, operate))
+                        maths.exp = operate
+                        maths.options='unmask'
+                        maths.inp()
+                        maths.go()
                     else:
-                        operate="'<"+self.mosaic_continuum_mosaic_subdir+"/tmp_{}.map>".format(str(self.mosaic_beam_list[i]))+"+<"+self.mosaic_continuum_mosaic_subdir+"/sum_{}.map>'".format(str(self.mosaic_beam_list[i-1]))
-                    maths.out = self.mosaic_continuum_mosaic_subdir+'/sum_{}.map'.format(str(self.mosaic_beam_list[i]))
-                    maths.exp = operate
-                    maths.options='unmask'
-                    maths.inp()
-                    maths.go()
+                        error = "Could not find mosaic beam map for beam {}".format(b)
+                        logger.error(error)
+                        raise RuntimeError(error)
+                i=1
+                while i<len(self.mosaic_beam_list):
+                    if os.path.isdir(os.path.join(self.mosaic_continuum_mosaic_subdir, "tmp_{}.map".format(self.mosaic_beam_list[i-1]))) and os.path.isdir(os.path.join(self.mosaic_continuum_mosaic_subdir, "tmp_{}.map".format(self.mosaic_beam_list[i]))):
+                        if i==1:
+                            operate = "'<"+self.mosaic_continuum_mosaic_subdir+"/tmp_{}.map>+<".format(str(self.mosaic_beam_list[i-1]))+self.mosaic_continuum_mosaic_subdir+"/tmp_{}.map>'".format(str(self.mosaic_beam_list[i]))
+                        else:
+                            operate="'<"+self.mosaic_continuum_mosaic_subdir+"/tmp_{}.map>".format(str(self.mosaic_beam_list[i]))+"+<"+self.mosaic_continuum_mosaic_subdir+"/sum_{}.map>'".format(str(self.mosaic_beam_list[i-1]))
+                        maths.out = self.mosaic_continuum_mosaic_subdir+'/sum_{}.map'.format(str(self.mosaic_beam_list[i]))
+                        maths.exp = operate
+                        maths.options='unmask'
+                        maths.inp()
+                        maths.go()
+                    else:
+                        error = "Could not find temporary maps for beam {0} or beam {1}".format(self.mosaic_beam_list[i-1], self.mosaic_beam_list[i])
+                        logger.error(error)
+                        raise RuntimeError(error)
+                    i+=1
+                
+                if os.path.isdir(os.path.join(self.mosaic_continuum_mosaic_subdir, 'sum_{}.map'.format(self.mosaic_beam_list[i-1]))):
+                    subs_managefiles.director(self, 'rn', self.mosaic_continuum_mosaic_subdir+'/btci_{}.map'.format(bm), file_=self.mosaic_continuum_mosaic_subdir+'/sum_{}.map'.format(str(self.mosaic_beam_list[i-1])))
+                    #os.rename(,self.mosaic_continuum_mosaic_subdir+'/btci_{}.map'.format(bm))
                 else:
-                    error = "Could not find temporary maps for beam {0} or beam {1}".format(self.mosaic_beam_list[i-1], self.mosaic_beam_list[i])
+                    error = "Could not find temporary sum map for beam {}".format(self.mosaic_beam_list[i-1])
                     logger.error(error)
                     raise RuntimeError(error)
-                i+=1
+
+                # remove the scratch files
+                logger.info("Removing scratch files")
+                for fl in glob.glob(os.path.join(self.mosaic_continuum_mosaic_dir,'tmp_*.map')):
+                    subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
+                for fl in glob.glob(os.path.join(self.mosaic_continuum_mosaic_dir,'sum_*.map')):
+                    subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
+
+            logger.info("Multiplying beam matrix by covariance matrix ... Done")
+            mosaic_product_beam_covariance_matrix_status = True
+        else:
+            logger.info("Multiplying beam matrix by covariance matrix has already been done.")
             
-            if os.path.isdir(os.path.join(self.mosaic_continuum_mosaic_subdir, 'sum_{}.map'.format(self.mosaic_beam_list[i-1]))):
-                subs_managefiles.director(self, 'rn', self.mosaic_continuum_mosaic_subdir+'/btci_{}.map'.format(bm), file_=self.mosaic_continuum_mosaic_subdir+'/sum_{}.map'.format(str(self.mosaic_beam_list[i-1])))
-                #os.rename(,self.mosaic_continuum_mosaic_subdir+'/btci_{}.map'.format(bm))
-            else:
-                error = "Could not find temporary sum map for beam {}".format(self.mosaic_beam_list[i-1])
-                logger.error(error)
-                raise RuntimeError(error)
-
-            # remove the scratch files
-            logger.info("Removing scratch files")
-            for fl in glob.glob(os.path.join(self.mosaic_continuum_mosaic_dir,'tmp_*.map')):
-                subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
-            for fl in glob.glob(os.path.join(self.mosaic_continuum_mosaic_dir,'sum_*.map')):
-                subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
-
-        logger.info("Multiplying beam matrix by covariance matrix ... Done")
-
-        mosaic_product_beam_covariance_matrix_status = True
         subs_param.add_param(
             self, 'mosaic_product_beam_covariance_matrix_status', mosaic_product_beam_covariance_matrix_status) 
     
