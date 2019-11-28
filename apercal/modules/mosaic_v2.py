@@ -65,6 +65,7 @@ class mosaic(BaseModule):
     mosaic_continuum_mf = None
     mosaic_polarisation_v = None
     mosaic_clean_up = None
+    mosaic_run_image_validation = None
 
     mosaic_continuum_subdir = None
     mosaic_continuum_images_subdir = None
@@ -1707,10 +1708,11 @@ class mosaic(BaseModule):
             validation.run(self.mosaic_name, finder=finder)
             
             logger.info("Writing mosaic fits files ... Done ({0:.0f}s)".format(time.time() - start_time_validation))
+            mosaic_run_image_validation_status = True
         else:
             logger.warning("Did not run image validation")
-
-        mosaic_run_image_validation_status = True
+            mosaic_run_image_validation_status = False
+        
         subs_param.add_param(
             self, 'mosaic_run_image_validation_status', mosaic_run_image_validation_status)
 
