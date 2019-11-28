@@ -1490,7 +1490,7 @@ class mosaic(BaseModule):
             raise RuntimeError(error)
 
         # Always outputs max value at same point
-        var_max=a[10].split(" ")[-3]
+        var_max=a[10].lstrip().split(" ")[-3]
 
         logger.info("Maximum of variance map is {}".format(var_max))
 
