@@ -1570,32 +1570,37 @@ class mosaic(BaseModule):
         # switch to mosaic directory
         subs_managefiles.director(self, 'ch', self.mosaic_continuum_mosaic_dir)
 
-        # Produce mosaic noise map
-        maths = lib.miriad('maths')
-        maths.out = 'mosaic_noise.map'
-        maths.exp="'1./sqrt(<variance_mos.map>)'"
-        maths.mask="'<variance_mos.map>.gt.0.01*"+str(mosaic_max_variance)+"'"
-        maths.inp()
-        try:
-            maths.go()
-        except Exception as e:
-            error = "Calculating mosaic noise map ... Failed"
-            logger.error(error)
-            logger.exception(e)
-            raise RuntimeError(error)
+        if not mosaic_get_mosaic_noise_map_status:
+            # Produce mosaic noise map
+            maths = lib.miriad('maths')
+            maths.out = 'mosaic_noise.map'
+            maths.exp="'1./sqrt(<variance_mos.map>)'"
+            maths.mask="'<variance_mos.map>.gt.0.01*"+str(mosaic_max_variance)+"'"
+            maths.inp()
+            try:
+                maths.go()
+            except Exception as e:
+                error = "Calculating mosaic noise map ... Failed"
+                logger.error(error)
+                logger.exception(e)
+                raise RuntimeError(error)
 
-        puthd = lib.miriad('puthd')
-        puthd.in_='mosaic_noise.map/bunit'
-        puthd.value='JY/BEAM'
-        try:
-            puthd.go()
-        except Exception as e:
-            error = "Adding noise map unit ... Failed"
-            logger.error(error)
-            logger.exception(e)
-            raise RuntimeError(error)
+            puthd = lib.miriad('puthd')
+            puthd.in_='mosaic_noise.map/bunit'
+            puthd.value='JY/BEAM'
+            try:
+                puthd.go()
+            except Exception as e:
+                error = "Adding noise map unit ... Failed"
+                logger.error(error)
+                logger.exception(e)
+                raise RuntimeError(error)
+            
+            logger.info("Getting mosaic noise map ... Done")
+            mosaic_get_mosaic_noise_map_status = True
+        else:
+            logger.info("Noise is already available")
 
-        mosaic_get_mosaic_noise_map_status = True
         subs_param.add_param(
             self, 'mosaic_get_mosaic_noise_map_status', mosaic_get_mosaic_noise_map_status)
 
