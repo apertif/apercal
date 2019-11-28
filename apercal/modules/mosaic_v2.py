@@ -1641,36 +1641,42 @@ class mosaic(BaseModule):
         # name of the noise map    
         mosaic_noise_name = self.mosaic_name.replace(".fits", "_noise.fits")
 
+        if not mosaic_write_mosaic_fits_files_status and not os.path.exists(self.mosaic_name):
 
-        # Write out FITS files
-        # main image
-        fits = lib.miriad('fits')
-        fits.op='xyout'
-        fits.in_='mosaic_final.map'
-        fits.out=self.mosaic_name
-        fits.inp()
-        try:
-            fits.go()
-        except Exception as e:
-            error = "Writing mosaic fits file ... Failed"
-            logger.error(error)
-            logger.exception(e)
-            raise RuntimeError(error)
+            # Write out FITS files
+            # main image
+            fits = lib.miriad('fits')
+            fits.op='xyout'
+            fits.in_='mosaic_final.map'
+            fits.out=self.mosaic_name
+            fits.inp()
+            try:
+                fits.go()
+            except Exception as e:
+                error = "Writing mosaic fits file ... Failed"
+                logger.error(error)
+                logger.exception(e)
+                raise RuntimeError(error)
+        else:
+            logger.info("Mosaic image has already been converted to fits")
 
-        # noise map
-        fits.in_='mosaic_noise.map'
-        fits.out=mosaic_noise_name
-        fits.inp()
-        try:
-            fits.go()          
-        except Exception as e:
-            error = "Writing mosaic noise mape fits file ... Failed"
-            logger.error(error)
-            logger.exception(e)
-            raise RuntimeError(error)
-
+        if not mosaic_write_mosaic_fits_files_status and not os.path.exists(self.mosaic_noise_name):
+            # noise map
+            fits.in_='mosaic_noise.map'
+            fits.out=mosaic_noise_name
+            fits.inp()
+            try:
+                fits.go()          
+            except Exception as e:
+                error = "Writing mosaic noise mape fits file ... Failed"
+                logger.error(error)
+                logger.exception(e)
+                raise RuntimeError(error)
+        
+        else:
+            logger.info("Mosaic noise image has already been converted to fits")
+            
         logger.info("Writing mosaic fits files ... Done")
-
         mosaic_write_mosaic_fits_files_status = True
         subs_param.add_param(
             self, 'mosaic_write_mosaic_fits_files_status', mosaic_write_mosaic_fits_files_status)
