@@ -1381,7 +1381,9 @@ class mosaic(BaseModule):
         i=0
         for beam in self.mosaic_beam_list:
             btci_map = os.path.join(self.mosaic_continuum_mosaic_subdir,"btci_{}.map>".format(beam))
+            logger.debug(btci_map)
             beam_mos_map = os.path.join(self.mosaic_continuum_beam_subdir,"/beam_{}_mos.map".format(beam))
+            logger.debug(beam_mos_map)
             if os.path.isdir(btci_map) and os.path.isdir(beam_mos_map):
                 operate="'<"+btci_map+">*<"+beam_mos_map+">'"
                 if beam != self.mosaic_beam_list[0]:
