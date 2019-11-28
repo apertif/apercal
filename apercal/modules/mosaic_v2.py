@@ -1201,7 +1201,7 @@ class mosaic(BaseModule):
             logger.info("Getting covariance matrix ...")
 
             # Initialize covariance matrix
-            noise_cov=noise_cor
+            noise_cov=copy.deepcopy(noise_cor)
 
             # Measure noise in the image for each beam
             # same size as the correlation matrix
@@ -1250,6 +1250,8 @@ class mosaic(BaseModule):
 
         subs_param.add_param(
             self, 'mosaic_continuum_inverse_covariance_matrix', mosaic_continuum_inverse_covariance_matrix)
+        subs_param.add_param(
+            self, 'mosaic_continuum_inverse_covariance_matrix', mosaic_continuum_noise_correlation_matrix)
 
 
         #return inv_cov
