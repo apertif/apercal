@@ -1370,9 +1370,7 @@ class mosaic(BaseModule):
             self, 'mosaic_variance_map_status', False)
 
         # switch to mosaic directory
-        logger.debug(os.getcwd())
         subs_managefiles.director(self, 'ch', self.mosaic_continuum_dir)
-        logger.debug(os.getcwd())
 
         # Calculate variance map (using beams and noise covariance matrix over entire map)
         # This is the denominator for I(mosaic)
@@ -1381,9 +1379,7 @@ class mosaic(BaseModule):
         i=0
         for beam in self.mosaic_beam_list:
             btci_map = os.path.join(self.mosaic_continuum_mosaic_subdir,"btci_{}.map>".format(beam))
-            logger.debug(btci_map)
-            beam_mos_map = os.path.join(self.mosaic_continuum_beam_subdir,"/beam_{}_mos.map".format(beam))
-            logger.debug(beam_mos_map)
+            beam_mos_map = os.path.join(self.mosaic_continuum_beam_subdir,"beam_{}_mos.map".format(beam))
             if os.path.isdir(btci_map) and os.path.isdir(beam_mos_map):
                 operate="'<"+btci_map+">*<"+beam_mos_map+">'"
                 if beam != self.mosaic_beam_list[0]:
