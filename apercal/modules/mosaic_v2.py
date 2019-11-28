@@ -1665,6 +1665,8 @@ class mosaic(BaseModule):
 
         if not mosaic_write_mosaic_fits_files_status and not os.path.exists(mosaic_noise_name):
             # noise map
+            fits = lib.miriad('fits')
+            fits.op='xyout'
             fits.in_='mosaic_noise.map'
             fits.out=mosaic_noise_name
             fits.inp()
