@@ -1162,9 +1162,9 @@ class mosaic(BaseModule):
         mosaic_continuum_read_covariance_matrix_status = get_param_def(
             self, 'mosaic_continuum_read_covariance_matrix_status', False)
 
-        mosaic_continuum_inverse_covariance_matrix = []
-        #mosaic_continuum_inverse_covariance_matrix = get_param_def(
-        #    self, 'mosaic_continuum_inverse_covariance_matrix', [])
+        #mosaic_continuum_inverse_covariance_matrix = []
+        mosaic_continuum_inverse_covariance_matrix = get_param_def(
+            self, 'mosaic_continuum_inverse_covariance_matrix', [])
 
 
         correlation_matrix_file = os.path.join(self.mosaic_continuum_dir,'correlation.txt')
@@ -1224,9 +1224,9 @@ class mosaic(BaseModule):
                 for m in self.mosaic_beam_list:
                     a = int(k)
                     b = int(m)
-                    logger.debug("noise_cor[{0},{1}]={2}".format(a,b,noise_cor[a,b]))
+                    #logger.debug("noise_cor[{0},{1}]={2}".format(a,b,noise_cor[a,b]))
                     noise_cov[a,b]=noise_cor[a,b]*sigma_beam[a]*sigma_beam[b]  # The noise covariance matrix is 
-                    logger.debug("noise_cov[{0},{1}]={2}".format(a,b,noise_cov[a,b]))
+                    #logger.debug("noise_cov[{0},{1}]={2}".format(a,b,noise_cov[a,b]))
             
             logger.info("Getting covariance matrix ... Done")
         
@@ -1234,9 +1234,6 @@ class mosaic(BaseModule):
             logger.info("Getting inverse of covariance matrix")
             mosaic_continuum_inverse_covariance_matrix = np.linalg.inv(noise_cov)
             logger.info("Getting inverse of covariance matrix ... Done")
-            logger.debug("mosaic_continuum_inverse_covariance_matrix[0,0]={}".format(mosaic_continuum_inverse_covariance_matrix[0,0]))
-            logger.debug("mosaic_continuum_inverse_covariance_matrix[0,1]={}".format(mosaic_continuum_inverse_covariance_matrix[0,1]))
-            logger.debug("mosaic_continuum_inverse_covariance_matrix[0,17]={}".format(mosaic_continuum_inverse_covariance_matrix[0,17]))
             
             logger.info("Calculating inverse covariance matrix ... Done")
         else:
@@ -1250,6 +1247,7 @@ class mosaic(BaseModule):
 
         subs_param.add_param(
             self, 'mosaic_continuum_inverse_covariance_matrix', mosaic_continuum_inverse_covariance_matrix)
+        
         subs_param.add_param(
             self, 'mosaic_continuum_noise_covariance_matrix', noise_cov)
 
@@ -1303,6 +1301,8 @@ class mosaic(BaseModule):
                         if inv_cov[int(b),int(bm)]!=0.:
                             #operate+="<"+self.mosaic_continuum_beam_subdir+"/beam_{0}_mos.map>*{1}+".format(b,inv_cov[int(b),int(bm)])
                             operate="'<{0}>*({1})'".format(beam_map,inv_cov[int(b),int(bm)])
+                        else:
+                            operate="'<{0}>*0'".format(beam_map)
                         logger.debug("for beam combination {0},{1}: operate = {2}".format(bm, b, operate))
                         maths.exp = operate
                         maths.options='unmask'
