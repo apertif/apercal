@@ -1476,7 +1476,7 @@ class mosaic(BaseModule):
         # switch to mosaic directory
         subs_managefiles.director(self, 'ch', self.mosaic_continuum_mosaic_dir)
 
-            if not mosaic_get_max_variance_status and mosaic_max_variance == 0.:
+        if not mosaic_get_max_variance_status and mosaic_max_variance == 0.:
             # Find maximum value of variance map
             imstat = lib.miriad('imstat')
             imstat.in_="'variance_mos.map'"
