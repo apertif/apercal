@@ -1534,7 +1534,7 @@ class mosaic(BaseModule):
         maths.mask="'<variance_mos.map>.gt.0.01*"+str(mosaic_max_variance)+"'"
         maths.inp()
         try:
-            math.go()
+            maths.go()
         except Exception as e:
             error = "Dividing image by variance map ... Failed"
             logger.error(error)
