@@ -1424,33 +1424,36 @@ class mosaic(BaseModule):
         # switch to mosaic directory
         subs_managefiles.director(self, 'ch', self.mosaic_continuum_mosaic_dir)
 
-        # Calculate transpose of beam matrix multiplied by noise_cov multiplied by image from each beam for each position
-        # in the final image
+            if not mosaic_product_beam_covariance_matrix_image_status:
+            # Calculate transpose of beam matrix multiplied by noise_cov multiplied by image from each beam for each position
+            # in the final image
+            maths = lib.miriad('maths')
+            i=0
+            for bm in self.mosaic_beam_list:
+                if os.path.isdir("image_{}_mos.map".format(bm)) and os.path.isdir("btci_{}.map".format(bm)):
+                    operate="'<"+"image_{}_mos.map>*<".format(bm)+"btci_{}.map>'".format(bm)
+                    if bm!=self.mosaic_beam_list[0]:
+                        operate=operate[:-1]+"+<"+"mos_{}.map>'".format(str(i).zfill(2))
+                    i+=1
+                    maths.out = "mos_{}.map".format(str(i).zfill(2))
+                    maths.exp = operate
+                    maths.options='unmask,grow'
+                    maths.inp()
+                    maths.go()
+                else:
+                    error = "Could not find the necessary files for beam {}".format(bm)
+                    logger.error(error)
+                    raise RuntimeError(error)
+            
+            subs_managefiles.director(self, 'rn', 'mosaic_im.map', file_='mos_{}.map'.format(str(i).zfill(2)))
+            #os.rename('mos_{}.map'.format(str(i).zfill(2)),'mosaic_im.map')
 
-        maths = lib.miriad('maths')
-        i=0
-        for bm in self.mosaic_beam_list:
-            if os.path.isdir("image_{}_mos.map".format(bm)) and os.path.isdir("btci_{}.map".format(bm)):
-                operate="'<"+"image_{}_mos.map>*<".format(bm)+"btci_{}.map>'".format(bm)
-                if bm!=self.mosaic_beam_list[0]:
-                    operate=operate[:-1]+"+<"+"mos_{}.map>'".format(str(i).zfill(2))
-                i+=1
-                maths.out = "mos_{}.map".format(str(i).zfill(2))
-                maths.exp = operate
-                maths.options='unmask,grow'
-                maths.inp()
-                maths.go()
-            else:
-                error = "Could not find the necessary files for beam {}".format(bm)
-                logger.error(error)
-                raise RuntimeError(error)
-        
-        subs_managefiles.director(self, 'rn', 'mosaic_im.map', file_='mos_{}.map'.format(str(i).zfill(2)))
-        #os.rename('mos_{}.map'.format(str(i).zfill(2)),'mosaic_im.map')
+            logger.info("Multiplying beam matrix by covariance matrix and image ... Done")
 
-        logger.info("Multiplying beam matrix by covariance matrix and image ... Done")
-
-        mosaic_product_beam_covariance_matrix_image_status = True
+            mosaic_product_beam_covariance_matrix_image_status = True
+        else:
+            logger.info("Multiplication has already been done.")
+            
         subs_param.add_param(
             self, 'mosaic_product_beam_covariance_matrix_image_status', mosaic_product_beam_covariance_matrix_image_status)
 
