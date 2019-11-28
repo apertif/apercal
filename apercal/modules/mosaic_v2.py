@@ -1441,7 +1441,9 @@ class mosaic(BaseModule):
                 maths.inp()
                 maths.go()
             else:
-                logger.warning("Could not find the necessary files for beam {}".format(bm))
+                error = "Could not find the necessary files for beam {}".format(bm)
+                logger.error(error)
+                raise RuntimeError(error)
         
         subs_managefiles.director(self, 'rn', 'mosaic_im.map', file_='mos_{}.map'.format(str(i).zfill(2)))
         #os.rename('mos_{}.map'.format(str(i).zfill(2)),'mosaic_im.map')
