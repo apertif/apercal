@@ -1424,7 +1424,7 @@ class mosaic(BaseModule):
         # switch to mosaic directory
         subs_managefiles.director(self, 'ch', self.mosaic_continuum_mosaic_dir)
 
-            if not mosaic_product_beam_covariance_matrix_image_status:
+        if not mosaic_product_beam_covariance_matrix_image_status:
             # Calculate transpose of beam matrix multiplied by noise_cov multiplied by image from each beam for each position
             # in the final image
             maths = lib.miriad('maths')
@@ -1453,7 +1453,7 @@ class mosaic(BaseModule):
             mosaic_product_beam_covariance_matrix_image_status = True
         else:
             logger.info("Multiplication has already been done.")
-            
+
         subs_param.add_param(
             self, 'mosaic_product_beam_covariance_matrix_image_status', mosaic_product_beam_covariance_matrix_image_status)
 
