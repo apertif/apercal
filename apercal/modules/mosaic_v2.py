@@ -1527,23 +1527,27 @@ class mosaic(BaseModule):
         # switch to mosaic directory
         subs_managefiles.director(self, 'ch', self.mosaic_continuum_mosaic_dir)
 
-        # Divide image by variance map
-        maths = lib.miriad('maths')
-        maths.out = 'mosaic_final.map'
-        maths.exp="'<mosaic_im.map>/<variance_mos.map>'"
-        maths.mask="'<variance_mos.map>.gt.0.01*"+str(mosaic_max_variance)+"'"
-        maths.inp()
-        try:
-            maths.go()
-        except Exception as e:
-            error = "Dividing image by variance map ... Failed"
-            logger.error(error)
-            logger.exception(e)
-            raise RuntimeError(error)
+        if not mosaic_divide_image_variance_status:
+            # Divide image by variance map
+            maths = lib.miriad('maths')
+            maths.out = 'mosaic_final.map'
+            maths.exp="'<mosaic_im.map>/<variance_mos.map>'"
+            maths.mask="'<variance_mos.map>.gt.0.01*"+str(mosaic_max_variance)+"'"
+            maths.inp()
+            try:
+                maths.go()
+            except Exception as e:
+                error = "Dividing image by variance map ... Failed"
+                logger.error(error)
+                logger.exception(e)
+                raise RuntimeError(error)
 
-        logger.info("Dividing image by variance map ... Done")
+            logger.info("Dividing image by variance map ... Done")
 
-        mosaic_divide_image_variance_status = True
+            mosaic_divide_image_variance_status = True
+        else:
+            logger.info("Division has already been performed")
+            
         subs_param.add_param(
             self, 'mosaic_divide_image_variance_status', mosaic_divide_image_variance_status)
 
