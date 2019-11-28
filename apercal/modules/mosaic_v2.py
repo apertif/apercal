@@ -1214,7 +1214,7 @@ class mosaic(BaseModule):
             for bm in self.mosaic_beam_list:
                 noise_val = self.get_beam_noise(bm)
                 sigma_beam[int(bm)]=float(noise_val[4].lstrip('Estimated rms is '))
-                logger.info("Beam {0}: {1}".format(bm, sigma_beam))
+                logger.info("Beam {0}: {1}".format(bm, sigma_beam[int(bm)]))
             
             # write the matrix
             # take into account that there are not always 40 beams
@@ -1234,6 +1234,9 @@ class mosaic(BaseModule):
             logger.info("Getting inverse of covariance matrix")
             mosaic_continuum_inverse_covariance_matrix = np.linalg.inv(noise_cov)
             logger.info("Getting inverse of covariance matrix ... Done")
+            logger.debug("mosaic_continuum_inverse_covariance_matrix[0,0]={}".format(mosaic_continuum_inverse_covariance_matrix[0,0]))
+            logger.debug("mosaic_continuum_inverse_covariance_matrix[0,1]={}".format(mosaic_continuum_inverse_covariance_matrix[0,1]))
+            logger.debug("mosaic_continuum_inverse_covariance_matrix[0,17]={}".format(mosaic_continuum_inverse_covariance_matrix[0,17]))
             
             logger.info("Calculating inverse covariance matrix ... Done")
         else:
