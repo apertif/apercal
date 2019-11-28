@@ -1663,7 +1663,7 @@ class mosaic(BaseModule):
         else:
             logger.info("Mosaic image has already been converted to fits")
 
-        if not mosaic_write_mosaic_fits_files_status and not os.path.exists(self.mosaic_noise_name):
+        if not mosaic_write_mosaic_fits_files_status and not os.path.exists(mosaic_noise_name):
             # noise map
             fits.in_='mosaic_noise.map'
             fits.out=mosaic_noise_name
