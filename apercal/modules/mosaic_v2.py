@@ -1251,7 +1251,7 @@ class mosaic(BaseModule):
         subs_param.add_param(
             self, 'mosaic_continuum_inverse_covariance_matrix', mosaic_continuum_inverse_covariance_matrix)
         subs_param.add_param(
-            self, 'mosaic_continuum_inverse_covariance_matrix', mosaic_continuum_noise_correlation_matrix)
+            self, 'mosaic_continuum_noise_correlation_matrix', mosaic_continuum_noise_correlation_matrix)
 
 
         #return inv_cov
