@@ -1166,6 +1166,9 @@ class mosaic(BaseModule):
         mosaic_continuum_inverse_covariance_matrix = get_param_def(
             self, 'mosaic_continuum_inverse_covariance_matrix', [])
 
+        noise_cov = get_param_def(
+            self, 'mosaic_continuum_noise_covariance_matrix', [])
+
 
         correlation_matrix_file = os.path.join(self.mosaic_continuum_dir,'correlation.txt')
 
