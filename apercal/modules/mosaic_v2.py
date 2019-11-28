@@ -1233,7 +1233,10 @@ class mosaic(BaseModule):
             for a in range(self.NBEAMS):
                 for b in range(self.NBEAMS):
                     #logger.debug("noise_cor[{0},{1}]={2}".format(a,b,noise_cor[a,b]))
-                    noise_cov[a,b]=noise_cor[a,b]*sigma_beam[a]*sigma_beam[b]  # The noise covariance matrix is 
+                    if (sigma_beam[a] == 0. or sigma_beam[b] == 0) and a == b:
+                        noise_cov[a,b]=noise_cor[a,b]
+                    else:        
+                        noise_cov[a,b]=noise_cor[a,b]*sigma_beam[a]*sigma_beam[b]  # The noise covariance matrix is 
                     #logger.debug("noise_cov[{0},{1}]={2}".format(a,b,noise_cov[a,b]))
             
             logger.info("Getting covariance matrix ... Done")
