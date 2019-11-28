@@ -1476,31 +1476,35 @@ class mosaic(BaseModule):
         # switch to mosaic directory
         subs_managefiles.director(self, 'ch', self.mosaic_continuum_mosaic_dir)
 
-        # Find maximum value of variance map
-        imstat = lib.miriad('imstat')
-        imstat.in_="'variance_mos.map'"
-        imstat.region="'quarter(1)'"
-        imstat.axes="'x,y'"
-        try:
-            a=imstat.go()
-        except Exception as e:
-            error = "Getting maximum of varianc map ... Failed"
-            logger.error(error)
-            logger.exception(e)
-            raise RuntimeError(error)
+            if not mosaic_get_max_variance_status and mosaic_max_variance == 0.:
+            # Find maximum value of variance map
+            imstat = lib.miriad('imstat')
+            imstat.in_="'variance_mos.map'"
+            imstat.region="'quarter(1)'"
+            imstat.axes="'x,y'"
+            try:
+                a=imstat.go()
+            except Exception as e:
+                error = "Getting maximum of varianc map ... Failed"
+                logger.error(error)
+                logger.exception(e)
+                raise RuntimeError(error)
 
-        # Always outputs max value at same point
-        var_max=a[10].lstrip().split(" ")[3]
+            # Always outputs max value at same point
+            var_max=a[10].lstrip().split(" ")[3]
 
-        logger.info("Maximum of variance map is {}".format(var_max))
+            logger.info("Maximum of variance map is {}".format(var_max))
 
-        logger.info("Getting maximum of variance map ... Done")
+            logger.info("Getting maximum of variance map ... Done")
 
-        mosaic_get_max_variance_status = True
+            mosaic_get_max_variance_status = True
+            mosaic_max_variance = var_max
+        else:
+            logger.info("Maximum of variance map has already been determined.")
+
         subs_param.add_param(
             self, 'mosaic_get_max_variance_status', mosaic_get_max_variance_status)
         
-        mosaic_max_variance = var_max
         subs_param.add_param(
             self, 'mosaic_max_variance', mosaic_max_variance)
     
