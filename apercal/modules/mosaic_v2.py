@@ -1168,6 +1168,9 @@ class mosaic(BaseModule):
 
         noise_cov = get_param_def(
             self, 'mosaic_continuum_noise_covariance_matrix', [])
+        
+        sigma_beam = get_param_def(
+            self, 'mosaic_continuum_image_noise', [])
 
 
         correlation_matrix_file = os.path.join(self.mosaic_continuum_dir,'correlation.txt')
@@ -1223,10 +1226,12 @@ class mosaic(BaseModule):
             # take into account that there are not always 40 beams
             # for k in range(n_beams):
             #     for m in range(n_beams):
-            for k in self.mosaic_beam_list:
-                for m in self.mosaic_beam_list:
-                    a = int(k)
-                    b = int(m)
+            # for k in self.mosaic_beam_list:
+            #     for m in self.mosaic_beam_list:
+            #         a = int(k)
+            #         b = int(m)
+            for a in range(self.NBEAMS):
+                for b in range(self.NBEAMS):
                     #logger.debug("noise_cor[{0},{1}]={2}".format(a,b,noise_cor[a,b]))
                     noise_cov[a,b]=noise_cor[a,b]*sigma_beam[a]*sigma_beam[b]  # The noise covariance matrix is 
                     #logger.debug("noise_cov[{0},{1}]={2}".format(a,b,noise_cov[a,b]))
@@ -1253,6 +1258,9 @@ class mosaic(BaseModule):
         
         subs_param.add_param(
             self, 'mosaic_continuum_noise_covariance_matrix', noise_cov)
+        
+        subs_param.add_param(
+            self, 'mosaic_continuum_image_noise', sigma_beam)
 
 
         #return inv_cov
