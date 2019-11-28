@@ -1385,7 +1385,7 @@ class mosaic(BaseModule):
                 if beam != self.mosaic_beam_list[0]:
                     operate=operate[:-1]+"+<"+self.mosaic_continuum_mosaic_subdir+"/out_{}_mos.map>'".format(str(i).zfill(2))
                 i+=1
-                logger.debug("Beam {0}: operate = {1}".format(operate))
+                logger.debug("Beam {0}: operate = {1}".format(beam, operate))
                 maths.out = self.mosaic_continuum_mosaic_subdir+"/out_{}_mos.map".format(str(i).zfill(2))
                 maths.exp = operate
                 maths.options='unmask'
