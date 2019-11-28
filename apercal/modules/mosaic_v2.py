@@ -6,6 +6,7 @@ import socket
 import subprocess
 import glob
 import copy
+import time
 
 from apercal.modules.base import BaseModule
 from apercal.subs import setinit as subs_setinit
