@@ -1044,7 +1044,7 @@ class mosaic(BaseModule):
             # Put images on mosaic template grid
             for beam in self.mosaic_beam_list:
                 input_file = os.path.join(
-                    self.mosaic_continuum_beam_subdir, '{0}/beam_{0}.map'.format(beam))
+                    self.mosaic_continuum_beam_subdir, 'beam_{}.map'.format(beam))
                 output_file = os.path.join(
                     self.mosaic_continuum_beam_subdir, 'beam_{}_mos.map'.format(beam))
                 template_mosaic_file = os.path.join(
