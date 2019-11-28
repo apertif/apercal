@@ -1599,7 +1599,7 @@ class mosaic(BaseModule):
             logger.info("Getting mosaic noise map ... Done")
             mosaic_get_mosaic_noise_map_status = True
         else:
-            logger.info("Noise is already available")
+            logger.info("Mosaic noise is already available")
 
         subs_param.add_param(
             self, 'mosaic_get_mosaic_noise_map_status', mosaic_get_mosaic_noise_map_status)
