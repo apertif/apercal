@@ -1430,7 +1430,7 @@ class mosaic(BaseModule):
         maths = lib.miriad('maths')
         i=0
         for bm in self.mosaic_beam_list:
-            if os.path.isdir("image_{}_mos.map".format(bm)) and os.path.isdir("btci_{}.map".format(bm)) and os.path.isdir("mos_{}.map>".format(str(i).zfill(2))):
+            if os.path.isdir("image_{}_mos.map".format(bm)) and os.path.isdir("btci_{}.map".format(bm))):
                 operate="'<"+"image_{}_mos.map>*<".format(bm)+"btci_{}.map>'".format(bm)
                 if bm!=self.mosaic_beam_list[0]:
                     operate=operate[:-1]+"+<"+"mos_{}.map>'".format(str(i).zfill(2))
