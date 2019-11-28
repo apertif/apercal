@@ -1547,7 +1547,7 @@ class mosaic(BaseModule):
             mosaic_divide_image_variance_status = True
         else:
             logger.info("Division has already been performed")
-            
+
         subs_param.add_param(
             self, 'mosaic_divide_image_variance_status', mosaic_divide_image_variance_status)
 
@@ -1577,7 +1577,7 @@ class mosaic(BaseModule):
         maths.mask="'<variance_mos.map>.gt.0.01*"+str(mosaic_max_variance)+"'"
         maths.inp()
         try:
-            math.go()
+            maths.go()
         except Exception as e:
             error = "Calculating mosaic noise map ... Failed"
             logger.error(error)
