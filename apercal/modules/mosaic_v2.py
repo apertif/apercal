@@ -1378,18 +1378,21 @@ class mosaic(BaseModule):
         maths = lib.miriad('maths')
         i=0
         for beam in self.mosaic_beam_list:
-            if os.path.isdir(self.mosaic_continuum_mosaic_subdir+"/btci_{}.map>".format(beam)) and os.path.isdir(self.mosaic_continuum_beam_subdir+"/beam_{}_mos.map".format(beam)):
-                operate="'<"+self.mosaic_continuum_mosaic_subdir+"/btci_{}.map>*<".format(beam)+self.mosaic_continuum_beam_subdir+"/beam_{}_mos.map>'".format(beam)
+            btci_map = os.path.join(self.mosaic_continuum_mosaic_subdir,"btci_{}.map>".format(beam))
+            beam_mos_map = os.path.join(self.mosaic_continuum_beam_subdir,"/beam_{}_mos.map".format(beam))
+            if os.path.isdir(btci_map) and os.path.isdir(beam_mos_map):
+                operate="'<"+btci_map+">*<"+beam_mos_map+">'"
                 if beam != self.mosaic_beam_list[0]:
                     operate=operate[:-1]+"+<"+self.mosaic_continuum_mosaic_subdir+"/out_{}_mos.map>'".format(str(i).zfill(2))
                 i+=1
+                logger.debug("Beam {0}: operate = {1}".format(operate))
                 maths.out = self.mosaic_continuum_mosaic_subdir+"/out_{}_mos.map".format(str(i).zfill(2))
                 maths.exp = operate
                 maths.options='unmask'
                 maths.inp()
                 maths.go()
             else:
-                logger.warning("Could not find the necessary files for beam {0}".format(beam))
+                logger.warning("Could not find the btci-map for beam {0}".format(beam))
 
         subs_managefiles.director(self, 'rn', os.path.join(self.mosaic_continuum_mosaic_subdir,'variance_mos.map'), file_=os.path.join(self.mosaic_continuum_mosaic_subdir, 'out_{}_mos.map'.format(str(i).zfill(2))))
         #os.rename(mosaicdir+'out_{}_mos.map'.format(str(i).zfill(2)),mosaicdir+'variance_mos.map')
