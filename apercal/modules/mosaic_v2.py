@@ -1372,36 +1372,39 @@ class mosaic(BaseModule):
         # switch to mosaic directory
         subs_managefiles.director(self, 'ch', self.mosaic_continuum_dir)
 
-        # Calculate variance map (using beams and noise covariance matrix over entire map)
-        # This is the denominator for I(mosaic)
+        if not mosaic_variance_map_status:
+            # Calculate variance map (using beams and noise covariance matrix over entire map)
+            # This is the denominator for I(mosaic)
+            maths = lib.miriad('maths')
+            i=0
+            for beam in self.mosaic_beam_list:
+                btci_map = os.path.join(self.mosaic_continuum_mosaic_subdir,"btci_{}.map".format(beam))
+                beam_mos_map = os.path.join(self.mosaic_continuum_beam_subdir,"beam_{}_mos.map".format(beam))
+                if os.path.isdir(btci_map) and os.path.isdir(beam_mos_map):
+                    operate="'<"+btci_map+">*<"+beam_mos_map+">'"
+                    if beam != self.mosaic_beam_list[0]:
+                        operate=operate[:-1]+"+<"+self.mosaic_continuum_mosaic_subdir+"/out_{}_mos.map>'".format(str(i).zfill(2))
+                    i+=1
+                    logger.debug("Beam {0}: operate = {1}".format(beam, operate))
+                    maths.out = self.mosaic_continuum_mosaic_subdir+"/out_{}_mos.map".format(str(i).zfill(2))
+                    maths.exp = operate
+                    maths.options='unmask'
+                    maths.inp()
+                    maths.go()
+                else:
+                    error = "Could not find the maps for beam {0}".format(beam)
+                    logger.error(error)
+                    raise RuntimeError(error)
 
-        maths = lib.miriad('maths')
-        i=0
-        for beam in self.mosaic_beam_list:
-            btci_map = os.path.join(self.mosaic_continuum_mosaic_subdir,"btci_{}.map".format(beam))
-            beam_mos_map = os.path.join(self.mosaic_continuum_beam_subdir,"beam_{}_mos.map".format(beam))
-            if os.path.isdir(btci_map) and os.path.isdir(beam_mos_map):
-                operate="'<"+btci_map+">*<"+beam_mos_map+">'"
-                if beam != self.mosaic_beam_list[0]:
-                    operate=operate[:-1]+"+<"+self.mosaic_continuum_mosaic_subdir+"/out_{}_mos.map>'".format(str(i).zfill(2))
-                i+=1
-                logger.debug("Beam {0}: operate = {1}".format(beam, operate))
-                maths.out = self.mosaic_continuum_mosaic_subdir+"/out_{}_mos.map".format(str(i).zfill(2))
-                maths.exp = operate
-                maths.options='unmask'
-                maths.inp()
-                maths.go()
-            else:
-                error = "Could not find the maps for beam {0}".format(beam)
-                logger.error(error)
-                raise RuntimeError(error)
+            subs_managefiles.director(self, 'rn', os.path.join(self.mosaic_continuum_mosaic_subdir,'variance_mos.map'), file_=os.path.join(self.mosaic_continuum_mosaic_subdir, 'out_{}_mos.map'.format(str(i).zfill(2))))
+            #os.rename(mosaicdir+'out_{}_mos.map'.format(str(i).zfill(2)),mosaicdir+'variance_mos.map')
 
-        subs_managefiles.director(self, 'rn', os.path.join(self.mosaic_continuum_mosaic_subdir,'variance_mos.map'), file_=os.path.join(self.mosaic_continuum_mosaic_subdir, 'out_{}_mos.map'.format(str(i).zfill(2))))
-        #os.rename(mosaicdir+'out_{}_mos.map'.format(str(i).zfill(2)),mosaicdir+'variance_mos.map')
+            logger.info("Calculate variance map ... Done")
 
-        logger.info("Calculate variance map ... Done")
+            mosaic_variance_map_status = True
+        else:
+            logger.info("Variance map has already been calculated.")
 
-        mosaic_variance_map_status = True
         subs_param.add_param(
             self, 'mosaic_variance_map_status', mosaic_variance_map_status)
         
