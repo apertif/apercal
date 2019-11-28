@@ -1226,7 +1226,7 @@ class mosaic(BaseModule):
                     b = int(m)
                     logger.debug("noise_cor[{0},{1}]={2}".format(a,b,noise_cor[a,b]))
                     noise_cov[a,b]=noise_cor[a,b]*sigma_beam[a]*sigma_beam[b]  # The noise covariance matrix is 
-                    logger.debug("noise_cov[{0},{1}]={2}".format(a,b,noise_cor[a,b]))
+                    logger.debug("noise_cov[{0},{1}]={2}".format(a,b,noise_cov[a,b]))
             
             logger.info("Getting covariance matrix ... Done")
         
