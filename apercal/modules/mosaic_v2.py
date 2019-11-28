@@ -1162,8 +1162,9 @@ class mosaic(BaseModule):
         mosaic_continuum_read_covariance_matrix_status = get_param_def(
             self, 'mosaic_continuum_read_covariance_matrix_status', False)
 
-        mosaic_continuum_inverse_covariance_matrix = get_param_def(
-            self, 'mosaic_continuum_inverse_covariance_matrix', [])
+        mosaic_continuum_inverse_covariance_matrix = []
+        #mosaic_continuum_inverse_covariance_matrix = get_param_def(
+        #    self, 'mosaic_continuum_inverse_covariance_matrix', [])
 
 
         correlation_matrix_file = os.path.join(self.mosaic_continuum_dir,'correlation.txt')
@@ -1213,6 +1214,7 @@ class mosaic(BaseModule):
             for bm in self.mosaic_beam_list:
                 noise_val = self.get_beam_noise(bm)
                 sigma_beam[int(bm)]=float(noise_val[4].lstrip('Estimated rms is '))
+                logger.info("Beam {0}: {1}".format(bm, sigma_beam))
             
             # write the matrix
             # take into account that there are not always 40 beams
@@ -1222,7 +1224,9 @@ class mosaic(BaseModule):
                 for m in self.mosaic_beam_list:
                     a = int(k)
                     b = int(m)
+                    logger.debug("noise_cor[{0},{1}]={2}".format(a,b,noise_cor[a,b]))
                     noise_cov[a,b]=noise_cor[a,b]*sigma_beam[a]*sigma_beam[b]  # The noise covariance matrix is 
+                    logger.debug("noise_cov[{0},{1}]={2}".format(a,b,noise_cor[a,b]))
             
             logger.info("Getting covariance matrix ... Done")
         
