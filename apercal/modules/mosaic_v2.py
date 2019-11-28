@@ -1226,8 +1226,9 @@ class mosaic(BaseModule):
             
             # write the matrix
             # take into account that there are not always 40 beams
-            # for k in range(n_beams):
-            #     for m in range(n_beams):
+            # this is different from the notebook, because the notebook code
+            # does not set non-diagonal matrix elements to zero
+            # for missing beams
             # for k in self.mosaic_beam_list:
             #     for m in self.mosaic_beam_list:
             #         a = int(k)
