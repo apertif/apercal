@@ -1190,7 +1190,7 @@ class mosaic(BaseModule):
             logger.info("Reading covariance matrix")
             # Read in noise correlation matrix 
             try:
-                noise_cor=np.loadtxt(correlation_matrix_file,dtype='f')
+                noise_cor=np.loadtxt(correlation_matrix_file,dtype=np.float64)
             except Exception as e:
                 warning = "Reading covariance matrix ... Failed"
                 logger.warning(warning)
@@ -1205,7 +1205,7 @@ class mosaic(BaseModule):
 
             # Measure noise in the image for each beam
             # same size as the correlation matrix
-            sigma_beam=np.zeros(self.NBEAMS,float)
+            sigma_beam=np.zeros(self.NBEAMS,np.float64)
 
             # number of beams used to go through beam list using indices
             # no need to use indices because the beams are indices themselves

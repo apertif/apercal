@@ -228,7 +228,7 @@ def create_correlation_matrix(output_file):
     and writes it out to a file
     """
     # This needs to be multiplied by the variance for each beam still.
-    C=np.identity(40,dtype=float)
+    C=np.identity(40,dtype=np.float64)
     # Fill array with estimated correlation coefficients (r in the nomenclature)
     # These are eyeballed based on ASKAP measurements.
     C[0,17]=0.7
