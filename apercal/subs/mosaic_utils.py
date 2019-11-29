@@ -113,7 +113,7 @@ def get_measured_beam_maps(beam, beam_map_input_path, beam_map_output_path, beam
 	work_dir = os.getcwd()
 
     temp_beam_model_name = os.path.join(beam_map_output_path, 'beam_model_{1}_temp.fits'.format(beam))
-    input_beam_model = os.path.join(beam_map_input_path, "{0}_{1}_I_mode.fits".format(os.path.basename(beam_map_input_path, beam)))
+    input_beam_model = os.path.join(beam_map_input_path, "{0}_{1}_I_mode.fits".format(os.path.basename(beam_map_input_path), beam))
 
 	# copy beam model to work directory
     logger.debug("Copying beam model of beam {0} ({1} -> {2})".format(beam, input_beam_model,temp_beam_model_name))
