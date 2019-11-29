@@ -2,6 +2,7 @@ import numpy as np
 from apercal.libs import lib
 import logging
 import os
+import shutil
 
 logger = logging.getLogger(__name__)
 
@@ -47,10 +48,8 @@ def create_beam(beam, beam_map_dir, corrtype='Gaussian', primary_beam_path=None,
             make_gaussian_beam(beam_map_dir, beamoutname,
                                bm_size, cell, fwhm, cutoff)
         elif corrtype == 'Correct':
-            error = 'Measured PB maps not yet supported'
-            logger.error(error)
-            raise ApercalException(error)
-            get_measured_beam_maps(beam, beam_map_dir, primary_beam_path)
+            get_measured_beam_maps(
+                beam, beam_map_dir, primary_beam_path, beamoutname)
         else:
             error = 'Type of beam map not supported'
             logger.error(error)
@@ -114,13 +113,17 @@ def get_measured_beam_maps(beam, beam_map_input_path, beam_map_output_path, beam
 	work_dir = os.getcwd()
 
     temp_beam_model_name = os.path.join(beam_map_output_path, 'beam_model_{1}_temp.fits'.format(beam))
+    input_beam_model = os.path.join(beam_map_input_path, "{0}_{1}_I_mode.fits".format(os.path.basename(beam_map_input_path, beam)))
 
 	# copy beam model to work directory
-    logger.debug("Copying beam model of beam {}".format(beam))
-    copy_cmd = 'cp -r {0}191023_{1}_I_model.fits {2}'.format(
-	    beam_map_input_path, beam, temp_beam_model_name)
-    logger.debug(copy_cmd)
-	os.system(copy_cmd)
+    logger.debug("Copying beam model of beam {0} ({1} -> {2})".format(beam, input_beam_model,temp_beam_model_name))
+    # copy_cmd = 'cp -r {0} {1}'.format(input_beam_model, temp_beam_model_name)
+    # copy_cmd = 'cp -r {0}191023_{1}_I_model.fits {2}'.format(
+	#     beam_map_input_path, beam, temp_beam_model_name)
+    # logger.debug(copy_cmd)
+    # switched to python command
+    shutil.copy2(input_beam_model,temp_beam_model_name)
+	# os.system(copy_cmd)
 
     logger.debug("Converting beam model of beam {}".format(beam))
 	# convert beam model to mir file
