@@ -1734,7 +1734,7 @@ class mosaic(BaseModule):
         """
         subs_setinit.setinitdirs(self)
         
-        mosaic_continuummf_status = get_param_def(self, 'mosaic_continuum_mf_status', False)
+        mosaic_continuum_mf_status = get_param_def(self, 'mosaic_continuum_mf_status', False)
         
         # Start the mosaicking of the stacked continuum images
         if self.mosaic_continuum_mf:
@@ -1744,7 +1744,7 @@ class mosaic(BaseModule):
             #subs_managefiles.director(self, 'ch', os.path.join(self.mosdir, self.mosaic_continuum_subdir))
 
             # if no mosaic has already been created
-            if not mosaiccontinuummfstatus:
+            if not mosaic_continuum_mf_status:
 
                 # set (and create) the sub-directories
                 # ====================================
@@ -1917,7 +1917,7 @@ class mosaic(BaseModule):
                     i += 1
 
                 # Save the derived parameters to the parameter file
-                mosaic_continuummf_status = True
+                mosaic_continuum_mf_status = True
             
                 if self.mosaic_clean_up:
                     logger.info("#### Step {0} ####".format(i))
@@ -1933,7 +1933,7 @@ class mosaic(BaseModule):
             pass
 
         subs_param.add_param(
-            self, 'mosaic_continuum_mf_status', mosaic_continuummf_status)
+            self, 'mosaic_continuum_mf_status', mosaic_continuum_mf_status)
 
     def show(self, showall=False):
         lib.show(self, 'MOSAIC', showall)
