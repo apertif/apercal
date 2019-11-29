@@ -1746,11 +1746,13 @@ class mosaic(BaseModule):
             # if no mosaic has already been created
             if not mosaic_continuum_mf_status:
 
+                # step counter
+                i = 1
+
                 # set (and create) the sub-directories
                 # ====================================
                 logger.info("#### Step {0} ####".format(i))
                 start_time_step = time.time()
-                i = 1
                 self.set_mosaic_subdirs(continuum=True)
                 logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(i, time.time() - start_time_step))
                 i += 1
