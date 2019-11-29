@@ -7,6 +7,7 @@ import subprocess
 import glob
 import copy
 import time
+import pymp
 
 from apercal.modules.base import BaseModule
 from apercal.subs import setinit as subs_setinit
@@ -66,7 +67,9 @@ class mosaic(BaseModule):
     mosaic_continuum_mf = None
     mosaic_polarisation_v = None
     mosaic_clean_up = None
-    mosaic_run_image_validation = None
+    mosaic_image_validation = None
+    mosaic_parallelisation = None
+    mosaic_parallelisation_cpus = None
 
     mosaic_continuum_subdir = None
     mosaic_continuum_images_subdir = None
@@ -124,9 +127,11 @@ class mosaic(BaseModule):
         mosaic_continuum_polarisationqu
         mosaic_continuum_polarisationv
         """
-        logger.info("Starting MOSAICKING ")
-        self.create_mosaic_continuum_mf()
-        logger.info("MOSAICKING done ")
+        if self.mosaic_continuum_mf:
+            start_time_continuum = time.time()
+            logger.info("Starting MOSAICKING of continuum")
+            self.create_mosaic_continuum_mf()
+            logger.info("MOSAICKING of continuum done in ({0:.0f}s)".format(time.time() - start_time_continuum))
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
     # Just a small helper function to abort the module
@@ -1428,7 +1433,7 @@ class mosaic(BaseModule):
     # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
     # Function to calculate the beam  matrix multiplied by the covariance matrix
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    def math_multiply_beam_matrix_by_covariance_matrx_and_image(self):
+    def math_multiply_beam_matrix_by_covariance_matrix_and_image(self):
         """
         Function to muliply the beam matrix by covariance matrix and image 
         """
@@ -1735,93 +1740,191 @@ class mosaic(BaseModule):
         if self.mosaic_continuum_mf:
             logger.info("Creating continuum image mosaic")
 
-            subs_setinit.setinitdirs(self)
-            subs_setinit.setdatasetnamestomiriad(self)
-
-            # set the name of the sub-directories if they were not specified
-            self.set_mosaic_subdirs(continuum=True)
-
             # change into the directory for the continuum mosaic
-            subs_managefiles.director(self, 'ch', os.path.join(self.mosdir, self.mosaic_continuum_subdir))
+            #subs_managefiles.director(self, 'ch', os.path.join(self.mosdir, self.mosaic_continuum_subdir))
 
             # if no mosaic has already been created
             if not mosaiccontinuummfstatus:
 
+                # set (and create) the sub-directories
+                # ====================================
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
+                i = 1
+                self.set_mosaic_subdirs(continuum=True)
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(i, time.time() - start_time_step))
+                i += 1
+
                 # get the continuum images
                 # ========================
-                logger.info("Getting continuum images for continuum mosaic")
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
                 self.get_mosaic_continuum_images()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(i, time.time() - start_time_step))
+                i += 1
 
                 # get the beams
                 # =============
-                logger.info("Getting beam information for continuum mosaic")
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
                 self.get_mosaic_continuum_beams()
-
-                # set or check the projection center
-                # ==================================
-                self.get_mosaic_projection_centre()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                    i, time.time() - start_time_step))
+                i += 1
 
                 # Converting images into miriad
                 # =======================================
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
                 self.convert_images_to_miriad()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                    i, time.time() - start_time_step))
+                i += 1
                 
+                # set or check the projection center
+                # ==================================
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
+                self.get_mosaic_projection_centre()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                    i, time.time() - start_time_step))
+                i += 1
+
                 # Transfer image coordinates
                 # ==========================
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
                 self.transfer_coordinates()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(i, time.time() - start_time_step))
+                i += 1
                 
                 # Create a template mosaic
                 # ========================
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time() 
                 self.create_template_mosaic()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(i, time.time() - start_time_step))
+                i += 1
                 
                 # Regrid images
                 # =============
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
                 self.regrid_images()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(i, time.time() - start_time_step))
+                i += 1
 
                 # Regrid beam maps
                 # ================
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
                 self.regrid_beam_maps()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(i, time.time() - start_time_step))
+                i += 1
                 
                 # Determing common beam for convolution
                 # =====================================
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
                 self.get_common_beam()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                    i, time.time() - start_time_step))
+                i += 1
 
                 # Convolve images
                 # ===============
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
                 self.mosaic_convolve_images()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(i, time.time() - start_time_step))
+                i += 1
+
+                # Get inverse covariance matrix
+                # =====================================================
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
+                self.get_inverted_covariance_matrix()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                    i, time.time() - start_time_step))
+                i += 1
 
                 # Calculate product of beam matrix and covariance matrix
                 # ======================================================
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
                 self.math_multiply_beam_and_covariance_matrix()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(i, time.time() - start_time_step))
+                i += 1
 
                 # Calculate variance map
                 # ======================
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
                 self.math_calculate_variance_map()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                    i, time.time() - start_time_step))
+                i += 1             
 
                 # Calculate beam matrix multiplied by covariance matrix
                 # =====================================================
-                self.math_multiply_beam_matrix_by_covariance_matrx_and_image()
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
+                self.math_multiply_beam_matrix_by_covariance_matrix_and_image()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(i, time.time() - start_time_step))
+                i += 1
 
                 # Find maximum variance map
                 # =========================
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
                 self.math_get_max_variance_map()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(i, time.time() - start_time_step))
+                i += 1
 
                 # Calculate divide image by variance map
                 # ======================================
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
                 self.math_divide_image_by_variance_map()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(i, time.time() - start_time_step))
+                i += 1
 
                 # Calculate get mosaic noise map
                 # ==============================
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
                 self.get_mosaic_noise_map()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(i, time.time() - start_time_step))
+                i += 1
 
                 # Writing files
                 # =============
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
                 self.write_mosaic_fits_files()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                    i, time.time() - start_time_step))
+                i += 1
+
+                # Image validation
+                # ================
+                if self.mosaic_image_validation:
+                    logger.info("#### Step {0} ####".format(i))
+                    start_time_step = time.time()
+                    self.run_image_validation()
+                    logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                        i, time.time() - start_time_step))
+                    i += 1
 
                 # Save the derived parameters to the parameter file
                 mosaic_continuummf_status = True
             
                 if self.mosaic_clean_up:
+                    logger.info("#### Step {0} ####".format(i))
+                    start_time_step = time.time()
                     self.clean_up()
+                    logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                        i, time.time() - start_time_step))
             else:
                 logger.info("Continuum image mosaic was already created")
 
