@@ -113,7 +113,7 @@ def get_measured_beam_maps(beam, beam_map_input_path, beam_map_output_path, beam
     work_dir = os.getcwd()
 
     temp_beam_model_name = os.path.join(
-        beam_map_output_path, 'beam_model_{1}_temp.fits'.format(beam))
+        beam_map_output_path, 'beam_model_{0}_temp.fits'.format(beam))
     input_beam_model = os.path.join(beam_map_input_path, "{0}_{1}_I_mode.fits".format(
         os.path.basename(beam_map_input_path), beam))
 
