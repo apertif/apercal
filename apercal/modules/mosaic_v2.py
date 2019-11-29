@@ -77,6 +77,11 @@ class mosaic(BaseModule):
     mosaic_continuum_mosaic_subdir = None
     mosaic_continuum_imsize = 5121
     mosaic_continuum_cellsize = 4
+    mosaic_gaussian_beam_map_size = 3073
+    mosaic_gaussian_beam_map_cellsize = 4.0
+    mosaic_gaussian_beam_map_fwhm_arcsec = 1950.0
+    mosaic_gaussian_beam_map_cutoff = 0.25
+
 
     FNULL = open(os.devnull, 'w')
 
@@ -112,8 +117,9 @@ class mosaic(BaseModule):
             logger.error(error)
             raise RuntimeError(error)
 
+        # class variable not accessible through config
         self.mosaic_continuum_image_list = []
-
+        
     # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
     # The main function for the module
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -527,7 +533,11 @@ class mosaic(BaseModule):
                 subs_managefiles.director(self, 'ch', self.mosaic_continuum_dir)
 
                 try:
-                    mosaic_utils.create_beam(beam, self.mosaic_continuum_beam_subdir, corrtype=self.mosaic_primary_beam_type, primary_beam_path=self.mosaic_primary_beam_shape_files_location)
+                    mosaic_utils.create_beam(beam, self.mosaic_continuum_beam_subdir, corrtype=self.mosaic_primary_beam_type, primary_beam_path=self.mosaic_primary_beam_shape_files_location,
+                    bm_size=self.mosaic_gaussian_beam_map_size,
+                    cell=self.mosaic_gaussian_beam_map_cellsize,
+                    fwhm=self.mosaic_gaussian_beam_map_fwhm_arcsec,
+                    cutoff=self.mosaic_gaussian_beam_map_cutoff)
                 except Exception as e:
                     error = "Creating map of beam {} ... Failed".format(beam)
                     logger.warning(error)
