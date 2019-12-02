@@ -1979,6 +1979,231 @@ class mosaic(BaseModule):
 
         subs_param.add_param(
             self, 'mosaic_continuum_mf_status', mosaic_continuum_mf_status)
+    
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Function to create the polarisation q mosaic
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    def create_mosaic_polarisation_q(self, mosaic_type=None):
+        """
+        Function to create the different mosaics
+        """
+        subs_setinit.setinitdirs(self)
+
+        mosaic_polarisation-q_status = get_param_def(
+            self, 'mosaic_polarisation_q_status', False)
+
+        # Start the mosaicking of the stacked continuum images
+        if self.mosaic_polarisation_q:
+            logger.info("Creating stokes Q mosaic")
+
+            # change into the directory for the continuum mosaic
+            #subs_managefiles.director(self, 'ch', os.path.join(self.mosdir, self.mosaic_continuum_subdir))
+
+            # if no mosaic has already been created
+            if not mosaic_continuum_mf_status:
+
+                # step counter
+                i = 1
+
+                # set (and create) the sub-directories
+                # ====================================
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
+                self.set_mosaic_subdirs(continuum=True)
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                    i, time.time() - start_time_step))
+                i += 1
+
+                # get the continuum images
+                # ========================
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
+                self.get_mosaic_continuum_images()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                    i, time.time() - start_time_step))
+                i += 1
+
+                # get the beams
+                # =============
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
+                self.get_mosaic_continuum_beams()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                    i, time.time() - start_time_step))
+                i += 1
+
+                # Converting images into miriad
+                # =======================================
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
+                self.convert_images_to_miriad()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                    i, time.time() - start_time_step))
+                i += 1
+
+                # set or check the projection center
+                # ==================================
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
+                self.get_mosaic_projection_centre()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                    i, time.time() - start_time_step))
+                i += 1
+
+                # Transfer image coordinates
+                # ==========================
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
+                self.transfer_coordinates()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                    i, time.time() - start_time_step))
+                i += 1
+
+                # Create a template mosaic
+                # ========================
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
+                self.create_template_mosaic()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                    i, time.time() - start_time_step))
+                i += 1
+
+                # Regrid images
+                # =============
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
+                self.regrid_images()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                    i, time.time() - start_time_step))
+                i += 1
+
+                # Regrid beam maps
+                # ================
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
+                self.regrid_beam_maps()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                    i, time.time() - start_time_step))
+                i += 1
+
+                # Determing common beam for convolution
+                # =====================================
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
+                self.get_common_beam()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                    i, time.time() - start_time_step))
+                i += 1
+
+                # Convolve images
+                # ===============
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
+                self.mosaic_convolve_images()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                    i, time.time() - start_time_step))
+                i += 1
+
+                # Get inverse covariance matrix
+                # =====================================================
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
+                self.get_inverted_covariance_matrix()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                    i, time.time() - start_time_step))
+                i += 1
+
+                # Calculate product of beam matrix and covariance matrix
+                # ======================================================
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
+                self.math_multiply_beam_and_covariance_matrix()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                    i, time.time() - start_time_step))
+                i += 1
+
+                # Calculate variance map
+                # ======================
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
+                self.math_calculate_variance_map()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                    i, time.time() - start_time_step))
+                i += 1
+
+                # Calculate beam matrix multiplied by covariance matrix
+                # =====================================================
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
+                self.math_multiply_beam_matrix_by_covariance_matrix_and_image()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                    i, time.time() - start_time_step))
+                i += 1
+
+                # Find maximum variance map
+                # =========================
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
+                self.math_get_max_variance_map()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                    i, time.time() - start_time_step))
+                i += 1
+
+                # Calculate divide image by variance map
+                # ======================================
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
+                self.math_divide_image_by_variance_map()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                    i, time.time() - start_time_step))
+                i += 1
+
+                # Calculate get mosaic noise map
+                # ==============================
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
+                self.get_mosaic_noise_map()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                    i, time.time() - start_time_step))
+                i += 1
+
+                # Writing files
+                # =============
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
+                self.write_mosaic_fits_files()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                    i, time.time() - start_time_step))
+                i += 1
+
+                # Image validation
+                # ================
+                if self.mosaic_image_validation:
+                    logger.info("#### Step {0} ####".format(i))
+                    start_time_step = time.time()
+                    self.run_image_validation()
+                    logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                        i, time.time() - start_time_step))
+                    i += 1
+
+                # Save the derived parameters to the parameter file
+                mosaic_polarisation_q_status = True
+
+                # if self.mosaic_clean_up:
+                #     logger.info("#### Step {0} ####".format(i))
+                #     start_time_step = time.time()
+                #     self.clean_up(level=self.mosaic_clean_up_level)
+                #     logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                #         i, time.time() - start_time_step))
+            else:
+                logger.info("Stokes Q mosaic was already created")
+
+            logger.info("Creating stokes Q mosaic ... Done")
+        else:
+            pass
+
+        subs_param.add_param(
+            self, 'mosaic_polarisation_q_status', mosaic_polarisation_q_status)
 
     def show(self, showall=False):
         lib.show(self, 'MOSAIC', showall)
