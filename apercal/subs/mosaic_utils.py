@@ -120,7 +120,7 @@ def get_measured_beam_maps(beam, beam_map_input_path, beam_map_output_path, beam
         beam_map_output_path, 'beam_model_{0}_temp.fits'.format(beam))
     # file name of the miriad file before applying the cutoff
     temp_beam_map_output_name = beam_map_output_name.replace(
-        ".mir", "_temp.mir")
+        ".map", "_temp.map")
 
     # copy beam model to work directory
     logger.debug("Copying beam model of beam {0} ({1} -> {2})".format(
