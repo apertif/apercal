@@ -49,7 +49,7 @@ def create_beam(beam, beam_map_dir, corrtype='Gaussian', primary_beam_path=None,
                                bm_size, cell, fwhm, cutoff)
         elif corrtype == 'Correct':
             get_measured_beam_maps(
-                beam, primary_beam_path, beam_map_dir, beamoutname)
+                beam, primary_beam_path, beam_map_dir, beamoutname, cutoff)
         else:
             error = 'Type of beam map not supported'
             logger.error(error)
@@ -98,7 +98,7 @@ def make_gaussian_beam(beamdir, beamoutname, bm_size, cell, fwhm, cutoff):
 # def get_measured_beam_maps(beam, image_path, beam_map_path, output_name):
 
 
-def get_measured_beam_maps(beam, beam_map_input_path, beam_map_output_path, beam_map_output_name):
+def get_measured_beam_maps(beam, beam_map_input_path, beam_map_output_path, beam_map_output_name, cutoff):
     """
     Function to create beam map from drift scans
 
@@ -112,10 +112,15 @@ def get_measured_beam_maps(beam, beam_map_input_path, beam_map_output_path, beam
 
     work_dir = os.getcwd()
 
-    temp_beam_model_name = os.path.join(
-        beam_map_output_path, 'beam_model_{0}_temp.fits'.format(beam))
+    # file name of the beam model fits file which will be copied
     input_beam_model = os.path.join(beam_map_input_path, "{0}_{1}_I_model.fits".format(
         os.path.basename(beam_map_input_path), beam))
+    # file name of the fits file after copying
+    temp_beam_model_name = os.path.join(
+        beam_map_output_path, 'beam_model_{0}_temp.fits'.format(beam))
+    # file name of the miriad file before applying the cutoff
+    temp_beam_map_output_name = beam_map_output_name.replace(
+        ".mir", "_temp.mir")
 
     # copy beam model to work directory
     logger.debug("Copying beam model of beam {0} ({1} -> {2})".format(
@@ -128,17 +133,25 @@ def get_measured_beam_maps(beam, beam_map_input_path, beam_map_output_path, beam
     shutil.copy2(input_beam_model, temp_beam_model_name)
     # os.system(copy_cmd)
 
-    logger.debug("Converting beam model of beam {}".format(beam))
     # convert beam model to mir file
+    # but only if it does not exists
     # if os.path.isdir('./beam_model_{0}_temp.mir'.format(beam)) == False:
     if os.path.isdir(os.path.join(beam_map_output_path, beam_map_output_name)) == False:
+        logger.debug("Converting beam model of beam {}".format(beam))
         fits = lib.miriad('fits')
         # fits.in_ = './beam_model_{0}_temp.fits'.format(beam)
         fits.in_ = temp_beam_model_name
         fits.op = 'xyin'
         # fits.out = './beam_model_{0}_temp.mir'.format(beam)
-        fits.out = os.path.join(beam_map_output_path, beam_map_output_name)
+        fits.out = os.path.join(beam_map_output_path,
+                                temp_beam_map_output_name)
         fits.go()
+
+        # now apply the cutoff
+        logger.debug(
+            "Applying cutoff of {0} to beam model of beam {1}".format(cutoff, beam))
+        beam_cutoff(beam_map_output_name, temp_beam_map_output_name,
+                    beam_map_output_path, cutoff)
 
     # if os.path.isdir('{}.mir'.format(image_path[:-5])) == False:
     # 	fits = lib.miriad('fits')
