@@ -89,7 +89,7 @@ class mosaic(BaseModule):
     mosaic_gaussian_beam_map_size = 3073
     mosaic_gaussian_beam_map_cellsize = 4.0
     mosaic_gaussian_beam_map_fwhm_arcsec = 1950.0
-    mosaic_gaussian_beam_map_cutoff = 0.25
+    mosaic_beam_map_cutoff = 0.25
 
 
     FNULL = open(os.devnull, 'w')
@@ -570,7 +570,7 @@ class mosaic(BaseModule):
                     bm_size=self.mosaic_gaussian_beam_map_size,
                     cell=self.mosaic_gaussian_beam_map_cellsize,
                     fwhm=self.mosaic_gaussian_beam_map_fwhm_arcsec,
-                    cutoff=self.mosaic_gaussian_beam_map_cutoff)
+                    cutoff=self.mosaic_beam_map_cutoff)
                 except Exception as e:
                     error = "Creating map of beam {} ... Failed".format(beam)
                     logger.warning(error)
