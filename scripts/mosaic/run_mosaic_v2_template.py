@@ -58,7 +58,8 @@ mo.mosaic_taskid = "190428055"
 mo.mosaic_beams = 'all'
 
 # set location of continuum images, default is ALTA
-# continuum images must be located in <path>/<beam_nr>/<image_name>.fits
+# if local path is specified, then the
+# continuum images must be located in <local_path>/<beam_nr>/<image_name>.fits
 # mo.mosaic_continuum_image_origin = "/data/pisano/190428055/continuum/raw/"
 
 # set the type of primary beam to be used
