@@ -193,9 +193,9 @@ class mosaic(BaseModule):
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
     # Basic setup
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    def mosaic_setup():
+    def mosaic_setup(self):
         """
-            Function to create the base directory and beam list
+        Function to create the base directory and beam list
         """
 
         # check the directory
