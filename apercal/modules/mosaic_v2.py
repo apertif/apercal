@@ -1989,7 +1989,7 @@ class mosaic(BaseModule):
         """
         subs_setinit.setinitdirs(self)
 
-        mosaic_polarisation-q_status = get_param_def(
+        mosaic_polarisation_q_status = get_param_def(
             self, 'mosaic_polarisation_q_status', False)
 
         # Start the mosaicking of the stacked continuum images
