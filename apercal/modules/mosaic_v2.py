@@ -97,35 +97,6 @@ class mosaic(BaseModule):
     def __init__(self, file_=None, **kwargs):
         self.default = lib.load_config(self, file_)
         
-        # check the directory
-        if self.basedir is None:
-            self.basedir = os.getcwd()
-            logger.info("No base directory specified. Using current working directory {}".format(self.basedir))
-        else:
-            # check if the base directory exists
-            if not os.path.exists(self.basedir):
-                subs_managefiles.director(self, 'mk', self.basedir)
-        # taskid will not be added to basedir to main mosaic dir
-        # because mosaics can also be created with images from different taskids
-        self.mosdir = self.basedir
-
-        subs_setinit.setinitdirs(self)
-            
-        # get the beams
-        # set the number of beams to process>
-        if self.mosaic_beams is None or self.mosaic_beams != '':
-            if self.mosaic_beams == "all" or self.mosaic_beams is None:
-                logger.info("No list of beams specified for mosaic. Using all beams")
-                self.mosaic_beam_list = [str(k).zfill(2)
-                                             for k in range(self.NBEAMS)]
-            else:
-                logger.info("Beams specified for mosaic: {}".format(self.mosaic_beams))
-                self.mosaic_beam_list = self.mosaic_beams.split(",")
-        else:
-            error = "No beams specified for making the mosaic."
-            logger.error(error)
-            raise RuntimeError(error)
-
         # class variable not accessible through config
         self.mosaic_continuum_image_list = []
         
@@ -218,6 +189,46 @@ class mosaic(BaseModule):
         return_msg = subprocess.check_call(alta_cmd, shell=True, stdout=self.FNULL, stderr=self.FNULL)
 
         return return_msg
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Basic setup
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    def mosaic_setup():
+        """
+            Function to create the base directory and beam list
+        """
+
+        # check the directory
+        if self.basedir is None:
+            self.basedir = os.getcwd()
+            logger.info(
+                "No base directory specified. Using current working directory {}".format(self.basedir))
+        else:
+            # check if the base directory exists
+            if not os.path.exists(self.basedir):
+                subs_managefiles.director(self, 'mk', self.basedir)
+        # taskid will not be added to basedir to main mosaic dir
+        # because mosaics can also be created with images from different taskids
+        self.mosdir = self.basedir
+
+        #subs_setinit.setinitdirs(self)
+
+        # get the beams
+        # set the number of beams to process>
+        if self.mosaic_beams is None or self.mosaic_beams != '':
+            if self.mosaic_beams == "all" or self.mosaic_beams is None:
+                logger.info(
+                    "No list of beams specified for mosaic. Using all beams")
+                self.mosaic_beam_list = [str(k).zfill(2)
+                                         for k in range(self.NBEAMS)]
+            else:
+                logger.info("Beams specified for mosaic: {}".format(
+                    self.mosaic_beams))
+                self.mosaic_beam_list = self.mosaic_beams.split(",")
+        else:
+            error = "No beams specified for making the mosaic."
+            logger.error(error)
+            raise RuntimeError(error)
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++ 
     # Create all the sub-directories for the mosaic
@@ -1791,6 +1802,14 @@ class mosaic(BaseModule):
 
                 # step counter
                 i = 1
+
+                # setup
+                # ====================================
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
+                self.mosaic_setup()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(i, time.time() - start_time_step))
+                i += 1
 
                 # set (and create) the sub-directories
                 # ====================================
