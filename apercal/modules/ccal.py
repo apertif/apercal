@@ -1355,6 +1355,14 @@ class ccal(BaseModule):
         
         n_stokes = pol_array.shape[2]  # shape is time, one, nstokes
     
+        # list of flags
+        flag_ant = []
+        flag_pol = []
+        # list of polarisation
+        # 0 = 'XX', 3 = 'YY'
+        pol_list_ms = [0, 3]
+        pol_list = ['XX', 'YY']
+
         #take MS file and get calibrated data
         # amp_ant_array = np.empty(
         #     (len(ant_names), len(freqs), n_stokes), dtype=np.float64)        
@@ -1369,21 +1377,47 @@ class ccal(BaseModule):
             except Exception as e:
                 logger.warning("Beam {}: Could not get autocorrelation information for antenna {}".format(self.beam, ant_name))
                 logger.exception(e)
+                continue
             
             # get XX and YY
-            amp_XX = amp_ant[:, 0]
-            amp_YY = amp_ant[:, 3]
-            freqs_XX_selected = freqs[np.where(amp_XX != 0)[0]]
-            amp_XX_selected = amp_XX[np.where(amp_XX != 0)[0]]
-            freqs_YY_selected = freqs[np.where(amp_YY != 0)[0]]
-            amp_YY_selected = amp_YY[np.where(amp_YY != 0)[0]]
+            # amp_XX = amp_ant[:, 0]
+            # amp_YY = amp_ant[:, 3]
+            # freqs_XX_selected = freqs[np.where(amp_XX != 0)[0]]
+            # amp_XX_selected = amp_XX[np.where(amp_XX != 0)[0]]
+            # freqs_YY_selected = freqs[np.where(amp_YY != 0)[0]]
+            # amp_YY_selected = amp_YY[np.where(amp_YY != 0)[0]]
         
-            # call function for comparison
-            flag_list = []
+            logger.info("Beam {0}: Checking autocorrelation amplitude of antenna {1}".format(self.beam, ant_name))
+            for pol_nr in pol_list_ms:
+                amp = amp_ant[:, pol_nr]
+                freqs_selected = freqs[np.where(amp != 0)[0]]
+                amp_selected = amp[np.where(amp != 0)[0]]
 
-            if len(flag_list) != 0:
+                ratio_vis_above_limit = ccal_utils.get_ratio_autocorrelation_above_limit(amp_selected, self.autocorrelation_amp_threshold)
+                ratio_vis_above_limit))
+                if ratio_vis_above_limit > self.autocorrelation_data_fraction_threshold:
+                    logger.info(
+                        "Beam {0}, Antenna {1} ({2}): fraction of autocorrelation data above amplitude threshold: {3} => Flagging polarisation {2}".format(self.beam, ant_name, pol_list[pol_nr], ratio_vis_above_limit))
+                    flag_ant = flag_ant.append(ant_name)
+                    flag_pol = flag_pol.append(pol_list[pol_nr])
+                else:
+                    logger.info(
+                        "Beam {0}, Antenna {1} ({2}): fraction of autocorrelation data above amplitude threshold: {3} => No flagging".format(self.beam, ant_name, pol_list[pol_nr], ratio_vis_above_limit_xx))
+                
+            # run check of fit to autocorrelation
+            logger.info("Checking fit of autocorrelation not yet available")
+
+            # run check of bandpass phase solutions
+            logger.info("Checking bandpass phase solution not yet available")
+            
+        if len(flag_nat) != 0:
+            logger.info("Flaggging data")
+            
+            for ant, pol in zip(flag_ant, flag_pol):
                 # call function for flagging
-                self.crosscal_try_restart = True
+                flag_data(polarisation = flag_pol, antenna = ant)
+            
+            self.crosscal_try_restart = True
 
     def flag_data(self, polarisation = '', antenna = ''):
         """
