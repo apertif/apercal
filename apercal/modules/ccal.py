@@ -1433,7 +1433,7 @@ class ccal(BaseModule):
         # list of polarisation
         # 0 = 'XX', 3 = 'YY'
         pol_list_ms = [0, 3]
-        pol_list = ['XX', 'YY']
+        pol_list = ['XX', 'XY', 'YX', 'YY']
 
         # take MS file and get calibrated data
         # amp_ant_array = np.empty(
