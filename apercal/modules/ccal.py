@@ -1429,7 +1429,6 @@ class ccal(BaseModule):
                 amp_selected = amp[np.where(amp != 0)[0]]
 
                 ratio_vis_above_limit = ccal_utils.get_ratio_autocorrelation_above_limit(amp_selected, self.crosscal_autocorrelation_amp_limit)
-                ratio_vis_above_limit))
                 if ratio_vis_above_limit > self.crosscal_autocorrelation_data_fraction_limit:
                     logger.info(
                         "Beam {0}, Antenna {1} ({2}): fraction of autocorrelation data above amplitude threshold: {3} => Flagging polarisation {2}".format(self.beam, ant_name, pol_list[pol_nr], ratio_vis_above_limit))

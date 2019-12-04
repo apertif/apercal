@@ -7,7 +7,11 @@ from aperCC.modules.Sols import BPSols
 import numpy as np
 
 
-def get_ratio_autocorrelation_above_limit(amp, polarisation, amp_threshold):
+def get_ratio_autocorrelation_above_limit(amp, amp_threshold):
+    """
+    Get the fraction of data that have autocorrelation amplitudes
+    above a given threshold
+    """
 
     # get the data that is above the threshold
     amp_above_threshold = amp[amp > amp_threshold]
