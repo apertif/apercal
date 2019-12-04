@@ -23,7 +23,7 @@ def get_ratio_autocorrelation_above_limit(amp, amp_threshold):
     n_vis = len(amp)
 
     # fraction of data points above amplitude threshold
-    ratio_vis_above_threshold = float(n_vis) / float(n_vis_above_threshold)
+    ratio_vis_above_threshold = float(n_vis_above_threshold) / float(n_vis)
 
     return ratio_vis_above_threshold
 
