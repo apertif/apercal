@@ -15,6 +15,7 @@ from apercal.subs import msutils as subs_msutils
 from apercal.subs import calmodels as subs_calmodels
 from apercal.subs.param import get_param_def
 from apercal.subs import param as subs_param
+from apercal.subs import ccal_utils
 from apercal.exceptions import ApercalException
 
 from apercal.libs import lib
