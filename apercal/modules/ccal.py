@@ -1467,8 +1467,8 @@ class ccal(BaseModule):
                 amp_selected = amp[np.where(amp != 0)[0]]
 
                 if len(amp_selected) == 0:
-                    logger.warning("Beam {0}, Antenna {1} (polarization {2}): No autocorrelation data available".format(
-                        self.beam, ant_name, pol_list[pol_nr], ratio_vis_above_limit))
+                    logger.info("Beam {0}, Antenna {1} (polarization {2}): No autocorrelation data available".format(
+                        self.beam, ant_name, pol_list[pol_nr]))
                     continue
 
                 ratio_vis_above_limit = ccal_utils.get_ratio_autocorrelation_above_limit(amp_selected, self.crosscal_autocorrelation_amp_limit)
