@@ -1457,7 +1457,7 @@ class ccal(BaseModule):
                     flag_pol = flag_pol.append(pol_list[pol_nr])
                 else:
                     logger.info(
-                        "Beam {0}, Antenna {1} (polarization {2}): fraction of autocorrelation data above amplitude threshold: {3} => No flagging".format(self.beam, ant_name, pol_list[pol_nr], ratio_vis_above_limit_xx))
+                        "Beam {0}, Antenna {1} (polarization {2}): fraction of autocorrelation data above amplitude threshold: {3} => No flagging".format(self.beam, ant_name, pol_list[pol_nr], ratio_vis_above_limit))
                 
             # run check of fit to autocorrelation
             logger.info("Checking fit of autocorrelation not yet available")
