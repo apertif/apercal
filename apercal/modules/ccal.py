@@ -59,6 +59,7 @@ class ccal(BaseModule):
     crosscal_try_counter = 0
     crosscal_try_restart = False
     crosscal_fluxcal_try_restart = False
+    crosscal_flag_list = None
     
     def __init__(self, file_=None, **kwargs):
         self.default = lib.load_config(self, file_)
@@ -162,13 +163,12 @@ class ccal(BaseModule):
                 break
 
             if self.crosscal_try_restart:
-                logger.warning("Beam {0}: Running cross-calibration attempt {1} (out of {2}) failed autocorrelation check. Restarting".format(
+                logger.warning("Beam {0}: Running cross-calibration attempt {1} (out of {2}) failed autocorrelation check. Going to reset, flag and restart".format(
                     self.beam, self.crosscal_try_counter+1, self.crosscal_try_limit))
                 # checking the number of antennas flagged
-                ccal_flag_list = subs_param.get_param_def(
-                    self, cbeam + '_flag_list', None)
+                ccal_flag_list = self.crosscal_flag_list
                 if ccal_flag_list is not None:
-                    logger.info("Beam {0}: Autocorrelation check applied the following flags: {1}".format(self.beam, ccal_flag_list))
+                    logger.info("Beam {0}: Autocorrelation check found the following flags: {1}".format(self.beam, ccal_flag_list))
                     # get a list flagged polarisation
                     pol_flag_list = np.array([flag[1] for flag in ccal_flag_list])
                     # get the flags that have both polarisation flagged
@@ -180,8 +180,14 @@ class ccal(BaseModule):
                         logger.error(error)
                         raise RuntimeError(error)
 
+
                 # reset first (only fluxcal and polcal need to have theire calibration reset)
                 self.reset(do_clearcal=False, do_clearcal_fluxcal=True, do_clearcal_polcal=True)
+
+                # flagging data
+                # need to do it after restart
+                self.flag_data()
+
                 # set the counter up
                 self.crosscal_try_counter += 1
                 # set the status parameter
@@ -190,7 +196,23 @@ class ccal(BaseModule):
             else:
                 logger.info("Beam {0}: Running cross-calibration attempt {1} (out of {2}) passed autocorrelation check. Continuing".format(
                     self.beam, self.crosscal_try_counter+1, self.crosscal_try_limit))
+                crosscal_finished = True
                 break
+        
+        subs_param.add_param(
+            self, cbeam + '_calibration_restart', ccal_calibration_restart)
+        subs_param.add_param(
+            self, cbeam + '_calibration_try_counter', ccal_calibration_try_counter)
+        
+        if crosscal_finished:
+            logger.info(
+                "Beam {}: Cross-calibration was successful".format(self.beam))
+        else:
+            error = "Beam {}: Cross-calibration failed. Abort".format(
+                self.beam)
+            logger.error(error)
+            raise RuntimeError(error)
+
 
     def calibrate_fluxcal(self):
         """
@@ -1406,8 +1428,8 @@ class ccal(BaseModule):
         logger.info("Beam {}: Inspecting autocorrelation of each antenna".format(self.beam))
 
         # list of flags
-        flag_ant = []
-        flag_pol = []
+        ccal_flag_list = []
+        #flag_pol = []
         # list of polarisation
         # 0 = 'XX', 3 = 'YY'
         pol_list_ms = [0, 3]
@@ -1453,8 +1475,9 @@ class ccal(BaseModule):
                 if ratio_vis_above_limit > self.crosscal_autocorrelation_data_fraction_limit:
                     logger.info(
                         "Beam {0}, Antenna {1} (polarization {2}): fraction of autocorrelation data above amplitude threshold: {3} => Flagging polarisation {2}".format(self.beam, ant_name, pol_list[pol_nr], ratio_vis_above_limit))
-                    flag_ant = flag_ant.append(ant_name)
-                    flag_pol = flag_pol.append(pol_list[pol_nr])
+                    ccal_flag_list.append([ant_name, pol_list[pol_nr]])
+                    #flag_ant = flag_ant.append(ant_name)
+                    #flag_pol = flag_pol.append(pol_list[pol_nr])
                 else:
                     logger.info(
                         "Beam {0}, Antenna {1} (polarization {2}): fraction of autocorrelation data above amplitude threshold: {3} => No flagging".format(self.beam, ant_name, pol_list[pol_nr], ratio_vis_above_limit))
@@ -1464,19 +1487,24 @@ class ccal(BaseModule):
 
             # run check of bandpass phase solutions
             logger.info("Checking bandpass phase solution not yet available")
+        
+        # cannot flag here only set restart
+        # need to flag after resetting, otherwise flags are gone
+        if len(ccal_flag_list) != 0:
+            logger.info("Found data for flagging. Setting restart")
             
-        if len(flag_ant) != 0:
-            logger.info("Flaggging data")
-            
-            for ant, pol in zip(flag_ant, flag_pol):
-                # call function for flagging
-                flag_data(polarisation = flag_pol, antenna = ant)
+            # for ant, pol in zip(flag_ant, flag_pol):
+            #     # call function for flagging
+            #     flag_data(polarisation = flag_pol, antenna = ant)
             
             self.crosscal_try_restart = True
-        
+            self.crosscal_flag_list = ccal_flag_list
+        else:
+            self.crosscal_flag_list = None
+
         logger.info("Beam {}: Checking autocorrelation ... Done".format(self.beam))
 
-    def flag_data(self, polarisation = '', antenna = ''):
+    def flag_data(self):
         """
         Function to flag a polarisation for a given antenna
         """
@@ -1485,19 +1513,20 @@ class ccal(BaseModule):
         ccal_flag_list = subs_param.get_param_def(
             self, cbeam + '_flag_list', None)
 
-        if polarisation != '' and antenna != '':
-            logger.info("Beam {0}: Flagging polarisation {1} for antenna {2}".format(self.beam, polarisation, antenna))
-            flag_cmd = 'flagdata(vis="{0}", mode="list", inpfile=[antenna="{1}" corr="{2}"], flagbackup=False)'.format(self.get_fluxcal_path(), antenna, polarisation)
-            lib.run_casa([flag_cmd])
-            logger.info("Beam {0}: Flagging ... Done".format(self.beam))
-            # check if there is already a flag list
-            if ccal_flag_list is None:
-                # if not create a dictionary
-                ccal_flag_list = np.array([[antenna, polarisation]])
-            else:
-                # if yes, just append
-                ccal_flag_list = np.append(ccal_flag_list, [antenna, polarisation])
+        if self.crosscal_flag_list is not None:
 
+            logger.info("Beam {}: Flagging data".format(self.beam))
+            # create a casa-conform list
+            casa_list = ["antenna={1} corr={2}".format(flag[0], flag[1]) for flag in self.crosscal_flag_list]
+            logger.info("Beam {0}: Flagging polarisation {1} for antenna {2}".format(self.beam, polarisation, antenna))
+            flag_cmd = 'flagdata(vis="{0}", mode="list", {1}, flagbackup=False)'.format(self.get_fluxcal_path(), antenna, polarisation)
+            logger.debug(flag_cmd)
+            lib.run_casa([flag_cmd])
+            logger.info("Beam {0}: Flagging data ... Done".format(self.beam))
+            # check if there is already a flag list
+
+            ccal_flag_list = ccal_flag_list + self.crosscal_flag_list
+            
         subs_param.add_param(self, cbeam + '_flag_list', ccal_flag_list)
 
             
