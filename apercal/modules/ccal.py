@@ -66,6 +66,10 @@ class ccal(BaseModule):
         self.config_file_name = file_
 
         # setting some presets if not specified
+        if self.crosscal_check_autocorrelation is None:
+            self.crosscal_check_autocorrelation = True
+            logger.info("Setting for checking autocorrelation was not specified. Setting it to default {}".format(self.crosscal_check_autocorrelation))
+
         if self.crosscal_try_limit is None:
             self.crosscal_try_limit = 3
             logger.info("Number of overall crosscal restarts not specified. Setting to default: {}".format(self.crosscal_try_counter))
@@ -89,6 +93,7 @@ class ccal(BaseModule):
             self.crosscal_autocorrelation_data_fraction_limit = 0.9
             logger.info("Limit of the fraction of data with autocorrelation amplitude above maximum value not specified. Setting to default: {}".format(
                 self.crosscal_autocorrelation_data_fraction_limit))
+        
 
     def go(self):
         """
@@ -148,8 +153,13 @@ class ccal(BaseModule):
             # apply solutions
             #self.apply_solutions()
             self.transfer_to_cal()
+
             if self.crosscal_check_autocorrelation:
                 self.check_autocorrelation()
+            else:
+                logger.warning("Beam {0}: Running cross-calibration attempt {1} (out of {2}) finished without autocorrelation check.".format(
+                    self.beam, self.crosscal_try_counter+1, self.crosscal_try_limit))
+                break
 
             if self.crosscal_try_restart:
                 logger.warning("Beam {0}: Running cross-calibration attempt {1} (out of {2}) failed autocorrelation check. Restarting".format(
@@ -180,6 +190,7 @@ class ccal(BaseModule):
             else:
                 logger.info("Beam {0}: Running cross-calibration attempt {1} (out of {2}) passed autocorrelation check. Continuing".format(
                     self.beam, self.crosscal_try_counter+1, self.crosscal_try_limit))
+                break
 
     def calibrate_fluxcal(self):
         """
@@ -1344,6 +1355,8 @@ class ccal(BaseModule):
         shows an issue, the polarisation of this telescope will get flagged
         """
 
+        logger.info("Beam {}: Checking autocorrelation".format(self.beam))
+
         # check only the flux calibrator
         msfile = self.get_fluxcal_path()
 
@@ -1452,6 +1465,8 @@ class ccal(BaseModule):
                 flag_data(polarisation = flag_pol, antenna = ant)
             
             self.crosscal_try_restart = True
+        
+        logger.info("Beam {}: Checking autocorrelation ... Done".format(self.beam))
 
     def flag_data(self, polarisation = '', antenna = ''):
         """
