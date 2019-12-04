@@ -2264,17 +2264,28 @@ class mosaic(BaseModule):
             subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
 
         # more to remove
-        if level == 1:
-            for fl in glob.glob('image_*_mos.map'):
+        if level >= 1:
+            subs_managefiles.director(self, 'ch', self.mosaic_continuum_beam_dir)
+            for fl in glob.glob('beam_??.map'):
                 subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
         
             subs_managefiles.director(self, 'ch', self.mosaic_continuum_images_dir)
             for fl in glob.glob('image_*_regrid.map'):
                 subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
             
+            for fl in glob.glob('??'):
+                subs_managefiles.director(
+                    self, 'rm', fl, ignore_nonexistent=True)
+
+        if level >= 2:
             subs_managefiles.director(self, 'ch', self.mosaic_continuum_beam_dir)
             for fl in glob.glob('beam_*_mos.map'):
                 subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
+
+            subs_managefiles.director(self, 'ch', self.mosaic_continuum_mosaic_dir)
+            for fl in glob.glob('image_*_mos.map'):
+                subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
+        
         
         logger.info("Removing scratch files ... Done")
             
