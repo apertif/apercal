@@ -44,21 +44,50 @@ class ccal(BaseModule):
     crosscal_refant = None
     crosscal_refant_exclude = ["RTC", "RTD"]
     crosscal_ant_list = None
-    config_file_name = None
     crosscal_check_bandpass = None
     crosscal_check_autocorrelation = None
-    crosscal_try_counter = 0
-    crosscal_try_limit = 2
-    crosscal_try_restart = False
     crosscal_flag_limit = 4
-    crosscal_fluxcal_try_counter = 0
-    crosscal_fluxcal_try_limit = 3
-    crosscal_fluxcal_try_restart = False
+    crosscal_try_limit = None
+    crosscal_fluxcal_try_limit = None
+    crosscal_autocorrelation_amp_limit = None
+    crosscal_autocorrelation_data_fraction_limit = None
 
+    # not for config
+    config_file_name = None
+    crosscal_fluxcal_try_counter = 0
+    crosscal_try_counter = 0
+    crosscal_try_restart = False
+    crosscal_fluxcal_try_restart = False
+    
     def __init__(self, file_=None, **kwargs):
         self.default = lib.load_config(self, file_)
         subs_setinit.setinitdirs(self)
         self.config_file_name = file_
+
+        # setting some presets if not specified
+        if self.crosscal_try_limit is None:
+            self.crosscal_try_limit = 3
+            logger.info("Number of overall crosscal restarts not specified. Setting to default: {}".format(self.crosscal_try_counter))
+        
+        if self.crosscal_fluxcal_try_limit is None:
+            self.crosscal_fluxcal_try_limit = 3
+            logger.info("Number of fluxcal calibration restarts not specified. Setting to default: {}".format(
+                self.crosscal_fluxcal_try_counter))
+
+        if self.crosscal_flag_limit is None:
+            self.crosscal_flag_limit = 4
+            logger.info("Maximum number of antennas with at least one polarisation flagged not specified. Setting to default: {}".format(
+                self.crosscal_flag_counter))
+           
+        if self.crosscal_autocorrelation_amp_limit is None:
+            self.crosscal_autocorrelation_amp_limit = 1500.
+            logger.info("Maximum value of autocorrelation ampliude not specified. Setting to default: {}".format(
+                self.crosscal_autocorrelation_amp_limit))
+        
+        if self.crosscal_autocorrelation_data_fraction_limit is None:
+            self.crosscal_autocorrelation_data_fraction_limit = 0.9
+            logger.info("Limit of the fraction of data with autocorrelation amplitude above maximum value not specified. Setting to default: {}".format(
+                self.crosscal_autocorrelation_data_fraction_limit))
 
     def go(self):
         """
@@ -99,9 +128,12 @@ class ccal(BaseModule):
         while self.crosscal_try_counter < self.crosscal_try_limit and not crosscal_finished:
 
             logger.info("Beam {0}: Running cross-calibration attempt {1} (out of {2})".format(
-                self.beam, self.crosscal_fluxcal_try_counter+1, self.crosscal_fluxcal_try_limit))
+                self.beam, self.crosscal_try_counter+1, self.crosscal_try_limit))
 
             self.crosscal_try_restart = False
+
+            # reset counter for flux calibration
+            self.crosscal_fluxcal_try_counter = 0
 
             # set the model
             self.setflux()
@@ -129,8 +161,10 @@ class ccal(BaseModule):
                     # get a list flagged polarisation
                     pol_flag_list = np.array([flag[1] for flag in ccal_flag_list])
                     # get the flags that have both polarisation flagged
-                    n_full_poll_flags = len(np.where(pol_flag_list == "XX,YY")[0])
-                    if len(n_full_poll_flags) > self.crosscal_flag_limit:
+                    n_full_poll_flags_xx = len(np.where(pol_flag_list == "XX")[0])
+                    n_full_poll_flags_yy = len(
+                        np.where(pol_flag_list == "YY")[0])
+                    if n_full_poll_flags_xx > self.crosscal_flag_limit or n_full_poll_flags_yy > self.crosscal_flag_limit:
                         error = "Beam {0}: Number of antennas with XX and YY flagged ({1}) exceeds defined limit {2}".format(self.beam, n_full_poll_flags, self.crosscal_flag_limit)
                         logger.error(error)
                         raise RuntimeError(error)
@@ -1393,9 +1427,9 @@ class ccal(BaseModule):
                 freqs_selected = freqs[np.where(amp != 0)[0]]
                 amp_selected = amp[np.where(amp != 0)[0]]
 
-                ratio_vis_above_limit = ccal_utils.get_ratio_autocorrelation_above_limit(amp_selected, self.autocorrelation_amp_threshold)
+                ratio_vis_above_limit = ccal_utils.get_ratio_autocorrelation_above_limit(amp_selected, self.crosscal_autocorrelation_amp_limit)
                 ratio_vis_above_limit))
-                if ratio_vis_above_limit > self.autocorrelation_data_fraction_threshold:
+                if ratio_vis_above_limit > self.crosscal_autocorrelation_data_fraction_limit:
                     logger.info(
                         "Beam {0}, Antenna {1} ({2}): fraction of autocorrelation data above amplitude threshold: {3} => Flagging polarisation {2}".format(self.beam, ant_name, pol_list[pol_nr], ratio_vis_above_limit))
                     flag_ant = flag_ant.append(ant_name)
