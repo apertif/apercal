@@ -111,9 +111,7 @@ class ccal(BaseModule):
         tranfer_to_target
         """
         logger.info("Starting CROSS CALIBRATION ")
-
-        self.check_ref_ant()
-        
+       
         self.calibrate_calibrators()
             
         self.transfer_to_target()
@@ -141,6 +139,9 @@ class ccal(BaseModule):
 
             # reset counter for flux calibration
             self.crosscal_fluxcal_try_counter = 0
+
+            # check the reference antenna
+            self.check_ref_ant()
 
             # set the model
             self.setflux()
