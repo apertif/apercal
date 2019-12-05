@@ -208,8 +208,10 @@ class mosaic(BaseModule):
             if not os.path.exists(self.basedir):
                 subs_managefiles.director(self, 'mk', self.basedir)
         # taskid will not be added to basedir to main mosaic dir
-        # because mosaics can also be created with images from different taskids
-        self.mosdir = self.basedir
+        # because mosaics can (in the future) also be created with images from different taskids
+        self.mosdir = os.path.join(self.basedir, self.mossubdir)
+        if not os.path.exists(self.mosdir):
+            subs_managefiles.director(self, 'mk', self.mosdir)
 
         #subs_setinit.setinitdirs(self)
 
@@ -1786,7 +1788,7 @@ class mosaic(BaseModule):
         """
         Function to create the continuum mosaic
         """
-        subs_setinit.setinitdirs(self)
+        # subs_setinit.setinitdirs(self)
         
         mosaic_continuum_mf_status = get_param_def(self, 'mosaic_continuum_mf_status', False)
         
@@ -2006,7 +2008,7 @@ class mosaic(BaseModule):
         """
         Function to create the different mosaics
         """
-        subs_setinit.setinitdirs(self)
+        # subs_setinit.setinitdirs(self)
 
         mosaic_polarisation_q_status = get_param_def(
             self, 'mosaic_polarisation_q_status', False)
