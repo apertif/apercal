@@ -124,10 +124,11 @@ class ccal(BaseModule):
 
         cbeam = 'ccal_B' + str(self.beam).zfill(2)
         ccal_calibration_restart = get_param_def(self, cbeam + '_calibration_restart', False)
+        ccal_calibration_calibrator_finished = get_param_def(self, cbeam + '_calibration_calibrator_finished', False)
         ccal_calibration_try_counter = get_param_def(self, cbeam + '_calibration_try_counter', 0)
 
         # to break the crosscal loop before the limit
-        crosscal_finished = False
+        crosscal_finished = ccal_calibration_calibrator_finished
 
         # loop for restarting all of cross-calibration
         while self.crosscal_try_counter < self.crosscal_try_limit and not crosscal_finished:
@@ -210,6 +211,9 @@ class ccal(BaseModule):
         if crosscal_finished:
             logger.info(
                 "Beam {}: Cross-calibration was successful".format(self.beam))
+            ccal_calibration_calibrator_finished = True
+            subs_param.add_param(
+                self, cbeam + '_calibration_calibrator_finished', ccal_calibration_calibrator_finished)
         else:
             error = "Beam {}: Cross-calibration failed. Abort".format(
                 self.beam)
