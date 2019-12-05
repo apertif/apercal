@@ -73,12 +73,12 @@ class ccal(BaseModule):
 
         if self.crosscal_try_limit is None:
             self.crosscal_try_limit = 3
-            logger.info("Number of overall crosscal restarts not specified. Setting to default: {}".format(self.crosscal_try_counter))
+            logger.info("Number of overall crosscal restarts not specified. Setting to default: {}".format(self.crosscal_try_limit))
         
         if self.crosscal_fluxcal_try_limit is None:
             self.crosscal_fluxcal_try_limit = 3
             logger.info("Number of fluxcal calibration restarts not specified. Setting to default: {}".format(
-                self.crosscal_fluxcal_try_counter))
+                self.crosscal_fluxcal_try_limit))
 
         if self.crosscal_flag_limit is None:
             self.crosscal_flag_limit = 4
@@ -166,9 +166,11 @@ class ccal(BaseModule):
             if self.crosscal_try_restart:
                 logger.warning("Beam {0}: Running cross-calibration attempt {1} (out of {2}) failed autocorrelation check. Going to reset, flag and restart".format(
                     self.beam, self.crosscal_try_counter+1, self.crosscal_try_limit))
-                # checking the number of antennas flagged
-                ccal_flag_list = self.crosscal_flag_list
-                if ccal_flag_list is not None:
+                # checking the number of antennas flagged in total
+                ccal_flag_list = subs_param.get_param_def(self, cbeam + '_flag_list', []) 
+                if self.crosscal_flag_list is not None:
+                    ccal_flag_list = ccal_flag_list + self.crosscal_flag_list
+                if len(ccal_flag_list) != 0:
                     logger.info("Beam {0}: Autocorrelation check found the following flags: {1}".format(self.beam, ccal_flag_list))
                     # get a list flagged polarisation
                     pol_flag_list = np.array([flag[1] for flag in ccal_flag_list])
@@ -1514,6 +1516,9 @@ class ccal(BaseModule):
         ccal_flag_list = subs_param.get_param_def(
             self, cbeam + '_flag_list', None)
 
+        if ccal_flag_list is None:
+            ccal_flag_list = []
+
         if self.crosscal_flag_list is not None:
 
             logger.info("Beam {}: Flagging data".format(self.beam))
@@ -1525,6 +1530,7 @@ class ccal(BaseModule):
             logger.info("Beam {0}: Flagging data ... Done".format(self.beam))
             # check if there is already a flag list
 
+            # add new flags to list of existing flags for this beam
             ccal_flag_list = ccal_flag_list + self.crosscal_flag_list
             
         subs_param.add_param(self, cbeam + '_flag_list', ccal_flag_list)
