@@ -212,6 +212,7 @@ class mosaic(BaseModule):
         self.mosdir = os.path.join(self.basedir, self.mossubdir)
         if not os.path.exists(self.mosdir):
             subs_managefiles.director(self, 'mk', self.mosdir)
+        logger.info("Base directory is set to be: {}".format(self.mosdir))
 
         #subs_setinit.setinitdirs(self)
 
