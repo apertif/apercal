@@ -1523,7 +1523,7 @@ class ccal(BaseModule):
 
             logger.info("Beam {}: Flagging data".format(self.beam))
             # create a casa-conform list
-            casa_list = ["antenna='{0}' corr='{1}'".format(flag[0], flag[1]) for flag in self.crosscal_flag_list]
+            casa_list = ["antenna='{0}' correlation='{1}'".format(flag[0], flag[1]) for flag in self.crosscal_flag_list]
             flag_cmd = 'flagdata(vis="{0}", mode="list", inpfile={1}, flagbackup=False)'.format(self.get_fluxcal_path(), casa_list)
             logger.debug(flag_cmd)
             lib.run_casa([flag_cmd])
