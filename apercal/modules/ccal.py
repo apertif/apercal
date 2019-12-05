@@ -185,7 +185,7 @@ class ccal(BaseModule):
 
 
                 # reset first (only fluxcal and polcal need to have theire calibration reset)
-                self.reset(do_clearcal=False, do_clearcal_fluxcal=True, do_clearcal_polcal=True)
+                self.reset(do_clearcal=True, do_clearcal_fluxcal=True, do_clearcal_polcal=True)
 
                 # flagging data
                 # need to do it after restart
@@ -1683,15 +1683,11 @@ class ccal(BaseModule):
                 logger.error('Beam ' + self.beam + ': Calibration could not completely be removed from ' +
                                 dataset + '. Flags might also not have been properly reset!')
         # Remove the keywords in the parameter file
-        if do_clearcal:
-            logger.warning('Beam ' + self.beam + ': Deleting all parameter file entries for CROSSCAL module')
-            if do_clearcal_fluxcal:
-                subs_param.del_param(self, cbeam + '_fluxcal_model')
-            if do_clearcal_polcal:
-                subs_param.del_param(self, cbeam + '_polcal_model')
-        else:
-            logger.warning(
-                'Beam ' + self.beam + ': Deleting all parameter file entries for CROSSCAL module except fluxcal and polcal model parameters')
+        logger.warning('Beam ' + self.beam + ': Deleting parameter file entries for CROSSCAL module')
+        if do_clearcal_fluxcal:
+            subs_param.del_param(self, cbeam + '_fluxcal_model')
+        if do_clearcal_polcal:
+            subs_param.del_param(self, cbeam + '_polcal_model')
         subs_param.del_param(self, cbeam + '_fluxcal_initialphase')
         subs_param.del_param(self, cbeam + '_fluxcal_globaldelay')
         subs_param.del_param(self, cbeam + '_fluxcal_bandpass')
