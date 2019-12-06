@@ -81,7 +81,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
 
     # set the base directory if none was provided
     if not basedir:
-        basedir = '/data/apertif/{}/'.format(taskid_target)
+        basedir = '/tank/apertif/{}/'.format(taskid_target)
     elif len(basedir) > 0 and basedir[-1] != '/':
         basedir = basedir + '/'
     if not os.path.exists(basedir):
