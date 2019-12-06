@@ -1525,15 +1525,38 @@ class ccal(BaseModule):
 
         if self.crosscal_flag_list is not None:
 
-            logger.info("Beam {}: Flagging data".format(self.beam))
+            logger.info("Beam {}: Flagging data of flux calibrator {}".format(self.beam, self.fluxcal))
             # create a casa-conform list
             casa_list = ["antenna='{0}' correlation='{1}'".format(flag[0], flag[1]) for flag in self.crosscal_flag_list]
             flag_cmd = 'flagdata(vis="{0}", mode="list", inpfile={1}, flagbackup=False)'.format(self.get_fluxcal_path(), casa_list)
             logger.debug(flag_cmd)
             lib.run_casa([flag_cmd])
-            logger.info("Beam {0}: Flagging data ... Done".format(self.beam))
-            # check if there is already a flag list
-
+            logger.info("Beam {0}: Flagging data of flux calibrator {} ... Done".format(self.beam, self.fluxcal))
+            
+            logger.info("Beam {}: Flagging data of polarisation calibrator {}".format(
+                self.beam, self.polcal))
+            # create a casa-conform list
+            casa_list = ["antenna='{0}' correlation='{1}'".format(
+                flag[0], flag[1]) for flag in self.crosscal_flag_list]
+            flag_cmd = 'flagdata(vis="{0}", mode="list", inpfile={1}, flagbackup=False)'.format(
+                self.get_polcal_path(), casa_list)
+            logger.debug(flag_cmd)
+            lib.run_casa([flag_cmd])
+            logger.info("Beam {0}: Flagging data of polarisation calibrator {} ... Done".format(
+                self.beam, self.polcal))
+            
+            logger.info("Beam {}: Flagging data of target {}".format(
+                self.beam, self.target))
+            # create a casa-conform list
+            casa_list = ["antenna='{0}' correlation='{1}'".format(
+                flag[0], flag[1]) for flag in self.crosscal_flag_list]
+            flag_cmd = 'flagdata(vis="{0}", mode="list", inpfile={1}, flagbackup=False)'.format(
+                self.get_target_path(), casa_list)
+            logger.debug(flag_cmd)
+            lib.run_casa([flag_cmd])
+            logger.info("Beam {0}: Flagging data of target {} ... Done".format(
+                self.beam, self.target))
+            
             # add new flags to list of existing flags for this beam
             ccal_flag_list = ccal_flag_list + self.crosscal_flag_list
             
