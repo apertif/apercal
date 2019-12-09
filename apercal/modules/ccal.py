@@ -4,6 +4,10 @@ import os
 import numpy as np
 import pandas as pd
 
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
 import casacore.tables as pt
 
 from ConfigParser import SafeConfigParser, ConfigParser
@@ -47,6 +51,7 @@ class ccal(BaseModule):
     crosscal_ant_list = None
     crosscal_check_bandpass = None
     crosscal_check_autocorrelation = None
+    crosscal_plot_autocorrelation = None
     crosscal_flag_limit = 4
     crosscal_try_limit = None
     crosscal_fluxcal_try_limit = None
@@ -70,6 +75,10 @@ class ccal(BaseModule):
         if self.crosscal_check_autocorrelation is None:
             self.crosscal_check_autocorrelation = True
             logger.info("Setting for checking autocorrelation was not specified. Setting it to default {}".format(self.crosscal_check_autocorrelation))
+
+        if self.crosscal_plot_autocorrelation is None and self.crosscal_check_autocorrelation:
+            self.crosscal_plot_autocorrelation = True
+            logger.info("Setting for plotting autocorrelation was not specified. Setting it to default {}".format(self.crosscal_check_autocorrelation))
 
         if self.crosscal_try_limit is None:
             self.crosscal_try_limit = 3
@@ -1442,6 +1451,17 @@ class ccal(BaseModule):
         pol_list_ms = [0, 3]
         pol_list = ['XX', 'XY', 'YX', 'YY']
 
+        # for the plots
+        y_min = 200
+        y_max = 2000
+        nx = 4
+        ny = 3
+        xsize = nx*4
+        ysize = ny*4
+        plt.figure(figsize=(xsize, ysize))
+        plt.suptitle(
+            'Autocorrelation of Beam {0:02d}'.format(beamnum), size=30)
+
         # take MS file and get calibrated data
         # amp_ant_array = np.empty(
         #     (len(ant_names), len(freqs), n_stokes), dtype=np.float64)        
@@ -1488,7 +1508,17 @@ class ccal(BaseModule):
                 else:
                     logger.info(
                         "Beam {0}, Antenna {1} (polarization {2}): fraction of autocorrelation data above amplitude threshold: {3} => No flagging".format(self.beam, ant_name, pol_list[pol_nr], ratio_vis_above_limit))
-                
+
+                if self.crosscal_plot_autocorrelation:
+                    plt.subplot(ny, nx, ant+1)
+                    plt.scatter(freqs_selected, amp_selected],
+                                label='{}'.format(pol_list[pol_nr]),
+                                marker=',', s=1, color='C0')
+            plt.title('Antenna {0}'.format(ant))
+            plt.ylim(y_min, y_max)
+            plt.legend(markerscale=3, fontsize=14)
+            plt.savefig(plt.savefig(
+                '{2}/Autocorrelation_Beam_{0:02d}_{1}.png'.format(beamnum, self.scan, imagepath)))
             # run check of fit to autocorrelation
             logger.info("Checking fit of autocorrelation not yet available")
 
@@ -1508,6 +1538,8 @@ class ccal(BaseModule):
             self.crosscal_flag_list = ccal_flag_list
         else:
             self.crosscal_flag_list = None
+
+        plt.close("all")
 
         logger.info("Beam {}: Checking autocorrelation ... Done".format(self.beam))
 
@@ -1531,7 +1563,7 @@ class ccal(BaseModule):
             flag_cmd = 'flagdata(vis="{0}", mode="list", inpfile={1}, flagbackup=False)'.format(self.get_fluxcal_path(), casa_list)
             logger.debug(flag_cmd)
             lib.run_casa([flag_cmd])
-            logger.info("Beam {0}: Flagging data of flux calibrator {} ... Done".format(self.beam, self.fluxcal))
+            logger.info("Beam {}: Flagging data of flux calibrator {} ... Done".format(self.beam, self.fluxcal))
             
             logger.info("Beam {}: Flagging data of polarisation calibrator {}".format(
                 self.beam, self.polcal))
@@ -1542,7 +1574,7 @@ class ccal(BaseModule):
                 self.get_polcal_path(), casa_list)
             logger.debug(flag_cmd)
             lib.run_casa([flag_cmd])
-            logger.info("Beam {0}: Flagging data of polarisation calibrator {} ... Done".format(
+            logger.info("Beam {}: Flagging data of polarisation calibrator {} ... Done".format(
                 self.beam, self.polcal))
             
             logger.info("Beam {}: Flagging data of target {}".format(
@@ -1554,7 +1586,7 @@ class ccal(BaseModule):
                 self.get_target_path(), casa_list)
             logger.debug(flag_cmd)
             lib.run_casa([flag_cmd])
-            logger.info("Beam {0}: Flagging data of target {} ... Done".format(
+            logger.info("Beam {}: Flagging data of target {} ... Done".format(
                 self.beam, self.target))
             
             # add new flags to list of existing flags for this beam
