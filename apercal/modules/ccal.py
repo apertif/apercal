@@ -1466,7 +1466,7 @@ class ccal(BaseModule):
             ysize = ny*4
             plt.figure(figsize=(xsize, ysize))
             plt.suptitle(
-                'Autocorrelation of Beam {0:02d}'.format(beamnum), size=30)
+                'Autocorrelation of Beam {0:02d}'.format(self.beam), size=30)
             if self.subdirification:
                 plot_path = os.path.join(self.basedir,"qa/crosscal/{}".format(self.beam))
                 if not path.exists(plot_path):
