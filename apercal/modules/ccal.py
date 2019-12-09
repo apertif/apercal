@@ -1534,7 +1534,7 @@ class ccal(BaseModule):
                     high_values = np.where(amp_selected > y_max)[0]
                     if len(high_values) != 0:
                         plt.scatter(freqs_selected[high_values], np.full(len(high_values),y_max - (20 + 3*pol_nr)),
-                                    marker = 10, s = 1, label="{0}>{1}".format(plot_list[pol_nr], y_max), color='{}'.format(color_list_high[pol_nr]))
+                                    marker = 10, s = 1, label="{0}>{1}".format(pol_list[pol_nr], y_max), color='{}'.format(color_list_high[pol_nr]))
                 
             if self.crosscal_plot_autocorrelation:
                 plt.title('Antenna {0}'.format(ant))
