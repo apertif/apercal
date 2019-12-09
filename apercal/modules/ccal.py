@@ -1452,15 +1452,27 @@ class ccal(BaseModule):
         pol_list = ['XX', 'XY', 'YX', 'YY']
 
         # for the plots
-        y_min = 200
-        y_max = 2000
-        nx = 4
-        ny = 3
-        xsize = nx*4
-        ysize = ny*4
-        plt.figure(figsize=(xsize, ysize))
-        plt.suptitle(
-            'Autocorrelation of Beam {0:02d}'.format(beamnum), size=30)
+        if self.crosscal_plot_autocorrelation:
+            # only what is set in plot_list_ms will be used
+            color_list = ["C0", "C2", "C3", "C1"]
+            color_list_high = ["C9", "C2", "C3", "C10"]
+            # fixing plot limits of y-axis
+            y_min = 200
+            y_max = 2000
+            # setting plot layout
+            nx = 4
+            ny = 3
+            xsize = nx*4
+            ysize = ny*4
+            plt.figure(figsize=(xsize, ysize))
+            plt.suptitle(
+                'Autocorrelation of Beam {0:02d}'.format(beamnum), size=30)
+            if self.subdirification:
+                plot_path = os.path.join(self.basedir,"qa/crosscal/{}".format(self.beam))
+                if not path.exists(plot_path):
+                    os.makedirs(plot_path)
+            else:
+                plot_path = "."
 
         # take MS file and get calibrated data
         # amp_ant_array = np.empty(
@@ -1487,6 +1499,10 @@ class ccal(BaseModule):
             # freqs_YY_selected = freqs[np.where(amp_YY != 0)[0]]
             # amp_YY_selected = amp_YY[np.where(amp_YY != 0)[0]]
         
+            # for the plots
+            if self.crosscal_plot_autocorrelation:
+                plt.subplot(ny, nx, ant+1)
+
             logger.info("Beam {0}: Checking autocorrelation amplitude of antenna {1}".format(self.beam, ant_name))
             for pol_nr in pol_list_ms:
                 amp = amp_ant[:, pol_nr]
@@ -1509,22 +1525,33 @@ class ccal(BaseModule):
                     logger.info(
                         "Beam {0}, Antenna {1} (polarization {2}): fraction of autocorrelation data above amplitude threshold: {3} => No flagging".format(self.beam, ant_name, pol_list[pol_nr], ratio_vis_above_limit))
 
+                # plot the data
                 if self.crosscal_plot_autocorrelation:
-                    plt.subplot(ny, nx, ant+1)
                     plt.scatter(freqs_selected, amp_selected],
                                 label='{}'.format(pol_list[pol_nr]),
-                                marker=',', s=1, color='C0')
-            plt.title('Antenna {0}'.format(ant))
-            plt.ylim(y_min, y_max)
-            plt.legend(markerscale=3, fontsize=14)
-            plt.savefig(plt.savefig(
-                '{2}/Autocorrelation_Beam_{0:02d}_{1}.png'.format(beamnum, self.scan, imagepath)))
+                                marker=',', s=1, color='{}'.format(color_list[pol_nr]))
+                    # indicate values above plot maximum
+                    high_values = np.where(amp_selected > y_max)[0]
+                    if len(high_values) != 0:
+                        plt.scatter(freqs_selected[high_values], np.full(len(high_values),y_max - (20 - 3*pol_nr)),
+                                    marker = 10, s = 1, label="{0}>{1}".format(plot_list[pol_nr], y_max), color='{}'.format(color_list_high[pol_nr]))
+                
+            if self.crosscal_plot_autocorrelation:
+                plt.title('Antenna {0}'.format(ant))
+                plt.ylim(y_min, y_max)
+
             # run check of fit to autocorrelation
             logger.info("Checking fit of autocorrelation not yet available")
 
             # run check of bandpass phase solutions
             logger.info("Checking bandpass phase solution not yet available")
         
+        # change the legend and save the file
+        if self.crosscal_plot_autocorrelation:
+            plt.legend(markerscale=3, fontsize=14)
+            plt.savefig(plt.savefig(
+                '{0}/Autocorrelation_Beam_{1}_ccal_{2}.png'.format(plot_path, self.beam, self.crosscal_try_counter)))
+
         # cannot flag here only set restart
         # need to flag after resetting, otherwise flags are gone
         if len(ccal_flag_list) != 0:
@@ -1539,7 +1566,9 @@ class ccal(BaseModule):
         else:
             self.crosscal_flag_list = None
 
-        plt.close("all")
+        # close all plots
+        if self.crosscal_plot_autocorrelation:
+            plt.close("all")
 
         logger.info("Beam {}: Checking autocorrelation ... Done".format(self.beam))
 
