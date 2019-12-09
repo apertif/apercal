@@ -1469,7 +1469,7 @@ class ccal(BaseModule):
                 'Autocorrelation of Beam {}'.format(self.beam), size=30)
             if self.subdirification:
                 plot_path = os.path.join(self.basedir,"qa/crosscal/{}".format(self.beam))
-                if not path.exists(plot_path):
+                if not os.path.exists(plot_path):
                     os.makedirs(plot_path)
             else:
                 plot_path = "."
