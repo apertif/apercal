@@ -1,4 +1,4 @@
-__version__ = '2.3'
+__version__ = '2.5'
 
 import libs.lib
 
@@ -23,7 +23,7 @@ import subs.lsm
 import subs.imstats
 import subs.param
 import subs.combim
-import subs.irods
+# import subs.irods
 import subs.msutils
 import subs.calmodels
 
