@@ -1,6 +1,7 @@
 def is_polarised(source_name):
     return source_name.strip(".MS") in ["3C138", "3C286"]
 
+
 def get_calparameters(calibrator):
     """
     calibrator(string): Calibrator name to get the values for
@@ -31,7 +32,7 @@ def get_calparameters(calibrator):
     elif calibrator == '3C196':
         av = True
         fluxdensity = '19.373, 0.0, 0.0, 0.0'
-        spix = '-0.8520, -0.1534, -0.0200, 0.0201'
+        spix = '-0.8530, -0.1534, -0.0200, 0.0201'
         reffreq = '1.0GHz'
         rotmeas = '0.0'
     elif calibrator == '3C286':
