@@ -1978,9 +1978,15 @@ class mosaic(BaseModule):
                 if self.mosaic_image_validation:
                     logger.info("#### Step {0} ####".format(i))
                     start_time_step = time.time()
-                    self.run_image_validation()
-                    logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
-                        i, time.time() - start_time_step))
+                    try:
+                        self.run_image_validation()
+                    except Exception as e:
+                        logger.warning("#### Step {0} ... Failed (after {1:.0f}s) ####".format(
+                            i, time.time() - start_time_step))
+                        logger.exception(e)
+                    else:
+                        logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                            i, time.time() - start_time_step))
                     i += 1
 
                 # Save the derived parameters to the parameter file
@@ -2203,9 +2209,15 @@ class mosaic(BaseModule):
                 if self.mosaic_image_validation:
                     logger.info("#### Step {0} ####".format(i))
                     start_time_step = time.time()
-                    self.run_image_validation()
-                    logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
-                        i, time.time() - start_time_step))
+                    try:
+                        self.run_image_validation()
+                    except Exception as e:
+                        logger.warning("#### Step {0} ... Failed (after {1:.0f}s) ####".format(
+                            i, time.time() - start_time_step))
+                        logger.exception(e)
+                    else:
+                        logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                            i, time.time() - start_time_step))
                     i += 1
 
                 # Save the derived parameters to the parameter file
