@@ -197,14 +197,16 @@ def check_bpass_phase(bpath, max_std):
     Function to check the bandpass phase solutions to identify a bad antenna.
 
     It checks if the standard deviation of the bandpass phase solutions is below
-    a maximum standard deviation. If it is above, the antenna should get flagged.
+    a maximum standard deviation. The return is a dictionary with entries for each
+    antenna and booleans for each polarisation. If the standard deviation is below
+    the limit, it is True (i.e., good). If it is below, it is False (i.e., bad).    
 
     Args:
         bpath (str): Path to bandpass file
         max_std (float): Maximum standard deviation of phase solutions
 
     Return
-        results (dict):
+        results (dict({ant: [XX_phase<max_std, YY_phase<max_std]})): Check for each antenna and polarisaiton
     """
 
     # get the data from the bandpass table
@@ -251,11 +253,9 @@ def check_bpass_phase(bpath, max_std):
         std = np.nanstd(phase_ant, axis=0)
         logger.debug("Ant: {0}, std = {1}".format(ant, std))
         if not np.isfinite(std[0]) and not np.isfinite(std[1]):
-            pass
-            # cond = np.array([True, True])  # The reference antenna
+            cond = np.array([True, True])  # The reference antenna
         else:
-            logger.debug("=> Will be flagged")
-            cond = std >= max_std
+            cond = std < max_std
         res.update({ant: cond})
 
     return res
