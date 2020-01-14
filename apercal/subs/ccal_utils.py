@@ -254,5 +254,8 @@ def check_bpass_phase(bpath, max_std):
             pass
             # cond = np.array([True, True])  # The reference antenna
         else:
+            logger.debug("=> Will be flagged")
             cond = std >= max_std
         res.update({ant: cond})
+
+    return res
