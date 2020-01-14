@@ -12,6 +12,7 @@ from apercal.subs import misc as misc
 
 logger = logging.getLogger(__name__)
 
+
 def get_ratio_autocorrelation_above_limit(amp, amp_threshold):
     """
     Get the fraction of data that have autocorrelation amplitudes
@@ -45,7 +46,8 @@ def get_autocorr(msfile):
     t = pt.taql(taql_antnames)
     ant_names = t.getcol("NAME")
     if ant_names is None:
-        logger.warning("Something wrong. No antenna names. Continue with next beam")
+        logger.warning(
+            "Something wrong. No antenna names. Continue with next beam")
 
     taql_freq = "SELECT CHAN_FREQ FROM {0}::SPECTRAL_WINDOW".format(msfile)
     t = pt.taql(taql_freq)
@@ -56,20 +58,23 @@ def get_autocorr(msfile):
     t_pol = pt.taql(taql_stokes)
     pol_array = t_pol.getcol('amp')
     if pol_array is None:
-        logger.warning("Something wrong. No polarisation information. Continue with next beam")
+        logger.warning(
+            "Something wrong. No polarisation information. Continue with next beam")
     n_stokes = pol_array.shape[2]  # shape is time, one, nstokes
 
     # take MS file and get data
-    amp_ant_array = np.empty((len(ant_names), len(freqs), n_stokes), dtype=np.float32)
+    amp_ant_array = np.empty(
+        (len(ant_names), len(freqs), n_stokes), dtype=np.float32)
 
     # get autocorrelation
     for ant in xrange(len(ant_names)):
         try:
             taql_command = ("SELECT abs(gmeans(CORRECTED_DATA[FLAG])) AS amp "
-            "FROM {0} "
-            "WHERE ANTENNA1==ANTENNA2 && (ANTENNA1={1} || ANTENNA2={1})").format(msfile, ant)
+                            "FROM {0} "
+                            "WHERE ANTENNA1==ANTENNA2 && (ANTENNA1={1} || ANTENNA2={1})").format(msfile, ant)
             t = pt.taql(taql_command)
-            amp_ant_array[ant, :, :] = t.getcol('amp')[0, :, :]  # phase_ant_array[ant, :, :] = t.getcol('phase')[0, :, :]
+            # phase_ant_array[ant, :, :] = t.getcol('phase')[0, :, :]
+            amp_ant_array[ant, :, :] = t.getcol('amp')[0, :, :]
         except Exception as e:
             amp_ant_array[ant, :, :] = np.full((len(freqs), n_stokes), np.nan)
             logger.exception(e)
@@ -99,13 +104,14 @@ def polyfit_autocorr(autocorrdata):
     YY_rpolyvals = []
     YY_rcov = []
     YY_rr2 = []
-    for dish in range(0,12):
+    for dish in range(0, 12):
         XX_remove = np.where(autocorrdata[1][dish] == 0.0)
         XX_clean = np.asarray(np.delete(autocorrdata[1][dish], XX_remove))
         XX_freq = np.asarray(np.delete(freqs, XX_remove))
         XX_mean = np.mean(XX_clean)
         XX_sd = np.std(XX_clean)
-        XX_out = np.where((XX_clean < XX_mean - 3.0 * XX_sd) | (XX_clean > XX_mean + 3.0 * XX_sd))
+        XX_out = np.where((XX_clean < XX_mean - 3.0 * XX_sd)
+                          | (XX_clean > XX_mean + 3.0 * XX_sd))
         XX_clean = np.delete(XX_clean, XX_out)
         XX_freq = np.delete(XX_freq, XX_out)
         try:
@@ -137,7 +143,8 @@ def polyfit_autocorr(autocorrdata):
         YY_freq = np.asarray(np.delete(freqs, YY_remove))
         YY_mean = np.mean(YY_clean)
         YY_sd = np.std(YY_clean)
-        YY_out = np.where((YY_clean < YY_mean - 3.0 * YY_sd) | (YY_clean > YY_mean + 3.0 * YY_sd))
+        YY_out = np.where((YY_clean < YY_mean - 3.0 * YY_sd)
+                          | (YY_clean > YY_mean + 3.0 * YY_sd))
         YY_clean = np.delete(YY_clean, YY_out)
         YY_freq = np.delete(YY_freq, YY_out)
         try:
@@ -184,3 +191,68 @@ def polyfit_autocorr(autocorrdata):
 #             cond = std < max_std
 #         res.update({ant: cond})
 #     return res
+
+def check_bpass_phase(bpath, max_std):
+    """ 
+    Function to check the bandpass phase solutions to identify a bad antenna.
+
+    It checks if the standard deviation of the bandpass phase solutions is below
+    a maximum standard deviation. If it is above, the antenna should get flagged.
+
+    Args:
+        bpath (str): Path to bandpass file
+        max_std (float): Maximum standard deviation of phase solutions
+
+    Return
+        results (dict):
+    """
+
+    # get the data from the bandpass table
+    if os.path.isdir(bpath):
+        taql_command = ("SELECT TIME,abs(CPARAM) AS amp, arg(CPARAM) AS phase, "
+                        "FLAG FROM {0}").format(bpath)
+        t = pt.taql(taql_command)
+        times = t.getcol('TIME')
+        amp_sols = t.getcol('amp')
+        phase_sols = t.getcol('phase')
+        flags = t.getcol('FLAG')
+        taql_antnames = "SELECT NAME FROM {0}::ANTENNA".format(
+            bpath)
+        t = pt.taql(taql_antnames)
+        ant_names = t.getcol("NAME")
+        taql_freq = "SELECT CHAN_FREQ FROM {0}::SPECTRAL_WINDOW".format(
+            bpath)
+        t = pt.taql(taql_freq)
+        freqs = t.getcol('CHAN_FREQ')
+
+        # check for flags and mask
+        amp_sols[flags] = np.nan
+        phase_sols[flags] = np.nan
+
+        #time = times
+        phase = phase_sols * 180./np.pi  # put into degrees
+        #amp = amp_sols
+        #flags = flags
+        freq = freqs / 1e9  # GHz
+        #t0 = get_time(times[0])
+    else:
+        error = "BP Table not found"
+        logger.error(error)
+        raise RuntimeError(error)
+
+    # to store the results
+    res = dict()
+
+    # go through the antennas
+    for ant in ant_names:
+        a_index = ant_names.index(ant)
+        freq_ant = freq[0, :]
+        phase_ant = phase[a_index, :, :]
+        std = np.nanstd(phase_ant, axis=0)
+        logger.debug("Ant: {0}, std = {1}".format(ant, std))
+        if not np.isfinite(std[0]) and not np.isfinite(std[1]):
+            pass
+            # cond = np.array([True, True])  # The reference antenna
+        else:
+            cond = std >= max_std
+        res.update({ant: cond})
