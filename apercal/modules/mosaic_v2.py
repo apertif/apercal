@@ -90,6 +90,7 @@ class mosaic(BaseModule):
     mosaic_gaussian_beam_map_cellsize = 4.0
     mosaic_gaussian_beam_map_fwhm_arcsec = 1950.0
     mosaic_beam_map_cutoff = 0.25
+    mosaic_use_askap_based_matrix = True   
 
 
     FNULL = open(os.devnull, 'w')
@@ -1242,7 +1243,7 @@ class mosaic(BaseModule):
 
             logger.info("Writing covariance matrix")
             try:
-                mosaic_utils.create_correlation_matrix(correlation_matrix_file)
+                mosaic_utils.create_correlation_matrix(correlation_matrix_file, use_askap_based_matrix=mosaic_use_askap_based_matrix)
             except Exception as e:
                 warning = "Writing covariance matrix ... Failed"
                 logger.warning(warning)
