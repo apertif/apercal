@@ -1874,8 +1874,8 @@ class mosaic(BaseModule):
                 i += 1
                 
                 # if circular beam is selected (or nothing), first convolve, then regrid
-                if self.mosaic_common_beam_type == 'circular' or self.mosaic_common_beam_type == '':
-                    pass
+                # if self.mosaic_common_beam_type == 'circular' or self.mosaic_common_beam_type == '':
+                    # pass
                     # logger.info("Circular beam is used for convolution: Convolve images first and then regrid.")
 
                     # # Determing common beam for convolution
@@ -1914,41 +1914,41 @@ class mosaic(BaseModule):
                     #     i, time.time() - start_time_step))
                     # i += 1
 
-                else:
+                # else:
                     # logger.info("Non-Circular beam is used for convolution: Regrid images first and then convolve.")
 
-                    # Regrid images
-                    # =============
-                    logger.info("#### Step {0} ####".format(i))
-                    start_time_step = time.time()
-                    self.regrid_images()
-                    logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(i, time.time() - start_time_step))
-                    i += 1
+                # Regrid images
+                # =============
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
+                self.regrid_images()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(i, time.time() - start_time_step))
+                i += 1
 
-                    # Regrid beam maps
-                    # ================
-                    logger.info("#### Step {0} ####".format(i))
-                    start_time_step = time.time()
-                    self.regrid_beam_maps()
-                    logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(i, time.time() - start_time_step))
-                    i += 1
-                    
-                    # Determing common beam for convolution
-                    # =====================================
-                    logger.info("#### Step {0} ####".format(i))
-                    start_time_step = time.time()
-                    self.get_common_beam()
-                    logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
-                        i, time.time() - start_time_step))
-                    i += 1
+                # Regrid beam maps
+                # ================
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
+                self.regrid_beam_maps()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(i, time.time() - start_time_step))
+                i += 1
+                
+                # Determing common beam for convolution
+                # =====================================
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
+                self.get_common_beam()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                    i, time.time() - start_time_step))
+                i += 1
 
-                    # Convolve images
-                    # ===============
-                    logger.info("#### Step {0} ####".format(i))
-                    start_time_step = time.time()
-                    self.mosaic_convolve_images()
-                    logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(i, time.time() - start_time_step))
-                    i += 1
+                # Convolve images
+                # ===============
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
+                self.mosaic_convolve_images()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(i, time.time() - start_time_step))
+                i += 1
 
                 # Get inverse covariance matrix
                 # =====================================================
