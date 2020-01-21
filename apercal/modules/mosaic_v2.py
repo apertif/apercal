@@ -1243,7 +1243,7 @@ class mosaic(BaseModule):
 
             logger.info("Writing covariance matrix")
             try:
-                mosaic_utils.create_correlation_matrix(correlation_matrix_file, use_askap_based_matrix=mosaic_use_askap_based_matrix)
+                mosaic_utils.create_correlation_matrix(correlation_matrix_file, use_askap_based_matrix=self.mosaic_use_askap_based_matrix)
             except Exception as e:
                 warning = "Writing covariance matrix ... Failed"
                 logger.warning(warning)
