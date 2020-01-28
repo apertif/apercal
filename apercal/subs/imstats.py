@@ -4,7 +4,7 @@ import os
 import random
 import string
 import logging
-from backports import tempfile
+import tempfile
 
 from apercal.libs import lib
 from apercal.subs import setinit

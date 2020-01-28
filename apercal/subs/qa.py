@@ -7,7 +7,7 @@ import astropy.io.fits as pyfits
 import numpy as np
 import scipy.stats
 
-from backports import tempfile
+import tempfile
 
 from apercal.libs import lib
 from apercal.subs import setinit
