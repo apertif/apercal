@@ -495,17 +495,17 @@ class mosaic(BaseModule):
                             continue
 
                         # find the fits file
-                        image_beam_fits_path = os.path.join(image_beam_dir, "image_mf_??.fits")
+                        image_beam_fits_path = os.path.join(image_beam_dir, "*.fits")
                         fits_files = glob.glob(image_beam_fits_path)
                         fits_files.sort()
                         if len(fits_files) == 0:
                             logger.warning(
-                                "Did not find a continuum image 'image_mf_??.fits' for beam {}.".format(beam))
+                                "Did not find a continuum image for beam {}.".format(beam))
                             failed_beams.append(beam)
                             continue
                         
-                        # get the highest number, though there should only be one
-                        fits_file = fits_files[-1]
+                        # get the first one though there should only be one
+                        fits_file = fits_files[0]
 
                         # create local beam dir only if it doesn't already exists
                         local_beam_dir = os.path.join(self.mosaic_continuum_images_dir, beam)
@@ -698,7 +698,7 @@ class mosaic(BaseModule):
                     fits = lib.miriad('fits')
                     fits.op = 'xyin'
                     #fits.in_ = '{}/image_mf_00.fits'.format(beam)
-                    fits.in_ = glob.glob(os.path.join(beam,"image_mf_0?.fits"))[0]
+                    fits.in_ = glob.glob(os.path.join(beam,"*.fits"))[0]
                     fits.out = '{0}/image_{0}.map'.format(beam)
                     fits.inp()
                     try:
