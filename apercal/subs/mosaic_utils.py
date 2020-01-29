@@ -119,7 +119,7 @@ def get_measured_beam_maps(beam, beam_map_input_path, beam_map_output_path, beam
 
     # file name of the beam model fits file which will be copied
     input_beam_model = os.path.join(beam_map_input_path, "{0}_{1}_I_model.fits".format(
-        os.path.basename(beam_map_input_path), beam))
+        beam_map_input_path.split("/")[4], beam))
     # file name of the fits file after copying
     temp_beam_model_name = os.path.join(
         beam_map_output_path, 'beam_model_{0}_temp.fits'.format(beam))
