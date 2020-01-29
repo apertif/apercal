@@ -28,7 +28,7 @@ import time
 import argparse
 
 
-def make_mosaic(task_id, basedir, centre_ra=None, centre_dec=None, primary_beam_map_dir=None):
+def make_mosaic(task_id, basedir, centre_ra=None, centre_dec=None, mosaic_beams=None, primary_beam_map_dir=None, do_validation=False):
 
     start_time = time.time()
 
@@ -62,7 +62,10 @@ def make_mosaic(task_id, basedir, centre_ra=None, centre_dec=None, primary_beam_
     mo.mosaic_taskid = "{}".format(task_id)
 
     # set the list of beams or all
-    mo.mosaic_beams = 'all'
+    if mosaic_beams is None:
+        mo.mosaic_beams = 'all'
+    else:
+        mo.mosaic_beams = mosaic_beams
 
     # set location of continuum images, default is ALTA
     # continuum images must be located in <path>/<beam_nr>/<image_name>.fits
@@ -92,7 +95,10 @@ def make_mosaic(task_id, basedir, centre_ra=None, centre_dec=None, primary_beam_
     mo.mosaic_common_beam_type = 'circular'
 
     # run the image validation tool on the mosaic
-    mo.mosaic_image_validation = True
+    if do_validation:
+        mo.mosaic_image_validation = True
+    else:
+        mo.mosaic_image_validation = False
 
     # clean up
     mo.mosaic_clean_up_level = 1
@@ -122,11 +128,14 @@ if __name__ == "__main__":
     parser.add_argument("--centre_dec", type=str, default=None,
                         help='RA coordinate of projection centre. Works only together with --centre_ra')
 
+    parser.add_argument("--mosaic_beams", type=str, default=None,
+                        help='Comma-separated list of beams in a single string')
+
     parser.add_argument("--primary_beam_map_dir", type=str, default=None,
                         help='Location of the primary beam maps')
 
-    # parser.add_argument("--do_validation", action="store_true", default=False,
-    #                     help='Set to enable validation of mosaic')
+    parser.add_argument("--do_validation", action="store_true", default=False,
+                        help='Set to enable validation of mosaic')
 
     # parser.add_argument("--do_cleanup", action="store_true", default=False,
     #                     help='Set to enable validation of mosaic')
@@ -134,4 +143,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     make_mosaic(args.task_id, args.basedir,
-                centre_ra=args.centre_ra, centre_dec=args.centre_dec, primary_beam_map_dir=args.primary_beam_map_dir)
+                centre_ra=args.centre_ra, centre_dec=args.centre_dec, mosaic_beams=args.mosaic_beams, primary_beam_map_dir=args.primary_beam_map_dir, do_validation=args.do_validation)
