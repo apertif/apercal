@@ -417,7 +417,7 @@ class mosaic(BaseModule):
                     raise RuntimeError(error)
             # in case the data is on ALTA
             # ===========================
-            elif self.mosaic_continuum_image_origin == "alta" or self.mosaic_continuum_image_origin is None:
+            elif self.mosaic_continuum_image_origin == "ALTA" or self.mosaic_continuum_image_origin is None:
                 logger.info(
                     "Assuming to get the data from ALTA")
 
@@ -519,7 +519,7 @@ class mosaic(BaseModule):
 
                         logger.info("Getting continuum image of beam {} ... Done".format(beam))
                 else:
-                    error = "The directory {} does not exists. Abort".format(self.mosaic_continuum_image_files_dir)
+                    error = "The directory {} does not exists. Abort".format(self.mosaic_continuum_image_origin)
                     logger.error(error)
                     raise RuntimeError(error)
             else:
