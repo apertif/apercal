@@ -48,8 +48,13 @@ def create_beam(beam, beam_map_dir, corrtype='Gaussian', primary_beam_path=None,
             make_gaussian_beam(beam_map_dir, beamoutname,
                                bm_size, cell, fwhm, cutoff)
         elif corrtype == 'Correct':
-            get_measured_beam_maps(
-                beam, primary_beam_path, beam_map_dir, beamoutname, cutoff)
+            if primary_beam_path is None:
+                error = "Path to primary beam maps not specified"
+                logger.error(error)
+                raise ApercalException(error)
+            else:
+                get_measured_beam_maps(
+                    beam, primary_beam_path, beam_map_dir, beamoutname, cutoff)
         else:
             error = 'Type of beam map not supported'
             logger.error(error)
