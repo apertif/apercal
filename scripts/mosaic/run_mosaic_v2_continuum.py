@@ -28,7 +28,7 @@ import time
 import argparse
 
 
-def make_mosaic(task_id, basedir, centre_ra=None, centre_dec=None):
+def make_mosaic(task_id, basedir, centre_ra=None, centre_dec=None, primary_beam_map_dir=None):
 
     start_time = time.time()
 
@@ -72,7 +72,10 @@ def make_mosaic(task_id, basedir, centre_ra=None, centre_dec=None):
     mo.mosaic_primary_beam_type = 'Correct'
     # if the correct primary beam is suppose to be used
     # set the path to files (do not change)
-    mo.mosaic_primary_beam_shape_files_location = "/data/apertif/driftscans/fits_files/191023"
+    if primary_beam_map_dir is None:
+        mo.mosaic_primary_beam_shape_files_location = "/data/apertif/driftscans/fits_files/191023"
+    else:
+        mo.mosaic_primary_beam_shape_files_location = primary_beam_map_dir
     # set the cutoff
     mo.mosaic_beam_map_cutoff = 0.1
 
@@ -119,6 +122,9 @@ if __name__ == "__main__":
     parser.add_argument("--centre_dec", type=str, default=None,
                         help='RA coordinate of projection centre. Works only together with --centre_ra')
 
+    parser.add_argument("--primary_beam_map_dir", type=str, default=None,
+                        help='Location of the primary beam maps')
+
     # parser.add_argument("--do_validation", action="store_true", default=False,
     #                     help='Set to enable validation of mosaic')
 
@@ -128,4 +134,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     make_mosaic(args.task_id, args.basedir,
-                centre_ra=args.centre_ra, centre_dec=args.centre_dec)
+                centre_ra=args.centre_ra, centre_dec=args.centre_dec, primary_beam_map_dir=args.primary_beam_map_dir)
