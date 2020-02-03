@@ -174,24 +174,30 @@ class ccal(BaseModule):
                 break
 
             if self.crosscal_try_restart:
-                logger.warning("Beam {0}: Running cross-calibration attempt {1} (out of {2}) failed autocorrelation check. Going to reset, flag and restart".format(
+                if self.crosscal_try_counter != self.crosscal_try_limit - 1: 
+                    logger.warning("Beam {0}: Running cross-calibration attempt {1} (out of {2}) failed autocorrelation check. Going to reset, flag and restart".format(
+                        self.beam, self.crosscal_try_counter+1, self.crosscal_try_limit))
+                    # checking the number of antennas flagged in total
+                    ccal_flag_list = subs_param.get_param_def(self, cbeam + '_flag_list', []) 
+                    if self.crosscal_flag_list is not None:
+                        ccal_flag_list = ccal_flag_list + self.crosscal_flag_list
+                    if len(ccal_flag_list) != 0:
+                        logger.info("Beam {0}: Autocorrelation check found the following flags: {1}".format(self.beam, ccal_flag_list))
+                        # get a list flagged polarisation
+                        pol_flag_list = np.array([flag[1] for flag in ccal_flag_list])
+                        # get the flags that have both polarisation flagged
+                        n_full_poll_flags_xx = len(np.where(pol_flag_list == "XX")[0])
+                        n_full_poll_flags_yy = len(
+                            np.where(pol_flag_list == "YY")[0])
+                        if n_full_poll_flags_xx > self.crosscal_flag_limit or n_full_poll_flags_yy > self.crosscal_flag_limit:
+                            error = "Beam {0}: Number of antennas with XX and YY flagged ({1}) exceeds defined limit {2}".format(self.beam, n_full_poll_flags, self.crosscal_flag_limit)
+                            logger.error(error)
+                            raise RuntimeError(error)
+                else:
+                    logger.info("Beam {0}: Running cross-calibration attempt {1} (out of {2}) passed autocorrelation check. Continuing".format(
                     self.beam, self.crosscal_try_counter+1, self.crosscal_try_limit))
-                # checking the number of antennas flagged in total
-                ccal_flag_list = subs_param.get_param_def(self, cbeam + '_flag_list', []) 
-                if self.crosscal_flag_list is not None:
-                    ccal_flag_list = ccal_flag_list + self.crosscal_flag_list
-                if len(ccal_flag_list) != 0:
-                    logger.info("Beam {0}: Autocorrelation check found the following flags: {1}".format(self.beam, ccal_flag_list))
-                    # get a list flagged polarisation
-                    pol_flag_list = np.array([flag[1] for flag in ccal_flag_list])
-                    # get the flags that have both polarisation flagged
-                    n_full_poll_flags_xx = len(np.where(pol_flag_list == "XX")[0])
-                    n_full_poll_flags_yy = len(
-                        np.where(pol_flag_list == "YY")[0])
-                    if n_full_poll_flags_xx > self.crosscal_flag_limit or n_full_poll_flags_yy > self.crosscal_flag_limit:
-                        error = "Beam {0}: Number of antennas with XX and YY flagged ({1}) exceeds defined limit {2}".format(self.beam, n_full_poll_flags, self.crosscal_flag_limit)
-                        logger.error(error)
-                        raise RuntimeError(error)
+                    crosscal_finished = True
+                    break
 
 
                 # reset first (only fluxcal and polcal need to have theire calibration reset)
