@@ -653,7 +653,7 @@ class ccal(BaseModule):
                             logger.error(error)
                             
                             # leaving function in order to restart
-                            self.crosscal_try_restart = True
+                            self.crosscal_fluxcal_try_restart = True
                             return
                             #subs_param.add_param(self, cbeam + '_fluxcal_initialphase', ccalfluxcalinitialphase)
                             #raise RuntimeError(error)
@@ -722,7 +722,7 @@ class ccal(BaseModule):
                             logger.error('Beam ' + self.beam + ': Global delay correction table for flux calibrator was not created successfully!')
                             
                             # leaving function in order to restart
-                            self.crosscal_try_restart = True
+                            self.crosscal_fluxcal_try_restart = True
                             return
                 else:
                     ccalfluxcalglobaldelay = False
@@ -802,7 +802,7 @@ class ccal(BaseModule):
                             logger.error(error)
 
                             # leaving function in order to restart
-                            self.crosscal_try_restart = True
+                            self.crosscal_fluxcal_try_restart = True
                             return
                             #subs_param.add_param(self, cbeam + '_fluxcal_bandpass', ccalfluxcalbandpass)
                             #raise RuntimeError(error)
@@ -884,7 +884,7 @@ class ccal(BaseModule):
                             logger.error(error)
 
                             # leaving function in order to restart
-                            self.crosscal_try_restart = True
+                            self.crosscal_fluxcal_try_restart = True
                             return
                             
                             #subs_param.add_param(self, cbeam + '_fluxcal_apgains', ccalfluxcalapgains)
