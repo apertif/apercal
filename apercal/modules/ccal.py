@@ -194,9 +194,9 @@ class ccal(BaseModule):
                             logger.error(error)
                             raise RuntimeError(error)
                 else:
-                    logger.info("Beam {0}: Running cross-calibration attempt {1} (out of {2}) passed autocorrelation check. Continuing".format(
+                    logger.info("Beam {0}: Final cross-calibration attempt {1} (out of {2}) failed. ".format(
                     self.beam, self.crosscal_try_counter+1, self.crosscal_try_limit))
-                    crosscal_finished = True
+                    crosscal_finished = False
                     break
 
 
