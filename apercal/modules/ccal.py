@@ -263,7 +263,8 @@ class ccal(BaseModule):
             # running initial phase calibration
             self.initial_phase()
             # if it fails, restart the loop after changing the reference antenna
-            if self.crosscal_fluxcal_try_restart:
+            # unless it is the last attempt
+            if self.crosscal_fluxcal_try_restart and self.crosscal_fluxcal_try_counter < self.crosscal_fluxcal_try_limit - 1:
                 logger.warning("Beam {0}: Attempt {1} (out of {2}) failed at initial phase calibration. Trying to restart with different reference antenna".format(self.beam, self.crosscal_fluxcal_try_counter+1, self.crosscal_fluxcal_try_limit))
                 # reset first
                 self.reset(do_clearcal=False)
@@ -274,11 +275,16 @@ class ccal(BaseModule):
                 # set the status parameter
                 ccal_fluxcal_calibration_restart = self.crosscal_fluxcal_try_restart
                 continue
+            else:
+                logger.error("Beam {0}: Final attempt {1} (out of {2}) failed at initial phase calibration.".format(
+                    self.beam, self.crosscal_fluxcal_try_counter+1, self.crosscal_fluxcal_try_limit))
+                break
 
             # running global delay calibration
             self.global_delay()
             # if it fails, restart the loop after changing the reference antenna
-            if self.crosscal_fluxcal_try_restart:
+            # unless it is the last attempt
+            if self.crosscal_fluxcal_try_restart and self.crosscal_fluxcal_try_counter < self.crosscal_fluxcal_try_limit - 1:
                 logger.warning(
                     "Beam {0}: Attempt {1} (out of {2}) failed at global delay calibration. Trying to restart with different reference antenna".format(self.beam, self.crosscal_fluxcal_try_counter+1, self.crosscal_fluxcal_try_limit))
                 # reset first
@@ -290,6 +296,10 @@ class ccal(BaseModule):
                 # set the status parameter
                 ccal_fluxcal_calibration_restart = self.crosscal_fluxcal_try_restart
                 continue
+            else:
+                logger.error(
+                    "Beam {0}: Final attempt {1} (out of {2}) failed at global delay calibration.".format(self.beam, self.crosscal_fluxcal_try_counter+1, self.crosscal_fluxcal_try_limit))
+                break
 
             # running bandpass calibraiton
             self.bandpass()
@@ -299,7 +309,8 @@ class ccal(BaseModule):
             else:
                 logger.info("Beam {}: Did not check bandpass solutions".format(self.beam))
             # if it fails, restart the loop after changing the reference antenna
-            if self.crosscal_fluxcal_try_restart:
+            # unless it was the last attempt
+            if self.crosscal_fluxcal_try_restart and self.crosscal_fluxcal_try_counter < self.crosscal_fluxcal_try_limit - 1:
                 logger.warning(
                     "Beam {0}: Attempt {1} (out of {2}) failed at bandpass calibration. Trying to restart with different reference antenna".format(self.beam, self.crosscal_fluxcal_try_counter+1, self.crosscal_fluxcal_try_limit))
                 # reset first
@@ -311,10 +322,15 @@ class ccal(BaseModule):
                 # set the status parameter
                 ccal_fluxcal_calibration_restart = self.crosscal_fluxcal_try_restart
                 continue
+            else:
+                logger.error(
+                    "Beam {0}: Final attempt {1} (out of {2}) failed at bandpass calibration.".format(self.beam, self.crosscal_fluxcal_try_counter+1, self.crosscal_fluxcal_try_limit))
+                break
 
             self.gains()
             # if it fails, restart the loop after changing the reference antenna
-            if self.crosscal_fluxcal_try_restart:
+            # unless it was the last attempt
+            if self.crosscal_fluxcal_try_restart and self.crosscal_fluxcal_try_counter < self.crosscal_fluxcal_try_limit - 1:
                 logger.warning(
                     "Beam {0}: Attempt {1} (out of {2}) failed at gain calibration. Trying to restart with different reference antenna".format(self.beam, self.crosscal_fluxcal_try_counter+1, self.crosscal_fluxcal_try_limit))
                 # reset first
@@ -326,6 +342,10 @@ class ccal(BaseModule):
                 # set the status parameter
                 ccal_fluxcal_calibration_restart = self.crosscal_fluxcal_try_restart
                 continue
+            else:
+                logger.error(
+                    "Beam {0}: Final attempt {1} (out of {2}) failed at gain calibration.".format(self.beam, self.crosscal_fluxcal_try_counter+1, self.crosscal_fluxcal_try_limit))
+                break
 
             # if this point is reached, crosscalibration should have worked
             crosscal_fluxcal_finished = True
