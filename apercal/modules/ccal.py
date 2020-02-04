@@ -32,6 +32,12 @@ gencal_cmd = 'gencal(vis="{vis}", caltable="{caltable}", caltype="{caltype}", in
 class ccal(BaseModule):
     """
     Crosscal class to handle applying the calibrator gains and prepare the dataset for self-calibration.
+
+    Crosscal contains several quality checks at two levels for the flux calibrator.
+    First, it checks whether CASA failed to create any of the flux calibrator calibration files and 
+    changes references antennas if one failed. Second, it checks the bandpass phase solutions. It will
+    restart with a different reference antenna in case too many telescope failed or just flag the telescopes.
+    Third, it checks the amplitude of the autocorrelation and flags a polarization if they are too high.
     """
 
     module_name = 'CROSSCAL'
@@ -178,6 +184,8 @@ class ccal(BaseModule):
             #self.apply_solutions()
             self.transfer_to_cal()
 
+            # Technically, this could happen before calibrating the polarisation calibrator
+            # but it is placed here in case checks of the polarised calibrator will be added
             if self.crosscal_check_autocorrelation:
                 self.check_autocorrelation()
             else:
@@ -1689,9 +1697,6 @@ class ccal(BaseModule):
             # run check of fit to autocorrelation
             logger.info("Checking fit of autocorrelation not yet available")
 
-            # run check of bandpass phase solutions
-            logger.info("Checking bandpass phase solution not yet available")
-        
         # change the legend and save the file
         if self.crosscal_plot_autocorrelation:
             plt.legend(markerscale=3, fontsize=14)
