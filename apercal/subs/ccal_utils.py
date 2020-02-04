@@ -9,6 +9,7 @@ import casacore.tables as pt
 from scipy.optimize import curve_fit
 import logging
 from apercal.subs import misc as misc
+import os
 
 logger = logging.getLogger(__name__)
 
