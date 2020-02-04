@@ -50,6 +50,7 @@ class ccal(BaseModule):
     crosscal_refant_exclude = ["RTC", "RTD"]
     crosscal_ant_list = None
     crosscal_check_bandpass = None
+    crosscal_bandpass_phase_solution_max_std = None
     crosscal_check_autocorrelation = None
     crosscal_plot_autocorrelation = None
     crosscal_flag_limit = 4
@@ -103,6 +104,16 @@ class ccal(BaseModule):
             self.crosscal_autocorrelation_data_fraction_limit = 0.9
             logger.info("Limit of the fraction of data with autocorrelation amplitude above maximum value not specified. Setting to default: {}".format(
                 self.crosscal_autocorrelation_data_fraction_limit))
+        
+        if self.crosscal_check_bandpass is None:
+            self.crosscal_check_bandpass = True
+            logger.info("Check of bandpass solutions not provided. Setting to default: {}".format(
+                self.crosscal_check_bandpass))
+        
+        if self.crosscal_bandpass_phase_solution_max_std is None and self.crosscal_check_bandpass:
+            self.crosscal_bandpass_phase_solution_max_std = 10
+            logger.info("Maximum std of bandpass phase solutions not provided. Setting to default: {}".format(
+                self.crosscal_bandpass_phase_solution_max_std))
         
 
     def go(self):
@@ -830,7 +841,17 @@ class ccal(BaseModule):
         Function to check the quality of the bandpass phase solutions
         """
 
-        logger.info("Beam {}: Nothing to check yet".format(self.beam))
+        logger.info("Beam {}: Checking bandpass solutions".format(self.beam))
+
+        # path to bandpass table
+        fluxcal_bscan = self.get_fluxcal_path().rstrip('.MS') + '.Bscan'
+
+        # if there is a table check it
+        if os.path.isdir(fluxcal_bscan):
+            # this function returns a dictionary with true for good and false for bad solutions
+            bpass_check_results = ccal_utils.check_bpass_phase(self.bpath, self.crosscal_bandpass_phase_solution_max_std)
+
+            
 
     def gains(self):
         """
