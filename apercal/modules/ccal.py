@@ -337,8 +337,12 @@ class ccal(BaseModule):
             if self.crosscal_fluxcal_try_restart: 
                 # unless it was the last attempt
                 if self.crosscal_fluxcal_try_counter < self.crosscal_fluxcal_try_limit - 1:
-                    logger.warning(
-                        "Beam {0}: Attempt {1} (out of {2}) failed at bandpass calibration. Trying to restart with different reference antenna".format(self.beam, self.crosscal_fluxcal_try_counter+1, self.crosscal_fluxcal_try_limit))
+                    if self.crosscal_flag_list is not None:
+                        logger.warning(
+                            "Beam {0}: Attempt {1} (out of {2}) failed. Flagging bad antennas and restart ".format(self.beam, self.crosscal_fluxcal_try_counter+1, self.crosscal_fluxcal_try_limit))
+                    else:
+                        logger.warning(
+                            "Beam {0}: Attempt {1} (out of {2}) failed at bandpass calibration. Trying to restart with different reference antenna".format(self.beam, self.crosscal_fluxcal_try_counter+1, self.crosscal_fluxcal_try_limit))
                     # reset first
                     self.reset(do_clearcal=False)
                     # do not change refant if there is a flag list
@@ -937,6 +941,7 @@ class ccal(BaseModule):
                     if not bpass_check_results[bad_ant][1]:
                         bandpass_flag_list.append([bad_ant, bpass_check_results[bad_ant][1]])
                 self.crosscal_flag_list = bandpass_flag_list
+                self.crosscal_fluxcal_try_restart = True
             else:
                 logger.info("Beam {0}: Found no antennas with bad solutions. All good.")
         
