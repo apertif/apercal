@@ -890,7 +890,7 @@ class ccal(BaseModule):
         # if there is a table check it
         if os.path.isdir(fluxcal_bscan):
             # this function returns a dictionary with true for good and false for bad solutions
-            bpass_check_results = ccal_utils.check_bpass_phase(self.bpath, self.crosscal_bandpass_phase_solution_max_std)
+            bpass_check_results = ccal_utils.check_bpass_phase(fluxcal_bscan, self.crosscal_bandpass_phase_solution_max_std)
 
             # now go through the list
             # get the number of antennas with bad solutions
