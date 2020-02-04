@@ -229,7 +229,7 @@ def check_bpass_phase(bpath, max_std):
         freqs = t.getcol('CHAN_FREQ')
 
         # check for flags and mask
-        amp_sols[flags] = np.nan
+        # amp_sols[flags] = np.nan
         phase_sols[flags] = np.nan
 
         #time = times
@@ -258,6 +258,8 @@ def check_bpass_phase(bpath, max_std):
             cond = np.array([True, True])  # The reference antenna
         else:
             cond = std < max_std
+        logger.debug(
+            "=> Bandpass phase solutions are good? {}".format(str(cond)))
         res.update({ant: cond})
 
     return res
