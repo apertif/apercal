@@ -75,9 +75,9 @@ class convert(BaseModule):
 
         # Status of the solution transfer for the target, flux calibrator and polarisation calibrator
         ccal_targetbeams_transfer = get_param_def(
-            self, cbeam + '_targetbeams_transfer', False)
+            self, ccalbeam + '_targetbeams_transfer', False)
         ccal_calibration_calibrator_finished = get_param_def(
-            self, cbeam + '_calibration_calibrator_finished', False)
+            self, ccalbeam + '_calibration_calibrator_finished', False)
 
         if not ccal_calibration_calibrator_finished:
             error = "Beam {}: Will not convert files to miriad format because cross-calibration failed.".format(str(self.beam).zfill(2))
