@@ -275,7 +275,7 @@ class ccal(BaseModule):
                 # set the status parameter
                 ccal_fluxcal_calibration_restart = self.crosscal_fluxcal_try_restart
                 continue
-            else:
+            elif self.crosscal_fluxcal_try_limit == self.crosscal_fluxcal_try_limit - 1:
                 logger.error("Beam {0}: Final attempt {1} (out of {2}) failed at initial phase calibration.".format(
                     self.beam, self.crosscal_fluxcal_try_counter+1, self.crosscal_fluxcal_try_limit))
                 break
@@ -296,7 +296,7 @@ class ccal(BaseModule):
                 # set the status parameter
                 ccal_fluxcal_calibration_restart = self.crosscal_fluxcal_try_restart
                 continue
-            else:
+            elif self.crosscal_fluxcal_try_limit == self.crosscal_fluxcal_try_limit - 1:
                 logger.error(
                     "Beam {0}: Final attempt {1} (out of {2}) failed at global delay calibration.".format(self.beam, self.crosscal_fluxcal_try_counter+1, self.crosscal_fluxcal_try_limit))
                 break
@@ -322,7 +322,7 @@ class ccal(BaseModule):
                 # set the status parameter
                 ccal_fluxcal_calibration_restart = self.crosscal_fluxcal_try_restart
                 continue
-            else:
+            elif self.crosscal_fluxcal_try_limit == self.crosscal_fluxcal_try_limit - 1:
                 logger.error(
                     "Beam {0}: Final attempt {1} (out of {2}) failed at bandpass calibration.".format(self.beam, self.crosscal_fluxcal_try_counter+1, self.crosscal_fluxcal_try_limit))
                 break
@@ -342,7 +342,7 @@ class ccal(BaseModule):
                 # set the status parameter
                 ccal_fluxcal_calibration_restart = self.crosscal_fluxcal_try_restart
                 continue
-            else:
+            elif self.crosscal_fluxcal_try_limit == self.crosscal_fluxcal_try_limit - 1:
                 logger.error(
                     "Beam {0}: Final attempt {1} (out of {2}) failed at gain calibration.".format(self.beam, self.crosscal_fluxcal_try_counter+1, self.crosscal_fluxcal_try_limit))
                 break
