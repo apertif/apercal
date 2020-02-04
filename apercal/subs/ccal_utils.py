@@ -239,9 +239,10 @@ def check_bpass_phase(bpath, max_std):
         freq = freqs / 1e9  # GHz
         #t0 = get_time(times[0])
     else:
-        error = "BP Table not found"
-        logger.error(error)
-        raise RuntimeError(error)
+        logger.warning(
+            "BP Table {} not found. Checking solutions not possible".format(bpath))
+        # logger.error(error)
+        # raise RuntimeError(error)
 
     # to store the results
     res = dict()
