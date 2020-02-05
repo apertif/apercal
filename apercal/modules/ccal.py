@@ -953,7 +953,7 @@ class ccal(BaseModule):
                 self.crosscal_flag_list = bandpass_flag_list
                 self.crosscal_fluxcal_try_restart = True
             else:
-                logger.info("Beam {0}: Found no antennas with bad solutions. All good.")
+                logger.info("Beam {}: Found no antennas with bad solutions. All good.".format(self.beam))
         
         logger.info("Beam {}: Checking bandpass solutions ... Done".format(self.beam))
 
@@ -1693,7 +1693,7 @@ class ccal(BaseModule):
                                     marker = 10, s = 1, label="{0}>{1}".format(pol_list[pol_nr], y_max), color='{}'.format(color_list_high[pol_nr]))
                 
             if self.crosscal_plot_autocorrelation:
-                plt.title('Antenna {0}'.format(ant))
+                plt.title('Antenna {0}'.format(ant_name))
                 plt.ylim(y_min, y_max)
 
             # run check of fit to autocorrelation
@@ -1702,8 +1702,8 @@ class ccal(BaseModule):
         # change the legend and save the file
         if self.crosscal_plot_autocorrelation:
             plt.legend(markerscale=3, fontsize=14)
-            plt.savefig(plt.savefig(
-                '{0}/Autocorrelation_Beam_{1}_ccal_{2}.png'.format(plot_path, self.beam, self.crosscal_try_counter)))
+            plt.savefig(
+                '{0}/Autocorrelation_Beam_{1}_ccal_{2}.png'.format(plot_path, self.beam, self.crosscal_try_counter))
 
         # cannot flag here only set restart
         # need to flag after resetting, otherwise flags are gone
