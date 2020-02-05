@@ -285,10 +285,10 @@ def check_bpass_phase(bpath, max_std, plot_name=None, beam=''):
                         marker=',', s=1, color='C1')
             plt.title('Antenna {0}'.format(ant))
             plt.ylim(y_min, y_max)
-            plt.legend(markerscale=3, fontsize=14)
-            plt.savefig(plot_name)
 
     if plot_name is not None:
+        plt.legend(markerscale=3, fontsize=14)
+        plt.savefig(plot_name)
         plt.close('all')
 
     return res
