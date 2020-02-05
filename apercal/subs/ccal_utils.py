@@ -285,7 +285,7 @@ def check_bpass_phase(bpath, max_std, plot_name=None):
             plt.title('Antenna {0}'.format(ant_name))
             plt.ylim(y_min, y_max)
             plt.legend(markerscale=3, fontsize=14)
-            plt.savefig(plot_name))
+            plt.savefig(plot_name)
             plt.close('all')
 
     return res
