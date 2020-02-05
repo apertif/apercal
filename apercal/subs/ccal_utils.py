@@ -10,6 +10,7 @@ from scipy.optimize import curve_fit
 import logging
 from apercal.subs import misc as misc
 import os
+import matplotlib.pyplot as plt
 
 logger = logging.getLogger(__name__)
 
