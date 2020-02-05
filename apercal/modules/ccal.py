@@ -919,7 +919,7 @@ class ccal(BaseModule):
                 else:
                     plot_path = "."
                 bp_plot_name = '{0}/BP_amp_Beam_{1}_ccal_{2}_{3}.png'.format(
-                    plot_path, self.beam, self.crosscal_try_counter, self.crosscal_fluxcal_try_counter))
+                    plot_path, self.beam, self.crosscal_try_counter, self.crosscal_fluxcal_try_counter)
                 
                 # this function returns a dictionary with true for good and false for bad solutions
                 bpass_check_results = ccal_utils.check_bpass_phase(fluxcal_bscan, self.crosscal_bandpass_phase_solution_max_std, plot_name=bp_plot_name, beam=str(self.beam).zfill(2))
