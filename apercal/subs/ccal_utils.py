@@ -275,7 +275,7 @@ def check_bpass_phase(bpath, max_std, plot_name=None, beam=''):
         res.update({ant: cond})
 
         if plot_name is not None:
-            plt.subplot(ny, nx, ant+1)
+            plt.subplot(ny, nx, a_index+1)
             # plot XX
             plt.scatter(freq_ant, phase_ant[0],
                         label='XX',
@@ -283,7 +283,7 @@ def check_bpass_phase(bpath, max_std, plot_name=None, beam=''):
             plt.scatter(freq_ant, phase_ant[1],
                         label='YY',
                         marker=',', s=1, color='C1')
-            plt.title('Antenna {0}'.format(ant_name))
+            plt.title('Antenna {0}'.format(ant))
             plt.ylim(y_min, y_max)
             plt.legend(markerscale=3, fontsize=14)
             plt.savefig(plot_name)
