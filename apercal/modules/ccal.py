@@ -57,6 +57,7 @@ class ccal(BaseModule):
     crosscal_ant_list = None
     crosscal_check_bandpass = None
     crosscal_bandpass_phase_solution_max_std = None
+    crosscal_plot_bandpass_phase_solutions = None
     crosscal_check_autocorrelation = None
     crosscal_plot_autocorrelation = None
     crosscal_flag_limit = 4
@@ -108,13 +109,18 @@ class ccal(BaseModule):
                 self.crosscal_autocorrelation_amp_limit))
         
         if self.crosscal_autocorrelation_data_fraction_limit is None:
-            self.crosscal_autocorrelation_data_fraction_limit = 0.9
+            self.crosscal_autocorrelation_data_fraction_limit = 0.5
             logger.info("Limit of the fraction of data with autocorrelation amplitude above maximum value not specified. Setting to default: {}".format(
                 self.crosscal_autocorrelation_data_fraction_limit))
         
         if self.crosscal_check_bandpass is None:
             self.crosscal_check_bandpass = True
             logger.info("Check of bandpass solutions not provided. Setting to default: {}".format(
+                self.crosscal_check_bandpass))
+        
+        if self.crosscal_plot_bandpass_phase_solutions is None and self.crosscal_check_bandpass:
+            self.crosscal_plot_bandpass_phase_solutions = True
+            logger.info("Setting for plotting of bandpass solutions not provided. Setting to default: {}".format(
                 self.crosscal_check_bandpass))
         
         if self.crosscal_bandpass_phase_solution_max_std is None and self.crosscal_check_bandpass:
@@ -903,8 +909,23 @@ class ccal(BaseModule):
 
         # if there is a table check it
         if os.path.isdir(fluxcal_bscan):
-            # this function returns a dictionary with true for good and false for bad solutions
-            bpass_check_results = ccal_utils.check_bpass_phase(fluxcal_bscan, self.crosscal_bandpass_phase_solution_max_std)
+            if self.crosscal_plot_bandpass_phase_solutions:
+                # set plot name
+                if self.subdirification:
+                    plot_path = os.path.join(
+                        self.basedir, "qa/crosscal/{}".format(self.beam))
+                    if not os.path.exists(plot_path):
+                        os.makedirs(plot_path)
+                else:
+                    plot_path = "."
+                bp_plot_name = '{0}/BP_amp_Beam_{1}_ccal_{2}_{3}.png'.format(
+                    plot_path, self.beam, self.crosscal_try_counter, self.crosscal_fluxcal_try_counter))
+                
+                # this function returns a dictionary with true for good and false for bad solutions
+                bpass_check_results = ccal_utils.check_bpass_phase(fluxcal_bscan, self.crosscal_bandpass_phase_solution_max_std, plot_name=bp_plot_name, beam=str(self.beam).zfill(2))
+            else:
+                # this function returns a dictionary with true for good and false for bad solutions
+                bpass_check_results = ccal_utils.check_bpass_phase(fluxcal_bscan, self.crosscal_bandpass_phase_solution_max_std)
 
             # now go through the list
             # get the number of antennas with bad solutions
@@ -1702,8 +1723,7 @@ class ccal(BaseModule):
         # change the legend and save the file
         if self.crosscal_plot_autocorrelation:
             plt.legend(markerscale=3, fontsize=14)
-            plt.savefig(
-                '{0}/Autocorrelation_Beam_{1}_ccal_{2}.png'.format(plot_path, self.beam, self.crosscal_try_counter))
+            plt.savefig('{0}/Autocorrelation_Beam_{1}_ccal_{2}.png'.format(plot_path, self.beam, self.crosscal_try_counter))
 
         # cannot flag here only set restart
         # need to flag after resetting, otherwise flags are gone
