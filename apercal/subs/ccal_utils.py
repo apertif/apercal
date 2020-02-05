@@ -287,6 +287,8 @@ def check_bpass_phase(bpath, max_std, plot_name=None, beam=''):
             plt.ylim(y_min, y_max)
             plt.legend(markerscale=3, fontsize=14)
             plt.savefig(plot_name)
-            plt.close('all')
+
+    if plot_name is not None:
+        plt.close('all')
 
     return res
