@@ -232,6 +232,7 @@ def check_bpass_phase(bpath, max_std, plot_name=None, beam=''):
         # check for flags and mask
         # amp_sols[flags] = np.nan
         phase_sols[flags] = np.nan
+        freqs[flags] = np.nan
 
         # time = times
         phase = phase_sols * 180./np.pi  # put into degrees
