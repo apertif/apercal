@@ -232,7 +232,6 @@ def check_bpass_phase(bpath, max_std, plot_name=None, beam=''):
         # check for flags and mask
         # amp_sols[flags] = np.nan
         phase_sols[flags] = np.nan
-        freqs[flags] = np.nan
 
         # time = times
         phase = phase_sols * 180./np.pi  # put into degrees
@@ -278,10 +277,10 @@ def check_bpass_phase(bpath, max_std, plot_name=None, beam=''):
         if plot_name is not None:
             plt.subplot(ny, nx, a_index+1)
             # plot XX
-            plt.scatter(freq_ant, phase_ant[0],
+            plt.scatter(freq_ant, phase_ant[:, 0],
                         label='XX',
                         marker=',', s=1, color='C0')
-            plt.scatter(freq_ant, phase_ant[1],
+            plt.scatter(freq_ant, phase_ant[:, 1],
                         label='YY',
                         marker=',', s=1, color='C1')
             plt.title('Antenna {0}'.format(ant))
