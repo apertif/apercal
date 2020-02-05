@@ -5,7 +5,7 @@ import os
 import numpy as np
 
 from apercal.modules.base import BaseModule
-from apercal.subs import irods as subs_irods
+#from apercal.subs import irods as subs_irods
 from apercal.subs import setinit as subs_setinit
 from apercal.subs import managefiles as subs_managefiles
 from apercal.subs.param import get_param_def
