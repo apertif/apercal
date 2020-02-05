@@ -659,10 +659,10 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                         #     p2, 'rm', basedir + '/param_{:02d}.npy'.format(beamnr), ignore_nonexistent=True)
                         p2.go()
                         # it is necessary to move the param files in order to keep them
-                        param_file = os.path.join(
-                            basedir, 'param_{:02d}.npy'.format(beamnr))
-                        director(
-                            p2, 'rn', param_file.replace(".npy", "_crosscal.npy"), file_=param_file, ignore_nonexistent=True)
+                        # param_file = os.path.join(
+                        #     basedir, 'param_{:02d}.npy'.format(beamnr))
+                        # director(
+                        #     p2, 'rn', param_file.replace(".npy", "_crosscal.npy"), file_=param_file, ignore_nonexistent=True)
                 except Exception as e:
                     # Exception was already logged just before
                     logger.warning(
@@ -720,10 +720,10 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                         p3.go()
                         
                         # it is necessary to move the param files in order to keep them
-                        param_file = os.path.join(
-                            basedir, 'param_{:02d}.npy'.format(beamnr))
-                        director(
-                            p3, 'rn', param_file.replace(".npy", "_convert.npy"), file_=param_file, ignore_nonexistent=True)
+                        # param_file = os.path.join(
+                        #     basedir, 'param_{:02d}.npy'.format(beamnr))
+                        # director(
+                        #     p3, 'rn', param_file.replace(".npy", "_convert.npy"), file_=param_file, ignore_nonexistent=True)
                         # director(
                         #     p3, 'rm', basedir + '/param_{:02d}.npy'.format(beamnr), ignore_nonexistent=True)
                 except Exception as e:
