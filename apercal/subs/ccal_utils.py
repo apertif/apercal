@@ -193,14 +193,14 @@ def polyfit_autocorr(autocorrdata):
 #         res.update({ant: cond})
 #     return res
 
-def check_bpass_phase(bpath, max_std):
-    """ 
+def check_bpass_phase(bpath, max_std, plot_name=None):
+    """
     Function to check the bandpass phase solutions to identify a bad antenna.
 
     It checks if the standard deviation of the bandpass phase solutions is below
     a maximum standard deviation. The return is a dictionary with entries for each
     antenna and booleans for each polarisation. If the standard deviation is below
-    the limit, it is True (i.e., good). If it is below, it is False (i.e., bad).    
+    the limit, it is True (i.e., good). If it is below, it is False (i.e., bad).
 
     Args:
         bpath (str): Path to bandpass file
@@ -232,12 +232,12 @@ def check_bpass_phase(bpath, max_std):
         # amp_sols[flags] = np.nan
         phase_sols[flags] = np.nan
 
-        #time = times
+        # time = times
         phase = phase_sols * 180./np.pi  # put into degrees
-        #amp = amp_sols
-        #flags = flags
+        # amp = amp_sols
+        # flags = flags
         freq = freqs / 1e9  # GHz
-        #t0 = get_time(times[0])
+        # t0 = get_time(times[0])
     else:
         logger.warning(
             "BP Table {} not found. Checking solutions not possible".format(bpath))
@@ -246,6 +246,17 @@ def check_bpass_phase(bpath, max_std):
 
     # to store the results
     res = dict()
+
+    # setting plot layout
+    nx = 4
+    ny = 3
+    xsize = nx*4
+    ysize = ny*4
+    ymin = -180
+    ymax = 180
+    plt.figure(figsize=(xsize, ysize))
+    plt.suptitle(
+        'Bandpass phase solutions of Beam {}'.format(self.beam), size=30)
 
     # go through the antennas
     for ant in ant_names:
@@ -261,5 +272,20 @@ def check_bpass_phase(bpath, max_std):
         logger.debug(
             "=> Bandpass phase solutions are good? {}".format(str(cond)))
         res.update({ant: cond})
+
+        if plot_name is not None:
+            plt.subplot(ny, nx, ant+1)
+            # plot XX
+            plt.scatter(freq_ant, phase_ant[0],
+                        label='XX',
+                        marker=',', s=1, color='C0')
+            plt.scatter(freq_ant, phase_ant[1],
+                        label='YY',
+                        marker=',', s=1, color='C1')
+            plt.title('Antenna {0}'.format(ant_name))
+            plt.ylim(y_min, y_max)
+            plt.legend(markerscale=3, fontsize=14)
+            plt.savefig(plot_name))
+            plt.close('all')
 
     return res
