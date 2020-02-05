@@ -194,7 +194,7 @@ def polyfit_autocorr(autocorrdata):
 #         res.update({ant: cond})
 #     return res
 
-def check_bpass_phase(bpath, max_std, plot_name=None):
+def check_bpass_phase(bpath, max_std, plot_name=None, beam=''):
     """
     Function to check the bandpass phase solutions to identify a bad antenna.
 
@@ -257,7 +257,7 @@ def check_bpass_phase(bpath, max_std, plot_name=None):
     ymax = 180
     plt.figure(figsize=(xsize, ysize))
     plt.suptitle(
-        'Bandpass phase solutions of Beam {}'.format(self.beam), size=30)
+        'Bandpass phase solutions of Beam {}'.format(beam), size=30)
 
     # go through the antennas
     for ant in ant_names:
