@@ -253,8 +253,8 @@ def check_bpass_phase(bpath, max_std, plot_name=None, beam=''):
     ny = 3
     xsize = nx*4
     ysize = ny*4
-    ymin = -180
-    ymax = 180
+    y_min = -180
+    y_max = 180
     plt.figure(figsize=(xsize, ysize))
     plt.suptitle(
         'Bandpass phase solutions of Beam {}'.format(beam), size=30)
