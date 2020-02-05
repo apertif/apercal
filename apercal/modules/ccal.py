@@ -947,9 +947,9 @@ class ccal(BaseModule):
                 bandpass_flag_list = []
                 for bad_ant in bad_ant_list:
                     if not bpass_check_results[bad_ant][0]:
-                        bandpass_flag_list.append([bad_ant, "XX"])
+                        bandpass_flag_list.append([bad_ant, 'XX'])
                     if not bpass_check_results[bad_ant][1]:
-                        bandpass_flag_list.append([bad_ant, "YY"])
+                        bandpass_flag_list.append([bad_ant, 'YY'])
                 self.crosscal_flag_list = bandpass_flag_list
                 self.crosscal_fluxcal_try_restart = True
             else:
