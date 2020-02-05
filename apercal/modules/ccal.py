@@ -935,21 +935,21 @@ class ccal(BaseModule):
             if n_ant_bad >= self.crosscal_flag_limit:
                 logger.warning("Beam {0}: Number of antennas with bad phase solutions exceeds defined limit: {1}. Going to restart flux calibrator calibration with different reference antenna".format(self.beam, self.crosscal_flag_limit))
                 self.crosscal_fluxcal_try_restart = True
-                return
+                # return
             elif rtc_bad and rtd_bad:
                 logger.warning("Beam {0}: RTC and RTD have bad phase solutions exceeding survey requirements. Going to restart flux calibrator calibration with different reference antenna".format(
                     self.beam, self.crosscal_flag_limit))
                 self.crosscal_fluxcal_try_restart = True
-                return
+                # return
             elif n_ant_bad != 0:
-                logger.warning("Beam {0}: Number of antennas with bad phase solutions below defined limit: {1}. Going to flag the affected polarisations and continue".format(self.beam, self.crosscal_flag_limit))
+                logger.warning("Beam {0}: Number of antennas with bad phase solutions below defined limit: {1}. Going to flag the affected antennas/polarisations and restart".format(self.beam, self.crosscal_flag_limit))
                 # get the list of flags
                 bandpass_flag_list = []
                 for bad_ant in bad_ant_list:
                     if not bpass_check_results[bad_ant][0]:
-                        bandpass_flag_list.append([bad_ant, bpass_check_results[bad_ant][0]])
+                        bandpass_flag_list.append([bad_ant, "XX"])
                     if not bpass_check_results[bad_ant][1]:
-                        bandpass_flag_list.append([bad_ant, bpass_check_results[bad_ant][1]])
+                        bandpass_flag_list.append([bad_ant, "YY"])
                 self.crosscal_flag_list = bandpass_flag_list
                 self.crosscal_fluxcal_try_restart = True
             else:
