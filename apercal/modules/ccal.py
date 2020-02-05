@@ -355,14 +355,15 @@ class ccal(BaseModule):
                     self.reset(do_clearcal=False)
                     # do not change refant if there is a flag list
                     if self.crosscal_flag_list is not None:
+                        logger.debug("Beam {0}: Found the following new flags: {1}".format(
+                                self.beam, self.crosscal_flag_list))
                         # checking the number of antennas flagged in total
                         ccal_flag_list = subs_param.get_param_def(
                             self, cbeam + '_flag_list', [])
-                        if ccal_flag_list is not None:
-                            ccal_flag_list = ccal_flag_list + self.crosscal_flag_list
+                        ccal_flag_list = ccal_flag_list + self.crosscal_flag_list
                         # check that the list of flags is below the limit
                         if len(ccal_flag_list) != 0:
-                            logger.info("Beam {0}: Found the following flags: {1}".format(
+                            logger.debug("Beam {0}: This is the full list of flags for this beam: {1}".format(
                                 self.beam, ccal_flag_list))
                             # get a list flagged polarisation
                             pol_flag_list = np.array(
@@ -383,6 +384,7 @@ class ccal(BaseModule):
                             self.crosscal_flag_list = None
                     # change refant
                     else:
+                        logger.debug("Beam {0}: Changing reference antenna".format(self.beam))
                         self.check_ref_ant(check_flags=False, change_ref_ant=True)
                     # set the counter up
                     self.crosscal_fluxcal_try_counter += 1
