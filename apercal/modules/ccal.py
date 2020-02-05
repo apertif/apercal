@@ -210,7 +210,7 @@ class ccal(BaseModule):
                         n_full_poll_flags_xx = len(np.where(pol_flag_list == "XX")[0])
                         n_full_poll_flags_yy = len(
                             np.where(pol_flag_list == "YY")[0])
-                        if n_full_poll_flags_xx > self.crosscal_flag_limit or n_full_poll_flags_yy > self.crosscal_flag_limit:
+                        if n_full_poll_flags_xx >= self.crosscal_flag_limit or n_full_poll_flags_yy >= self.crosscal_flag_limit:
                             error = "Beam {0}: Number of antennas with XX and YY flagged ({1}) exceeds defined limit {2}".format(self.beam, n_full_poll_flags, self.crosscal_flag_limit)
                             logger.error(error)
                             raise RuntimeError(error)
@@ -373,7 +373,7 @@ class ccal(BaseModule):
                                 np.where(pol_flag_list == "XX")[0])
                             n_full_poll_flags_yy = len(
                                 np.where(pol_flag_list == "YY")[0])
-                            if n_full_poll_flags_xx > self.crosscal_flag_limit or n_full_poll_flags_yy > self.crosscal_flag_limit:
+                            if n_full_poll_flags_xx >= self.crosscal_flag_limit or n_full_poll_flags_yy >= self.crosscal_flag_limit:
                                 error = "Beam {0}: Number of antennas with XX and YY flagged ({1}) exceeds defined limit {2}".format(
                                     self.beam, n_full_poll_flags, self.crosscal_flag_limit)
                                 logger.error(error)
