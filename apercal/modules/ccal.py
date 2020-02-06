@@ -124,7 +124,7 @@ class ccal(BaseModule):
                 self.crosscal_check_bandpass))
         
         if self.crosscal_bandpass_phase_solution_max_std is None and self.crosscal_check_bandpass:
-            self.crosscal_bandpass_phase_solution_max_std = 10
+            self.crosscal_bandpass_phase_solution_max_std = 15
             logger.info("Maximum std of bandpass phase solutions not provided. Setting to default: {}".format(
                 self.crosscal_bandpass_phase_solution_max_std))
         
@@ -917,7 +917,7 @@ class ccal(BaseModule):
                         os.makedirs(plot_path)
                 else:
                     plot_path = "."
-                bp_plot_name = '{0}/BP_amp_Beam_{1}_ccal_{2}_{3}.png'.format(
+                bp_plot_name = '{0}/BP_phase_Beam_{1}_ccal_{2}_{3}.png'.format(
                     plot_path, self.beam, self.crosscal_try_counter, self.crosscal_fluxcal_try_counter)
                 
                 # this function returns a dictionary with true for good and false for bad solutions
