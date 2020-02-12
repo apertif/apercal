@@ -14,6 +14,7 @@ from apercal.libs.calculations import calc_dr_maj, calc_theoretical_noise, calc_
     calc_dr_min, calc_line_masklevel, calc_miniter
 from apercal.subs import setinit as subs_setinit
 from apercal.subs import managefiles as subs_managefiles
+from apercal.subs.param import get_param_def
 
 from apercal.libs import lib
 
@@ -204,7 +205,9 @@ class line(BaseModule):
             else:
                 logger.info("Finished LINE IMAGING")
         else:
-            logger.warning("LINE IMAGING failed")
+            msg = "LINE IMAGING failed"
+            logger.error(msg)
+            raise ApercalException(msg)
 
     def check_starting_conditions(self):
         """
@@ -234,20 +237,44 @@ class line(BaseModule):
         # path to converted miriad file
         mir_file = os.path.join(self.crosscaldir, self.target)
 
+        all_good = True
+
         # check that the file exists
-        if os.path.isdir(mir_file):
-            # miriad file exists
-            logger.info(
-                "Beam {}: Checking starting conditions for LINE ... Done: All good.".format(self.beam))
-            return True
-        else:
-            # miriad file does not exists
-            logger.warning(
-                "Beam {}: Checking starting conditions for LINE ... Done: Failed".format(self.beam))
+        if not os.path.isdir(mir_file):
             logger.warning(
                 "Beam {}: Did not find main miriad file in {}".format(self.beam, mir_file))
+            all_good = False
 
-            return False
+        # check the continuum file
+        cbeam = 'continuum_B' + str(self.beam).zfill(2)
+        continuumtargetbeamsmfstatus = get_param_def(
+            self, cbeam + '_targetbeams_mf_status', False)
+        
+        if not continuumtargetbeamsmfstatus:
+            logger.warning(
+                "Beam {}: Continuum imaging was not successful".format(self.beam))
+            all_good = False
+        
+        # check that selfcal worked
+        sbeam = 'selfcal_B' + str(self.beam).zfill(2)
+        selfcaltargetbeamsphasestatus = get_param_def(
+            self, sbeam + '_targetbeams_phase_status', False)
+        selfcaltargetbeamsampstatus = get_param_def(
+            self, sbeam + '_targetbeams_amp_status', False)
+        # check selfcal
+        if not selfcaltargetbeamsphasestatus and not selfcaltargetbeamsampstatus:
+            logger.warning(
+                "Beam {}: Neither phase nor amplitude self-calibration was successful. No polarisation imaging".format(self.beam))
+            all_good = False
+
+        if all_good:
+            logger.info(
+                "Beam {}: Checking starting conditions for LINE ... Done: All good.".format(self.beam))
+        else:
+            logger.warning(
+                "Beam {}: Checking starting conditions for LINE ... Done: Failed".format(self.beam))
+
+        return all_good
 
     def transfergains(self, nthreads=1):
         """
