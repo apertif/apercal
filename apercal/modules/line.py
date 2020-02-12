@@ -14,6 +14,7 @@ from apercal.libs.calculations import calc_dr_maj, calc_theoretical_noise, calc_
     calc_dr_min, calc_line_masklevel, calc_miniter
 from apercal.subs import setinit as subs_setinit
 from apercal.subs import managefiles as subs_managefiles
+from apercal.subs.param import get_param_def
 
 from apercal.libs import lib
 
