@@ -371,6 +371,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     s0 = split(file_=configfilename_list[beam_index])
                     set_files(s0)
                     s0.beam = "{:02d}".format(beamnr)
+                    s0.paramfilename = 'param_{:02d}.npy'.format(beamnr)
                     if "split" in steps and not dry_run:
                         s0.go()
                 except Exception as e:
@@ -855,6 +856,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     continue
                 p7.basedir = basedir
                 p7.beam = "{:02d}".format(beamnr)
+                p7.paramfilename = 'param_{:02d}.npy'.format(beamnr)
                 p7.target = name_target + '.mir'
                 if "line" in steps and not dry_run:
                     p7.go()
