@@ -323,7 +323,7 @@ class line(BaseModule):
                     gpcopy.go()
                     logger.info('(LINE) Copying amp corrections from selfcal to line data #')
                 else:
-                    logger.warning('(LINE) amp selfcal data not found or not available #')
+                    logger.warning('(LINE) amp selfcal was not successful. Using only phase selfcal. #')
                 # amp selfcal corrections applied
                 logger.info('(LINE) Selfcal amp solutions applied to target data #')
             else:
