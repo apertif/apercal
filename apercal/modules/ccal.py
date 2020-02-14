@@ -94,7 +94,7 @@ class ccal(BaseModule):
             logger.info("Number of overall crosscal restarts not specified. Setting to default: {}".format(self.crosscal_try_limit))
         
         if self.crosscal_fluxcal_try_limit is None:
-            self.crosscal_fluxcal_try_limit = 4
+            self.crosscal_fluxcal_try_limit = 5
             logger.info("Number of fluxcal calibration restarts not specified. Setting to default: {}".format(
                 self.crosscal_fluxcal_try_limit))
 
