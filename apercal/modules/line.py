@@ -297,8 +297,14 @@ class line(BaseModule):
                                       file_=self.crosscaldir + '/' + self.target)
             logger.info('(LINE) crosscal data copied to line directory #')
             if self.line_transfergains:
+                # get status of phase and amplitude selfcal
+                sbeam = 'selfcal_B' + str(self.beam).zfill(2)
+                selfcaltargetbeamsphasestatus = get_param_def(
+                    self, sbeam + '_targetbeams_phase_status', False)
+                selfcaltargetbeamsampstatus = get_param_def(
+                    self, sbeam + '_targetbeams_amp_status', False)
                 # apply phase selfcal solutions if these exist
-                if os.path.isfile(self.selfcaldir + '/' + self.target + '/gains'):
+                if os.path.isfile(self.selfcaldir + '/' + self.target + '/gains') and selfcaltargetbeamsphasestatus:
                     gpcopy = lib.miriad('gpcopy')
                     gpcopy.vis = self.selfcaldir + '/' + self.target
                     gpcopy.out = self.linedir + '/' + self.target
@@ -310,14 +316,14 @@ class line(BaseModule):
                 # amp selfcal corrections applied
                 logger.info('(LINE) Selfcal phase solutions applied to target data #')
                 # apply amp selfcal solutions if these exist
-                if os.path.isfile(self.selfcaldir + '/' + self.target.rstrip('.mir') + '_amp.mir' + '/gains'):
+                if os.path.isfile(self.selfcaldir + '/' + self.target.rstrip('.mir') + '_amp.mir' + '/gains') and selfcaltargetbeamsampstatus:
                     gpcopy = lib.miriad('gpcopy')
                     gpcopy.vis = self.selfcaldir + '/' + self.target.rstrip('.mir') + '_amp.mir'
                     gpcopy.out = self.linedir + '/' + self.target
                     gpcopy.go()
                     logger.info('(LINE) Copying amp corrections from selfcal to line data #')
                 else:
-                    logger.warning('(LINE) amp selfcal data not found #')
+                    logger.warning('(LINE) amp selfcal was not successful. Using only phase selfcal. #')
                 # amp selfcal corrections applied
                 logger.info('(LINE) Selfcal amp solutions applied to target data #')
             else:
