@@ -249,7 +249,7 @@ class ccal(BaseModule):
                     [flag[0] for flag in ccal_flag_list])
                 if self.crosscal_refant in antenna_flag_list:
                     logger.info(
-                        "Beam {0}: Found reference antenna in list of flagged antennas. Changing reference antenna")
+                        "Beam {0}: Found reference antenna in list of flagged antennas. Changing reference antenna".format(self.beam))
                     self.check_ref_ant(check_flags=False, change_ref_ant=True)
 
                 # set the counter up
