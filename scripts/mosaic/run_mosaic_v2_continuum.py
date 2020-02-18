@@ -28,7 +28,7 @@ import time
 import argparse
 
 
-def make_mosaic(task_id, basedir, centre_ra=None, centre_dec=None, mosaic_beams=None, primary_beam_map_dir=None, do_validation=False):
+def make_mosaic(task_id, basedir, centre_ra=None, centre_dec=None, mosaic_beams=None, primary_beam_map_dir=None, step_limit=None, use_noise_correlation=False, do_validation=False, continuum_image_dir=None, do_not_cleanup=False):
 
     start_time = time.time()
 
@@ -51,6 +51,9 @@ def make_mosaic(task_id, basedir, centre_ra=None, centre_dec=None, mosaic_beams=
     # Settings
     # ========
 
+    # set the number of steps for the mosaic to go through
+    mo.mosaic_step_limit = step_limit
+
     # set the output directory
     #mo.basedir = '/data/schulz/mosaic_test/{}/'.format(task_id)
     mo.basedir = os.path.join(basedir, '{}'.format(task_id))
@@ -69,6 +72,10 @@ def make_mosaic(task_id, basedir, centre_ra=None, centre_dec=None, mosaic_beams=
 
     # set location of continuum images, default is ALTA
     # continuum images must be located in <path>/<beam_nr>/<image_name>.fits
+    if continuum_image_dir is None:
+        mo.mosaic_continuum_image_origin = "ALTA"
+    else:
+        mo.mosaic_continuum_image_origin = continuum_image_dir
     # mo.mosaic_continuum_image_origin = "/data/pisano/190428055/continuum/raw/"
 
     # set the type of primary beam to be used
@@ -76,7 +83,7 @@ def make_mosaic(task_id, basedir, centre_ra=None, centre_dec=None, mosaic_beams=
     # if the correct primary beam is suppose to be used
     # set the path to files (do not change)
     if primary_beam_map_dir is None:
-        mo.mosaic_primary_beam_shape_files_location = "/data/apertif/driftscans/fits_files/191023"
+        mo.mosaic_primary_beam_shape_files_location = "/tank/apertif/driftscans/fits_files/191023/chann_5"
     else:
         mo.mosaic_primary_beam_shape_files_location = primary_beam_map_dir
     # set the cutoff
@@ -94,6 +101,12 @@ def make_mosaic(task_id, basedir, centre_ra=None, centre_dec=None, mosaic_beams=
     # type of beam for convolution
     mo.mosaic_common_beam_type = 'circular'
 
+    # turn on noise correlation
+    if use_noise_correlation:
+        mo.mosaic_use_askap_based_matrix = True
+    else:
+        mo.mosaic_use_askap_based_matrix = False
+
     # run the image validation tool on the mosaic
     if do_validation:
         mo.mosaic_image_validation = True
@@ -102,7 +115,10 @@ def make_mosaic(task_id, basedir, centre_ra=None, centre_dec=None, mosaic_beams=
 
     # clean up
     mo.mosaic_clean_up_level = 1
-    mo.mosaic_clean_up = True
+    if do_not_cleanup:
+        mo.mosaic_clean_up = False
+    else:
+        mo.mosaic_clean_up = True
 
     # create the mosaic
     # =================
@@ -129,18 +145,27 @@ if __name__ == "__main__":
                         help='RA coordinate of projection centre. Works only together with --centre_ra')
 
     parser.add_argument("--mosaic_beams", type=str, default=None,
-                        help='Comma-separated list of beams in a single string')
+                        help='Comma-separated list of beams in a single string. Default is all available beams')
 
     parser.add_argument("--primary_beam_map_dir", type=str, default=None,
                         help='Location of the primary beam maps')
 
+    parser.add_argument("--step_limit", type=int, default=None,
+                        help='The maximum number of steps the mosaic module should do')
+
     parser.add_argument("--do_validation", action="store_true", default=False,
                         help='Set to enable validation of mosaic')
 
-    # parser.add_argument("--do_cleanup", action="store_true", default=False,
-    #                     help='Set to enable validation of mosaic')
+    parser.add_argument("--use_noise_correlation", action="store_true", default=False,
+                        help='Set to enable using noise correlation')
+
+    parser.add_argument("--continuum_image_dir", type=str, default='ALTA',
+                        help='Location of the continuum images. Default is AlTA')
+
+    parser.add_argument("--do_not_cleanup", action="store_true", default=False,
+                        help='Set to enable validation of mosaic')
 
     args = parser.parse_args()
 
     make_mosaic(args.task_id, args.basedir,
-                centre_ra=args.centre_ra, centre_dec=args.centre_dec, mosaic_beams=args.mosaic_beams, primary_beam_map_dir=args.primary_beam_map_dir, do_validation=args.do_validation)
+                centre_ra=args.centre_ra, centre_dec=args.centre_dec, mosaic_beams=args.mosaic_beams, primary_beam_map_dir=args.primary_beam_map_dir, use_noise_correlation=args.use_noise_correlation, step_limit=args.step_limit, do_validation=args.do_validation, continuum_image_dir=args.continuum_image_dir, do_not_cleanup=args.do_not_cleanup)
