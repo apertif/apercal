@@ -1793,7 +1793,11 @@ class ccal(BaseModule):
             # add new flags to list of existing flags for this beam
             ccal_flag_list = ccal_flag_list + self.crosscal_flag_list
             
+        # save entire flaglist
         subs_param.add_param(self, cbeam + '_flag_list', ccal_flag_list)
+
+        # empty temporary flag list
+        self.crosscal_flag_list = None
 
             
 
