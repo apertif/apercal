@@ -267,7 +267,8 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
             p0.prepare_target_beams = str(beamnr_fluxcal)
             p0.prepare_date = str(taskid_fluxcal)[:6]
             p0.prepare_obsnum_target = validate_taskid(taskid_fluxcal)
-            p0.paramfilename = 'param_prepare_{}.npy'.format(name_fluxcal.split('_')[0])
+            p0.paramfilename = 'param_prepare_{}.npy'.format(
+                name_fluxcal.split('_')[0])
             if "prepare" in steps and not dry_run:
                 try:
                     p0.go()
@@ -276,7 +277,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                                    str(taskid_fluxcal) + " beam " + str(beamnr_fluxcal))
                     logger.exception(e)
 
-        if 'prepare' in steps:
+        # if 'prepare' in steps:
             # copy the param file generated here
             # param_file = os.path.join(basedir, 'param.npy')
             # director(
@@ -285,7 +286,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         # Prepare polcals
         if name_polcal != '':
             for (taskid_polcal, name_polcal, beamnr_polcal) in polcals:
-                p0=prepare(
+                p0 = prepare(
                     file_=configfilename_list[beamlist_target_for_config.index(beamnr_polcal)])
                 p0.basedir = basedir
                 # set_files(p0)
@@ -297,7 +298,8 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                 p0.prepare_target_beams = str(beamnr_polcal)
                 p0.prepare_date = str(taskid_polcal)[:6]
                 p0.prepare_obsnum_target = validate_taskid(taskid_polcal)
-                p0.paramfilename = 'param_prepare_{}.npy'.format(name_polcal.split('_')[0])
+                p0.paramfilename = 'param_prepare_{}.npy'.format(
+                    name_polcal.split('_')[0])
                 if "prepare" in steps and not dry_run:
                     try:
                         p0.go()
@@ -306,7 +308,7 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                             "Prepare failed for polcal " + str(taskid_polcal) + " beam " + str(beamnr_polcal))
                         logger.exception(e)
 
-            if 'prepare' in steps:
+            # if 'prepare' in steps:
                 # copy the param file generated here
                 # param_file = os.path.join(basedir, 'param.npy')
                 # director(
@@ -476,7 +478,8 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
 
                 try:
                     p1 = preflag(filename=configfilename_list[beam_index])
-                    p1.paramfilename = 'param_{0:02d}_preflag_{1}.npy'.format(beamnr, name_fluxcal.split('_')[0])
+                    p1.paramfilename = 'param_{0:02d}_preflag_{1}.npy'.format(
+                        beamnr, name_fluxcal.split('_')[0])
                     p1.basedir = basedir
                     p1.fluxcal = ''
                     p1.polcal = ''
@@ -528,7 +531,8 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     # remove next line in final version
                     p1.preflag_aoflagger_version = 'local'
                     p1.basedir = basedir
-                    p1.paramfilename = 'param_{0:02d}_preflag_{1}.npy'.format(beamnr, name_polcal.split('_')[0])
+                    p1.paramfilename = 'param_{0:02d}_preflag_{1}.npy'.format(
+                        beamnr, name_polcal.split('_')[0])
                     p1.basedir = basedir
                     if name_polcal != '':
                         p1.fluxcal = ''
@@ -580,7 +584,8 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
                     p1 = preflag(filename=configfilename_list[beam_index])
                     # remove next line in final version
                     p1.preflag_aoflagger_version = 'local'
-                    p1.paramfilename = 'param_{0:02d}_preflag_{1}.npy'.format(beamnr,name_target)
+                    p1.paramfilename = 'param_{0:02d}_preflag_{1}.npy'.format(
+                        beamnr, name_target)
                     p1.basedir = basedir
                     p1.fluxcal = ''
                     p1.polcal = ''
