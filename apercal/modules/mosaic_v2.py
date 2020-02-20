@@ -232,6 +232,7 @@ class mosaic(BaseModule):
                 logger.info("Beams specified for mosaic: {}".format(
                     self.mosaic_beams))
                 self.mosaic_beam_list = self.mosaic_beams.split(",")
+                self.mosaic_beam_list.sort()
         else:
             error = "No beams specified for making the mosaic."
             logger.error(error)
