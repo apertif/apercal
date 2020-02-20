@@ -513,7 +513,7 @@ class ccal(BaseModule):
         logger.info(
             "Beam {0}: Checking reference antenna {1} set in config file".format(self.beam, crosscal_refant))
 
-        if self.polcal != '':
+        if self.polcal != '' and os.path.isdir(self.get_polcal_path()):
             # get a list of antennas from the polcal MS file
             query = "SELECT NAME FROM {}::ANTENNA".format(
                 self.get_polcal_path())
