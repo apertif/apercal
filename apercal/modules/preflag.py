@@ -1215,10 +1215,15 @@ class preflag(BaseModule):
                         # Check if bandpass table was derived successfully
                         preflagaoflaggerbandpassstatus = get_param_def(self, '_aoflagger_bandpass_status', True)
                         if self.preflag_aoflagger_bandpass and preflagaoflaggerbandpassstatus:
-                            lib.basher(base_cmd + ' -bandpass ' + self.get_bandpass_path() + ' ' + self.get_fluxcal_path(),
-                                       prefixes_to_strip=strip_prefixes)
-                            logger.debug('Used AOFlagger to flag flux calibrator with preliminary bandpass applied')
-                            preflagaoflaggerfluxcalflag = True
+                            try:
+                                lib.basher(base_cmd + ' -bandpass ' + self.get_bandpass_path() + ' ' + self.get_fluxcal_path(),
+                                        prefixes_to_strip=strip_prefixes)
+                            except Exception as e:
+                                logger.error("Beam {0}: Using AOFlagger to flag flux calibrator ... Failed".format(self.beam))
+                                raise ApercalException(e)
+                            else:
+                                logger.debug('Beam {0}: Used AOFlagger to flag flux calibrator with preliminary bandpass applied'.format(self.beam))
+                                preflagaoflaggerfluxcalflag = True
                         elif self.preflag_aoflagger_bandpass and not preflagaoflaggerbandpassstatus:
                             lib.basher(base_cmd + ' ' + self.get_fluxcal_path(),
                                        prefixes_to_strip=strip_prefixes)
@@ -1243,6 +1248,10 @@ class preflag(BaseModule):
                         raise ApercalException(error)
                 else:
                     logger.info('Beam ' + self.beam + ': Flux calibrator was already flagged with AOFlagger!')
+            
+            # Save the derived parameters for the AOFlagger status to the parameter file
+            subs_param.add_param(self, pbeam + '_aoflagger_fluxcal_flag_status', preflagaoflaggerfluxcalflag)
+
             # Flag the polarised calibrator with AOFlagger
             if self.preflag_aoflagger_polcal and self.polcal != '':
                 if not preflagaoflaggerpolcalflag:
@@ -1262,10 +1271,16 @@ class preflag(BaseModule):
                     preflagaoflaggerbandpassstatus = get_param_def(self, pbeam + '_aoflagger_bandpass_status', False)
                     ao_base_cmd = 'aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_polcalstrat
                     if self.preflag_aoflagger_bandpass and preflagaoflaggerbandpassstatus:
-                        lib.basher(ao_base_cmd + ' -bandpass ' + self.get_bandpass_path() + ' ' + self.get_polcal_path(),
-                                   prefixes_to_strip=strip_prefixes)
-                        logger.debug('Beam ' + self.beam + ': Used AOFlagger to flag polarised calibrator with preliminary bandpass applied.')
-                        preflagaoflaggerpolcalflag = True
+                        try:
+                            lib.basher(ao_base_cmd + ' -bandpass ' + self.get_bandpass_path() + ' ' + self.get_polcal_path(),
+                                    prefixes_to_strip=strip_prefixes)
+                        except Exception as e:
+                            logger.error("Beam {0}: Using AOFlagger to flag polarisaed calibrator ... Failed".format(self.beam))
+                            logger.exception(e)
+                            preflagaoflaggerpolcalflag = False
+                        else:
+                            logger.debug('Beam ' + self.beam + ': Used AOFlagger to flag polarised calibrator with preliminary bandpass applied.')
+                            preflagaoflaggerpolcalflag = True
                     elif self.preflag_aoflagger_bandpass and not preflagaoflaggerbandpassstatus:
                         lib.basher(ao_base_cmd + ' ' + self.get_polcal_path(), prefixes_to_strip=strip_prefixes)
                         logger.warning('Beam ' + self.beam + ': Used AOFlagger to flag polarised calibrator without preliminary bandpass '
@@ -1285,6 +1300,10 @@ class preflag(BaseModule):
                 else:
                     logger.info('Beam ' + self.beam + ': Polarised calibrator was already flagged with AOFlagger!')
 
+            # Save the derived parameters for the AOFlagger status to the parameter file
+            subs_param.add_param(
+                self, pbeam + '_aoflagger_polcal_flag_status', preflagaoflaggerpolcalflag)
+            
             # Flag the target beams with AOFlagger
             if self.preflag_aoflagger_target and self.target != '':
                 if not preflagaoflaggertargetbeamsflag:
@@ -1307,8 +1326,12 @@ class preflag(BaseModule):
                             base_cmd = 'aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_targetstrat + " --max-interval-size {0}".format(self.preflag_aoflagger_delta_interval) + " -j {0}".format(
                             self.preflag_aoflagger_threads)
                             if self.preflag_aoflagger_bandpass and preflagaoflaggerbandpassstatus:
-                                lib.basher(base_cmd + ' -bandpass ' + self.get_bandpass_path() + ' ' + self.get_target_path(),
-                                        prefixes_to_strip=strip_prefixes)
+                                try:
+                                    lib.basher(base_cmd + ' -bandpass ' + self.get_bandpass_path() + ' ' + self.get_target_path(),
+                                            prefixes_to_strip=strip_prefixes)
+                                except Exception as e:
+                                    logger.error("Beam {0}: Using AOFlagger to flag target ... Failed".format(self.beam))
+                                    raise ApercalException(e)
                                 logger.debug('Beam ' + self.beam + ': Used AOFlagger to flag target beam with preliminary bandpass applied')
                                 preflagaoflaggertargetbeamsflag = True
                             elif self.preflag_aoflagger_bandpass and not preflagaoflaggerbandpassstatus:
@@ -1362,10 +1385,12 @@ class preflag(BaseModule):
                     logger.error(error)
                     raise ApercalException(error)
 
-        # Save the derived parameters for the AOFlagger status to the parameter file
-        subs_param.add_param(self, pbeam + '_aoflagger_fluxcal_flag_status', preflagaoflaggerfluxcalflag)
-        subs_param.add_param(self, pbeam + '_aoflagger_polcal_flag_status', preflagaoflaggerpolcalflag)
-        subs_param.add_param(self, pbeam + '_aoflagger_targetbeams_flag_status', preflagaoflaggertargetbeamsflag)
+            # Save the derived parameters for the AOFlagger status to the parameter file
+            subs_param.add_param(
+                self, pbeam + '_aoflagger_targetbeams_flag_status', preflagaoflaggertargetbeamsflag)
+        #subs_param.add_param(self, pbeam + '_aoflagger_fluxcal_flag_status', preflagaoflaggerfluxcalflag)
+        #subs_param.add_param(self, pbeam + '_aoflagger_polcal_flag_status', preflagaoflaggerpolcalflag)
+        
 
 
     def temp_del(self):
