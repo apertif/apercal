@@ -528,8 +528,6 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
 
                 try:
                     p1 = preflag(filename=configfilename_list[beam_index])
-                    # remove next line in final version
-                    p1.preflag_aoflagger_version = 'local'
                     p1.basedir = basedir
                     p1.paramfilename = 'param_{0:02d}_preflag_{1}.npy'.format(
                         beamnr, name_polcal.split('_')[0])
@@ -582,8 +580,6 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
 
                 try:
                     p1 = preflag(filename=configfilename_list[beam_index])
-                    # remove next line in final version
-                    p1.preflag_aoflagger_version = 'local'
                     p1.paramfilename = 'param_{0:02d}_preflag_{1}.npy'.format(
                         beamnr, name_target)
                     p1.basedir = basedir
