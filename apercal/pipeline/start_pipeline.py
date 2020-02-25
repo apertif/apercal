@@ -112,10 +112,14 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
         config = lib.get_default_config()
         # go through the config files and create them
         for beam_index in range(n_beams):
-            with open(configfilename_list[beam_index], "w") as fp:
-                config.write(fp)
-            logger.info("Beam {} config file saved to {}".format(
-                beamlist_target[beam_index], configfilename_list[beam_index]))
+            if not os.path.exists(configfilename_list[beam_index]):
+                with open(configfilename_list[beam_index], "w") as fp:
+                    config.write(fp)
+                logger.info("Beam {} config file saved to {}".format(
+                    beamlist_target[beam_index], configfilename_list[beam_index]))
+            else:
+                logger.warning("Beam {} config file already exists. Will not be overriden.".format(
+                    beamlist_target[beam_index]))
     # if configfile(s) are given as a list
     elif type(configfilename) is list:
         # if it is just one, create copies for each beam in the base directory
