@@ -44,6 +44,9 @@ basedir = None
 do_apercal = True
 do_qa = True
 
+# specify the osa name if necessary
+osa = ""
+
 # Optional settings:
 # ==================
 #
@@ -138,7 +141,7 @@ def run_manual_processing():
             start_time = time.time()
             logger.info('Running QA')
             return_msg = run_triggered_qa(
-                targets, fluxcals, polcals, osa="", basedir=os.path.dirname(basedir), steps=steps_qa)
+                targets, fluxcals, polcals, osa=osa, basedir=os.path.dirname(basedir), steps=steps_qa)
         except Exception as e:
             lib.setup_logger('debug', logfile=logfile)
             logger = logging.getLogger(__name__)

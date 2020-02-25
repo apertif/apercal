@@ -46,10 +46,17 @@ do_apercal = True
 do_qa = True
 do_apergest = False
 
+# Specify the name of the OSA
+osa = ""
+
 # Optional settings:
 # ==================
 #
 # The following settings only have to be adjusted if necessary
+
+# set the steps of the pipeline
+# really only necessary if processing is continued manually after a crash
+steps = None
 
 # set the location of the configfile for Apercal
 # if None, the default is used
@@ -98,8 +105,8 @@ def run_manual_processing():
             logger.info('Running apercal')
             # return_msg = start_apercal_pipeline(
             # targets, fluxcals, polcals, basedir=basedir, steps=steps, configfilename=configfile)
-            return_msg = start_apercal_pipeline(
-                targets, fluxcals, polcals, basedir=basedir, configfilename=configfile)
+            start_apercal_pipeline(
+                targets, fluxcals, polcals, configfilename=configfile, steps=steps)
             # return_msg = start_apercal_pipeline(
             #     targets, fluxcals, polcals, steps=steps)
         except Exception as e:
@@ -107,7 +114,6 @@ def run_manual_processing():
             logger = logging.getLogger(__name__)
             logger.warning("Running apercal failed ({0:.3f}h)".format(
                 (time.time() - start_time)/3600.))
-            logger.warning(return_msg)
             logger.exception(e)
         else:
             lib.setup_logger('debug', logfile=logfile)
@@ -129,14 +135,13 @@ def run_manual_processing():
         try:
             start_time = time.time()
             logger.info('Running QA')
-            return_msg = run_triggered_qa(
-                targets, fluxcals, polcals, osa="", basedir=basedir)
+            run_triggered_qa(
+                targets, fluxcals, polcals, osa=osa)
         except Exception as e:
             lib.setup_logger('debug', logfile=logfile)
             logger = logging.getLogger(__name__)
             logger.warning("Running QA failed ({0:.3f}h)".format(
                 (time.time() - start_time)/3600.))
-            logger.warning(return_msg)
             logger.exception(e)
         else:
             lib.setup_logger('debug', logfile=logfile)
