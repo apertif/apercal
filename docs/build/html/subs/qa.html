@@ -1,0 +1,178 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>qa &#8212; Apercal 2.5.0 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="readmirhead" href="readmirhead.html" />
+    <link rel="prev" title="peeling" href="peeling.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="readmirhead.html" title="readmirhead"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="peeling.html" title="peeling"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../subs_modules.html" accesskey="U">Supporting modules</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">qa</a><ul>
+<li><a class="reference internal" href="#module-apercal.subs.qa">Reference</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="peeling.html"
+                        title="previous chapter">peeling</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="readmirhead.html"
+                        title="next chapter">readmirhead</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/subs/qa.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="qa">
+<h1>qa<a class="headerlink" href="#qa" title="Permalink to this headline">¶</a></h1>
+<p>This module contains functionality for basic pipeline-internal qa</p>
+<div class="section" id="module-apercal.subs.qa">
+<span id="reference"></span><h2>Reference<a class="headerlink" href="#module-apercal.subs.qa" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="apercal.subs.qa.checkdirtyimage">
+<code class="descclassname">apercal.subs.qa.</code><code class="descname">checkdirtyimage</code><span class="sig-paren">(</span><em>self</em>, <em>image</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/qa.html#checkdirtyimage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.qa.checkdirtyimage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subroutine to check if a dirty image is valid
+image (string): The path/name of the image to check
+returns (boolean): True if image is ok, False otherwise</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.qa.checkimagegaussianity">
+<code class="descclassname">apercal.subs.qa.</code><code class="descname">checkimagegaussianity</code><span class="sig-paren">(</span><em>self</em>, <em>image</em>, <em>alpha</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/qa.html#checkimagegaussianity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.qa.checkimagegaussianity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subroutine to check if an image has gaussian distribution
+image (string): The path/name of the image to check in FITS-format
+returns (boolean): True if image is ok, False otherwise</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.qa.checkmaskimage">
+<code class="descclassname">apercal.subs.qa.</code><code class="descname">checkmaskimage</code><span class="sig-paren">(</span><em>self</em>, <em>image</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/qa.html#checkmaskimage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.qa.checkmaskimage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if a mask is completely blanked.
+image: The input mask to check
+return: True if mask is not blank</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.qa.checkmodelimage">
+<code class="descclassname">apercal.subs.qa.</code><code class="descname">checkmodelimage</code><span class="sig-paren">(</span><em>self</em>, <em>image</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/qa.html#checkmodelimage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.qa.checkmodelimage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subroutine to check if a model image is valid
+image (string): The path/name of the image to check
+returns (boolean): True if image is ok, False otherwise</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.qa.checkmodelpolimage">
+<code class="descclassname">apercal.subs.qa.</code><code class="descname">checkmodelpolimage</code><span class="sig-paren">(</span><em>self</em>, <em>image</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/qa.html#checkmodelpolimage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.qa.checkmodelpolimage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subroutine to check if a model image is valid
+image (string): The path/name of the image to check
+returns (boolean): True if image is ok, False otherwise</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.qa.checkrestoredimage">
+<code class="descclassname">apercal.subs.qa.</code><code class="descname">checkrestoredimage</code><span class="sig-paren">(</span><em>self</em>, <em>image</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/qa.html#checkrestoredimage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.qa.checkrestoredimage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subroutine to check if a restored image is valid
+image (string): The path/name of the image to check
+returns (boolean): True if image is ok, False otherwise</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.qa.checkrestoredpolimage">
+<code class="descclassname">apercal.subs.qa.</code><code class="descname">checkrestoredpolimage</code><span class="sig-paren">(</span><em>self</em>, <em>image</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/qa.html#checkrestoredpolimage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.qa.checkrestoredpolimage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subroutine to check if a restored image is valid
+image (string): The path/name of the image to check
+returns (boolean): True if image is ok, False otherwise</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="readmirhead.html" title="readmirhead"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="peeling.html" title="peeling"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../subs_modules.html" >Supporting modules</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Apercal Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4.
+    </div>
+  </body>
+</html>

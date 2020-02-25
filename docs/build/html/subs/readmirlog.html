@@ -1,0 +1,202 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>readmirlog &#8212; Apercal 2.5.0 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="setinit" href="setinit.html" />
+    <link rel="prev" title="readmirhead" href="readmirhead.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="setinit.html" title="setinit"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="readmirhead.html" title="readmirhead"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../subs_modules.html" accesskey="U">Supporting modules</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">readmirlog</a><ul>
+<li><a class="reference internal" href="#module-apercal.subs.readmirlog">Reference</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="readmirhead.html"
+                        title="previous chapter">readmirhead</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="setinit.html"
+                        title="next chapter">setinit</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/subs/readmirlog.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="readmirlog">
+<h1>readmirlog<a class="headerlink" href="#readmirlog" title="Permalink to this headline">¶</a></h1>
+<p>This module contains functionality for getting information
+from miriad files.</p>
+<div class="section" id="module-apercal.subs.readmirlog">
+<span id="reference"></span><h2>Reference<a class="headerlink" href="#module-apercal.subs.readmirlog" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="apercal.subs.readmirlog.get_amps">
+<code class="descclassname">apercal.subs.readmirlog.</code><code class="descname">get_amps</code><span class="sig-paren">(</span><em>file_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/readmirlog.html#get_amps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.readmirlog.get_amps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to create a python array of selfcal amplitude gains from a dataset
+<a href="#id1"><span class="problematic" id="id2">file_</span></a> (str): u,v file with the gain calibration
+return(array, array): an array with the phase gains for each antenna, frequency bin and solution interval, a</p>
+<blockquote>
+<div>datetime array with the actual solution timesteps</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.readmirlog.get_bp">
+<code class="descclassname">apercal.subs.readmirlog.</code><code class="descname">get_bp</code><span class="sig-paren">(</span><em>file_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/readmirlog.html#get_bp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.readmirlog.get_bp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to create a python array from a bandpass calibrated dataset to analyse
+<a href="#id3"><span class="problematic" id="id4">file_</span></a> (str): u,v file with the bandpass calibration
+return(array, array): The bandpass array in the following order (antenna, frequencies, solution intervals) and a</p>
+<blockquote>
+<div>list of the frequencies</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.readmirlog.get_delays">
+<code class="descclassname">apercal.subs.readmirlog.</code><code class="descname">get_delays</code><span class="sig-paren">(</span><em>file_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/readmirlog.html#get_delays"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.readmirlog.get_delays" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to create a numpy array with the antenna delays for each solution interval
+<a href="#id5"><span class="problematic" id="id6">file_</span></a> (str): u,v file with the bandpass calibration
+return(array, array): an array with the delays for each antenna and solution interval in nsec, a datetime array</p>
+<blockquote>
+<div>with the actual solution timesteps</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.readmirlog.get_nants">
+<code class="descclassname">apercal.subs.readmirlog.</code><code class="descname">get_nants</code><span class="sig-paren">(</span><em>file_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/readmirlog.html#get_nants"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.readmirlog.get_nants" title="Permalink to this definition">¶</a></dt>
+<dd><p>Funtion to get the number of antennas from a MIRIAD gain file
+<a href="#id7"><span class="problematic" id="id8">file_</span></a> (str): the log file with the table
+returns (int): Number of antennas</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.readmirlog.get_nbins">
+<code class="descclassname">apercal.subs.readmirlog.</code><code class="descname">get_nbins</code><span class="sig-paren">(</span><em>file_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/readmirlog.html#get_nbins"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.readmirlog.get_nbins" title="Permalink to this definition">¶</a></dt>
+<dd><p>Funtion to get the number of frequency bins in a MIRIAD gain file
+<a href="#id9"><span class="problematic" id="id10">file_</span></a> (str): the log file with the table
+returns (int): Number of frequency bins</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.readmirlog.get_ndims">
+<code class="descclassname">apercal.subs.readmirlog.</code><code class="descname">get_ndims</code><span class="sig-paren">(</span><em>file_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/readmirlog.html#get_ndims"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.readmirlog.get_ndims" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper funtion to get the dimension of the selfcal gain file
+<a href="#id11"><span class="problematic" id="id12">file_</span></a> (str): u,v file with the gain calibration
+returns (int, int, int): Number of antennas, number of frequency bins, number of time intervals</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.readmirlog.get_nsols">
+<code class="descclassname">apercal.subs.readmirlog.</code><code class="descname">get_nsols</code><span class="sig-paren">(</span><em>file_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/readmirlog.html#get_nsols"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.readmirlog.get_nsols" title="Permalink to this definition">¶</a></dt>
+<dd><p>Funtion to get the number of solution intervals from a MIRIAD gain file
+<a href="#id13"><span class="problematic" id="id14">file_</span></a> (str): the log file with the table
+returns (int): Number of solution intervals</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.readmirlog.get_phases">
+<code class="descclassname">apercal.subs.readmirlog.</code><code class="descname">get_phases</code><span class="sig-paren">(</span><em>file_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/readmirlog.html#get_phases"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.readmirlog.get_phases" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to create a python array of selfcal phase gains from a dataset
+<a href="#id15"><span class="problematic" id="id16">file_</span></a> (str): u,v file with the gain calibration
+return(array, array): an array with the phase gains for each antenna, frequency bin and solution interval, a</p>
+<blockquote>
+<div>datetime array with the actual solution timesteps</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.readmirlog.reformat_table">
+<code class="descclassname">apercal.subs.readmirlog.</code><code class="descname">reformat_table</code><span class="sig-paren">(</span><em>file_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/readmirlog.html#reformat_table"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.readmirlog.reformat_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to change the file format of a MIRIAD ggplt table to an ascii table compatible one
+<a href="#id17"><span class="problematic" id="id18">file_</span></a> (str): the log file with the table</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="setinit.html" title="setinit"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="readmirhead.html" title="readmirhead"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../subs_modules.html" >Supporting modules</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Apercal Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4.
+    </div>
+  </body>
+</html>

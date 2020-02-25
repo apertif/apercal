@@ -1,0 +1,336 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Configuration: SVC reprocessing &#8212; Apercal 2.5.0 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Scripts" href="../scripts.html" />
+    <link rel="prev" title="(Inactive) Configuration: Quicklook pipeline" href="default_ql.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../scripts.html" title="Scripts"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="default_ql.html" title="(Inactive) Configuration: Quicklook pipeline"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../configuration_files.html" accesskey="U">Configuration files</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="default_ql.html"
+                        title="previous chapter">(Inactive) Configuration: Quicklook pipeline</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../scripts.html"
+                        title="next chapter">Scripts</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/modules/default_svc.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="configuration-svc-reprocessing">
+<h1>Configuration: SVC reprocessing<a class="headerlink" href="#configuration-svc-reprocessing" title="Permalink to this headline">¶</a></h1>
+<p>This is the default configuration file for reprocessing of the SVC data.</p>
+<p><strong>Note: to be used with Apercal version 2.4</strong></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># ============================================================================</span>
+<span class="c1"># Pipeline settings for processing data above ~1290MHz</span>
+<span class="c1"># However, split needs to happen at ~1280MHz (or half the band)</span>
+<span class="c1"># because of line cube specifications</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="p">[</span><span class="n">INITIAL</span><span class="p">]</span>
+<span class="n">fluxcal</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>                                        <span class="c1"># Flux calibrator dataset, e.g. &#39;3C295.MS&#39;</span>
+<span class="n">polcal</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>                                         <span class="c1"># Polarised calibrator dataset, e.g. &#39;3C286.MS&#39;</span>
+<span class="n">target</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>                                         <span class="c1"># Target dataset, e.g. &#39;LH_WSRT.MS&#39;</span>
+<span class="n">basedir</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>                                        <span class="c1"># Base directory for your data reduction, e.g &#39;/data/adebahr/apertif/LH_WSRT/&#39;</span>
+<span class="n">beam</span> <span class="o">=</span> <span class="s1">&#39;10&#39;</span>                                         <span class="c1"># Beam number to work on for SELFCAL, CONTINUUM, LINE and POLARISATIOn module, e.g. &#39;00&#39;</span>
+<span class="n">rawsubdir</span> <span class="o">=</span> <span class="s1">&#39;raw&#39;</span>                                   <span class="c1"># Sub-directory for raw datasets, e.g. &#39;raw&#39;</span>
+<span class="n">crosscalsubdir</span> <span class="o">=</span> <span class="s1">&#39;crosscal&#39;</span>                         <span class="c1"># Sub-directory for cross calibration, e.g. &#39;crosscal&#39;</span>
+<span class="n">selfcalsubdir</span> <span class="o">=</span> <span class="s1">&#39;selfcal&#39;</span>                           <span class="c1"># Sub-directory for self calibration, e.g. &#39;selfcal&#39;</span>
+<span class="n">linesubdir</span> <span class="o">=</span> <span class="s1">&#39;line&#39;</span>                                 <span class="c1"># Sub-directory for line imaging, e.g. &#39;line&#39;</span>
+<span class="n">contsubdir</span> <span class="o">=</span> <span class="s1">&#39;continuum&#39;</span>                            <span class="c1"># Sub-directory for continuum imaging, e.g. &#39;continuum&#39;</span>
+<span class="n">polsubdir</span> <span class="o">=</span> <span class="s1">&#39;polarisation&#39;</span>                          <span class="c1"># Sub-directory for polarisation imaging, e.g. &#39;polarisation&#39;</span>
+<span class="n">mossubdir</span> <span class="o">=</span> <span class="s1">&#39;mosaics&#39;</span>                               <span class="c1"># Sub-directory for masaicking, e.g. &#39;mosaics&#39;</span>
+<span class="n">transfersubdir</span> <span class="o">=</span> <span class="s1">&#39;transfer&#39;</span>                         <span class="c1"># Sub-directory for the transfer of the final (u,v)-datasets, e.g. &#39;transfer&#39;</span>
+<span class="n">subdirification</span> <span class="o">=</span> <span class="kc">True</span>                              <span class="c1"># assume data is in /basedir/beamnum/rawsubdir/fluxcal format</span>
+
+<span class="p">[</span><span class="n">PREPARE</span><span class="p">]</span>
+<span class="n">prepare_date</span> <span class="o">=</span> <span class="kc">None</span>                                 <span class="c1"># Date of the observation, format: YYMMDD, e.g. &#39;180817&#39;</span>
+<span class="n">prepare_obsnum_fluxcal</span> <span class="o">=</span> <span class="kc">None</span>                       <span class="c1"># Observation number of the flux calibrator, format: NNN, e.g. &#39;001&#39;</span>
+<span class="n">prepare_obsnum_polcal</span> <span class="o">=</span> <span class="kc">None</span>                        <span class="c1"># Observation number of the polarised calibrator, format: NNN, e.g. &#39;002&#39;</span>
+<span class="n">prepare_obsnum_target</span> <span class="o">=</span> <span class="kc">None</span>                        <span class="c1"># Observation number of the target, format: NNN, e.g. &#39;003&#39;</span>
+<span class="n">prepare_target_beams</span> <span class="o">=</span> <span class="kc">None</span>                         <span class="c1"># Target beam numbers to copy, format: &#39;all&#39; for all beams, &#39;&#39; for no target, and &#39;NN,MM,...&#39; for certain beam numbers, e.g. &#39;00,01&#39;</span>
+<span class="n">prepare_bypass_alta</span> <span class="o">=</span> <span class="kc">False</span>                         <span class="c1"># Set to true if you don&#39;t want to fetch data from the ALTA archive</span>
+
+<span class="p">[</span><span class="n">PHASESLOPE</span><span class="p">]</span>
+<span class="n">phaseslope_correction</span> <span class="o">=</span> <span class="kc">True</span>                       <span class="c1"># Enable/Disable phase slope correction</span>
+
+<span class="p">[</span><span class="n">SPLIT</span><span class="p">]</span>
+<span class="n">split_startchannel</span> <span class="o">=</span> <span class="mi">3456</span>                          <span class="c1"># First channel to split out</span>
+<span class="n">split_endchannel</span> <span class="o">=</span> <span class="mi">15743</span>                           <span class="c1"># Last channel to split out</span>
+
+<span class="p">[</span><span class="n">PREFLAG</span><span class="p">]</span>
+<span class="n">preflag_shadow</span> <span class="o">=</span> <span class="kc">True</span>                               <span class="c1"># Flag all datasets for shadowed antennas</span>
+<span class="n">preflag_edges</span> <span class="o">=</span> <span class="kc">True</span>                                <span class="c1"># Flag subband egdes for all datasets</span>
+<span class="n">preflag_ghosts</span> <span class="o">=</span> <span class="kc">False</span>                              <span class="c1"># Flag ghost channels for all datasets</span>
+<span class="n">preflag_manualflag</span> <span class="o">=</span> <span class="kc">True</span>                           <span class="c1"># Run the manualflag options</span>
+<span class="n">preflag_manualflag_fluxcal</span> <span class="o">=</span> <span class="kc">True</span>                   <span class="c1"># Run manualflag options for the flux calibrator</span>
+<span class="n">preflag_manualflag_polcal</span> <span class="o">=</span> <span class="kc">True</span>                    <span class="c1"># Run manualflag options for the polarised calibrator</span>
+<span class="n">preflag_manualflag_target</span> <span class="o">=</span> <span class="kc">True</span>                    <span class="c1"># Run manualflag options for the target beams</span>
+<span class="n">preflag_manualflag_auto</span> <span class="o">=</span> <span class="kc">False</span>                     <span class="c1"># Flag auto-correlations</span>
+<span class="n">preflag_manualflag_antenna</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>                     <span class="c1"># Antennas to flag, e.g. &#39;RT2,RT3,RT4&#39;</span>
+<span class="n">preflag_manualflag_corr</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>                        <span class="c1"># Correlations to flag, e.g. &#39;XX,YX&#39;</span>
+<span class="n">preflag_manualflag_baseline</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>                    <span class="c1"># Flag certai baselines, e.g. &#39;RT2&amp;RT3,RT5&amp;RT6&#39;</span>
+<span class="n">preflag_manualflag_channel</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>                     <span class="c1"># Channels or channel ranges to flag, e.g. &#39;0~3054;10977~16384&#39;</span>
+<span class="n">preflag_manualflag_time</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>                        <span class="c1"># Time range to flag, e.g. &#39;09:14:0~09:54:0&#39;</span>
+<span class="n">preflag_manualflag_clipzeros</span> <span class="o">=</span> <span class="kc">False</span>                <span class="c1"># Flags all Zero-valued data (done by default AOFlagger strategies as well)</span>
+<span class="n">preflag_manualflag_file</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>                        <span class="c1"># File with flagging information</span>
+<span class="n">preflag_manualflag_file_path</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>                   <span class="c1"># Path to file with flagging information, if empty it is assumed to be in `basedir`</span>
+<span class="n">preflag_aoflagger</span> <span class="o">=</span> <span class="kc">True</span>                            <span class="c1"># Run the aoflagger step</span>
+<span class="n">preflag_aoflagger_bandpass</span> <span class="o">=</span> <span class="kc">True</span>                   <span class="c1"># Derive a preliminary bandpass for AOFlagging</span>
+<span class="n">preflag_aoflagger_fluxcal</span> <span class="o">=</span> <span class="kc">True</span>                    <span class="c1"># AOFlag the flux calibrator</span>
+<span class="n">preflag_aoflagger_polcal</span> <span class="o">=</span> <span class="kc">True</span>                     <span class="c1"># AOFlag the polarised calibrator</span>
+<span class="n">preflag_aoflagger_target</span> <span class="o">=</span> <span class="kc">True</span>                     <span class="c1"># AOFlag the target beams</span>
+<span class="n">preflag_aoflagger_fluxcalstrat</span> <span class="o">=</span> <span class="s1">&#39;fluxcal.rfis&#39;</span>     <span class="c1"># Flagging strategy for the flux calibrator</span>
+<span class="n">preflag_aoflagger_polcalstrat</span> <span class="o">=</span> <span class="s1">&#39;polcal.rfis&#39;</span>       <span class="c1"># Flagging strategy for the polarised calibrator</span>
+<span class="n">preflag_aoflagger_targetstrat</span> <span class="o">=</span> <span class="s1">&#39;target.rfis&#39;</span>       <span class="c1"># Flagging strategy for the target beams</span>
+<span class="n">preflag_aoflagger_threads</span> <span class="o">=</span> <span class="mi">48</span>                      <span class="c1"># Number of threads used by Aoflagger</span>
+<span class="n">preflag_aoflagger_use_interval</span> <span class="o">=</span> <span class="kc">True</span>               <span class="c1"># Use interval of time steps to process data</span>
+<span class="n">preflag_aoflagger_delta_interval</span> <span class="o">=</span> <span class="mi">450</span>              <span class="c1"># Length of interval</span>
+
+<span class="p">[</span><span class="n">CROSSCAL</span><span class="p">]</span>
+<span class="n">crosscal_refant</span> <span class="o">=</span> <span class="s1">&#39;RT2&#39;</span>                             <span class="c1"># Reference antenna used through all cross calibration steps</span>
+<span class="n">crosscal_initial_phase</span> <span class="o">=</span> <span class="kc">True</span>                       <span class="c1"># Initial phase calibration from the flux calibrator</span>
+<span class="n">crosscal_global_delay</span> <span class="o">=</span> <span class="kc">True</span>                        <span class="c1"># Global delay corrections</span>
+<span class="n">crosscal_bandpass</span> <span class="o">=</span> <span class="kc">True</span>                            <span class="c1"># Bandpass correction from the flux calibrator</span>
+<span class="n">crosscal_gains</span> <span class="o">=</span> <span class="kc">True</span>                               <span class="c1"># Gain and flux corrections for the flux calibrator</span>
+<span class="n">crosscal_crosshand_delay</span> <span class="o">=</span> <span class="kc">True</span>                     <span class="c1"># Cross-hand delay corrections</span>
+<span class="n">crosscal_leakage</span> <span class="o">=</span> <span class="kc">True</span>                             <span class="c1"># Polarisation leakage corrections</span>
+<span class="n">crosscal_polarisation_angle</span> <span class="o">=</span> <span class="kc">True</span>                  <span class="c1"># Polarisation angle corrections</span>
+<span class="n">crosscal_transfer_to_cal</span> <span class="o">=</span> <span class="kc">True</span>                     <span class="c1"># Transfer corrections to calibrators</span>
+<span class="n">crosscal_transfer_to_target</span> <span class="o">=</span> <span class="kc">True</span>                  <span class="c1"># Transfer corrections to the target fields</span>
+
+<span class="p">[</span><span class="n">CONVERT</span><span class="p">]</span>
+<span class="n">convert_fluxcal</span> <span class="o">=</span> <span class="kc">True</span>                              <span class="c1"># Convert the flux calibrator dataset</span>
+<span class="n">convert_polcal</span> <span class="o">=</span> <span class="kc">True</span>                               <span class="c1"># Convert the polarised calibrator dataset</span>
+<span class="n">convert_target</span> <span class="o">=</span> <span class="kc">True</span>                               <span class="c1"># Convert the target beam dataset</span>
+<span class="n">convert_removeuvfits</span> <span class="o">=</span> <span class="kc">True</span>                         <span class="c1"># Remove the UVFITS files</span>
+<span class="n">convert_removems</span> <span class="o">=</span> <span class="kc">True</span>                             <span class="c1"># Remove target measurement sets</span>
+<span class="n">convert_averagems</span> <span class="o">=</span> <span class="kc">True</span>                            <span class="c1"># Save averaged down target measurement sets</span>
+
+<span class="p">[</span><span class="n">SELFCAL</span><span class="p">]</span>
+<span class="n">selfcal_image_imsize</span> <span class="o">=</span> <span class="mi">3073</span>                         <span class="c1"># Image size in pixels</span>
+<span class="n">selfcal_image_cellsize</span> <span class="o">=</span> <span class="mi">4</span>                          <span class="c1"># Pixel size in arcseconds</span>
+<span class="n">selfcal_refant</span> <span class="o">=</span> <span class="s1">&#39;1&#39;</span>                                <span class="c1"># Reference antenna used for self-calibration, MIRIAD numbering here</span>
+<span class="n">selfcal_gaussianity</span> <span class="o">=</span> <span class="mf">1e-2</span>                          <span class="c1"># Gaussianity parameter for residual images in all steps to verify them as good (see scipy.stats.normaltest)</span>
+<span class="n">selfcal_average</span> <span class="o">=</span> <span class="kc">True</span>                              <span class="c1"># Average the data to one channel per subband for self-calibration</span>
+<span class="n">selfcal_flagline</span> <span class="o">=</span> <span class="kc">True</span>                             <span class="c1"># Flag residual RFI/HI emission for self-calibration and continuum imaging</span>
+<span class="n">selfcal_flagline_sigma</span> <span class="o">=</span> <span class="mf">0.5</span>                        <span class="c1"># Sensitivity parameter to flag RFI/HI emission</span>
+<span class="n">selfcal_parametric</span> <span class="o">=</span> <span class="kc">True</span>                           <span class="c1"># Do parametric self-calibration</span>
+<span class="n">selfcal_parametric_skymodel_radius</span> <span class="o">=</span> <span class="mf">0.5</span>            <span class="c1"># Radius from the pointing centre in degrees until which sources are considered</span>
+<span class="n">selfcal_parametric_skymodel_cutoff</span> <span class="o">=</span> <span class="mf">0.8</span>            <span class="c1"># Cutoff for the appaerant flux in the skymodel to use sources (1.0 = all sources in catalogues)</span>
+<span class="n">selfcal_parametric_skymodel_distance</span> <span class="o">=</span> <span class="mi">30</span>           <span class="c1"># Distance between NVSS/FIRST and WENSS sources in arcseconds to count as the same source</span>
+<span class="n">selfcal_parametric_solint</span> <span class="o">=</span> <span class="s1">&#39;auto&#39;</span>                  <span class="c1"># Time solution interval in minutes or &#39;auto&#39; for automatic calculation</span>
+<span class="n">selfcal_parametric_uvmin</span> <span class="o">=</span> <span class="mf">0.5</span>                      <span class="c1"># minimum u,v-limit in klambda</span>
+<span class="n">selfcal_parametric_uvmax</span> <span class="o">=</span> <span class="mi">3000</span>                     <span class="c1"># maximum u,v-limit in klambda</span>
+<span class="n">selfcal_parametric_amp</span> <span class="o">=</span> <span class="kc">False</span>                      <span class="c1"># Parametric amplitude calibration</span>
+<span class="n">selfcal_parametric_nfbin</span> <span class="o">=</span> <span class="mi">32</span>                       <span class="c1"># Number of solution intervals over frequency for parametric calibration</span>
+<span class="n">selfcal_phase</span> <span class="o">=</span> <span class="kc">True</span>                                <span class="c1"># Do the standard iterative self-calibration</span>
+<span class="n">selfcal_phase_majorcycle</span> <span class="o">=</span> <span class="mi">6</span>                        <span class="c1"># Maximum number of major cycles</span>
+<span class="n">selfcal_phase_majorcycle_function</span> <span class="o">=</span> <span class="s1">&#39;power&#39;</span>         <span class="c1"># Type of function to decrease threshold for major cycles, possible values: &#39;power&#39;</span>
+<span class="n">selfcal_phase_minorcycle</span> <span class="o">=</span> <span class="mi">3</span>                        <span class="c1"># Maximum number of minor cycles within each major cycle</span>
+<span class="n">selfcal_phase_minorcycle_function</span> <span class="o">=</span> <span class="s1">&#39;square&#39;</span>        <span class="c1"># Type of function to decrease threshold for minor cycles, possible values: &#39;square&#39;, &#39;power&#39;, &#39;linear&#39;</span>
+<span class="n">selfcal_phase_c0</span> <span class="o">=</span> <span class="mf">10.0</span>                             <span class="c1"># c0 parameter to calculate noise DR with (c0 + minor_cycle * c0) * (major_cycle + 1)</span>
+<span class="n">selfcal_phase_c1</span> <span class="o">=</span> <span class="mf">5.0</span>                              <span class="c1"># c1 parameter for clean threshold with mask_threshold / c1</span>
+<span class="n">selfcal_phase_drinit</span> <span class="o">=</span> <span class="mi">30</span>                           <span class="c1"># drinit parmeter to calculate dynamcic range limits in major cycles with drinit * np.power(dr0, major cycle)</span>
+<span class="n">selfcal_phase_dr0</span> <span class="o">=</span> <span class="mf">2.0</span>                             <span class="c1"># dr0 parameter to calculate dynamcic range limits in major cycles with drinit * np.power(dr0, major cycle)</span>
+<span class="n">selfcal_phase_mindr</span> <span class="o">=</span> <span class="mf">5.0</span>                           <span class="c1"># minimum dynamic range for masking if calculated thresholds are lower</span>
+<span class="n">selfcal_phase_nsigma</span> <span class="o">=</span> <span class="mi">5</span>                            <span class="c1"># Factor to calculate theoretical noise threshold with nsigma * theoretical_noise</span>
+<span class="n">selfcal_phase_uvmin</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.3</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">]</span>     <span class="c1"># Minimum u,v-range to use for phase self-calibration during major cylces, 1 value per cycle</span>
+<span class="n">selfcal_phase_uvmax</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3000</span><span class="p">,</span><span class="mi">3000</span><span class="p">,</span><span class="mi">3000</span><span class="p">,</span><span class="mi">3000</span><span class="p">,</span><span class="mi">3000</span><span class="p">,</span><span class="mi">3000</span><span class="p">]</span>    <span class="c1"># Maximum u,v-range to use for phase self-calibration during major cylces, 1 value per cycle</span>
+<span class="n">selfcal_phase_solint</span> <span class="o">=</span> <span class="s1">&#39;auto&#39;</span>                       <span class="c1"># Selfcal solution intervals for each major cycle as a list (e.g. [10,5,3]) or &#39;auto&#39; for an automatic calculation</span>
+<span class="n">selfcal_phase_nfbin</span> <span class="o">=</span> <span class="mi">32</span>                            <span class="c1"># Number of frequency solution intervals</span>
+<span class="n">selfcal_phase_robust</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span>                           <span class="c1"># Robust weighting setting</span>
+<span class="n">selfcal_amp</span> <span class="o">=</span> <span class="s1">&#39;auto&#39;</span>                                <span class="c1"># Do amplitude calibration, possible values True, False, &#39;auto&#39;</span>
+<span class="n">selfcal_amp_auto_limit</span> <span class="o">=</span> <span class="mf">1.0</span>                        <span class="c1"># Threshold for the sum of clean components in Jy in the last model to set amp calibration True in auto mode</span>
+<span class="n">selfcal_amp_minorcycle</span> <span class="o">=</span> <span class="mi">3</span>                          <span class="c1"># Maximum number of additional minor cycles to create amplitude model</span>
+<span class="n">selfcal_amp_minorcycle_function</span> <span class="o">=</span> <span class="s1">&#39;square&#39;</span>          <span class="c1"># Type of function to decrease threshold for minor cycles, possible values: &#39;square&#39;, &#39;power&#39;, &#39;linear&#39;, should be the same as for phase calibration</span>
+<span class="n">selfcal_amp_c0</span> <span class="o">=</span> <span class="mf">10.0</span>                               <span class="c1"># c0 parameter to calculate noise DR with (c0 + minor_cycle * c0) * (major_cycle + 1), should be the same as for phase calibration</span>
+<span class="n">selfcal_amp_c1</span> <span class="o">=</span> <span class="mf">5.0</span>                                <span class="c1"># c1 parameter for clean threshold with mask_threshold / c1, should be the same as for phase calibration</span>
+<span class="n">selfcal_amp_drinit</span> <span class="o">=</span> <span class="mi">30</span>                             <span class="c1"># drinit parmeter to calculate dynamcic range limits in major cycles with drinit * np.power(dr0, major cycle), should be the same as for phase calibration</span>
+<span class="n">selfcal_amp_dr0</span> <span class="o">=</span> <span class="mf">2.0</span>                               <span class="c1"># dr0 parameter to calculate dynamcic range limits in major cycles with drinit * np.power(dr0, major cycle), should be the same as for phase calibration</span>
+<span class="n">selfcal_amp_mindr</span> <span class="o">=</span> <span class="mf">5.0</span>                             <span class="c1"># minimum dynamic range for masking if calculated thresholds are lower, should be the same as for phase calibration</span>
+<span class="n">selfcal_amp_nsigma</span> <span class="o">=</span> <span class="mi">5</span>                              <span class="c1"># Factor to calculate theoretical noise threshold with nsigma * theoretical_noise, should be the same as for phase calibration</span>
+<span class="n">selfcal_amp_uvmin</span> <span class="o">=</span> <span class="mf">0.0</span>                             <span class="c1"># Minimum u,v-range to use for amplitude self-calibration during major cycles</span>
+<span class="n">selfcal_amp_uvmax</span> <span class="o">=</span> <span class="mi">3000</span>                            <span class="c1"># Maximum u,v-range to use for amplitude self-calibration during major cycles</span>
+<span class="n">selfcal_amp_solint</span> <span class="o">=</span> <span class="s1">&#39;auto&#39;</span>                         <span class="c1"># Selfcal solution interval for amplitude calibration (e.g. 20) or &#39;auto&#39; for an automatic calculation</span>
+<span class="n">selfcal_amp_nfbin</span> <span class="o">=</span> <span class="mi">32</span>                              <span class="c1"># Number of solution intervals over frequency for amplitude calibration</span>
+<span class="n">selfcal_amp_ratio</span> <span class="o">=</span> <span class="mf">1.2</span>                             <span class="c1"># Ratio of the dirty image min, max, std before and after amplitude calibration to verify amplitude calibration as good</span>
+<span class="n">selfcal_amp_robust</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span>                             <span class="c1"># Robust weighting setting</span>
+
+<span class="p">[</span><span class="n">CONTINUUM</span><span class="p">]</span>
+<span class="n">continuum_gaussianity</span> <span class="o">=</span> <span class="mf">1e-2</span>                        <span class="c1"># Gaussianity parameter for residual images in all steps to verify them as good (see scipy.stats.normaltest)</span>
+<span class="n">continuum_mfimage</span> <span class="o">=</span> <span class="kc">True</span>                            <span class="c1"># Multi-frequency continuum imaging</span>
+<span class="n">continuum_mfimage_imsize</span> <span class="o">=</span> <span class="mi">3073</span>                     <span class="c1"># Image size in pixels</span>
+<span class="n">continuum_mfimage_cellsize</span> <span class="o">=</span> <span class="mi">4</span>                      <span class="c1"># Pixel size in arcseconds</span>
+<span class="n">continuum_mfimage_minorcycle</span> <span class="o">=</span> <span class="mi">5</span>                    <span class="c1"># Maximum number of cycles to clean the continuum image before automatic stop</span>
+<span class="n">continuum_mfimage_c1</span> <span class="o">=</span> <span class="mf">5.0</span>                          <span class="c1"># c1 parameter for clean threshold with mask_threshold/c1</span>
+<span class="n">continuum_mfimage_drinc</span> <span class="o">=</span> <span class="mf">10.0</span>                      <span class="c1"># Increment for each iteration for the masking using max(residual map)/drinc</span>
+<span class="n">continuum_mfimage_mindr</span> <span class="o">=</span> <span class="mf">10.0</span>                      <span class="c1"># Minimum increase in dynamic range for the first cycle (in case calculated DR is lower)</span>
+<span class="n">continuum_mfimage_nsigma</span> <span class="o">=</span> <span class="mi">5</span>                        <span class="c1"># Factor to calculate theoretical noise threshold with nsigma * theoretical_noise</span>
+<span class="n">continuum_mfimage_robust</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span>                       <span class="c1"># Robust weighting setting</span>
+<span class="n">continuum_chunkimage</span> <span class="o">=</span> <span class="kc">False</span>                         <span class="c1"># Chunk continuum imaging</span>
+<span class="n">continuum_chunkimage_startchannels</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">32</span><span class="p">,</span><span class="mi">64</span><span class="p">,</span><span class="mi">96</span><span class="p">,</span><span class="mi">128</span><span class="p">,</span><span class="mi">160</span><span class="p">]</span>      <span class="c1"># Starting subbands for each chunk</span>
+<span class="n">continuum_chunkimage_endchannels</span> <span class="o">=</span> <span class="p">[</span><span class="mi">31</span><span class="p">,</span><span class="mi">63</span><span class="p">,</span><span class="mi">95</span><span class="p">,</span><span class="mi">127</span><span class="p">,</span><span class="mi">159</span><span class="p">]</span>          <span class="c1"># Ending subband for each chunk</span>
+<span class="n">continuum_chunkimage_imsize</span> <span class="o">=</span> <span class="mi">2049</span>                  <span class="c1"># Image size of the chunk images</span>
+<span class="n">continuum_chunkimage_cellsize</span> <span class="o">=</span> <span class="mi">4</span>                   <span class="c1"># Cell size of the chunk images</span>
+<span class="n">continuum_chunkimage_minorcycle</span> <span class="o">=</span> <span class="mi">5</span>                 <span class="c1"># Maximum minor cycles after iterative chunk imaging is stopped</span>
+<span class="n">continuum_chunkimage_c1</span> <span class="o">=</span> <span class="mf">5.0</span>                       <span class="c1"># c1 parameter for clean threshold with mask_threshold / c1</span>
+<span class="n">continuum_chunkimage_drinc</span> <span class="o">=</span> <span class="mf">10.0</span>                   <span class="c1"># Increment for each iteration for the masking using max(residual map)/drinc</span>
+<span class="n">continuum_chunkimage_mindr</span> <span class="o">=</span> <span class="mf">5.0</span>                    <span class="c1"># Minimum increase in dynamic range for the first cycle (in case calculated DR is lower)</span>
+<span class="n">continuum_chunkimage_nsigma</span> <span class="o">=</span> <span class="mi">5</span>                     <span class="c1"># Factor to calculate theoretical noise threshold with nsigma * theoretical_noise</span>
+<span class="n">continuum_chunkimage_robust</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span>                       <span class="c1"># Robust weighting setting</span>
+
+<span class="p">[</span><span class="n">LINE</span><span class="p">]</span>
+<span class="n">line_beams</span> <span class="o">=</span> <span class="s1">&#39;all&#39;</span>                                  <span class="c1"># Beams to run line imaging on, list of integers (e.g. 1,2,3) or &#39;all&#39;</span>
+<span class="n">line_first_level_threads</span> <span class="o">=</span> <span class="mi">32</span>                       <span class="c1"># set the first level threads for line</span>
+<span class="n">line_second_level_threads</span> <span class="o">=</span> <span class="mi">16</span>                      <span class="c1"># set the second level threads for line</span>
+<span class="n">line_cube_channel_list</span> <span class="o">=</span>  <span class="p">[[</span><span class="mi">58</span><span class="p">,</span> <span class="mi">3711</span><span class="p">],</span> <span class="p">[</span><span class="mi">3388</span><span class="p">,</span> <span class="mi">7041</span><span class="p">],</span> <span class="p">[</span><span class="mi">6718</span><span class="p">,</span> <span class="mi">10371</span><span class="p">],</span> <span class="p">[</span><span class="mi">10049</span><span class="p">,</span> <span class="mi">11267</span><span class="p">]]</span>
+<span class="n">line_cube_channelwidth_list</span> <span class="o">=</span> <span class="p">[</span><span class="mf">3.6621e-05</span><span class="p">,</span> <span class="mf">3.6621e-05</span><span class="p">,</span> <span class="mf">3.6621e-05</span><span class="p">,</span> <span class="mf">1.2207e-05</span><span class="p">]</span> <span class="c1"># list of channel widths of the cube for splitting data</span>
+<span class="n">line_splitdata</span> <span class="o">=</span> <span class="kc">True</span>                               <span class="c1"># if True: split the band into subbands for faster processing</span>
+<span class="n">line_splitdata_chunkbandwidth</span> <span class="o">=</span> <span class="mf">0.0046875</span>           <span class="c1"># in GHz: defines number of subbands and is 0.15/(number of subbands): default for 16 subbands is 0.009375 = 0.3/16 GHz or 32 chunks with 0.0046875</span>
+<span class="n">line_splitdata_channelbandwidth</span> <span class="o">=</span> <span class="mf">0.000036621</span>       <span class="c1"># [Deprecated, will be overridden by values in line_cube_channelwidth_list], in GHz</span>
+<span class="n">line_transfergains</span> <span class="o">=</span> <span class="kc">True</span>                                   <span class="c1"># if False no selfcal solutions will be applied to the data. Default is True.</span>
+<span class="n">line_subtract</span> <span class="o">=</span> <span class="kc">True</span>                                <span class="c1"># Subtract continuum from the uv data</span>
+<span class="n">line_subtract_mode</span> <span class="o">=</span> <span class="s1">&#39;uvmodel&#39;</span>                      <span class="c1"># Continuum subtraction method: if &#39;uvmodel&#39; the last continuum model is taken, if &#39;uvlin&#39; uvlin is applied to each subband</span>
+<span class="n">line_subtract_mode_uvmodel_majorcycle_function</span> <span class="o">=</span> <span class="s1">&#39;square&#39;</span>
+<span class="n">line_subtract_mode_uvmodel_minorcycle_function</span> <span class="o">=</span> <span class="s1">&#39;square&#39;</span>
+<span class="n">line_subtract_mode_uvmodel_minorcycle</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="n">line_subtract_mode_uvmodel_c0</span> <span class="o">=</span> <span class="mf">10.0</span>
+<span class="n">line_subtract_mode_uvmodel_c1</span> <span class="o">=</span> <span class="mf">5.0</span>
+<span class="n">line_subtract_mode_uvmodel_drinit</span> <span class="o">=</span> <span class="mi">25</span>
+<span class="n">line_subtract_mode_uvmodel_dr0</span> <span class="o">=</span> <span class="mf">2.0</span>
+<span class="n">line_subtract_mode_uvmodel_nsigma</span> <span class="o">=</span> <span class="mi">30</span>
+<span class="n">line_subtract_mode_uvmodel_imsize</span> <span class="o">=</span> <span class="mi">513</span>
+<span class="n">line_subtract_mode_uvmodel_cellsize</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">line_subtract_mode_uvmodel_minorcycle0_dr</span> <span class="o">=</span> <span class="mf">3.0</span>
+<span class="n">line_image</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">line_image_channels</span> <span class="o">=</span> <span class="s1">&#39;2800,3600&#39;</span> <span class="c1"># [Deprecated, will be overriden] Two comma seperated values as a string with the beginning and end channels, zero based, in the binned channel range</span>
+<span class="n">line_image_imsize</span> <span class="o">=</span> <span class="mi">661</span>
+<span class="n">line_image_cellsize</span> <span class="o">=</span> <span class="mi">6</span>
+<span class="n">line_image_centre</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+<span class="n">line_image_robust</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">line_clean</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">line_image_ratio_limit</span> <span class="o">=</span> <span class="mf">1.05</span>
+<span class="n">line_image_c0</span> <span class="o">=</span> <span class="mf">10.0</span>
+<span class="n">line_image_c1</span> <span class="o">=</span> <span class="mf">5.0</span>
+<span class="n">line_image_nsigma</span> <span class="o">=</span> <span class="mi">45</span>
+<span class="n">line_image_minorcycle0_dr</span> <span class="o">=</span> <span class="mf">5.0</span>
+<span class="n">line_image_dr0</span> <span class="o">=</span> <span class="mf">2.0</span>
+<span class="n">line_image_restorbeam</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+<span class="n">line_image_convolbeam</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+<span class="n">line_always_cleanup</span> <span class="o">=</span> <span class="kc">True</span>                         <span class="c1"># In case line fails, auxiliary files are going to be deleted</span>
+
+<span class="p">[</span><span class="n">POLARISATION</span><span class="p">]</span>
+<span class="n">polarisation_qu</span> <span class="o">=</span> <span class="kc">True</span>                              <span class="c1"># Create Q-/U-images</span>
+<span class="n">polarisation_qu_startsubband</span> <span class="o">=</span> <span class="mi">0</span>                    <span class="c1"># First subband to image</span>
+<span class="n">polarisation_qu_endsubband</span> <span class="o">=</span> <span class="mi">191</span>                    <span class="c1"># Last subband to image</span>
+<span class="n">polarisation_qu_nsubband</span> <span class="o">=</span> <span class="mi">8</span>                        <span class="c1"># Number of subbands to combine for one image</span>
+<span class="n">polarisation_qu_imsize</span> <span class="o">=</span> <span class="mi">2049</span>                       <span class="c1"># Image size of the Q-/U-images</span>
+<span class="n">polarisation_qu_cellsize</span> <span class="o">=</span> <span class="mi">4</span>                        <span class="c1"># Cell size of the Q-/U-images</span>
+<span class="n">polarisation_qu_clean_sigma</span> <span class="o">=</span> <span class="mf">1.0</span>                   <span class="c1"># Clean threshold factor (sigma*std of map)</span>
+<span class="n">polarisation_qu_cube</span> <span class="o">=</span> <span class="kc">True</span>                         <span class="c1"># Create a cube from the Q- and U-images</span>
+<span class="n">polarisation_qu_cube_delete</span> <span class="o">=</span> <span class="kc">True</span>                  <span class="c1"># Delete the individual channel products after successfully creating the cubes</span>
+<span class="n">polarisation_v</span> <span class="o">=</span> <span class="kc">True</span>                               <span class="c1"># Create V-image</span>
+<span class="n">polarisation_v_imsize</span> <span class="o">=</span> <span class="mi">3073</span>                        <span class="c1"># Image size of the V-image</span>
+<span class="n">polarisation_v_cellsize</span> <span class="o">=</span> <span class="mi">4</span>                         <span class="c1"># Cell size of the V-image</span>
+<span class="n">polarisation_v_clean_sigma</span> <span class="o">=</span> <span class="mf">1.0</span>                    <span class="c1"># Clean threshold factor (sigma*std of map)</span>
+
+<span class="p">[</span><span class="n">MOSAIC</span><span class="p">]</span>
+<span class="n">mosaic_continuum_mf</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">mosaic_continuum_chunks</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">mosaic_line</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">mosaic_polarisation</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="p">[</span><span class="n">TRANSFER</span><span class="p">]</span>
+<span class="n">transfer_convert_selfcaluv2uvfits</span> <span class="o">=</span> <span class="kc">True</span>              <span class="c1"># Copy the selfcal solutions to the original dataset and export as UVFITS</span>
+</pre></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../scripts.html" title="Scripts"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="default_ql.html" title="(Inactive) Configuration: Quicklook pipeline"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../configuration_files.html" >Configuration files</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Apercal Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4.
+    </div>
+  </body>
+</html>

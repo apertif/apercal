@@ -1,0 +1,236 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>calculations &#8212; Apercal 2.5.0 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="lib" href="lib.html" />
+    <link rel="prev" title="Library modules" href="../lib_modules.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="lib.html" title="lib"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../lib_modules.html" title="Library modules"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../lib_modules.html" accesskey="U">Library modules</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">calculations</a><ul>
+<li><a class="reference internal" href="#module-apercal.libs.calculations">Reference</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../lib_modules.html"
+                        title="previous chapter">Library modules</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="lib.html"
+                        title="next chapter">lib</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/lib/calculations.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="calculations">
+<h1>calculations<a class="headerlink" href="#calculations" title="Permalink to this headline">¶</a></h1>
+<p>This module contains functionality to calculate various parameters.</p>
+<p><em>Note: there is potentially overlap with functions defined in supporting modules.</em></p>
+<div class="section" id="module-apercal.libs.calculations">
+<span id="reference"></span><h2>Reference<a class="headerlink" href="#module-apercal.libs.calculations" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="apercal.libs.calculations.calc_clean_cutoff">
+<code class="descclassname">apercal.libs.calculations.</code><code class="descname">calc_clean_cutoff</code><span class="sig-paren">(</span><em>mask_threshold</em>, <em>c1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/libs/calculations.html#calc_clean_cutoff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.libs.calculations.calc_clean_cutoff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the cutoff for the cleaning
+mask_threshold (float): the mask threshold to calculate the clean cutoff from
+returns (float): the clean cutoff</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.libs.calculations.calc_dr_maj">
+<code class="descclassname">apercal.libs.calculations.</code><code class="descname">calc_dr_maj</code><span class="sig-paren">(</span><em>drinit</em>, <em>dr0</em>, <em>majorcycles</em>, <em>func</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/libs/calculations.html#calc_dr_maj"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.libs.calculations.calc_dr_maj" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to calculate the dynamic range limits during major cycles
+drinit (float): The initial dynamic range
+dr0 (float): Coefficient for increasing the dynamic range threshold at each major cycle
+majorcycles (int): The number of major cycles to execute
+func (string): The function to follow for increasing the dynamic ranges. Currently ‘power’ is supported.
+returns (list of floats): A list of floats for the dynamic range limits within the major cycles.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.libs.calculations.calc_dr_min">
+<code class="descclassname">apercal.libs.calculations.</code><code class="descname">calc_dr_min</code><span class="sig-paren">(</span><em>dr_maj</em>, <em>majc</em>, <em>minorcycles</em>, <em>function</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/libs/calculations.html#calc_dr_min"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.libs.calculations.calc_dr_min" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to calculate the dynamic range limits during minor cycles
+dr_maj (list of floats): List with dynamic range limits for major cycles. Usually from calc_dr_maj
+majc (int): The major cycles you want to calculate the minor cycle dynamic ranges for
+minorcycles (int): The number of minor cycles to use
+function (string): The function to follow for increasing the dynamic ranges. Currently ‘square’, ‘power’, and</p>
+<blockquote>
+<div>‘linear’ is supported.</div></blockquote>
+<p>returns (list of floats): A list of floats for the dynamic range limits within the minor cycles.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.libs.calculations.calc_dynamic_range_threshold">
+<code class="descclassname">apercal.libs.calculations.</code><code class="descname">calc_dynamic_range_threshold</code><span class="sig-paren">(</span><em>imax</em>, <em>dynamic_range</em>, <em>dynamic_range_minimum</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/libs/calculations.html#calc_dynamic_range_threshold"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.libs.calculations.calc_dynamic_range_threshold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the dynamic range threshold
+imax (float): the maximum in the input image
+dynamic_range (float): the dynamic range you want to calculate the threshold for
+returns (float): the dynamic range threshold</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.libs.calculations.calc_mask_threshold">
+<code class="descclassname">apercal.libs.calculations.</code><code class="descname">calc_mask_threshold</code><span class="sig-paren">(</span><em>theoretical_noise_threshold</em>, <em>noise_threshold</em>, <em>dynamic_range_threshold</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/libs/calculations.html#calc_mask_threshold"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.libs.calculations.calc_mask_threshold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to calculate the actual mask_threshold and the type of mask threshold from the
+theoretical noise threshold, noise threshold, and the dynamic range threshold
+theoretical_noise_threshold (float): The theoretical noise threshold calculated by</p>
+<blockquote>
+<div>calc_theoretical_noise_threshold</div></blockquote>
+<p>noise_threshold (float): The noise threshold calculated by calc_noise_threshold
+dynamic_range_threshold (float): The dynamic range threshold calculated by calc_dynamic_range_threshold
+returns (float, string): The maximum of the three thresholds, the type of the maximum threshold</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.libs.calculations.calc_miniter">
+<code class="descclassname">apercal.libs.calculations.</code><code class="descname">calc_miniter</code><span class="sig-paren">(</span><em>maxdr</em>, <em>dr0</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/libs/calculations.html#calc_miniter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.libs.calculations.calc_miniter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the number of minor cycles needed for cleaning a line channel
+maxdr (float): The maximum dynamic range reachable calculated by the theoretical noise and maximum pixel value</p>
+<blockquote>
+<div>in the image</div></blockquote>
+<p>dr0 (float): The increase for each cycle to clean deeper
+returns (int): Number of minor cycle iterations for cleaning</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.libs.calculations.calc_noise_threshold">
+<code class="descclassname">apercal.libs.calculations.</code><code class="descname">calc_noise_threshold</code><span class="sig-paren">(</span><em>imax</em>, <em>minor_cycle</em>, <em>major_cycle</em>, <em>c0</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/libs/calculations.html#calc_noise_threshold"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.libs.calculations.calc_noise_threshold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the noise threshold
+imax (float): the maximum in the input image
+minor_cycle (int): the current minor cycle the self-calibration is in
+major_cycle (int): the current major cycle the self-calibration is in
+returns (float): the noise threshold</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.libs.calculations.calc_scal_interval">
+<code class="descclassname">apercal.libs.calculations.</code><code class="descname">calc_scal_interval</code><span class="sig-paren">(</span><em>flux</em>, <em>noise</em>, <em>obstime</em>, <em>baselines</em>, <em>nfbin</em>, <em>feeds</em>, <em>snr</em>, <em>cycle</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/libs/calculations.html#calc_scal_interval"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.libs.calculations.calc_scal_interval" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to automatically calculate the self-calibration solution interval for each major cycle of an observation
+flux (float): Flux in the clean model in Jy
+noise (float): Theoretical noise of the dataset
+obstime (float): Total integration time in minutes
+baselines (int): Number of available baselines
+nfbin (int): Number of frequency solution intervals
+feeds (int): Number of feeds
+snr (float): SNR for calculation. Typically 3 for phase and 10 for amplitude
+cycle (int): Major self-calibration cycle to use. Usually 1 for amplitude.
+returns (float): Solution interval to use</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.libs.calculations.calc_theoretical_noise">
+<code class="descclassname">apercal.libs.calculations.</code><code class="descname">calc_theoretical_noise</code><span class="sig-paren">(</span><em>dataset</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/libs/calculations.html#calc_theoretical_noise"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.libs.calculations.calc_theoretical_noise" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the theoretical rms of a given dataset
+dataset (string): The input dataset to calculate the theoretical rms from
+returns (float): The theoretical rms of the input dataset as a float</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.libs.calculations.calc_theoretical_noise_threshold">
+<code class="descclassname">apercal.libs.calculations.</code><code class="descname">calc_theoretical_noise_threshold</code><span class="sig-paren">(</span><em>theoretical_noise</em>, <em>nsigma</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/libs/calculations.html#calc_theoretical_noise_threshold"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.libs.calculations.calc_theoretical_noise_threshold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the theoretical noise threshold from the theoretical noise
+theoretical_noise (float): the theoretical noise of the observation
+returns (float): the theoretical noise threshold</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.libs.calculations.get_freqstart">
+<code class="descclassname">apercal.libs.calculations.</code><code class="descname">get_freqstart</code><span class="sig-paren">(</span><em>dataset</em>, <em>startchan</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/libs/calculations.html#get_freqstart"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.libs.calculations.get_freqstart" title="Permalink to this definition">¶</a></dt>
+<dd><p>dataset: The dataset to get the first frequency from
+returns: The starting frequency of the observation</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="lib.html" title="lib"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../lib_modules.html" title="Library modules"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../lib_modules.html" >Library modules</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Apercal Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4.
+    </div>
+  </body>
+</html>

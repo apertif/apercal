@@ -1,0 +1,263 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>apercal.subs.msutils &#8212; Apercal 2.5.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for apercal.subs.msutils</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">casacore.tables</span> <span class="k">as</span> <span class="nn">pt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">astropy.coordinates</span> <span class="k">import</span> <span class="n">Angle</span>
+<span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
+
+
+<div class="viewcode-block" id="has_good_modeldata"><a class="viewcode-back" href="../../../subs/msutils.html#apercal.subs.msutils.has_good_modeldata">[docs]</a><span class="k">def</span> <span class="nf">has_good_modeldata</span><span class="p">(</span><span class="n">vis</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Test whether a model column exists and is not only 1 or 0</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        vis (string): input MS file</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        bool: True if &#39;good&#39; model data exists</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">vis</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s2">&quot;MODEL_DATA&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">colnames</span><span class="p">():</span>
+        <span class="c1"># Bad data: no model column</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="n">vis_max</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">taql</span><span class="p">(</span><span class="s2">&quot;SELECT gmax(abs(MODEL_DATA)) as res from $t&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">getcol</span><span class="p">(</span><span class="s2">&quot;res&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">vis_min</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">taql</span><span class="p">(</span><span class="s2">&quot;SELECT gmin(abs(MODEL_DATA)) as res from $t&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">getcol</span><span class="p">(</span><span class="s2">&quot;res&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">vis_min</span><span class="p">,</span> <span class="mf">0.</span><span class="p">)</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">vis_max</span><span class="p">,</span> <span class="mf">1.</span><span class="p">):</span>
+        <span class="c1"># Bad data: only default values</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Actual good model data</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="has_correcteddata"><a class="viewcode-back" href="../../../subs/msutils.html#apercal.subs.msutils.has_correcteddata">[docs]</a><span class="k">def</span> <span class="nf">has_correcteddata</span><span class="p">(</span><span class="n">vis</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Test if a corrected_data column exists</span>
+<span class="sd">    vis(string): input MS file</span>
+<span class="sd">    return(bool): True if corrected_data column exists, otherwise False</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">vis</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s2">&quot;CORRECTED_DATA&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">colnames</span><span class="p">():</span>
+        <span class="c1"># Bad data: no corrected_data column</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="add_caltables"><a class="viewcode-back" href="../../../subs/msutils.html#apercal.subs.msutils.add_caltables">[docs]</a><span class="k">def</span> <span class="nf">add_caltables</span><span class="p">(</span><span class="n">ct</span><span class="p">,</span> <span class="n">interp</span><span class="p">,</span> <span class="n">addct</span><span class="p">,</span> <span class="n">addinterp</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Funtion to autimatically handle the adding of on-the-fly calibration table expressions in the CASA syntax</span>
+
+<span class="sd">    ct (string): Calibration table string</span>
+<span class="sd">    interp (string): Interpolation string</span>
+<span class="sd">    addct (string): Calibration table string to add</span>
+<span class="sd">    addinterp (string): Interpolation string to add</span>
+
+<span class="sd">    returns(string, string): The updated calibration table string, the updated inteprolation string</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">ct</span> <span class="o">==</span> <span class="s1">&#39;&quot;&quot;&#39;</span> <span class="ow">and</span> <span class="n">interp</span> <span class="o">==</span> <span class="s1">&#39;&quot;&quot;&#39;</span><span class="p">:</span>
+        <span class="n">newct</span> <span class="o">=</span> <span class="n">addct</span>
+        <span class="n">newinterp</span> <span class="o">=</span> <span class="n">addinterp</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">newct</span> <span class="o">=</span> <span class="n">ct</span> <span class="o">+</span> <span class="s1">&#39;,&#39;</span> <span class="o">+</span> <span class="n">addct</span>
+        <span class="n">newinterp</span> <span class="o">=</span> <span class="n">interp</span> <span class="o">+</span> <span class="s1">&#39;,&#39;</span> <span class="o">+</span> <span class="n">addinterp</span>
+    <span class="k">return</span> <span class="n">newct</span><span class="p">,</span> <span class="n">newinterp</span></div>
+
+
+<div class="viewcode-block" id="get_source_name"><a class="viewcode-back" href="../../../subs/msutils.html#apercal.subs.msutils.get_source_name">[docs]</a><span class="k">def</span> <span class="nf">get_source_name</span><span class="p">(</span><span class="n">msname</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the source name from a Measurement Set</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        msname (str): full path to a Measurement Set</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: Source name (e.g. 3C295)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;SELECT NAME FROM </span><span class="si">{}</span><span class="s2">/FIELD&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">msname</span><span class="p">)</span>
+    <span class="n">res_table</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">taql</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">res_table</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;NAME&quot;</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="get_nchan"><a class="viewcode-back" href="../../../subs/msutils.html#apercal.subs.msutils.get_nchan">[docs]</a><span class="k">def</span> <span class="nf">get_nchan</span><span class="p">(</span><span class="n">msname</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the number of channels from a Measurement Set</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        msname (str): full path to a Measurement Set</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        int: number of channels (in first spectral window)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">msname</span><span class="p">,</span> <span class="nb">str</span><span class="p">))</span>
+    <span class="n">spectralwindowtable</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">msname</span> <span class="o">+</span> <span class="s1">&#39;::SPECTRAL_WINDOW&#39;</span><span class="p">,</span> <span class="n">ack</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">nchan</span> <span class="o">=</span> <span class="n">spectralwindowtable</span><span class="o">.</span><span class="n">getcol</span><span class="p">(</span><span class="s2">&quot;CHAN_FREQ&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">nchan</span></div>
+
+
+<div class="viewcode-block" id="format_dir"><a class="viewcode-back" href="../../../subs/msutils.html#apercal.subs.msutils.format_dir">[docs]</a><span class="k">def</span> <span class="nf">format_dir</span><span class="p">(</span><span class="n">dir_rad</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Format an angle in ra, dec in sexagesimal format</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        dir_rad (Tuple[float, float]): Direction in ra, dec (in radians)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: formatted direction, e.g. 5h42m36.144s 49d51m07.2s</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ra</span> <span class="o">=</span> <span class="n">Angle</span><span class="p">(</span><span class="n">dir_rad</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">rad</span><span class="p">)</span>
+    <span class="n">dec</span> <span class="o">=</span> <span class="n">Angle</span><span class="p">(</span><span class="n">dir_rad</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">rad</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">ra</span><span class="o">.</span><span class="n">to_string</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">hour</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">dec</span><span class="o">.</span><span class="n">to_string</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">degree</span><span class="p">))</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="flip_ra"><a class="viewcode-back" href="../../../subs/msutils.html#apercal.subs.msutils.flip_ra">[docs]</a><span class="k">def</span> <span class="nf">flip_ra</span><span class="p">(</span><span class="n">msname</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Flip RA about central pointing, stored in REFERENCE_DIR. Will not flip if it has been done already.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        msname (str): full path to measurement set</span>
+<span class="sd">        logger (Logger): logger to be used. If None, will print to stdout</span>
+<span class="sd">        force (bool): also flip when it has been done already</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        bool: True if ra has been flipped</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">logger</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Flipping RA for </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">msname</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">ra_flipped</span><span class="p">(</span><span class="n">msname</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">force</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Not flipping RA since it has been done already&quot;</span>
+            <span class="k">if</span> <span class="n">logger</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;RA was already flipped, redoing it because you specified &#39;force=True&#39;&quot;</span>
+            <span class="k">if</span> <span class="n">logger</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="n">t_field</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">msname</span> <span class="o">+</span> <span class="s2">&quot;::FIELD&quot;</span><span class="p">,</span> <span class="n">readonly</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ack</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">phasedir</span> <span class="o">=</span> <span class="n">t_field</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;PHASE_DIR&quot;</span><span class="p">]</span>
+    <span class="n">refdir</span> <span class="o">=</span> <span class="n">t_field</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;REFERENCE_DIR&quot;</span><span class="p">]</span>  <span class="c1"># Pointing of beam 0</span>
+    <span class="n">newphasedir</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">phasedir</span><span class="p">)</span>
+
+    <span class="c1"># Reflect phasedir around reference dir to get new phasedir</span>
+    <span class="n">newphasedir</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">phasedir</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">refdir</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">phasedir</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+
+    <span class="n">string_phase</span> <span class="o">=</span> <span class="n">format_dir</span><span class="p">(</span><span class="n">phasedir</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">string_newphase</span> <span class="o">=</span> <span class="n">format_dir</span><span class="p">(</span><span class="n">newphasedir</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">log_msg</span> <span class="o">=</span> <span class="s1">&#39;Changed phase direction from </span><span class="si">{}</span><span class="s1"> to </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">string_phase</span><span class="p">,</span> <span class="n">string_newphase</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">logger</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">log_msg</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">log_msg</span><span class="p">)</span>
+    <span class="n">pt</span><span class="o">.</span><span class="n">taql</span><span class="p">(</span><span class="s1">&#39;INSERT INTO </span><span class="si">{}</span><span class="s1">::HISTORY SET MESSAGE=&quot;</span><span class="si">{}</span><span class="s1">&quot;, APPLICATION=&quot;apercal&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">msname</span><span class="p">,</span> <span class="n">log_msg</span><span class="p">))</span>
+
+    <span class="c1"># Do the actual update</span>
+    <span class="n">t_field</span><span class="o">.</span><span class="n">putcell</span><span class="p">(</span><span class="s2">&quot;PHASE_DIR&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">newphasedir</span><span class="p">)</span>
+    <span class="n">t_field</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="c1"># Recalculate uv coordinates</span>
+    <span class="n">pt</span><span class="o">.</span><span class="n">taql</span><span class="p">(</span><span class="s1">&#39;update </span><span class="si">{0}</span><span class="s1"> set UVW = mscal.newuvw()&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">msname</span><span class="p">))</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="ra_flipped"><a class="viewcode-back" href="../../../subs/msutils.html#apercal.subs.msutils.ra_flipped">[docs]</a><span class="k">def</span> <span class="nf">ra_flipped</span><span class="p">(</span><span class="n">msname</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check if RA was already flipped by reading HISTORY subtable</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        msname: full path to measurement set</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        bool: True if already flipped</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="s1">&#39;SELECT FROM </span><span class="si">{}</span><span class="s1">::HISTORY WHERE APPLICATION==&quot;apercal&quot; &#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">msname</span><span class="p">)</span> <span class="o">+</span> \
+            <span class="s1">&#39;AND MESSAGE LIKE &quot;Changed phase direction %&quot;&#39;</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">taql</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">res</span><span class="o">.</span><span class="n">nrows</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Apercal Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4.
+    </div>
+  </body>
+</html>

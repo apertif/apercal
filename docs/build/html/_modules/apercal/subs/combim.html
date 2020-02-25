@@ -1,0 +1,119 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>apercal.subs.combim &#8212; Apercal 2.5.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for apercal.subs.combim</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="calc_synbeam"><a class="viewcode-back" href="../../../subs/combim.html#apercal.subs.combim.calc_synbeam">[docs]</a><span class="k">def</span> <span class="nf">calc_synbeam</span><span class="p">(</span><span class="n">sbeams</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the mimimum major and minor axis as well as the pa of a synthesised beam giving multiple input beams</span>
+<span class="sd">    beamnumbers (list): Beam numbers referring to the beam parameters</span>
+<span class="sd">    sbeams (numpy array): The input minor, major and pa parameters of the beams</span>
+<span class="sd">    returns (numpy array, list of strings): The major and minor axis and pa of the beam to convolve to, list of the</span>
+<span class="sd">                          rejected chunks</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">beamnumbers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">40</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">bmaj_rej</span> <span class="o">=</span> <span class="n">reject_outliers</span><span class="p">(</span><span class="n">sbeams</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="mf">20.0</span><span class="p">)</span>
+    <span class="n">bmin_rej</span> <span class="o">=</span> <span class="n">reject_outliers</span><span class="p">(</span><span class="n">sbeams</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="mf">20.0</span><span class="p">)</span>
+    <span class="n">bpa_rej</span> <span class="o">=</span> <span class="n">reject_outliers</span><span class="p">(</span><span class="n">sbeams</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">],</span> <span class="mf">20.0</span><span class="p">)</span>
+    <span class="n">rejlist</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">bmaj_rej</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">bmin_rej</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">bpa_rej</span><span class="p">[</span><span class="mi">0</span><span class="p">])))</span>
+    <span class="n">brej</span> <span class="o">=</span> <span class="p">[</span><span class="n">beamnumbers</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">rejlist</span><span class="p">]</span>
+    <span class="n">bmaj_filt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">sbeams</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">rejlist</span><span class="p">)</span>
+    <span class="n">bmin_filt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">sbeams</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">rejlist</span><span class="p">)</span>
+    <span class="n">bpa_filt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">sbeams</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">rejlist</span><span class="p">)</span>
+    <span class="n">bmaj</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">bmaj_filt</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1.02</span>
+    <span class="n">bmin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">bmin_filt</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1.02</span>
+    <span class="n">bpa</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmedian</span><span class="p">(</span><span class="n">bpa_filt</span><span class="p">)</span>
+    <span class="n">bpar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">bmaj</span><span class="p">,</span> <span class="n">bmin</span><span class="p">,</span> <span class="n">bpa</span><span class="p">])</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">brej</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">bpar</span></div>
+
+
+<div class="viewcode-block" id="reject_outliers"><a class="viewcode-back" href="../../../subs/combim.html#apercal.subs.combim.reject_outliers">[docs]</a><span class="k">def</span> <span class="nf">reject_outliers</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">m</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Algorithm to remove outliers by median</span>
+<span class="sd">    data (numpy array): Data to detect outliers in</span>
+<span class="sd">    m (float): Outlier threshold</span>
+<span class="sd">    returns (numpy array): Data without outliers</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">data</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmedian</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+    <span class="n">mdev</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmedian</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">d</span> <span class="o">/</span> <span class="p">(</span><span class="n">mdev</span> <span class="k">if</span> <span class="n">mdev</span> <span class="k">else</span> <span class="mf">1.0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">s</span> <span class="o">&gt;=</span> <span class="n">m</span><span class="p">])</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Apercal Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4.
+    </div>
+  </body>
+</html>

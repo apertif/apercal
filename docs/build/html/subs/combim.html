@@ -1,0 +1,143 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>combim &#8212; Apercal 2.5.0 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="convim" href="convim.html" />
+    <link rel="prev" title="calmodels" href="calmodels.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="convim.html" title="convim"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="calmodels.html" title="calmodels"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../subs_modules.html" accesskey="U">Supporting modules</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">combim</a><ul>
+<li><a class="reference internal" href="#module-apercal.subs.combim">Reference</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="calmodels.html"
+                        title="previous chapter">calmodels</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="convim.html"
+                        title="next chapter">convim</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/subs/combim.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="combim">
+<h1>combim<a class="headerlink" href="#combim" title="Permalink to this headline">¶</a></h1>
+<p>This module contains functionality to calculate synthesized beam.</p>
+<p><em>Note: it is not clear which pipeline module uses it.</em></p>
+<div class="section" id="module-apercal.subs.combim">
+<span id="reference"></span><h2>Reference<a class="headerlink" href="#module-apercal.subs.combim" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="apercal.subs.combim.calc_synbeam">
+<code class="descclassname">apercal.subs.combim.</code><code class="descname">calc_synbeam</code><span class="sig-paren">(</span><em>sbeams</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/combim.html#calc_synbeam"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.combim.calc_synbeam" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the mimimum major and minor axis as well as the pa of a synthesised beam giving multiple input beams
+beamnumbers (list): Beam numbers referring to the beam parameters
+sbeams (numpy array): The input minor, major and pa parameters of the beams
+returns (numpy array, list of strings): The major and minor axis and pa of the beam to convolve to, list of the</p>
+<blockquote>
+<div>rejected chunks</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.combim.reject_outliers">
+<code class="descclassname">apercal.subs.combim.</code><code class="descname">reject_outliers</code><span class="sig-paren">(</span><em>data</em>, <em>m</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/combim.html#reject_outliers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.combim.reject_outliers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Algorithm to remove outliers by median
+data (numpy array): Data to detect outliers in
+m (float): Outlier threshold
+returns (numpy array): Data without outliers</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="convim.html" title="convim"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="calmodels.html" title="calmodels"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../subs_modules.html" >Supporting modules</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Apercal Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4.
+    </div>
+  </body>
+</html>

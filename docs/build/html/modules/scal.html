@@ -1,0 +1,197 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Module: scal &#8212; Apercal 2.5.0 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Module: continuum" href="continuum.html" />
+    <link rel="prev" title="Module: ccal" href="ccal.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="continuum.html" title="Module: continuum"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="ccal.html" title="Module: ccal"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../pipeline_modules.html" accesskey="U">Pipeline modules</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="ccal.html"
+                        title="previous chapter">Module: ccal</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="continuum.html"
+                        title="next chapter">Module: continuum</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/modules/scal.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-apercal.modules.scal">
+<span id="module-scal"></span><h1>Module: scal<a class="headerlink" href="#module-apercal.modules.scal" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="apercal.modules.scal.scal">
+<em class="property">class </em><code class="descclassname">apercal.modules.scal.</code><code class="descname">scal</code><span class="sig-paren">(</span><em>file_=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/scal.html#scal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.scal.scal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Selfcal class to do the self-calibration on a dataset.</p>
+<dl class="method">
+<dt id="apercal.modules.scal.scal.amp">
+<code class="descname">amp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/scal.html#scal.amp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.scal.scal.amp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Executes amplitude self-calibration with the given parameters</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.scal.scal.averagedata">
+<code class="descname">averagedata</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/scal.html#scal.averagedata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.scal.scal.averagedata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Averages the data to one channel per subband for self-calibration</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.scal.scal.check_starting_conditions">
+<code class="descname">check_starting_conditions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/scal.html#scal.check_starting_conditions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.scal.scal.check_starting_conditions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check that the miriad file from convert exists.</p>
+<p>If it does not exists, none of the subsequent tasks in go need to be executed.
+This seems necessary as not all the tasks do this check and they do not have
+to. A single task is enough.</p>
+<p>Not sure if it is necessary to add all the param variables from selfcal
+and set them False if the check fails. For now, just use the main one</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>self</dd>
+<dt>Return:</dt>
+<dd>(bool): True if file is found, otherwise False</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.scal.scal.flagline">
+<code class="descname">flagline</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/scal.html#scal.flagline"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.scal.scal.flagline" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an image cube of the averaged datasets and measures the rms in each channel. All channels with an rms
+outside of a given sigma interval are flagged in the self-calibration, continuum and polarisation imagaing, but are still used for line imaging.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.scal.scal.go">
+<code class="descname">go</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/scal.html#scal.go"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.scal.scal.go" title="Permalink to this definition">¶</a></dt>
+<dd><p>Executes the whole self-calibration process in the following order:
+averagedata
+flagline
+parametric
+phase
+amp</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.scal.scal.parametric">
+<code class="descname">parametric</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/scal.html#scal.parametric"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.scal.scal.parametric" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parametric self calibration using an NVSS/FIRST skymodel and calculating spectral indices by source matching with WENSS.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.scal.scal.phase">
+<code class="descname">phase</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/scal.html#scal.phase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.scal.scal.phase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Executes the phase self-calibration with the given parameters</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.scal.scal.reset">
+<code class="descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/scal.html#scal.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.scal.scal.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to reset the current step and remove all generated selfcal data for the current beam. Be careful! Deletes all data generated in
+this step!</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.scal.scal.reset_all">
+<code class="descname">reset_all</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/scal.html#scal.reset_all"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.scal.scal.reset_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to reset the current step and remove all generated selfcal data for the all beams. Be careful! Deletes all data generated in
+this step!</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.scal.scal.summary">
+<code class="descname">summary</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/scal.html#scal.summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.scal.scal.summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a general summary of the parameters in the parameter file generated during SELFCAL. No detailed summary
+is available for SELFCAL up to now.</p>
+<p>returns (DataFrame): A python pandas dataframe object, which can be looked at with the style function in the notebook</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="continuum.html" title="Module: continuum"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="ccal.html" title="Module: ccal"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../pipeline_modules.html" >Pipeline modules</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Apercal Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4.
+    </div>
+  </body>
+</html>

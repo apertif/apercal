@@ -1,0 +1,242 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Overview of Apercal pipeline &#8212; Apercal 2.5.0 documentation</title>
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Running Apercal on happili" href="apercal_happili.html" />
+    <link rel="prev" title="Welcome to Apercal’s documentation!" href="index.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="apercal_happili.html" title="Running Apercal on happili"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to Apercal’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Apercal 2.5.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Overview of Apercal pipeline</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#pipeline">0. Pipeline</a></li>
+<li><a class="reference internal" href="#prepare">1. Prepare</a></li>
+<li><a class="reference internal" href="#preflag">2. Preflag</a></li>
+<li><a class="reference internal" href="#crosscal">3. Crosscal</a></li>
+<li><a class="reference internal" href="#convert">4. Convert</a></li>
+<li><a class="reference internal" href="#selfcal">5. Selfcal</a></li>
+<li><a class="reference internal" href="#continuum">6. Continuum</a></li>
+<li><a class="reference internal" href="#line">7. Line</a></li>
+<li><a class="reference internal" href="#polarisation">8. Polarisation</a></li>
+<li><a class="reference internal" href="#mosaic">9. Mosaic</a></li>
+<li><a class="reference internal" href="#transfer">10. Transfer</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to Apercal’s documentation!</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="apercal_happili.html"
+                        title="next chapter">Running Apercal on happili</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/overview.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="overview-of-apercal-pipeline">
+<h1>Overview of Apercal pipeline<a class="headerlink" href="#overview-of-apercal-pipeline" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>This brief overview of the Apercal pipeline is based on the Apercal specification document (APERCal.pdf) in combination with the pipeline itself. The goal is to give a generic (but somewhat specific) insight into the various modules within Apercal and what they are doing. More specific/detailed documentation to come elsewhere.</p>
+<p>Each module can be run individually though some modules depend on the data products created by others.</p>
+</div>
+<div class="section" id="pipeline">
+<h2>0. Pipeline<a class="headerlink" href="#pipeline" title="Permalink to this headline">¶</a></h2>
+<p>The pipeline runs all modules listed below except for <em>Mosaic</em>. Most steps process 5 to 10 beams in parallel which is optimized for running on happili. The only exception is the <em>Prepare</em> module which is run sequentially and the <em>Line</em> module which is already parallelized for creating the cubes of a single beam.</p>
+</div>
+<div class="section" id="prepare">
+<h2>1. Prepare<a class="headerlink" href="#prepare" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Goal: Download data from ALTA and sort into folders</li>
+<li>Input: Requested target + calibrator observation task IDs</li>
+<li>Output: <code class="docutils literal notranslate"><span class="pre">*.MS</span></code> data products, in directory structure</li>
+</ul>
+<p>Check if observation directories exist; if not, create them.
+Check if observation data products exist; if not, download them.</p>
+</div>
+<div class="section" id="preflag">
+<h2>2. Preflag<a class="headerlink" href="#preflag" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Goal: Apply known flags and conduct automatic flagging</li>
+<li>Input: <code class="docutils literal notranslate"><span class="pre">*.MS</span></code> data products, in directory structure</li>
+<li>Output: <code class="docutils literal notranslate"><span class="pre">*.MS</span></code> data products (changed in place)</li>
+</ul>
+<p>Flag data where antennas are shadowed (preflag.shadow)
+Flag subband edges, specifically channels 0-1 and 63-64 (preflag.edges)
+Flag ghost channels, specifically channels 16 and 48 (preflag.ghosts)
+Apply manual flags (preflag.manual), which can be any of:</p>
+<p>Autocorrelations (preflag.manualflag_auto)
+Named antennas, e.g. ‘RT2,RTD’? (preflag.manualflag_antenna)
+Correlations, e.g. ‘XY,YX,YY’ (preflag.manualflag_corr)
+Baselines, e.g. ‘ant1&amp;ant2’? (preflag.manualflag_baseline)
+Channels, e.g. ‘0~5;120~128’ (preflag.manualflag_channel)
+Time, e.g. ‘09:14:0~09:54:0’ (preflag.manualflag_time)</p>
+<p>Apply AOflagger strategy to data-set (preflag.aoflagger):</p>
+<p>Create bandpass solution and apply to data (preflag.aoflagger_bandpass)
+AOflagging on data-set (preflag.aoflagger_flag)</p>
+</div>
+<div class="section" id="crosscal">
+<h2>3. Crosscal<a class="headerlink" href="#crosscal" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Goal: Calibrate the data using calibrator observation.</li>
+<li>Input: Flagged MS for calibrators, Flagged MS for target.</li>
+<li>Output: Calibrated MS (changed in place), caltables (<code class="docutils literal notranslate"><span class="pre">*.Df</span></code>, <code class="docutils literal notranslate"><span class="pre">*.Kcross</span></code>, <code class="docutils literal notranslate"><span class="pre">*.Xf</span></code>, <code class="docutils literal notranslate"><span class="pre">*.Bscan</span></code>, <code class="docutils literal notranslate"><span class="pre">*.G0ph</span></code>, <code class="docutils literal notranslate"><span class="pre">*.G1ap</span></code>, <code class="docutils literal notranslate"><span class="pre">*.K</span></code>)</li>
+</ul>
+<p>Create TEC correction images/calibration tables (ccal.TEC)
+Carry out bandpass calibration (ccal.bandpass)
+Calculate amplitude and phase gains using fluxcal (ccal.gains)
+Calculate global delay calibrations using fluxcal (ccal.global_delay)
+Calculate crosshand delays using polcal (ccal.crosshand_delay)
+Get leakage corrections using fluxcal (ccal.leakage)
+Calculate polarisation angle corrections using polcal (ccal.polarisation_angle)
+Apply correction tables to calibrators (ccal.transfer_to_cal)
+Apply correction tables to target beams (ccal.transfer_to_target)</p>
+</div>
+<div class="section" id="convert">
+<h2>4. Convert<a class="headerlink" href="#convert" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Goal: Convert between CASA/Miriad/UVFITS/other formats.</li>
+<li>Input: Calibrated MS</li>
+<li>Output: <code class="docutils literal notranslate"><span class="pre">*.UVFITS</span></code> / <code class="docutils literal notranslate"><span class="pre">*.mir</span></code> files</li>
+</ul>
+<p>The default configuration will remove the UVFITS file</p>
+</div>
+<div class="section" id="selfcal">
+<h2>5. Selfcal<a class="headerlink" href="#selfcal" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Goal: Self-calibrate the visibilities.</li>
+<li>Input: Converted Mir files</li>
+<li>Output: <code class="docutils literal notranslate"><span class="pre">*.mir</span></code>/<code class="docutils literal notranslate"><span class="pre">*_amp.mir</span></code> files</li>
+</ul>
+</div>
+<div class="section" id="continuum">
+<h2>6. Continuum<a class="headerlink" href="#continuum" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Goal: Deconvolve and clean the data to produce continuum images.
+Create a multifrequncy image and images based on frequency chunks</li>
+<li>Input: Converted Mir file and selfcal Mir files</li>
+<li>Output: <code class="docutils literal notranslate"><span class="pre">*.fits</span></code></li>
+</ul>
+</div>
+<div class="section" id="line">
+<h2>7. Line<a class="headerlink" href="#line" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Goal: Split the full bandwidth into frequency chunks with small overlap and produce continuum-subtracted line emission cubes for each frequency chunks</li>
+<li>Input: Converted Mir file and selfcal Mir files</li>
+<li>Output: <code class="docutils literal notranslate"><span class="pre">*.fits</span></code></li>
+</ul>
+</div>
+<div class="section" id="polarisation">
+<h2>8. Polarisation<a class="headerlink" href="#polarisation" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Goal: Generate Stokes Q,U,V continuum images.</li>
+<li>Input: Converted Mir file and selfcal Mir files</li>
+<li>Output: <code class="docutils literal notranslate"><span class="pre">*.fits</span></code></li>
+</ul>
+</div>
+<div class="section" id="mosaic">
+<h2>9. Mosaic<a class="headerlink" href="#mosaic" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Goal: Mosaic data from different beams into one large field. This step is not done automatically</li>
+<li>Input: Continuum image fits files</li>
+<li>Output: <code class="docutils literal notranslate"><span class="pre">*.fits</span></code></li>
+</ul>
+</div>
+<div class="section" id="transfer">
+<h2>10. Transfer<a class="headerlink" href="#transfer" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Goal: Create self-calibrated visibility data which can be transferred to ALTA</li>
+<li>Input: Converted Mir file and selfcal Mir files</li>
+<li>Output: <code class="docutils literal notranslate"><span class="pre">*.UVFITS</span></code></li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="apercal_happili.html" title="Running Apercal on happili"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to Apercal’s documentation!"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Apercal 2.5.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Apercal Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4.
+    </div>
+  </body>
+</html>

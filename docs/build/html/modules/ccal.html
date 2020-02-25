@@ -1,0 +1,279 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Module: ccal &#8212; Apercal 2.5.0 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Module: scal" href="scal.html" />
+    <link rel="prev" title="Module: convert" href="convert.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="scal.html" title="Module: scal"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="convert.html" title="Module: convert"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../pipeline_modules.html" accesskey="U">Pipeline modules</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="convert.html"
+                        title="previous chapter">Module: convert</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="scal.html"
+                        title="next chapter">Module: scal</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/modules/ccal.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-apercal.modules.ccal">
+<span id="module-ccal"></span><h1>Module: ccal<a class="headerlink" href="#module-apercal.modules.ccal" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="apercal.modules.ccal.ccal">
+<em class="property">class </em><code class="descclassname">apercal.modules.ccal.</code><code class="descname">ccal</code><span class="sig-paren">(</span><em>file_=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/ccal.html#ccal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.ccal.ccal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Crosscal class to handle applying the calibrator gains and prepare the dataset for self-calibration.</p>
+<p>Crosscal contains several quality checks at two levels for the flux calibrator.
+First, it checks whether CASA failed to create any of the flux calibrator calibration files and 
+changes references antennas if one failed. Second, it checks the bandpass phase solutions. It will
+restart with a different reference antenna in case too many telescope failed or just flag the telescopes.
+Third, it checks the amplitude of the autocorrelation and flags a polarization if they are too high.</p>
+<dl class="method">
+<dt id="apercal.modules.ccal.ccal.apply_solutions">
+<code class="descname">apply_solutions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/ccal.html#ccal.apply_solutions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.ccal.ccal.apply_solutions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply the solutions to the calibrators and the target</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.ccal.ccal.bandpass">
+<code class="descname">bandpass</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/ccal.html#ccal.bandpass"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.ccal.ccal.bandpass" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the bandpass correction table using the flux calibrator.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.ccal.ccal.calibrate_calibrators">
+<code class="descname">calibrate_calibrators</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/ccal.html#ccal.calibrate_calibrators"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.ccal.ccal.calibrate_calibrators" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to manage the adaptive calibration of the calibrators.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.ccal.ccal.calibrate_fluxcal">
+<code class="descname">calibrate_fluxcal</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/ccal.html#ccal.calibrate_fluxcal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.ccal.ccal.calibrate_fluxcal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Running the calibration steps that are specific for the flux calibrator</p>
+<p>In case one of the calibration steps fails and there is no calibration table, 
+the function restarts and tries to calibrate the flux calibrator
+with a different reference antenna except for the case that
+the bandpass phase solution check is failed.
+The function does not perform a quality check except for the bandpass
+phase solutions.
+If an antenna fails the bandpass phase solutions, it is flagged.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.ccal.ccal.calibrate_polcal">
+<code class="descname">calibrate_polcal</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/ccal.html#ccal.calibrate_polcal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.ccal.ccal.calibrate_polcal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Running the calibration steps that are specific for the pol calibrator</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.ccal.ccal.check_autocorrelation">
+<code class="descname">check_autocorrelation</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/ccal.html#ccal.check_autocorrelation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.ccal.ccal.check_autocorrelation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check the autocorrelation in relation to expected values and flag data
+if necessary.</p>
+<p>The function will check the autocorrelation for each telescope in XX and YY
+with respect to an expected distribution. It will check the relative offset 
+and the to some extent the shape of the autocorrelation. If one or the other
+shows an issue, the polarisation of this telescope will get flagged</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.ccal.ccal.check_bandpass">
+<code class="descname">check_bandpass</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/ccal.html#ccal.check_bandpass"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.ccal.ccal.check_bandpass" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to check the quality of the bandpass phase solutions</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.ccal.ccal.check_ref_ant">
+<code class="descname">check_ref_ant</code><span class="sig-paren">(</span><em>check_flags=True</em>, <em>change_ref_ant=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/ccal.html#ccal.check_ref_ant"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.ccal.ccal.check_ref_ant" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check that the default reference antenna.</p>
+<p>This function tests whether the default reference antenna is 
+available or not. If not, it uses the next antenna. It changes
+the config file settings for crosscal and selfcal accordingly.
+RTC and RTD have been excluded because of their performance. 
+At the moment, the function only tests whether the entire reference
+antenna is flagged.</p>
+<p>Theses tests are based on the flux calibrator</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.ccal.ccal.crosshand_delay">
+<code class="descname">crosshand_delay</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/ccal.html#ccal.crosshand_delay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.ccal.ccal.crosshand_delay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the cross-hand delay corrections from the polarised calibrator</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.ccal.ccal.flag_data">
+<code class="descname">flag_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/ccal.html#ccal.flag_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.ccal.ccal.flag_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to flag a polarisation for a given antenna</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.ccal.ccal.gains">
+<code class="descname">gains</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/ccal.html#ccal.gains"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.ccal.ccal.gains" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the amplitude and phase gains for the flux calibrator</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.ccal.ccal.global_delay">
+<code class="descname">global_delay</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/ccal.html#ccal.global_delay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.ccal.ccal.global_delay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the global delay corrections from the flux calibrator</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.ccal.ccal.go">
+<code class="descname">go</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/ccal.html#ccal.go"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.ccal.ccal.go" title="Permalink to this definition">¶</a></dt>
+<dd><p>Executes the full cross calibration process in the following order.
+setflux
+initial_phase
+global_delay
+bandpass
+gains
+crosshand_delay
+leakage
+polarisation_angle
+transfer_to_cal
+tranfer_to_target</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.ccal.ccal.initial_phase">
+<code class="descname">initial_phase</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/ccal.html#ccal.initial_phase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.ccal.ccal.initial_phase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initial phase calibration for the calibrators</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.ccal.ccal.leakage">
+<code class="descname">leakage</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/ccal.html#ccal.leakage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.ccal.ccal.leakage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the leakage corrections from the flux calibrator</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.ccal.ccal.polarisation_angle">
+<code class="descname">polarisation_angle</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/ccal.html#ccal.polarisation_angle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.ccal.ccal.polarisation_angle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the polarisation angle corrections from the polarised calibrator</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.ccal.ccal.reset">
+<code class="descname">reset</code><span class="sig-paren">(</span><em>do_clearcal=True</em>, <em>do_clearcal_fluxcal=False</em>, <em>do_clearcal_polcal=False</em>, <em>do_clearcal_target=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/ccal.html#ccal.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.ccal.ccal.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to reset the current step and clear all calibration from datasets as well as all calibration tables.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.ccal.ccal.setflux">
+<code class="descname">setflux</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/ccal.html#ccal.setflux"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.ccal.ccal.setflux" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the models for the flux and polarisation calibrators</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.ccal.ccal.summary">
+<code class="descname">summary</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/ccal.html#ccal.summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.ccal.ccal.summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a general summary of the parameters in the parameter file generated during CROSSCAL. No detailed
+summary is available for CROSSCAL.</p>
+<p>returns (DataFrame): A python pandas dataframe object, which can be looked at with the style function in
+the notebook</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.ccal.ccal.transfer_to_cal">
+<code class="descname">transfer_to_cal</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/ccal.html#ccal.transfer_to_cal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.ccal.ccal.transfer_to_cal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Applies the correction tables to the calibrators</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.ccal.ccal.transfer_to_target">
+<code class="descname">transfer_to_target</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/ccal.html#ccal.transfer_to_target"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.ccal.ccal.transfer_to_target" title="Permalink to this definition">¶</a></dt>
+<dd><p>Applies the correction tables to the target beams</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="scal.html" title="Module: scal"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="convert.html" title="Module: convert"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../pipeline_modules.html" >Pipeline modules</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Apercal Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,10 @@
+Run Apercal, DataQA and Apergest
+********************************
+
+This is a template script to run Apercal, DataQA and Apergest
+
+Reference
+---------
+
+.. automodule:: scripts.run_apercal_qa_apergest_happili-01
+   :members:

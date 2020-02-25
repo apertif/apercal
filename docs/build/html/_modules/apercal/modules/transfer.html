@@ -1,0 +1,364 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>apercal.modules.transfer &#8212; Apercal 2.5.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for apercal.modules.transfer</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">apercal.modules.base</span> <span class="k">import</span> <span class="n">BaseModule</span>
+<span class="kn">from</span> <span class="nn">apercal.subs</span> <span class="k">import</span> <span class="n">setinit</span> <span class="k">as</span> <span class="n">subs_setinit</span>
+<span class="kn">from</span> <span class="nn">apercal.subs</span> <span class="k">import</span> <span class="n">managefiles</span> <span class="k">as</span> <span class="n">subs_managefiles</span>
+<span class="kn">from</span> <span class="nn">apercal.subs.param</span> <span class="k">import</span> <span class="n">get_param_def</span>
+<span class="kn">from</span> <span class="nn">apercal.subs</span> <span class="k">import</span> <span class="n">param</span> <span class="k">as</span> <span class="n">subs_param</span>
+<span class="kn">from</span> <span class="nn">apercal.libs</span> <span class="k">import</span> <span class="n">lib</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="transfer"><a class="viewcode-back" href="../../../modules/transfer.html#apercal.modules.transfer.transfer">[docs]</a><span class="k">class</span> <span class="nc">transfer</span><span class="p">(</span><span class="n">BaseModule</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Transfer class to combine the calibrated data chunks with full spectral resolution into one file and export to UVFITS.</span>
+<span class="sd">    Gain tables and flags are already applied. Data is then ready to get ingested into ALTA.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">module_name</span> <span class="o">=</span> <span class="s1">&#39;TRANSFER&#39;</span>
+
+    <span class="n">transferdir</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">transfer_convert_selfcaluv2uvfits</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">default</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">load_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_</span><span class="p">)</span>
+        <span class="n">subs_setinit</span><span class="o">.</span><span class="n">setinitdirs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">subs_setinit</span><span class="o">.</span><span class="n">setdatasetnamestomiriad</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+<div class="viewcode-block" id="transfer.go"><a class="viewcode-back" href="../../../modules/transfer.html#apercal.modules.transfer.transfer.go">[docs]</a>    <span class="k">def</span> <span class="nf">go</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Executes the continuum imaging process in the following order</span>
+<span class="sd">        convert_lineuv2uvfits</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting TRANSFER module&quot;</span><span class="p">)</span>
+
+        <span class="c1"># checking miriad source file</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_starting_conditions</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">convert_selfcaluv2uvfits</span><span class="p">()</span>
+
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;TRANSFER module done&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;TRANSFER module failed&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="transfer.check_starting_conditions"><a class="viewcode-back" href="../../../modules/transfer.html#apercal.modules.transfer.transfer.check_starting_conditions">[docs]</a>    <span class="k">def</span> <span class="nf">check_starting_conditions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check that the miriad file from convert exists.</span>
+
+<span class="sd">        If it does not exists, none of the subsequent tasks in go need to be executed.</span>
+<span class="sd">        This seems necessary as not all the tasks do this check and they do not have</span>
+<span class="sd">        to. A single task is enough.</span>
+
+<span class="sd">        Not sure if it is necessary to add all the param variables from selfcal</span>
+<span class="sd">        and set them False if the check fails. For now, just use the main one</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            self</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            (bool): True if file is found, otherwise False</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;Beam </span><span class="si">{}</span><span class="s2">: Checking starting conditions for TRANSFER&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">beam</span><span class="p">))</span>
+
+        <span class="c1"># initial setup</span>
+        <span class="n">subs_setinit</span><span class="o">.</span><span class="n">setinitdirs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">subs_setinit</span><span class="o">.</span><span class="n">setdatasetnamestomiriad</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="c1"># path to converted miriad file</span>
+        <span class="n">mir_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">crosscaldir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+
+        <span class="c1"># check that the file exists</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">mir_file</span><span class="p">):</span>
+            <span class="c1"># miriad file exists</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">&quot;Beam </span><span class="si">{}</span><span class="s2">: Checking starting conditions for TRANSFER ... Done: All good.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">beam</span><span class="p">))</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># miriad file does not exists</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;Beam </span><span class="si">{}</span><span class="s2">: Checking starting conditions for TRANSFER ... Done: Failed&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">beam</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;Beam </span><span class="si">{}</span><span class="s2">: Did not find main miriad file in </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">beam</span><span class="p">,</span> <span class="n">mir_file</span><span class="p">))</span>
+
+            <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="transfer.convert_selfcaluv2uvfits"><a class="viewcode-back" href="../../../modules/transfer.html#apercal.modules.transfer.transfer.convert_selfcaluv2uvfits">[docs]</a>    <span class="k">def</span> <span class="nf">convert_selfcaluv2uvfits</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Looks for the last self-calibrated uv-fits file, copies its gains over to the original file, applies them and coverts to UVFITS format</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">subs_setinit</span><span class="o">.</span><span class="n">setinitdirs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="n">sbeam</span> <span class="o">=</span> <span class="s1">&#39;selfcal_B&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">beam</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">tbeam</span> <span class="o">=</span> <span class="s1">&#39;transfer_B&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">beam</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="c1"># Create the parameters for the parameter file for the conversion of the UVFITS-files</span>
+
+        <span class="n">transfertargetbeamsselfcaluv2uvfitsstatus</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">tbeam</span> <span class="o">+</span> <span class="s1">&#39;_targetbeams_selfcaluv2uvfits_status&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">transfer_convert_selfcaluv2uvfits</span><span class="p">:</span>
+            <span class="n">subs_setinit</span><span class="o">.</span><span class="n">setinitdirs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="n">subs_setinit</span><span class="o">.</span><span class="n">setdatasetnamestomiriad</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="n">subs_managefiles</span><span class="o">.</span><span class="n">director</span><span class="p">(</span>
+                <span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;ch&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">transferdir</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">transfertargetbeamsselfcaluv2uvfitsstatus</span><span class="p">:</span>
+                <span class="c1"># Get the status of the selfcal for the specified beam</span>
+                <span class="n">selfcaltargetbeamsphasestatus</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="p">,</span> <span class="n">sbeam</span> <span class="o">+</span> <span class="s1">&#39;_targetbeams_phase_status&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+                <span class="n">selfcaltargetbeamsampstatus</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="p">,</span> <span class="n">sbeam</span> <span class="o">+</span> <span class="s1">&#39;_targetbeams_amp_status&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+                <span class="n">datasetname_amp</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">selfcaldir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;.mir&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_amp.mir&#39;</span>
+                <span class="n">datasetname_phase</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">selfcaldir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                    <span class="s2">&quot;Setting amplitude selfcal file name: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">datasetname_amp</span><span class="p">))</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                    <span class="s2">&quot;Setting phase selfcal file name: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">datasetname_phase</span><span class="p">))</span>
+                <span class="c1"># datasetname_amp = self.get_target_path().rstrip(&#39;.mir&#39;) + &#39;_amp.mir&#39;</span>
+                <span class="c1"># datasetname_phase = self.get_target_path()</span>
+                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">datasetname_amp</span><span class="p">)</span> <span class="ow">and</span> <span class="n">selfcaltargetbeamsampstatus</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span>
+                                <span class="s1">&#39;: Using amplitude self-calibrated dataset!&#39;</span><span class="p">)</span>
+                    <span class="n">dataset</span> <span class="o">=</span> <span class="n">datasetname_amp</span>
+                <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">datasetname_phase</span><span class="p">)</span> <span class="ow">and</span> <span class="n">selfcaltargetbeamsphasestatus</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                        <span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Using phase self-calibrated dataset. Amplitude calibration was not successful or not wanted!&#39;</span><span class="p">)</span>
+                    <span class="n">dataset</span> <span class="o">=</span> <span class="n">datasetname_phase</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">dataset</span> <span class="o">=</span> <span class="kc">None</span>
+
+                <span class="k">if</span> <span class="n">dataset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="c1"># Copy the raw dataset to the transfer directory</span>
+                    <span class="n">subs_managefiles</span><span class="o">.</span><span class="n">director</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;cp&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">transferdir</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="n">file_</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">crosscaldir</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">selfcaltargetbeamsampstatus</span><span class="p">:</span>
+                        <span class="n">gpcopy</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">miriad</span><span class="p">(</span><span class="s1">&#39;gpcopy&#39;</span><span class="p">)</span>
+                        <span class="n">gpcopy</span><span class="o">.</span><span class="n">vis</span> <span class="o">=</span> <span class="n">datasetname_phase</span>
+                        <span class="n">gpcopy</span><span class="o">.</span><span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transferdir</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span>
+                        <span class="n">gpcopy</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
+                        <span class="n">uvaver</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">miriad</span><span class="p">(</span><span class="s1">&#39;uvaver&#39;</span><span class="p">)</span>
+                        <span class="n">uvaver</span><span class="o">.</span><span class="n">vis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transferdir</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span>
+                        <span class="n">uvaver</span><span class="o">.</span><span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transferdir</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> \
+                            <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;.mir&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_phase.mir&#39;</span>
+                        <span class="n">uvaver</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
+                        <span class="n">gpcopy</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">miriad</span><span class="p">(</span><span class="s1">&#39;gpcopy&#39;</span><span class="p">)</span>
+                        <span class="n">gpcopy</span><span class="o">.</span><span class="n">vis</span> <span class="o">=</span> <span class="n">datasetname_amp</span>
+                        <span class="n">gpcopy</span><span class="o">.</span><span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transferdir</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> \
+                            <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;.mir&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_phase.mir&#39;</span>
+                        <span class="n">gpcopy</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
+                        <span class="n">fits</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">miriad</span><span class="p">(</span><span class="s1">&#39;fits&#39;</span><span class="p">)</span>
+                        <span class="n">fits</span><span class="o">.</span><span class="n">op</span> <span class="o">=</span> <span class="s1">&#39;uvout&#39;</span>
+                        <span class="n">fits</span><span class="o">.</span><span class="n">in_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transferdir</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> \
+                            <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;.mir&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_phase.mir&#39;</span>
+                        <span class="n">fits</span><span class="o">.</span><span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transferdir</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> \
+                            <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;.mir&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.UVFITS&#39;</span>
+                        <span class="n">fits</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
+                        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transferdir</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;.mir&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.UVFITS&#39;</span><span class="p">):</span>
+                            <span class="n">subs_managefiles</span><span class="o">.</span><span class="n">director</span><span class="p">(</span>
+                                <span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;rm&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">transferdir</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+                            <span class="n">subs_managefiles</span><span class="o">.</span><span class="n">director</span><span class="p">(</span>
+                                <span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;rm&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">transferdir</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;.mir&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_phase.mir&#39;</span><span class="p">)</span>
+                            <span class="n">transfertargetbeamsselfcaluv2uvfitsstatus</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                                <span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Conversion was not successful. No UVFITS-file generated!&#39;</span><span class="p">)</span>
+                            <span class="n">transfertargetbeamsselfcaluv2uvfitsstatus</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="k">elif</span> <span class="n">selfcaltargetbeamsphasestatus</span><span class="p">:</span>
+                        <span class="n">gpcopy</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">miriad</span><span class="p">(</span><span class="s1">&#39;gpcopy&#39;</span><span class="p">)</span>
+                        <span class="n">gpcopy</span><span class="o">.</span><span class="n">vis</span> <span class="o">=</span> <span class="n">datasetname_phase</span>
+                        <span class="n">gpcopy</span><span class="o">.</span><span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transferdir</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span>
+                        <span class="n">gpcopy</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
+                        <span class="n">fits</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">miriad</span><span class="p">(</span><span class="s1">&#39;fits&#39;</span><span class="p">)</span>
+                        <span class="n">fits</span><span class="o">.</span><span class="n">op</span> <span class="o">=</span> <span class="s1">&#39;uvout&#39;</span>
+                        <span class="n">fits</span><span class="o">.</span><span class="n">in_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transferdir</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span>
+                        <span class="n">fits</span><span class="o">.</span><span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transferdir</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> \
+                            <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;.mir&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.UVFITS&#39;</span>
+                        <span class="n">fits</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
+                        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transferdir</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;.mir&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.UVFITS&#39;</span><span class="p">):</span>
+                            <span class="n">subs_managefiles</span><span class="o">.</span><span class="n">director</span><span class="p">(</span>
+                                <span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;rm&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">transferdir</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+                            <span class="n">transfertargetbeamsselfcaluv2uvfitsstatus</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                                <span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Conversion was not successful. No UVFITS-file generated!&#39;</span><span class="p">)</span>
+                            <span class="n">transfertargetbeamsselfcaluv2uvfitsstatus</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                        <span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Self-calibration was not successful. No conversion to UVFITS-format possible!&#39;</span><span class="p">)</span>
+                    <span class="n">transfertargetbeamsselfcaluv2uvfitsstatus</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Conversion of final calibrated data to UVFITS-format already successfully executed!&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span>
+                        <span class="s1">&#39;: Conversion of final calibrated data to UVFITS-format not selected!&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Save the derived parameters to the parameter file</span>
+
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tbeam</span> <span class="o">+</span> <span class="s1">&#39;_targetbeams_selfcaluv2uvfits_status&#39;</span><span class="p">,</span>
+                             <span class="n">transfertargetbeamsselfcaluv2uvfitsstatus</span><span class="p">)</span></div>
+
+    <span class="c1"># def convert_lineuv2uvfits(self):</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#     Looks for all calibrated datasets created by the line module, combines the chunks of individual beams and</span>
+    <span class="c1">#     converts them to UVFITS format</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#     subs_setinit.setinitdirs(self)</span>
+    <span class="c1">#     subs_managefiles.director(self, &#39;ch&#39;, self.transferdir, verbose=False)</span>
+    <span class="c1">#     beamlist = sorted(glob.glob(self.basedir + &#39;[0-9][0-9]&#39;))</span>
+    <span class="c1">#     beamnames = [beam.split(&#39;/&#39;)[-1] for beam in beamlist]</span>
+    <span class="c1">#     subs_param.add_param(self, &#39;transfer_input_beams&#39;, beamnames)</span>
+    <span class="c1">#     # transferstatusarray = np.full((len(beamnames, 2), np.False))</span>
+    <span class="c1">#     for b, beam in enumerate(beamlist):</span>
+    <span class="c1">#         uvgluestatusarray = np.full((len(beamnames)), False)</span>
+    <span class="c1">#         uvfitsstatusarray = np.full((len(beamnames)), False)</span>
+    <span class="c1">#         if os.path.isfile(self.target.rstrip(&#39;.mir&#39;) + &#39;_B&#39; + beam.split(&#39;/&#39;)[-1] + &#39;.UVFITS&#39;):</span>
+    <span class="c1">#             logger.warning(&#39;UVFITS file for beam &#39; + beam.split(&#39;/&#39;)[-1] + &#39; already exists! #&#39;)</span>
+    <span class="c1">#         else:</span>
+    <span class="c1">#             chunklist = sorted(glob.glob(beam + &#39;/&#39; + self.linesubdir + &#39;/&#39; + &#39;[0-9][0-9]/[0-9][0-9]&#39; + &#39;.mir&#39;))</span>
+    <span class="c1">#             chunknames = [chunk.split(&#39;/&#39;)[-2] for chunk in chunklist]</span>
+    <span class="c1">#             subs_param.add_param(self, &#39;transfer_input_beam_&#39; + str(beamnames[b]) + &#39;_chunks&#39;, chunknames)</span>
+    <span class="c1">#             uvcatstatusarray = np.full((len(chunknames)), False)</span>
+    <span class="c1">#             logger.debug(&#39;Starting combination of frequency chunks for beam &#39; + beam.split(&#39;/&#39;)[-1] + &#39; #&#39;)</span>
+    <span class="c1">#             for c, chunk in enumerate(chunklist):</span>
+    <span class="c1">#                 uvcat = lib.miriad(&#39;uvcat&#39;)</span>
+    <span class="c1">#                 uvcat.vis = chunk</span>
+    <span class="c1">#                 uvcat.out = self.transferdir + &#39;/&#39; + &#39;B&#39; + beam.split(&#39;/&#39;)[-1] + &#39;_&#39; + str(c + 1)</span>
+    <span class="c1">#                 uvcat.go()</span>
+    <span class="c1">#                 # Check if file has been copied successfully</span>
+    <span class="c1">#                 if os.path.isdir(self.transferdir + &#39;/&#39; + &#39;B&#39; + beam.split(&#39;/&#39;)[-1] + &#39;_&#39; + str(c + 1)):</span>
+    <span class="c1">#                     logger.debug(&#39;Chunk &#39; + str(chunk).zfill(2) + &#39; for beam &#39; + str(</span>
+    <span class="c1">#                         beam.split(&#39;/&#39;)[-1]) + &#39; copied successfully! #&#39;)</span>
+    <span class="c1">#                     uvcatstatusarray[c] = True</span>
+    <span class="c1">#                 else:</span>
+    <span class="c1">#                     logger.warning(&#39;Chunk &#39; + str(chunk).zfill(2) + &#39; for beam &#39; + str(</span>
+    <span class="c1">#                         beam.split(&#39;/&#39;)[-1]) + &#39; NOT copied successfully! #&#39;)</span>
+    <span class="c1">#                     uvcatstatusarray[c] = False</span>
+    <span class="c1">#             subs_param.add_param(self, &#39;transfer_input_beam_&#39; + str(beamnames[b]) + &#39;_copy_status&#39;,</span>
+    <span class="c1">#                                  uvcatstatusarray)</span>
+    <span class="c1">#             uvglue = lib.miriad(&#39;uvglue&#39;)</span>
+    <span class="c1">#             uvglue.vis = &#39;B&#39; + beam.split(&#39;/&#39;)[-1]</span>
+    <span class="c1">#             uvglue.nfiles = len(chunklist)</span>
+    <span class="c1">#             uvglue.out = self.target.rstrip(&#39;.mir&#39;) + &#39;_B&#39; + beam.split(&#39;/&#39;)[-1] + &#39;.mir&#39;</span>
+    <span class="c1">#             uvglue.go()</span>
+    <span class="c1">#             if os.path.isdir(self.target.rstrip(&#39;.mir&#39;) + &#39;_B&#39; + beam.split(&#39;/&#39;)[-1] + &#39;.mir&#39;):</span>
+    <span class="c1">#                 logger.debug(&#39;Combination of frequency chunks for beam &#39; + beam.split(&#39;/&#39;)[-1] + &#39; successful! #&#39;)</span>
+    <span class="c1">#                 subs_managefiles.director(self, &#39;rm&#39;, &#39;B&#39; + beam.split(&#39;/&#39;)[-1] + &#39;*&#39;)</span>
+    <span class="c1">#                 uvgluestatusarray[b] = True</span>
+    <span class="c1">#             else:</span>
+    <span class="c1">#                 logger.warning(&#39;Combination of frequency chunks for beam &#39; + beam.split(&#39;/&#39;)[-1] +</span>
+    <span class="c1">#                                &#39; not successful! #&#39;)</span>
+    <span class="c1">#                 uvgluestatusarray[b] = False</span>
+    <span class="c1">#             fits = lib.miriad(&#39;fits&#39;)</span>
+    <span class="c1">#             fits.op = &#39;uvout&#39;</span>
+    <span class="c1">#             fits.in_ = self.target.rstrip(&#39;.mir&#39;) + &#39;_B&#39; + beam.split(&#39;/&#39;)[-1] + &#39;.mir&#39;</span>
+    <span class="c1">#             fits.out = self.target.rstrip(&#39;.mir&#39;) + &#39;_B&#39; + beam.split(&#39;/&#39;)[-1] + &#39;.UVFITS&#39;</span>
+    <span class="c1">#             fits.go()</span>
+    <span class="c1">#             if os.path.isfile(self.target.rstrip(&#39;.mir&#39;) + &#39;_B&#39; + beam.split(&#39;/&#39;)[-1] + &#39;.UVFITS&#39;):</span>
+    <span class="c1">#                 logger.debug(</span>
+    <span class="c1">#                     &#39;Conversion of MIRIAD file to UVFITS for beam &#39; + beam.split(&#39;/&#39;)[-1] + &#39; successful! #&#39;)</span>
+    <span class="c1">#                 subs_managefiles.director(self, &#39;rm&#39;,</span>
+    <span class="c1">#                                           self.target.rstrip(&#39;.mir&#39;) + &#39;_B&#39; + beam.split(&#39;/&#39;)[-1] + &#39;.mir&#39;)</span>
+    <span class="c1">#                 uvfitsstatusarray[b] = True</span>
+    <span class="c1">#             else:</span>
+    <span class="c1">#                 logger.warning(</span>
+    <span class="c1">#                     &#39;Conversion of MIRIAD file to UVFITS for beam &#39; + beam.split(&#39;/&#39;)[-1] + &#39; NOT successful! #&#39;)</span>
+    <span class="c1">#                 uvfitsstatusarray[b] = False</span>
+    <span class="c1">#         subs_param.add_param(self, &#39;transfer_input_beams_uvglue&#39;, uvgluestatusarray)</span>
+    <span class="c1">#         subs_param.add_param(self, &#39;transfer_input_beams_uvfits&#39;, uvfitsstatusarray)</span>
+
+<div class="viewcode-block" id="transfer.reset"><a class="viewcode-back" href="../../../modules/transfer.html#apercal.modules.transfer.transfer.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Function to reset the current step and remove all generated data. Be careful! Deletes all data generated in</span>
+<span class="sd">        this step!</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">subs_setinit</span><span class="o">.</span><span class="n">setinitdirs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">subs_setinit</span><span class="o">.</span><span class="n">setdatasetnamestomiriad</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Deleting all data products ready for transfer!&#39;</span><span class="p">)</span>
+        <span class="n">subs_managefiles</span><span class="o">.</span><span class="n">director</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;ch&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">basedir</span><span class="p">)</span>
+        <span class="n">subs_managefiles</span><span class="o">.</span><span class="n">director</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;rm&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">transferdir</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Apercal Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4.
+    </div>
+  </body>
+</html>
