@@ -1,0 +1,535 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>apercal.modules.prepare &#8212; Apercal 2.5.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for apercal.modules.prepare</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">apercal.modules.base</span> <span class="k">import</span> <span class="n">BaseModule</span>
+<span class="c1">#from apercal.subs import irods as subs_irods</span>
+<span class="kn">from</span> <span class="nn">apercal.subs</span> <span class="k">import</span> <span class="n">setinit</span> <span class="k">as</span> <span class="n">subs_setinit</span>
+<span class="kn">from</span> <span class="nn">apercal.subs</span> <span class="k">import</span> <span class="n">managefiles</span> <span class="k">as</span> <span class="n">subs_managefiles</span>
+<span class="kn">from</span> <span class="nn">apercal.subs.param</span> <span class="k">import</span> <span class="n">get_param_def</span>
+<span class="kn">from</span> <span class="nn">apercal.subs</span> <span class="k">import</span> <span class="n">param</span> <span class="k">as</span> <span class="n">subs_param</span>
+<span class="kn">from</span> <span class="nn">getdata_alta</span> <span class="k">import</span> <span class="n">getdata_alta</span><span class="p">,</span> <span class="n">getstatus_alta</span>
+<span class="kn">from</span> <span class="nn">apercal.libs</span> <span class="k">import</span> <span class="n">lib</span>
+<span class="kn">from</span> <span class="nn">apercal.subs.msutils</span> <span class="k">import</span> <span class="n">flip_ra</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="prepare"><a class="viewcode-back" href="../../../modules/prepare.html#apercal.modules.prepare.prepare">[docs]</a><span class="k">class</span> <span class="nc">prepare</span><span class="p">(</span><span class="n">BaseModule</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Prepare class. Automatically copies the datasets into the directories and selects valid data (in case of multi-element observations)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">module_name</span> <span class="o">=</span> <span class="s1">&#39;PREPARE&#39;</span>
+
+    <span class="n">prepare_date</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">prepare_obsnum_fluxcal</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">prepare_obsnum_polcal</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">prepare_obsnum_target</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">prepare_target_beams</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">prepare_bypass_alta</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">prepare_flip_ra</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">prepare_split</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">prepare_split_startchannel</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">prepare_split_endchannel</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">default</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">load_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_</span><span class="p">)</span>
+        <span class="n">subs_setinit</span><span class="o">.</span><span class="n">setinitdirs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+<div class="viewcode-block" id="prepare.go"><a class="viewcode-back" href="../../../modules/prepare.html#apercal.modules.prepare.prepare.go">[docs]</a>    <span class="k">def</span> <span class="nf">go</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Executes the complete prepare step with the parameters indicated in the config-file in the following order:</span>
+<span class="sd">        copyobs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Preparing data for calibration&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">copyobs</span><span class="p">()</span>
+        <span class="c1">#self.split()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Data prepared for calibration&#39;</span><span class="p">)</span></div>
+
+    <span class="c1">##############################################</span>
+    <span class="c1"># Continuum mosaicing of the stacked images #</span>
+    <span class="c1">##############################################</span>
+
+<div class="viewcode-block" id="prepare.copyobs"><a class="viewcode-back" href="../../../modules/prepare.html#apercal.modules.prepare.prepare.copyobs">[docs]</a>    <span class="k">def</span> <span class="nf">copyobs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Prepares the directory structure and copies over the needed data from ALTA.</span>
+<span class="sd">        Checks for data in the current working directories and copies only missing data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">subs_setinit</span><span class="o">.</span><span class="n">setinitdirs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="c1"># Check if the parameter is already in the parameter file and load it otherwise create the needed arrays #</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basedir</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basedir</span><span class="p">)</span>
+
+        <span class="c1"># Is the fluxcal data requested?</span>
+        <span class="n">preparefluxcalrequested</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_fluxcal_requested&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Is the polcal data requested?</span>
+        <span class="n">preparepolcalrequested</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_polcal_requested&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Is the target data requested? One entry per beam</span>
+        <span class="n">preparetargetbeamsrequested</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_targetbeams_requested&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NBEAMS</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
+
+        <span class="c1"># Is the fluxcal data already on disk?</span>
+        <span class="n">preparefluxcaldiskstatus</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_fluxcal_diskstatus&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Is the polcal data already on disk?</span>
+        <span class="n">preparepolcaldiskstatus</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_polcal_diskstatus&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Is the target data already on disk? One entry per beam</span>
+        <span class="n">preparetargetbeamsdiskstatus</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_targetbeams_diskstatus&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NBEAMS</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
+
+        <span class="c1"># Is the fluxcal data on ALTA?</span>
+        <span class="n">preparefluxcalaltastatus</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_fluxcal_altastatus&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Is the polcal data on ALTA?</span>
+        <span class="n">preparepolcalaltastatus</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_polcal_altastatus&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Is the target data on disk? One entry per beam</span>
+        <span class="n">preparetargetbeamsaltastatus</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_targetbeams_altastatus&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NBEAMS</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
+
+        <span class="c1"># Is the fluxcal data copied?</span>
+        <span class="n">preparefluxcalcopystatus</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_fluxcal_copystatus&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Is the polcal data on copied?</span>
+        <span class="n">preparepolcalcopystatus</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_polcal_copystatus&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Is the target data copied? One entry per beam</span>
+        <span class="n">preparetargetbeamscopystatus</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_targetbeams_copystatus&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NBEAMS</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
+
+        <span class="c1"># Reason for flux calibrator dataset not being there</span>
+        <span class="n">preparefluxcalrejreason</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_fluxcal_rejreason&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;U50&#39;</span><span class="p">))</span>
+
+        <span class="c1"># Reason for polarisation calibrator dataset not being there</span>
+        <span class="n">preparepolcalrejreason</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_polcal_rejreason&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;U50&#39;</span><span class="p">))</span>
+
+        <span class="c1"># Reason for a beam dataset not being there</span>
+        <span class="n">preparetargetbeamsrejreason</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_targetbeams_rejreason&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NBEAMS</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;U50&#39;</span><span class="p">))</span>
+
+        <span class="c1">################################################</span>
+        <span class="c1"># Start the preparation of the flux calibrator #</span>
+        <span class="c1">################################################</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluxcal</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>  <span class="c1"># If the flux calibrator is requested</span>
+            <span class="n">preparefluxcalrejreason</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>  <span class="c1"># Empty the comment string</span>
+            <span class="n">preparefluxcalrequested</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">fluxcal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_fluxcal_path</span><span class="p">()</span>
+            <span class="n">preparefluxcaldiskstatus</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">fluxcal</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">preparefluxcaldiskstatus</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Flux calibrator dataset found on disk (</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fluxcal</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Flux calibrator dataset not on disk (</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fluxcal</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_bypass_alta&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare_bypass_alta</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Skipping fetching dataset from ALTA&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Check if the flux calibrator dataset is available on ALTA</span>
+                <span class="n">preparefluxcalaltastatus</span> <span class="o">=</span> <span class="n">getstatus_alta</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prepare_date</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare_obsnum_fluxcal</span><span class="p">,</span>
+                                                                     <span class="bp">self</span><span class="o">.</span><span class="n">beam</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">preparefluxcalaltastatus</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Flux calibrator dataset available on ALTA&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Flux calibrator dataset not available on ALTA&#39;</span><span class="p">)</span>
+                <span class="c1"># Copy the flux calibrator data from ALTA if needed</span>
+                <span class="k">if</span> <span class="n">preparefluxcaldiskstatus</span> <span class="ow">and</span> <span class="n">preparefluxcalaltastatus</span><span class="p">:</span>
+                    <span class="n">preparefluxcalcopystatus</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">elif</span> <span class="n">preparefluxcaldiskstatus</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">preparefluxcalaltastatus</span><span class="p">:</span>
+                    <span class="n">preparefluxcalcopystatus</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Flux calibrator data available on disk, but not in ALTA!&#39;</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="ow">not</span> <span class="n">preparefluxcaldiskstatus</span> <span class="ow">and</span> <span class="n">preparefluxcalaltastatus</span><span class="p">:</span>
+                    <span class="n">subs_managefiles</span><span class="o">.</span><span class="n">director</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;mk&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">basedir</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">rawsubdir</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                    <span class="n">getdata_alta</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prepare_date</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prepare_obsnum_fluxcal</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">targetdir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rawdir</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluxcal</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_fluxcal_path</span><span class="p">()):</span>
+                        <span class="n">preparefluxcalcopystatus</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Flux calibrator dataset successfully copied from ALTA&#39;</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">preparefluxcalcopystatus</span> <span class="o">=</span> <span class="kc">False</span>
+                        <span class="n">preparefluxcalrejreason</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Copy from ALTA not successful&#39;</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Flux calibrator dataset available on ALTA, but NOT successfully copied!&#39;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare_flip_ra</span><span class="p">:</span>
+                        <span class="n">flip_ra</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rawdir</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluxcal</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="ow">not</span> <span class="n">preparefluxcaldiskstatus</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">preparefluxcalaltastatus</span><span class="p">:</span>
+                    <span class="n">preparefluxcalcopystatus</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="n">preparefluxcalrejreason</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Dataset not on ALTA or disk&#39;</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Flux calibrator dataset not available on disk nor in ALTA! The next steps will not work!&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># In case the flux calibrator is not specified meaning the parameter is empty.</span>
+            <span class="n">preparefluxcalrequested</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">preparefluxcaldiskstatus</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">preparefluxcalaltastatus</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">preparefluxcalcopystatus</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">preparefluxcalrejreason</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Dataset not specified&#39;</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;No flux calibrator dataset specified. The next steps will not work!&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Save the derived parameters for the fluxcal to the parameter file</span>
+
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_fluxcal_requested&#39;</span><span class="p">,</span> <span class="n">preparefluxcalrequested</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_fluxcal_diskstatus&#39;</span><span class="p">,</span> <span class="n">preparefluxcaldiskstatus</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_fluxcal_altastatus&#39;</span><span class="p">,</span> <span class="n">preparefluxcalaltastatus</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_fluxcal_copystatus&#39;</span><span class="p">,</span> <span class="n">preparefluxcalcopystatus</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_fluxcal_rejreason&#39;</span><span class="p">,</span> <span class="n">preparefluxcalrejreason</span><span class="p">)</span>
+
+        <span class="c1">########################################################</span>
+        <span class="c1"># Start the preparation of the polarisation calibrator #</span>
+        <span class="c1">########################################################</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">polcal</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>  <span class="c1"># If the polarised calibrator is requested</span>
+            <span class="n">preparepolcalrejreason</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>  <span class="c1"># Empty the comment string</span>
+            <span class="n">preparepolcalrequested</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">preparepolcaldiskstatus</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_polcal_path</span><span class="p">())</span>
+            <span class="k">if</span> <span class="n">preparepolcaldiskstatus</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Polarisation calibrator dataset found on disk&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Polarisation calibrator dataset not on disk&#39;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_bypass_alta&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare_bypass_alta</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Skipping fetching dataset from ALTA&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+
+                <span class="c1"># Check if the polarisation calibrator dataset is available on ALTA</span>
+                <span class="n">preparepolcalaltastatus</span> <span class="o">=</span> <span class="n">getstatus_alta</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prepare_date</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare_obsnum_polcal</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">preparepolcalaltastatus</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Polarisation calibrator dataset available on ALTA&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Polarisation calibrator dataset not available on ALTA&#39;</span><span class="p">)</span>
+                <span class="c1"># Copy the polarisation calibrator data from ALTA if needed</span>
+                <span class="k">if</span> <span class="n">preparepolcaldiskstatus</span> <span class="ow">and</span> <span class="n">preparepolcalaltastatus</span><span class="p">:</span>
+                    <span class="n">preparepolcalcopystatus</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">elif</span> <span class="n">preparepolcaldiskstatus</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">preparepolcalaltastatus</span><span class="p">:</span>
+                    <span class="n">preparepolcalcopystatus</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Polarisation calibrator data available on disk, but not in ALTA!&#39;</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="ow">not</span> <span class="n">preparepolcaldiskstatus</span> <span class="ow">and</span> <span class="n">preparepolcalaltastatus</span><span class="p">:</span>
+                    <span class="n">subs_managefiles</span><span class="o">.</span><span class="n">director</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;mk&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">basedir</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">rawsubdir</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                    <span class="n">getdata_alta</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prepare_date</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prepare_obsnum_polcal</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">targetdir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rawdir</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">polcal</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_polcal_path</span><span class="p">()):</span>
+                        <span class="n">preparepolcalcopystatus</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Polarisation calibrator dataset successfully copied from ALTA&#39;</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">preparepolcalcopystatus</span> <span class="o">=</span> <span class="kc">False</span>
+                        <span class="n">preparepolcalrejreason</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Copy from ALTA not successful&#39;</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Polarisation calibrator dataset available on ALTA, but NOT successfully copied!&#39;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare_flip_ra</span><span class="p">:</span>
+                        <span class="n">flip_ra</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rawdir</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">polcal</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="ow">not</span> <span class="n">preparepolcaldiskstatus</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">preparepolcalaltastatus</span><span class="p">:</span>
+                    <span class="n">preparepolcalcopystatus</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="n">preparepolcalrejreason</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Dataset not on ALTA or disk&#39;</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Polarisation calibrator dataset not available on disk nor in ALTA! Polarisation calibration will not work!&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># In case the polarisation calibrator is not specified meaning the parameter is empty.</span>
+            <span class="n">preparepolcalrequested</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">preparepolcaldiskstatus</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">preparepolcalaltastatus</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">preparepolcalcopystatus</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">preparepolcalrejreason</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Dataset not specified&#39;</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;No polarisation calibrator dataset specified. Polarisation calibration will not work!&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Save the derived parameters for the polcal to the parameter file</span>
+
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_polcal_requested&#39;</span><span class="p">,</span> <span class="n">preparepolcalrequested</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_polcal_diskstatus&#39;</span><span class="p">,</span> <span class="n">preparepolcaldiskstatus</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_polcal_altastatus&#39;</span><span class="p">,</span> <span class="n">preparepolcalaltastatus</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_polcal_copystatus&#39;</span><span class="p">,</span> <span class="n">preparepolcalcopystatus</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_polcal_rejreason&#39;</span><span class="p">,</span> <span class="n">preparepolcalrejreason</span><span class="p">)</span>
+
+        <span class="c1">################################################</span>
+        <span class="c1"># Start the preparation of the target datasets #</span>
+        <span class="c1">################################################</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare_obsnum_target</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare_obsnum_target</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare_target_beams</span> <span class="o">==</span> <span class="s1">&#39;all&#39;</span><span class="p">:</span>  <span class="c1"># if all beams are requested</span>
+                <span class="n">reqbeams_int</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NBEAMS</span><span class="p">)</span>  <span class="c1"># create a list of numbers for the beams</span>
+                <span class="n">reqbeams</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">reqbeams_int</span><span class="p">]</span>  <span class="c1"># Add the leading zeros</span>
+            <span class="k">else</span><span class="p">:</span>  <span class="c1"># if only certain beams are requested</span>
+                <span class="n">reqbeams</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare_target_beams</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+                <span class="n">reqbeams_int</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">reqbeams</span><span class="p">]</span>
+                <span class="n">reqbeams</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">reqbeams_int</span><span class="p">]</span> <span class="c1"># Add leading zeros</span>
+            <span class="k">for</span> <span class="n">beam</span> <span class="ow">in</span> <span class="n">reqbeams</span><span class="p">:</span>
+                <span class="n">preparetargetbeamsrequested</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">beam</span><span class="p">)]</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">reqbeams_int</span><span class="p">:</span>
+                <span class="c1"># Check which target beams are already on disk</span>
+                <span class="n">preparetargetbeamsrejreason</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">b</span><span class="p">)]</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>  <span class="c1"># Empty the comment string</span>
+                <span class="n">preparetargetbeamsdiskstatus</span><span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">basedir</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">rawsubdir</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">preparetargetbeamsdiskstatus</span><span class="p">[</span><span class="n">b</span><span class="p">]:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Target dataset for beam &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; found on disk&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Target dataset for beam &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; NOT found on disk&#39;</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_bypass_alta&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare_bypass_alta</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Skipping fetching dataset from ALTA&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># Check which target datasets are available on ALTA</span>
+                    <span class="n">preparetargetbeamsaltastatus</span><span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="o">=</span> <span class="n">getstatus_alta</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prepare_date</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare_obsnum_target</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="n">preparetargetbeamsaltastatus</span><span class="p">[</span><span class="n">b</span><span class="p">]:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Target dataset for beam &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; available on ALTA&#39;</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Target dataset for beam &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; NOT available on ALTA&#39;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_bypass_alta&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare_bypass_alta</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Skipping fetching dataset from ALTA&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Set the copystatus of the beams and copy beams which are requested but not on disk</span>
+                <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">reqbeams_int</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">preparetargetbeamsdiskstatus</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="ow">and</span> <span class="n">preparetargetbeamsaltastatus</span><span class="p">[</span><span class="n">c</span><span class="p">]:</span>
+                        <span class="n">preparetargetbeamscopystatus</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">elif</span> <span class="n">preparetargetbeamsdiskstatus</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">preparetargetbeamsaltastatus</span><span class="p">[</span><span class="n">c</span><span class="p">]:</span>
+                        <span class="n">preparetargetbeamscopystatus</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Target dataset for beam &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; available on disk, but not in ALTA!&#39;</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="ow">not</span> <span class="n">preparetargetbeamsdiskstatus</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="ow">and</span> <span class="n">preparetargetbeamsaltastatus</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="ow">and</span> <span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="ow">in</span> <span class="n">reqbeams</span><span class="p">:</span>  <span class="c1"># if target dataset is requested, but not on disk</span>
+                        <span class="n">subs_managefiles</span><span class="o">.</span><span class="n">director</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;mk&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">basedir</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">rawsubdir</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                        <span class="n">getdata_alta</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prepare_date</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prepare_obsnum_target</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)),</span> <span class="n">targetdir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">basedir</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">rawsubdir</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+                        <span class="c1"># Check if copy was successful</span>
+                        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basedir</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">rawsubdir</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">):</span>
+                            <span class="n">preparetargetbeamscopystatus</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">preparetargetbeamscopystatus</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+                            <span class="n">preparetargetbeamsrejreason</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">c</span><span class="p">)]</span> <span class="o">=</span> <span class="s1">&#39;Copy from ALTA not successful&#39;</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Target beam dataset available on ALTA, but NOT successfully copied!&#39;</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare_flip_ra</span><span class="p">:</span>
+                            <span class="n">flip_ra</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basedir</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">rawsubdir</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="ow">not</span> <span class="n">preparetargetbeamsdiskstatus</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">preparetargetbeamsaltastatus</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="ow">and</span> <span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="ow">in</span> <span class="n">reqbeams</span><span class="p">:</span>
+                        <span class="n">preparetargetbeamscopystatus</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+                        <span class="n">preparetargetbeamsrejreason</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">c</span><span class="p">)]</span> <span class="o">=</span> <span class="s1">&#39;Dataset not on ALTA or disk&#39;</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Target beam dataset not available on disk nor in ALTA! Requested beam cannot be processed!&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># If no target dataset is requested meaning the parameter is empty</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;No target datasets specified!&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NBEAMS</span><span class="p">):</span>
+                <span class="n">preparetargetbeamsrequested</span><span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">preparetargetbeamsdiskstatus</span><span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">preparetargetbeamsaltastatus</span><span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">preparetargetbeamscopystatus</span><span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">preparetargetbeamsrejreason</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">b</span><span class="p">)]</span> <span class="o">=</span> <span class="s1">&#39;Dataset not specified&#39;</span>
+
+        <span class="c1"># Save the derived parameters for the target beams to the parameter file</span>
+
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_targetbeams_requested&#39;</span><span class="p">,</span> <span class="n">preparetargetbeamsrequested</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_targetbeams_diskstatus&#39;</span><span class="p">,</span> <span class="n">preparetargetbeamsdiskstatus</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_targetbeams_altastatus&#39;</span><span class="p">,</span> <span class="n">preparetargetbeamsaltastatus</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_targetbeams_copystatus&#39;</span><span class="p">,</span> <span class="n">preparetargetbeamscopystatus</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_targetbeams_rejreason&#39;</span><span class="p">,</span> <span class="n">preparetargetbeamsrejreason</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="prepare.split"><a class="viewcode-back" href="../../../modules/prepare.html#apercal.modules.prepare.prepare.split">[docs]</a>    <span class="k">def</span> <span class="nf">split</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Splits out a certain frequency range from the datasets for the quicklook pipeline</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare_split</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Splitting channel &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prepare_split_startchannel</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; until &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prepare_split_endchannel</span><span class="p">))</span>
+            <span class="c1"># split the flux calibrator dataset</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;self.fluxcal = </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fluxcal</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;os.path.isdir(self.get_fluxcal_path()) = </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_fluxcal_path</span><span class="p">())))</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluxcal</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_fluxcal_path</span><span class="p">()):</span>
+                <span class="n">fluxcal_split</span> <span class="o">=</span> <span class="s1">&#39;split(vis = &quot;&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_fluxcal_path</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39;&quot;, outputvis = &quot;&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_fluxcal_path</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;.MS&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_split.MS&quot;&#39;</span> <span class="o">+</span> <span class="s1">&#39;, spw = &quot;0:&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prepare_split_startchannel</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;~&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prepare_split_endchannel</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;&quot;, datacolumn = &quot;data&quot;)&#39;</span>
+                <span class="n">lib</span><span class="o">.</span><span class="n">run_casa</span><span class="p">([</span><span class="n">fluxcal_split</span><span class="p">],</span> <span class="n">log_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">3600</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_fluxcal_path</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;.MS&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_split.MS&#39;</span><span class="p">):</span>
+                    <span class="n">subs_managefiles</span><span class="o">.</span><span class="n">director</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;rm&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_fluxcal_path</span><span class="p">())</span>
+                    <span class="n">subs_managefiles</span><span class="o">.</span><span class="n">director</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;rn&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_fluxcal_path</span><span class="p">(),</span> <span class="n">file_</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_fluxcal_path</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;.MS&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_split.MS&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Splitting of flux calibrator dataset not successful!&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Fluxcal not set or dataset not available! Cannot split flux calibrator dataset!&#39;</span><span class="p">)</span>
+            <span class="c1"># Split the polarised calibrator dataset</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;self.polcal = </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">polcal</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;os.path.isdir(self.get_polcal_path()) = </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_polcal_path</span><span class="p">())))</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">polcal</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_polcal_path</span><span class="p">()):</span>
+                <span class="n">polcal_split</span> <span class="o">=</span> <span class="s1">&#39;split(vis = &quot;&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_polcal_path</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39;&quot;, outputvis = &quot;&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_polcal_path</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;.MS&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_split.MS&quot;&#39;</span> <span class="o">+</span> <span class="s1">&#39;, spw = &quot;0:&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prepare_split_startchannel</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;~&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prepare_split_endchannel</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;&quot;, datacolumn = &quot;data&quot;)&#39;</span>
+                <span class="n">lib</span><span class="o">.</span><span class="n">run_casa</span><span class="p">([</span><span class="n">polcal_split</span><span class="p">],</span> <span class="n">log_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">3600</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_polcal_path</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;.MS&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_split.MS&#39;</span><span class="p">):</span>
+                    <span class="n">subs_managefiles</span><span class="o">.</span><span class="n">director</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;rm&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_polcal_path</span><span class="p">())</span>
+                    <span class="n">subs_managefiles</span><span class="o">.</span><span class="n">director</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;rn&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_polcal_path</span><span class="p">(),</span> <span class="n">file_</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_polcal_path</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;.MS&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_split.MS&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Splitting of polarised calibrator dataset not successful!&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Polcal not set or dataset not available! Cannot split polarised calibrator dataset!&#39;</span><span class="p">)</span>
+            <span class="c1"># Split the target dataset</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;self.target = </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;os.path.isdir(self.get_target_path()) = </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_target_path</span><span class="p">())))</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_target_path</span><span class="p">()):</span>
+                <span class="n">target_split</span> <span class="o">=</span> <span class="s1">&#39;split(vis = &quot;&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_target_path</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39;&quot;, outputvis = &quot;&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_target_path</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;.MS&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_split.MS&quot;&#39;</span> <span class="o">+</span> <span class="s1">&#39;, spw = &quot;0:&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prepare_split_startchannel</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;~&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prepare_split_endchannel</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;&quot;, datacolumn = &quot;data&quot;)&#39;</span>
+                <span class="n">lib</span><span class="o">.</span><span class="n">run_casa</span><span class="p">([</span><span class="n">target_split</span><span class="p">],</span> <span class="n">log_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">3600</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_target_path</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;.MS&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_split.MS&#39;</span><span class="p">):</span>
+                    <span class="n">subs_managefiles</span><span class="o">.</span><span class="n">director</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;rm&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_target_path</span><span class="p">())</span>
+                    <span class="n">subs_managefiles</span><span class="o">.</span><span class="n">director</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;rn&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_target_path</span><span class="p">(),</span> <span class="n">file_</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_target_path</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;.MS&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_split.MS&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Splitting of target dataset not successful!&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Target not set or dataset not available! Cannot split target dataset!&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="prepare.summary"><a class="viewcode-back" href="../../../modules/prepare.html#apercal.modules.prepare.prepare.summary">[docs]</a>    <span class="k">def</span> <span class="nf">summary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a general summary of the parameters in the parameter file generated during PREPARE. No detailed summary</span>
+<span class="sd">        is available for PREPARE</span>
+
+<span class="sd">        returns (DataFrame): A python pandas dataframe object, which can be looked at with the style function in notebook</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Load the parameters from the parameter file</span>
+
+        <span class="n">FR</span> <span class="o">=</span> <span class="n">subs_param</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_fluxcal_requested&#39;</span><span class="p">)</span>
+        <span class="n">FD</span> <span class="o">=</span> <span class="n">subs_param</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_fluxcal_diskstatus&#39;</span><span class="p">)</span>
+        <span class="n">FA</span> <span class="o">=</span> <span class="n">subs_param</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_fluxcal_altastatus&#39;</span><span class="p">)</span>
+        <span class="n">FC</span> <span class="o">=</span> <span class="n">subs_param</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_fluxcal_copystatus&#39;</span><span class="p">)</span>
+        <span class="n">Frej</span> <span class="o">=</span> <span class="n">subs_param</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_fluxcal_rejreason&#39;</span><span class="p">)</span>
+        <span class="n">PR</span> <span class="o">=</span> <span class="n">subs_param</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_polcal_requested&#39;</span><span class="p">)</span>
+        <span class="n">PD</span> <span class="o">=</span> <span class="n">subs_param</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_polcal_diskstatus&#39;</span><span class="p">)</span>
+        <span class="n">PA</span> <span class="o">=</span> <span class="n">subs_param</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_polcal_altastatus&#39;</span><span class="p">)</span>
+        <span class="n">PC</span> <span class="o">=</span> <span class="n">subs_param</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_polcal_copystatus&#39;</span><span class="p">)</span>
+        <span class="n">Prej</span> <span class="o">=</span> <span class="n">subs_param</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_polcal_rejreason&#39;</span><span class="p">)</span>
+        <span class="n">TR</span> <span class="o">=</span> <span class="n">subs_param</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_targetbeams_requested&#39;</span><span class="p">)</span>
+        <span class="n">TD</span> <span class="o">=</span> <span class="n">subs_param</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_targetbeams_diskstatus&#39;</span><span class="p">)</span>
+        <span class="n">TA</span> <span class="o">=</span> <span class="n">subs_param</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_targetbeams_altastatus&#39;</span><span class="p">)</span>
+        <span class="n">TC</span> <span class="o">=</span> <span class="n">subs_param</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_targetbeams_copystatus&#39;</span><span class="p">)</span>
+        <span class="n">Trej</span> <span class="o">=</span> <span class="n">subs_param</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_targetbeams_rejreason&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Create the data frame</span>
+
+        <span class="n">beam_range</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NBEAMS</span><span class="p">)</span>
+        <span class="n">dataset_beams</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39; Beam &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">beam_range</span><span class="p">]</span>
+        <span class="n">dataset_indices</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Flux calibrator (&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluxcal</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;)&#39;</span><span class="p">,</span> <span class="s1">&#39;Polarised calibrator (&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">polcal</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;)&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">dataset_beams</span>
+
+        <span class="n">all_r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NBEAMS</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="n">all_r</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">FR</span>
+        <span class="n">all_r</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">PR</span>
+        <span class="n">all_r</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span> <span class="o">=</span> <span class="n">TR</span>
+
+        <span class="n">all_d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NBEAMS</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="n">all_d</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">FD</span>
+        <span class="n">all_d</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">PD</span>
+        <span class="n">all_d</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span> <span class="o">=</span> <span class="n">TD</span>
+
+        <span class="n">all_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NBEAMS</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="n">all_a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">FA</span>
+        <span class="n">all_a</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">PA</span>
+        <span class="n">all_a</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span> <span class="o">=</span> <span class="n">TA</span>
+
+        <span class="n">all_c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NBEAMS</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="n">all_c</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">FC</span>
+        <span class="n">all_c</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">PC</span>
+        <span class="n">all_c</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span> <span class="o">=</span> <span class="n">TC</span>
+
+        <span class="n">all_rej</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">Frej</span><span class="p">,</span> <span class="n">Prej</span><span class="p">,</span> <span class="n">Trej</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">df_req</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">all_r</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="n">dataset_indices</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Requested?&#39;</span><span class="p">])</span>
+        <span class="n">df_disk</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">all_d</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="n">dataset_indices</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;On disk?&#39;</span><span class="p">])</span>
+        <span class="n">df_alta</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">all_a</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="n">dataset_indices</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;On ALTA?&#39;</span><span class="p">])</span>
+        <span class="n">df_copy</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">all_c</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="n">dataset_indices</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Copied?&#39;</span><span class="p">])</span>
+        <span class="n">df_rej</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">all_rej</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">dataset_indices</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Comment&#39;</span><span class="p">])</span>
+
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">df_req</span><span class="p">,</span> <span class="n">df_disk</span><span class="p">,</span> <span class="n">df_alta</span><span class="p">,</span> <span class="n">df_copy</span><span class="p">,</span> <span class="n">df_rej</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">df</span></div>
+
+<div class="viewcode-block" id="prepare.reset"><a class="viewcode-back" href="../../../modules/prepare.html#apercal.modules.prepare.prepare.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Function to reset the current step and remove all generated data. Be careful! Deletes all data generated in this step!</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">subs_setinit</span><span class="o">.</span><span class="n">setinitdirs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Deleting all raw data products and their directories.&#39;</span><span class="p">)</span>
+        <span class="n">subs_managefiles</span><span class="o">.</span><span class="n">director</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;ch&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">basedir</span><span class="p">)</span>
+        <span class="n">deldirs</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basedir</span> <span class="o">+</span> <span class="s1">&#39;[0-9][0-9]&#39;</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">rawsubdir</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">dir_</span> <span class="ow">in</span> <span class="n">deldirs</span><span class="p">:</span>
+            <span class="n">subs_managefiles</span><span class="o">.</span><span class="n">director</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;rm&#39;</span><span class="p">,</span> <span class="n">dir_</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Deleting all parameter file entries for PREPARE module&#39;</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_fluxcal_requested&#39;</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_fluxcal_diskstatus&#39;</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_fluxcal_altastatus&#39;</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_fluxcal_copystatus&#39;</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_fluxcal_rejreason&#39;</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_polcal_requested&#39;</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_polcal_diskstatus&#39;</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_polcal_altastatus&#39;</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_polcal_copystatus&#39;</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_polcal_rejreason&#39;</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_targetbeams_requested&#39;</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_targetbeams_diskstatus&#39;</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_targetbeams_altastatus&#39;</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_targetbeams_copystatus&#39;</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_targetbeams_rejreason&#39;</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Apercal Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4.
+    </div>
+  </body>
+</html>

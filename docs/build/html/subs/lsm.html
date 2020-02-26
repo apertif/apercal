@@ -1,0 +1,256 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>lsm &#8212; Apercal 2.5.0 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="managefiles" href="managefiles.html" />
+    <link rel="prev" title="imstats" href="imstats.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="managefiles.html" title="managefiles"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="imstats.html" title="imstats"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../subs_modules.html" accesskey="U">Supporting modules</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">lsm</a><ul>
+<li><a class="reference internal" href="#module-apercal.subs.lsm">Reference</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="imstats.html"
+                        title="previous chapter">imstats</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="managefiles.html"
+                        title="next chapter">managefiles</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/subs/lsm.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="lsm">
+<h1>lsm<a class="headerlink" href="#lsm" title="Permalink to this headline">¶</a></h1>
+<p>This module contains functionality to create a source catalogue for a given pointing. It is used by the selfcal module.</p>
+<div class="section" id="module-apercal.subs.lsm">
+<span id="reference"></span><h2>Reference<a class="headerlink" href="#module-apercal.subs.lsm" title="Permalink to this headline">¶</a></h2>
+<p>This file uses astropy and miriad to construct a catalogue of apparent and real flux densities for a
+pointing centre in a certain radius</p>
+<dl class="function">
+<dt id="apercal.subs.lsm.calc_SI">
+<code class="descclassname">apercal.subs.lsm.</code><code class="descname">calc_SI</code><span class="sig-paren">(</span><em>cat1</em>, <em>cat2</em>, <em>limit</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/lsm.html#calc_SI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.lsm.calc_SI" title="Permalink to this definition">¶</a></dt>
+<dd><p>module to use a catalogue at a different frequency, do cross matching, and calculate the spectral index
+The module also looks for multiple matches and assigns the flux of one source matching multiple ones linearly to
+calculate the spectral index. I tonly looks into sources which are not further apart as the limit parameter.</p>
+<p>cat1: The catalogue where you want to add the spectral index to the sources. Usually NVSS or FIRST.
+cat2: The catalogue to match and calculate the spectral index from. Usually WENSS.
+limit: Maximum distance in arcseconds for two sources to match each other.
+returns: cat1 with added spectral indices. Sources with no counterpart where set to -0.7.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.lsm.calc_appflux">
+<code class="descclassname">apercal.subs.lsm.</code><code class="descname">calc_appflux</code><span class="sig-paren">(</span><em>infile</em>, <em>cat</em>, <em>beam</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/lsm.html#calc_appflux"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.lsm.calc_appflux" title="Permalink to this definition">¶</a></dt>
+<dd><p>calc_appflux: module to calculate the apparent fluxes of sources from an input catalogue using primary beam correction
+infile: Input MIRIAD uv-file
+cat: catalogue (most likely from query_catalogue)
+beam: the beam type to correct for. Only ‘WSRT’ allowed at the moment
+returns: an extended catalogue file including the distances RA- and DEC-offsets and apparent fluxes from th</p>
+<blockquote>
+<div>pointing centre</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.lsm.calc_offset">
+<code class="descclassname">apercal.subs.lsm.</code><code class="descname">calc_offset</code><span class="sig-paren">(</span><em>infile</em>, <em>cat</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/lsm.html#calc_offset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.lsm.calc_offset" title="Permalink to this definition">¶</a></dt>
+<dd><p>calc_offset: Calculate the offset of the catalogue entries towards the pointing centre
+infile: Input MIRIAD uv-file
+cat: Input catalogue of sources to calculate the offset for
+returns: A catalogue with the offsets for the individual sources</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.lsm.cutoff_catalogue">
+<code class="descclassname">apercal.subs.lsm.</code><code class="descname">cutoff_catalogue</code><span class="sig-paren">(</span><em>catalogue</em>, <em>cutoff</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/lsm.html#cutoff_catalogue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.lsm.cutoff_catalogue" title="Permalink to this definition">¶</a></dt>
+<dd><p>cutoff_catalogue: limit the entries of a catalogue to the strongest sources in the field giving a cutoff
+catalogue: catalogue to limit (most likely after primary beam correction and sorting)
+cutoff: cutoff is defined as the part of the flux of all sources in the catalogue (0.0-1.0)
+returns: a catalogue with the weak sources removed according to the cutoff parameter</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.lsm.fixra">
+<code class="descclassname">apercal.subs.lsm.</code><code class="descname">fixra</code><span class="sig-paren">(</span><em>ra0</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/lsm.html#fixra"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.lsm.fixra" title="Permalink to this definition">¶</a></dt>
+<dd><p>fixra: module to fix the notation of the ra string
+ra0: input ra notation from a skycoords query
+returns: the fixed notation for the ra</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.lsm.getfreq">
+<code class="descclassname">apercal.subs.lsm.</code><code class="descname">getfreq</code><span class="sig-paren">(</span><em>infile</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/lsm.html#getfreq"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.lsm.getfreq" title="Permalink to this definition">¶</a></dt>
+<dd><p>getfreq: module to extract the central freqeuncy of the observing band
+param infile: infile (name of file)
+returns: the central frequency of the visibility file</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.lsm.getnchan">
+<code class="descclassname">apercal.subs.lsm.</code><code class="descname">getnchan</code><span class="sig-paren">(</span><em>infile</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/lsm.html#getnchan"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.lsm.getnchan" title="Permalink to this definition">¶</a></dt>
+<dd><p>getnchan: module to extract the number of channels from an observation
+param infile: infile (name of file)
+return: the number of channels of the observation</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.lsm.lsm_mask">
+<code class="descclassname">apercal.subs.lsm.</code><code class="descname">lsm_mask</code><span class="sig-paren">(</span><em>infile</em>, <em>radius</em>, <em>cutoff</em>, <em>catalogue</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/lsm.html#lsm_mask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.lsm.lsm_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>lsm_mask: Create a file for the MIRIAD task imgen to create a mask for the first iteration of the self-calibration
+infile: The MIRIAD (u,v)-dataset to calibrate on to get frequency and pointing information
+radius: The radius for the cone search to consider sources for the mask
+cutoff: The percentage of total apparent flux of the field to use for the mask (0.0-1.0)
+catalogue: The source catalogue to query (usually NVSS or FIRST)
+returns: A catalogue with the sources for the mask. Usually used for write_mask</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.lsm.lsm_model">
+<code class="descclassname">apercal.subs.lsm.</code><code class="descname">lsm_model</code><span class="sig-paren">(</span><em>infile</em>, <em>radius</em>, <em>cutoff</em>, <em>limit</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/lsm.html#lsm_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.lsm.lsm_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>lsm_model: Create a file to use for the MIRIAD task uvmodel to create a dataset for doing parametric self-calibration
+infile: The MIRIAD (u,v)-dataset to calibrate on to get frequency and pointing information
+radius: The radius for the cone search to consider sources for the skymodel
+cutoff: The percentage of total apparent flux of the field to use for the skymodel (0.0-1.0)
+limit: The distance in arcseconds for considering a source as a match for the source matching algorithm to</p>
+<blockquote>
+<div>calculate the spectral indices</div></blockquote>
+<p>returns: A catalogue of sources with spectral indices and the set cutoff. Used as input for write_model.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.lsm.query_catalogue">
+<code class="descclassname">apercal.subs.lsm.</code><code class="descname">query_catalogue</code><span class="sig-paren">(</span><em>infile</em>, <em>catalogue</em>, <em>radius</em>, <em>minflux=0.0</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/lsm.html#query_catalogue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.lsm.query_catalogue" title="Permalink to this definition">¶</a></dt>
+<dd><p>query_catalogue: module to query the FIRST, NVSS, or WENSS catalogue from Vizier and write it to a record array</p>
+<p>skycoords: coordinates of the pointing centre in astropy format
+catalogue: catalogue to ask for (NVSS, WENSS, or FIRST)
+radius: radius around the pointing centre to ask for in degreees
+minflux: minimum real source flux to receive from a VIZIER query. Default is 0.0 since for most operations you</p>
+<blockquote>
+<div>want all sources in the radius region</div></blockquote>
+<dl class="docutils">
+<dt>returns: record array with RA, DEC, Major axis, Minor axis, parallactic angle, and flux of the sources in the</dt>
+<dd>catalogue</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.lsm.sort_catalogue">
+<code class="descclassname">apercal.subs.lsm.</code><code class="descname">sort_catalogue</code><span class="sig-paren">(</span><em>catalogue</em>, <em>column</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/lsm.html#sort_catalogue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.lsm.sort_catalogue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sorts a catalogue after a certain column. Most likely after a calc_appflux call to generate a
+flux sorted local skymodel</p>
+<p>catalogue: an input catalogue (most likely from a query_catalogue call)
+column: the column to sort for
+returns: an updated sorted catalogue</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.lsm.write_mask">
+<code class="descclassname">apercal.subs.lsm.</code><code class="descname">write_mask</code><span class="sig-paren">(</span><em>outfile</em>, <em>cat</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/lsm.html#write_mask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.lsm.write_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>write_mask: Module to write a file used for the MIRIAD task imgen to create a first mask for self-calibration
+outfile: The output file to write to
+cat: The catalogue to use for the file to write</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.lsm.write_model">
+<code class="descclassname">apercal.subs.lsm.</code><code class="descname">write_model</code><span class="sig-paren">(</span><em>outfile</em>, <em>cat</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/lsm.html#write_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.lsm.write_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>write_model: Module to write a file used for the MIRIAD task uvmodel to do a parametric self-calibration
+outfile: The output file to write to
+cat: The catalogue to use for the file to write</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="managefiles.html" title="managefiles"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="imstats.html" title="imstats"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../subs_modules.html" >Supporting modules</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Apercal Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4.
+    </div>
+  </body>
+</html>

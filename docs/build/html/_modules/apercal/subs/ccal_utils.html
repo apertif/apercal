@@ -1,0 +1,375 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>apercal.subs.ccal_utils &#8212; Apercal 2.5.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for apercal.subs.ccal_utils</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Module with functionality to support cross-calibration</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c1"># aperCC must be in the $PYTHONPATH</span>
+<span class="c1"># from aperCC.modules.Sols import BPSols</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">casacore.tables</span> <span class="k">as</span> <span class="nn">pt</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="k">import</span> <span class="n">curve_fit</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">apercal.subs</span> <span class="k">import</span> <span class="n">misc</span> <span class="k">as</span> <span class="n">misc</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="get_ratio_autocorrelation_above_limit"><a class="viewcode-back" href="../../../subs/ccal_utils.html#apercal.subs.ccal_utils.get_ratio_autocorrelation_above_limit">[docs]</a><span class="k">def</span> <span class="nf">get_ratio_autocorrelation_above_limit</span><span class="p">(</span><span class="n">amp</span><span class="p">,</span> <span class="n">amp_threshold</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the fraction of data that have autocorrelation amplitudes</span>
+<span class="sd">    above a given threshold</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># get the data that is above the threshold</span>
+    <span class="n">amp_above_threshold</span> <span class="o">=</span> <span class="n">amp</span><span class="p">[</span><span class="n">amp</span> <span class="o">&gt;</span> <span class="n">amp_threshold</span><span class="p">]</span>
+
+    <span class="c1"># how many data points</span>
+    <span class="n">n_vis_above_threshold</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">amp_above_threshold</span><span class="p">)</span>
+
+    <span class="c1"># how many data points in total</span>
+    <span class="n">n_vis</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">amp</span><span class="p">)</span>
+
+    <span class="c1"># fraction of data points above amplitude threshold</span>
+    <span class="n">ratio_vis_above_threshold</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">n_vis_above_threshold</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">n_vis</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ratio_vis_above_threshold</span></div>
+
+
+<div class="viewcode-block" id="get_autocorr"><a class="viewcode-back" href="../../../subs/ccal_utils.html#apercal.subs.ccal_utils.get_autocorr">[docs]</a><span class="k">def</span> <span class="nf">get_autocorr</span><span class="p">(</span><span class="n">msfile</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets the autocorrelation data from a dataset</span>
+<span class="sd">    msfile: Input dataset with the autocorrelations</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># get the list of channels</span>
+    <span class="c1"># then get frequencies:</span>
+    <span class="n">taql_antnames</span> <span class="o">=</span> <span class="s2">&quot;SELECT NAME FROM </span><span class="si">{0}</span><span class="s2">::ANTENNA&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">msfile</span><span class="p">)</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">taql</span><span class="p">(</span><span class="n">taql_antnames</span><span class="p">)</span>
+    <span class="n">ant_names</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">getcol</span><span class="p">(</span><span class="s2">&quot;NAME&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ant_names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s2">&quot;Something wrong. No antenna names. Continue with next beam&quot;</span><span class="p">)</span>
+
+    <span class="n">taql_freq</span> <span class="o">=</span> <span class="s2">&quot;SELECT CHAN_FREQ FROM </span><span class="si">{0}</span><span class="s2">::SPECTRAL_WINDOW&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">msfile</span><span class="p">)</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">taql</span><span class="p">(</span><span class="n">taql_freq</span><span class="p">)</span>
+    <span class="n">freqs</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">getcol</span><span class="p">(</span><span class="s1">&#39;CHAN_FREQ&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span>
+
+    <span class="c1"># and number of stokes params</span>
+    <span class="n">taql_stokes</span> <span class="o">=</span> <span class="s2">&quot;SELECT abs(DATA) AS amp from </span><span class="si">{0}</span><span class="s2"> limit 1&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">msfile</span><span class="p">)</span>
+    <span class="n">t_pol</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">taql</span><span class="p">(</span><span class="n">taql_stokes</span><span class="p">)</span>
+    <span class="n">pol_array</span> <span class="o">=</span> <span class="n">t_pol</span><span class="o">.</span><span class="n">getcol</span><span class="p">(</span><span class="s1">&#39;amp&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">pol_array</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s2">&quot;Something wrong. No polarisation information. Continue with next beam&quot;</span><span class="p">)</span>
+    <span class="n">n_stokes</span> <span class="o">=</span> <span class="n">pol_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>  <span class="c1"># shape is time, one, nstokes</span>
+
+    <span class="c1"># take MS file and get data</span>
+    <span class="n">amp_ant_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span>
+        <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ant_names</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">freqs</span><span class="p">),</span> <span class="n">n_stokes</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+    <span class="c1"># get autocorrelation</span>
+    <span class="k">for</span> <span class="n">ant</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ant_names</span><span class="p">)):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">taql_command</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;SELECT abs(gmeans(CORRECTED_DATA[FLAG])) AS amp &quot;</span>
+                            <span class="s2">&quot;FROM </span><span class="si">{0}</span><span class="s2"> &quot;</span>
+                            <span class="s2">&quot;WHERE ANTENNA1==ANTENNA2 &amp;&amp; (ANTENNA1=</span><span class="si">{1}</span><span class="s2"> || ANTENNA2=</span><span class="si">{1}</span><span class="s2">)&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">msfile</span><span class="p">,</span> <span class="n">ant</span><span class="p">)</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">taql</span><span class="p">(</span><span class="n">taql_command</span><span class="p">)</span>
+            <span class="c1"># phase_ant_array[ant, :, :] = t.getcol(&#39;phase&#39;)[0, :, :]</span>
+            <span class="n">amp_ant_array</span><span class="p">[</span><span class="n">ant</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">getcol</span><span class="p">(</span><span class="s1">&#39;amp&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">amp_ant_array</span><span class="p">[</span><span class="n">ant</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">freqs</span><span class="p">),</span> <span class="n">n_stokes</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+    <span class="c1"># get XX and YY</span>
+    <span class="n">amp_xx</span> <span class="o">=</span> <span class="n">amp_ant_array</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">amp_yy</span> <span class="o">=</span> <span class="n">amp_ant_array</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">3</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">freqs</span><span class="p">,</span> <span class="n">amp_xx</span><span class="p">,</span> <span class="n">amp_yy</span></div>
+
+
+<div class="viewcode-block" id="polyfit_autocorr"><a class="viewcode-back" href="../../../subs/ccal_utils.html#apercal.subs.ccal_utils.polyfit_autocorr">[docs]</a><span class="k">def</span> <span class="nf">polyfit_autocorr</span><span class="p">(</span><span class="n">autocorrdata</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function to remove outliers from the auto-correlations, fit a polynomial of 2nd order and issue flagging of dishes dependent on covariance of the fit and the parameters of determination</span>
+<span class="sd">    autocorrdata: Auto-correlation data in frequency, amp_xx, amp_yy order (usually from function get_autocorr)</span>
+<span class="sd">    returns: frequency values, cleaned auto-correlation values, polynomially fitted values, covariance of the fit, parameter of determination each for XX and YY</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">antnames</span> <span class="o">=</span> <span class="n">misc</span><span class="o">.</span><span class="n">create_antnames</span><span class="p">()</span>
+    <span class="n">freqs</span> <span class="o">=</span> <span class="n">autocorrdata</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">XX_rclean</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">XX_rfreq</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">XX_rpolyvals</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">XX_rcov</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">XX_rr2</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">YY_rclean</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">YY_rfreq</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">YY_rpolyvals</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">YY_rcov</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">YY_rr2</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">dish</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">12</span><span class="p">):</span>
+        <span class="n">XX_remove</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">autocorrdata</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">dish</span><span class="p">]</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">XX_clean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">autocorrdata</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">dish</span><span class="p">],</span> <span class="n">XX_remove</span><span class="p">))</span>
+        <span class="n">XX_freq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">freqs</span><span class="p">,</span> <span class="n">XX_remove</span><span class="p">))</span>
+        <span class="n">XX_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">XX_clean</span><span class="p">)</span>
+        <span class="n">XX_sd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">XX_clean</span><span class="p">)</span>
+        <span class="n">XX_out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">XX_clean</span> <span class="o">&lt;</span> <span class="n">XX_mean</span> <span class="o">-</span> <span class="mf">3.0</span> <span class="o">*</span> <span class="n">XX_sd</span><span class="p">)</span>
+                          <span class="o">|</span> <span class="p">(</span><span class="n">XX_clean</span> <span class="o">&gt;</span> <span class="n">XX_mean</span> <span class="o">+</span> <span class="mf">3.0</span> <span class="o">*</span> <span class="n">XX_sd</span><span class="p">))</span>
+        <span class="n">XX_clean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">XX_clean</span><span class="p">,</span> <span class="n">XX_out</span><span class="p">)</span>
+        <span class="n">XX_freq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">XX_freq</span><span class="p">,</span> <span class="n">XX_out</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">XX_poly</span><span class="p">,</span> <span class="n">XX_covm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">XX_freq</span><span class="p">,</span> <span class="n">XX_clean</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">XX_polyvals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyval</span><span class="p">(</span><span class="n">XX_poly</span><span class="p">,</span> <span class="n">XX_freq</span><span class="p">)</span>
+            <span class="n">XX_polyres</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">XX_clean</span> <span class="o">-</span> <span class="n">XX_polyvals</span><span class="p">)</span> <span class="o">**</span> <span class="mf">2.0</span><span class="p">)</span>
+            <span class="n">XX_polytot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">XX_clean</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">XX_clean</span><span class="p">))</span> <span class="o">**</span> <span class="mf">2.0</span><span class="p">)</span>
+            <span class="n">XX_cov</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">XX_covm</span><span class="p">))</span>
+            <span class="n">XX_r2</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="p">(</span><span class="n">XX_polyres</span> <span class="o">/</span> <span class="n">XX_polytot</span><span class="p">)</span>
+            <span class="n">XX_rclean</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">XX_clean</span><span class="p">)</span>
+            <span class="n">XX_rfreq</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">XX_freq</span><span class="p">)</span>
+            <span class="n">XX_rpolyvals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">XX_polyvals</span><span class="p">)</span>
+            <span class="n">XX_rcov</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">XX_cov</span><span class="p">)</span>
+            <span class="n">XX_rr2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">XX_r2</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">XX_r2</span> <span class="o">&lt;</span> <span class="mf">0.5</span> <span class="ow">or</span> <span class="n">XX_cov</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mf">2e-16</span> <span class="ow">or</span> <span class="n">XX_cov</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mf">1e-6</span> <span class="ow">or</span> <span class="n">XX_cov</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mf">1e3</span><span class="p">:</span>
+                <span class="nb">print</span> <span class="s1">&#39;Dish &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">antnames</span><span class="p">[</span><span class="n">dish</span><span class="p">])</span> <span class="o">+</span> <span class="s1">&#39; XX flagged!&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">continue</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">XX_rclean</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">))</span>
+            <span class="n">XX_rfreq</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">))</span>
+            <span class="n">XX_rpolyvals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">))</span>
+            <span class="n">XX_rcov</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+            <span class="n">XX_rr2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+            <span class="nb">print</span> <span class="s1">&#39;Dish &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">antnames</span><span class="p">[</span><span class="n">dish</span><span class="p">])</span> <span class="o">+</span> <span class="s1">&#39; XX flagged!&#39;</span>
+    <span class="k">for</span> <span class="n">dish</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">12</span><span class="p">):</span>
+        <span class="n">YY_remove</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">autocorrdata</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="n">dish</span><span class="p">]</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">YY_clean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">autocorrdata</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="n">dish</span><span class="p">],</span> <span class="n">YY_remove</span><span class="p">))</span>
+        <span class="n">YY_freq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">freqs</span><span class="p">,</span> <span class="n">YY_remove</span><span class="p">))</span>
+        <span class="n">YY_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">YY_clean</span><span class="p">)</span>
+        <span class="n">YY_sd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">YY_clean</span><span class="p">)</span>
+        <span class="n">YY_out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">YY_clean</span> <span class="o">&lt;</span> <span class="n">YY_mean</span> <span class="o">-</span> <span class="mf">3.0</span> <span class="o">*</span> <span class="n">YY_sd</span><span class="p">)</span>
+                          <span class="o">|</span> <span class="p">(</span><span class="n">YY_clean</span> <span class="o">&gt;</span> <span class="n">YY_mean</span> <span class="o">+</span> <span class="mf">3.0</span> <span class="o">*</span> <span class="n">YY_sd</span><span class="p">))</span>
+        <span class="n">YY_clean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">YY_clean</span><span class="p">,</span> <span class="n">YY_out</span><span class="p">)</span>
+        <span class="n">YY_freq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">YY_freq</span><span class="p">,</span> <span class="n">YY_out</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">YY_poly</span><span class="p">,</span> <span class="n">YY_covm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">YY_freq</span><span class="p">,</span> <span class="n">YY_clean</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">YY_polyvals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyval</span><span class="p">(</span><span class="n">YY_poly</span><span class="p">,</span> <span class="n">YY_freq</span><span class="p">)</span>
+            <span class="n">YY_polyres</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">YY_clean</span> <span class="o">-</span> <span class="n">YY_polyvals</span><span class="p">)</span> <span class="o">**</span> <span class="mf">2.0</span><span class="p">)</span>
+            <span class="n">YY_polytot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">YY_clean</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">YY_clean</span><span class="p">))</span> <span class="o">**</span> <span class="mf">2.0</span><span class="p">)</span>
+            <span class="n">YY_cov</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">YY_covm</span><span class="p">))</span>
+            <span class="n">YY_r2</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="p">(</span><span class="n">YY_polyres</span> <span class="o">/</span> <span class="n">YY_polytot</span><span class="p">)</span>
+            <span class="n">YY_rclean</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">YY_clean</span><span class="p">)</span>
+            <span class="n">YY_rfreq</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">YY_freq</span><span class="p">)</span>
+            <span class="n">YY_rpolyvals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">YY_polyvals</span><span class="p">)</span>
+            <span class="n">YY_rcov</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">YY_cov</span><span class="p">)</span>
+            <span class="n">YY_rr2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">YY_r2</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">YY_r2</span> <span class="o">&lt;</span> <span class="mf">0.5</span> <span class="ow">or</span> <span class="n">YY_cov</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mf">2e-16</span> <span class="ow">or</span> <span class="n">YY_cov</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mf">1e-6</span> <span class="ow">or</span> <span class="n">YY_cov</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mf">1e3</span><span class="p">:</span>
+                <span class="nb">print</span> <span class="s1">&#39;Dish &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">antnames</span><span class="p">[</span><span class="n">dish</span><span class="p">])</span> <span class="o">+</span> <span class="s1">&#39; YY flagged!&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">continue</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">YY_rclean</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">))</span>
+            <span class="n">YY_rfreq</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">))</span>
+            <span class="n">YY_rpolyvals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">))</span>
+            <span class="n">YY_rcov</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+            <span class="n">YY_rr2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+            <span class="nb">print</span> <span class="s1">&#39;Dish &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">antnames</span><span class="p">[</span><span class="n">dish</span><span class="p">])</span> <span class="o">+</span> <span class="s1">&#39; YY flagged!&#39;</span>
+
+    <span class="k">return</span> <span class="n">XX_rfreq</span><span class="p">,</span> <span class="n">XX_rclean</span><span class="p">,</span> <span class="n">XX_rpolyvals</span><span class="p">,</span> <span class="n">XX_rcov</span><span class="p">,</span> <span class="n">XX_rr2</span><span class="p">,</span> <span class="n">YY_rfreq</span><span class="p">,</span> <span class="n">YY_rclean</span><span class="p">,</span> <span class="n">YY_rpolyvals</span><span class="p">,</span> <span class="n">YY_rcov</span><span class="p">,</span> <span class="n">YY_rr2</span></div>
+
+
+<span class="c1"># TODO: 1. Adjust the max_std (mb put to config); 2. Consider detrending...</span>
+<span class="c1"># def check_bpass_phase(bpath, max_std=3):</span>
+<span class="c1">#     &quot;&quot;&quot;</span>
+<span class="c1">#     Check if STD of a bandpass phase lower than max_std</span>
+<span class="c1">#     Return Dict: {ANT:[XX_phase&lt;max_std, YY_phase&lt;max_std]}</span>
+<span class="c1">#     &quot;&quot;&quot;</span>
+<span class="c1">#     BP = BPSols(bpath)</span>
+<span class="c1">#     res = dict()</span>
+<span class="c1">#     for ant in BP.ants:</span>
+<span class="c1">#         freq, _, phase = BP.get_ant_bpass(ant)</span>
+<span class="c1">#         std = np.nanstd(phase, axis=0)</span>
+<span class="c1">#         if not np.isfinite(std[0]) and not np.isfinite(std[1]):</span>
+<span class="c1">#             cond = np.array([True, True])  # The reference antenna</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             cond = std &lt; max_std</span>
+<span class="c1">#         res.update({ant: cond})</span>
+<span class="c1">#     return res</span>
+
+<div class="viewcode-block" id="check_bpass_phase"><a class="viewcode-back" href="../../../subs/ccal_utils.html#apercal.subs.ccal_utils.check_bpass_phase">[docs]</a><span class="k">def</span> <span class="nf">check_bpass_phase</span><span class="p">(</span><span class="n">bpath</span><span class="p">,</span> <span class="n">max_std</span><span class="p">,</span> <span class="n">plot_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">beam</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function to check the bandpass phase solutions to identify a bad antenna.</span>
+
+<span class="sd">    It checks if the standard deviation of the bandpass phase solutions is below</span>
+<span class="sd">    a maximum standard deviation. The return is a dictionary with entries for each</span>
+<span class="sd">    antenna and booleans for each polarisation. If the standard deviation is below</span>
+<span class="sd">    the limit, it is True (i.e., good). If it is below, it is False (i.e., bad).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        bpath (str): Path to bandpass file</span>
+<span class="sd">        max_std (float): Maximum standard deviation of phase solutions</span>
+
+<span class="sd">    Return</span>
+<span class="sd">        results (dict({ant: [XX_phase&lt;max_std, YY_phase&lt;max_std]})): Check for each antenna and polarisaiton</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># get the data from the bandpass table</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">bpath</span><span class="p">):</span>
+        <span class="n">taql_command</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;SELECT TIME,abs(CPARAM) AS amp, arg(CPARAM) AS phase, &quot;</span>
+                        <span class="s2">&quot;FLAG FROM </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bpath</span><span class="p">)</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">taql</span><span class="p">(</span><span class="n">taql_command</span><span class="p">)</span>
+        <span class="n">times</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">getcol</span><span class="p">(</span><span class="s1">&#39;TIME&#39;</span><span class="p">)</span>
+        <span class="n">amp_sols</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">getcol</span><span class="p">(</span><span class="s1">&#39;amp&#39;</span><span class="p">)</span>
+        <span class="n">phase_sols</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">getcol</span><span class="p">(</span><span class="s1">&#39;phase&#39;</span><span class="p">)</span>
+        <span class="n">flags</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">getcol</span><span class="p">(</span><span class="s1">&#39;FLAG&#39;</span><span class="p">)</span>
+        <span class="n">taql_antnames</span> <span class="o">=</span> <span class="s2">&quot;SELECT NAME FROM </span><span class="si">{0}</span><span class="s2">::ANTENNA&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">bpath</span><span class="p">)</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">taql</span><span class="p">(</span><span class="n">taql_antnames</span><span class="p">)</span>
+        <span class="n">ant_names</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">getcol</span><span class="p">(</span><span class="s2">&quot;NAME&quot;</span><span class="p">)</span>
+        <span class="n">taql_freq</span> <span class="o">=</span> <span class="s2">&quot;SELECT CHAN_FREQ FROM </span><span class="si">{0}</span><span class="s2">::SPECTRAL_WINDOW&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">bpath</span><span class="p">)</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">pt</span><span class="o">.</span><span class="n">taql</span><span class="p">(</span><span class="n">taql_freq</span><span class="p">)</span>
+        <span class="n">freqs</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">getcol</span><span class="p">(</span><span class="s1">&#39;CHAN_FREQ&#39;</span><span class="p">)</span>
+
+        <span class="c1"># check for flags and mask</span>
+        <span class="c1"># amp_sols[flags] = np.nan</span>
+        <span class="n">phase_sols</span><span class="p">[</span><span class="n">flags</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+        <span class="c1"># time = times</span>
+        <span class="n">phase</span> <span class="o">=</span> <span class="n">phase_sols</span> <span class="o">*</span> <span class="mf">180.</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span>  <span class="c1"># put into degrees</span>
+        <span class="c1"># amp = amp_sols</span>
+        <span class="c1"># flags = flags</span>
+        <span class="n">freq</span> <span class="o">=</span> <span class="n">freqs</span> <span class="o">/</span> <span class="mf">1e9</span>  <span class="c1"># GHz</span>
+        <span class="c1"># t0 = get_time(times[0])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s2">&quot;BP Table </span><span class="si">{}</span><span class="s2"> not found. Checking solutions not possible&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bpath</span><span class="p">))</span>
+        <span class="c1"># logger.error(error)</span>
+        <span class="c1"># raise RuntimeError(error)</span>
+
+    <span class="c1"># to store the results</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+    <span class="c1"># setting plot layout</span>
+    <span class="n">nx</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">ny</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">xsize</span> <span class="o">=</span> <span class="n">nx</span><span class="o">*</span><span class="mi">4</span>
+    <span class="n">ysize</span> <span class="o">=</span> <span class="n">ny</span><span class="o">*</span><span class="mi">4</span>
+    <span class="n">y_min</span> <span class="o">=</span> <span class="o">-</span><span class="mi">180</span>
+    <span class="n">y_max</span> <span class="o">=</span> <span class="mi">180</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="n">xsize</span><span class="p">,</span> <span class="n">ysize</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span>
+        <span class="s1">&#39;Bandpass phase solutions of Beam </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">beam</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+
+    <span class="c1"># go through the antennas</span>
+    <span class="k">for</span> <span class="n">ant</span> <span class="ow">in</span> <span class="n">ant_names</span><span class="p">:</span>
+        <span class="n">a_index</span> <span class="o">=</span> <span class="n">ant_names</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">ant</span><span class="p">)</span>
+        <span class="n">freq_ant</span> <span class="o">=</span> <span class="n">freq</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">phase_ant</span> <span class="o">=</span> <span class="n">phase</span><span class="p">[</span><span class="n">a_index</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span>
+        <span class="n">std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanstd</span><span class="p">(</span><span class="n">phase_ant</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Ant: </span><span class="si">{0}</span><span class="s2">, std = </span><span class="si">{1}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ant</span><span class="p">,</span> <span class="n">std</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">std</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">std</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="n">cond</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">])</span>  <span class="c1"># The reference antenna</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cond</span> <span class="o">=</span> <span class="n">std</span> <span class="o">&lt;</span> <span class="n">max_std</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">&quot;=&gt; Bandpass phase solutions are good? </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">cond</span><span class="p">)))</span>
+        <span class="n">res</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">ant</span><span class="p">:</span> <span class="n">cond</span><span class="p">})</span>
+
+        <span class="k">if</span> <span class="n">plot_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">ny</span><span class="p">,</span> <span class="n">nx</span><span class="p">,</span> <span class="n">a_index</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+            <span class="c1"># plot XX</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">freq_ant</span><span class="p">,</span> <span class="n">phase_ant</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span>
+                        <span class="n">label</span><span class="o">=</span><span class="s1">&#39;XX&#39;</span><span class="p">,</span>
+                        <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;C0&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">freq_ant</span><span class="p">,</span> <span class="n">phase_ant</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span>
+                        <span class="n">label</span><span class="o">=</span><span class="s1">&#39;YY&#39;</span><span class="p">,</span>
+                        <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;C1&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Antenna </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ant</span><span class="p">))</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="n">y_min</span><span class="p">,</span> <span class="n">y_max</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">plot_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">markerscale</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">plot_name</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">res</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Apercal Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4.
+    </div>
+  </body>
+</html>

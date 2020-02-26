@@ -1,0 +1,181 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Module: continuum &#8212; Apercal 2.5.0 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Module: line" href="line.html" />
+    <link rel="prev" title="Module: scal" href="scal.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="line.html" title="Module: line"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="scal.html" title="Module: scal"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../pipeline_modules.html" accesskey="U">Pipeline modules</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="scal.html"
+                        title="previous chapter">Module: scal</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="line.html"
+                        title="next chapter">Module: line</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/modules/continuum.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-apercal.modules.continuum">
+<span id="module-continuum"></span><h1>Module: continuum<a class="headerlink" href="#module-apercal.modules.continuum" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="apercal.modules.continuum.continuum">
+<em class="property">class </em><code class="descclassname">apercal.modules.continuum.</code><code class="descname">continuum</code><span class="sig-paren">(</span><em>file_=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/continuum.html#continuum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.continuum.continuum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Continuum class to produce continuum data products (Deep continuum images of individual frequency chunks and
+stacked continuum image).</p>
+<dl class="method">
+<dt id="apercal.modules.continuum.continuum.check_starting_conditions">
+<code class="descname">check_starting_conditions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/continuum.html#continuum.check_starting_conditions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.continuum.continuum.check_starting_conditions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check that the miriad file from convert and self-calibration exists.</p>
+<p>If the crosscal miriad file does not exists, none of the subsequent tasks 
+in go() need to be executed. It is easier for now to add this task than edit
+each task in go().
+The continuum imaging tasks do not check the existence of the crosscal miriad file. They
+only check if selfcal is performed. If the crosscal miriad file does not
+exists, continuum will not crash, but report that selfcalibration was not successfull.
+While this is true, it is not the main cause. This function will report the main cause
+in this case.</p>
+<p>The check for self-calibration is added for completeness.</p>
+<p>Not sure if it is necessary to add all the param variables from continuum
+and set them False if the check fails. For now, just use the main ones</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>self</dd>
+<dt>Return:</dt>
+<dd>(bool): True if file is found, otherwise False</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.continuum.continuum.chunkimage">
+<code class="descname">chunkimage</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/continuum.html#continuum.chunkimage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.continuum.continuum.chunkimage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the final deep mfs continuum image from the self-calibrated data</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.continuum.continuum.go">
+<code class="descname">go</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/continuum.html#continuum.go"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.continuum.continuum.go" title="Permalink to this definition">¶</a></dt>
+<dd><p>Executes the continuum imaging process in the following order
+image_continuum</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.continuum.continuum.mfimage">
+<code class="descname">mfimage</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/continuum.html#continuum.mfimage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.continuum.continuum.mfimage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the final deep mfs continuum image from the self-calibrated data</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.continuum.continuum.reset">
+<code class="descname">reset</code><span class="sig-paren">(</span><em>steps='all'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/continuum.html#continuum.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.continuum.continuum.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to reset the current step and remove all generated continuum data for the current beam. Be careful! Deletes all data generated in
+this step!</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.continuum.continuum.reset_all">
+<code class="descname">reset_all</code><span class="sig-paren">(</span><em>steps='all'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/continuum.html#continuum.reset_all"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.continuum.continuum.reset_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to reset the current step and remove all generated continuum data for the all beams. Be careful! Deletes all data generated in
+this step!</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.continuum.continuum.summary">
+<code class="descname">summary</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/continuum.html#continuum.summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.continuum.continuum.summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a general summary of the parameters in the parameter file generated during CONTINUUM. No detailed summary
+is available for CONTINUUM up to now.</p>
+<p>returns (DataFrame): A python pandas dataframe object, which can be looked at with the style function in the notebook</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="line.html" title="Module: line"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="scal.html" title="Module: scal"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../pipeline_modules.html" >Pipeline modules</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Apercal Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4.
+    </div>
+  </body>
+</html>

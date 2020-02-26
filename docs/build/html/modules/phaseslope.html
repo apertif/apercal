@@ -1,0 +1,149 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Module: phaseslope &#8212; Apercal 2.5.0 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Supporting modules" href="../subs_modules.html" />
+    <link rel="prev" title="Module: transfer" href="transfer.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../subs_modules.html" title="Supporting modules"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="transfer.html" title="Module: transfer"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../pipeline_modules.html" accesskey="U">Pipeline modules</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Module: phaseslope</a><ul>
+<li><a class="reference internal" href="#module-apercal.modules.phaseslope">Reference</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="transfer.html"
+                        title="previous chapter">Module: transfer</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../subs_modules.html"
+                        title="next chapter">Supporting modules</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/modules/phaseslope.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-phaseslope">
+<h1>Module: phaseslope<a class="headerlink" href="#module-phaseslope" title="Permalink to this headline">¶</a></h1>
+<p>This module allows to run the phase-slope correction offline.
+It requires additional software and is only needed for data prior
+to the start of the survey.</p>
+<div class="section" id="module-apercal.modules.phaseslope">
+<span id="reference"></span><h2>Reference<a class="headerlink" href="#module-apercal.modules.phaseslope" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="apercal.modules.phaseslope.phaseslope">
+<em class="property">class </em><code class="descclassname">apercal.modules.phaseslope.</code><code class="descname">phaseslope</code><span class="sig-paren">(</span><em>file_=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/phaseslope.html#phaseslope"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.phaseslope.phaseslope" title="Permalink to this definition">¶</a></dt>
+<dd><p>Phaseslope class. Correct the phase slope in SVC data</p>
+<dl class="method">
+<dt id="apercal.modules.phaseslope.phaseslope.correct_phaseslope">
+<code class="descname">correct_phaseslope</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/phaseslope.html#phaseslope.correct_phaseslope"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.phaseslope.phaseslope.correct_phaseslope" title="Permalink to this definition">¶</a></dt>
+<dd><p>Splits out a certain frequency range from the datasets</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.phaseslope.phaseslope.go">
+<code class="descname">go</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/phaseslope.html#phaseslope.go"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.phaseslope.phaseslope.go" title="Permalink to this definition">¶</a></dt>
+<dd><p>Executes the split step with the parameters indicated in the config-file</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.phaseslope.phaseslope.reset">
+<code class="descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/phaseslope.html#phaseslope.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.phaseslope.phaseslope.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to reset the current step and remove all generated data. Be careful! Deletes all data generated in
+this step!</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../subs_modules.html" title="Supporting modules"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="transfer.html" title="Module: transfer"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../pipeline_modules.html" >Pipeline modules</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Apercal Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4.
+    </div>
+  </body>
+</html>

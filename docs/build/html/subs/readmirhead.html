@@ -1,0 +1,210 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>readmirhead &#8212; Apercal 2.5.0 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="readmirlog" href="readmirlog.html" />
+    <link rel="prev" title="qa" href="qa.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="readmirlog.html" title="readmirlog"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="qa.html" title="qa"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../subs_modules.html" accesskey="U">Supporting modules</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">readmirhead</a><ul>
+<li><a class="reference internal" href="#module-apercal.subs.readmirhead">Reference</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="qa.html"
+                        title="previous chapter">qa</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="readmirlog.html"
+                        title="next chapter">readmirlog</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/subs/readmirhead.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="readmirhead">
+<h1>readmirhead<a class="headerlink" href="#readmirhead" title="Permalink to this headline">¶</a></h1>
+<p>This module contains functionality for reading header information
+from miriad files.</p>
+<div class="section" id="module-apercal.subs.readmirhead">
+<span id="reference"></span><h2>Reference<a class="headerlink" href="#module-apercal.subs.readmirhead" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="apercal.subs.readmirhead.fixra">
+<code class="descclassname">apercal.subs.readmirhead.</code><code class="descname">fixra</code><span class="sig-paren">(</span><em>ra0</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/readmirhead.html#fixra"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.readmirhead.fixra" title="Permalink to this definition">¶</a></dt>
+<dd><p>fixra: module to fix the notation of the ra string
+ra0: input ra notation from a skycoords query
+returns: the fixed notation for the ra</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.readmirhead.getbeamimage">
+<code class="descclassname">apercal.subs.readmirhead.</code><code class="descname">getbeamimage</code><span class="sig-paren">(</span><em>infile</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/readmirhead.html#getbeamimage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.readmirhead.getbeamimage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Uses the three functions above to return the beam parameters of an image (bmaj, bmin, bpa)
+infile (string): input image file in MIRIAD format
+returns (numpyarray): The bmaj, bmin, bpa of the image</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.readmirhead.getbmajimage">
+<code class="descclassname">apercal.subs.readmirhead.</code><code class="descname">getbmajimage</code><span class="sig-paren">(</span><em>infile</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/readmirhead.html#getbmajimage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.readmirhead.getbmajimage" title="Permalink to this definition">¶</a></dt>
+<dd><p>getbmajimage: Get the major beam size from a MIRIAD image
+infile (string): input image file in MIRIAD format
+returns (float): BMAJ in arcseconds of the image</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.readmirhead.getbminimage">
+<code class="descclassname">apercal.subs.readmirhead.</code><code class="descname">getbminimage</code><span class="sig-paren">(</span><em>infile</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/readmirhead.html#getbminimage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.readmirhead.getbminimage" title="Permalink to this definition">¶</a></dt>
+<dd><p>getbminimage: Get the minor beam size from a MIRIAD image
+infile (string): input image file in MIRIAD format
+returns (float): BMIN in arcseconds of the image</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.readmirhead.getbpaimage">
+<code class="descclassname">apercal.subs.readmirhead.</code><code class="descname">getbpaimage</code><span class="sig-paren">(</span><em>infile</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/readmirhead.html#getbpaimage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.readmirhead.getbpaimage" title="Permalink to this definition">¶</a></dt>
+<dd><p>getbmpaimage: Get the beam angle from a MIRIAD image
+infile (string): input image file in MIRIAD format
+returns (float): BPA in degrees of the image</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.readmirhead.getdecimage">
+<code class="descclassname">apercal.subs.readmirhead.</code><code class="descname">getdecimage</code><span class="sig-paren">(</span><em>infile</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/readmirhead.html#getdecimage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.readmirhead.getdecimage" title="Permalink to this definition">¶</a></dt>
+<dd><p>getdecimage: Get the DEC from a MIRIAD image
+infile (string): input image file in MIRIAD format
+returns: DEC coordinates dd:mm:ss.sss</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.readmirhead.getfreq">
+<code class="descclassname">apercal.subs.readmirhead.</code><code class="descname">getfreq</code><span class="sig-paren">(</span><em>infile</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/readmirhead.html#getfreq"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.readmirhead.getfreq" title="Permalink to this definition">¶</a></dt>
+<dd><p>getfreq: module to extract the central freqeuncy of the observing band
+param infile: infile (name of file)
+returns: the central frequency of the visibility file</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.readmirhead.getnchan">
+<code class="descclassname">apercal.subs.readmirhead.</code><code class="descname">getnchan</code><span class="sig-paren">(</span><em>infile</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/readmirhead.html#getnchan"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.readmirhead.getnchan" title="Permalink to this definition">¶</a></dt>
+<dd><p>getnchan: module to extract the number of channels from an observation
+param infile: infile (name of file)
+return: the number of channels of the observation</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.readmirhead.getradec">
+<code class="descclassname">apercal.subs.readmirhead.</code><code class="descname">getradec</code><span class="sig-paren">(</span><em>infile</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/readmirhead.html#getradec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.readmirhead.getradec" title="Permalink to this definition">¶</a></dt>
+<dd><p>getradec: module to extract the pointing centre ra and dec from a miriad image file. Uses the PRTHD task in miriad
+inputs: infile (name of file)
+returns: coords, an instance of the astropy.coordinates SkyCoord class which has a few convenient attributes.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.readmirhead.getradecsex">
+<code class="descclassname">apercal.subs.readmirhead.</code><code class="descname">getradecsex</code><span class="sig-paren">(</span><em>infile</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/readmirhead.html#getradecsex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.readmirhead.getradecsex" title="Permalink to this definition">¶</a></dt>
+<dd><p>skycoords: The astropy SkyCoord instance values to covert to a string
+returns: String with the RA and DEC in format hh:mm:ss,dd:mm:ss</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.readmirhead.getraimage">
+<code class="descclassname">apercal.subs.readmirhead.</code><code class="descname">getraimage</code><span class="sig-paren">(</span><em>infile</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/readmirhead.html#getraimage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.readmirhead.getraimage" title="Permalink to this definition">¶</a></dt>
+<dd><p>getraimage: Get the RA cooridinate from a miriad image
+infile (string): input image file in MIRIAD format
+returns: RA coordinates of the image in hh:mm:ss.sss</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="readmirlog.html" title="readmirlog"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="qa.html" title="qa"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../subs_modules.html" >Supporting modules</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Apercal Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4.
+    </div>
+  </body>
+</html>

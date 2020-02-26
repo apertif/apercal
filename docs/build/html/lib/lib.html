@@ -1,0 +1,289 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>lib &#8212; Apercal 2.5.0 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Other modules" href="../other_modules.html" />
+    <link rel="prev" title="calculations" href="calculations.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../other_modules.html" title="Other modules"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="calculations.html" title="calculations"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../lib_modules.html" accesskey="U">Library modules</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">lib</a><ul>
+<li><a class="reference internal" href="#module-apercal.libs.lib">Reference</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="calculations.html"
+                        title="previous chapter">calculations</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../other_modules.html"
+                        title="next chapter">Other modules</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/lib/lib.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="lib">
+<h1>lib<a class="headerlink" href="#lib" title="Permalink to this headline">¶</a></h1>
+<p>This module contains a range of different functions.</p>
+<div class="section" id="module-apercal.libs.lib">
+<span id="reference"></span><h2>Reference<a class="headerlink" href="#module-apercal.libs.lib" title="Permalink to this headline">¶</a></h2>
+<dl class="exception">
+<dt id="apercal.libs.lib.FatalMiriadError">
+<em class="property">exception </em><code class="descclassname">apercal.libs.lib.</code><code class="descname">FatalMiriadError</code><span class="sig-paren">(</span><em>error=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/libs/lib.html#FatalMiriadError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.libs.lib.FatalMiriadError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Custom  Exception for Fatal MIRIAD Errors</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.libs.lib.basher">
+<code class="descclassname">apercal.libs.lib.</code><code class="descname">basher</code><span class="sig-paren">(</span><em>cmd</em>, <em>showasinfo=False</em>, <em>prefixes_to_strip=[]</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/libs/lib.html#basher"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.libs.lib.basher" title="Permalink to this definition">¶</a></dt>
+<dd><p>basher: shell run - helper function to run commands on the shell.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>cmd (str): command to be run
+showasinfo (bool): Log the output to info (default: log to debug)
+remove_ouput (List[str]): do not log lines that start with any of these strings</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.libs.lib.director">
+<code class="descclassname">apercal.libs.lib.</code><code class="descname">director</code><span class="sig-paren">(</span><em>self</em>, <em>option</em>, <em>dest</em>, <em>file_=None</em>, <em>verbose=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/libs/lib.html#director"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.libs.lib.director" title="Permalink to this definition">¶</a></dt>
+<dd><p>director: Function to move, remove, and copy files and directories
+option: ‘mk’, ‘ch’, ‘mv’, ‘rm’, and ‘cp’ are supported
+dest: Destination of a file or directory to move to
+file: Which file to move or copy, otherwise None</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.libs.lib.exceptioner">
+<code class="descclassname">apercal.libs.lib.</code><code class="descname">exceptioner</code><span class="sig-paren">(</span><em>O</em>, <em>E</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/libs/lib.html#exceptioner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.libs.lib.exceptioner" title="Permalink to this definition">¶</a></dt>
+<dd><p>exceptioner(O, E) where O and E are the stdout outputs and errors.
+A simple and stupid way to do exception handling.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.libs.lib.get_default_config">
+<code class="descclassname">apercal.libs.lib.</code><code class="descname">get_default_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/libs/lib.html#get_default_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.libs.lib.get_default_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to get the default config settins</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.libs.lib.get_source_names">
+<code class="descclassname">apercal.libs.lib.</code><code class="descname">get_source_names</code><span class="sig-paren">(</span><em>vis=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/libs/lib.html#get_source_names"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.libs.lib.get_source_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function that uses the MIRIAD task UVINDEX to grab the name of the
+sources from a MIRIAD visibility file.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.libs.lib.importuvfitsys">
+<code class="descclassname">apercal.libs.lib.</code><code class="descname">importuvfitsys</code><span class="sig-paren">(</span><em>uvfits=None</em>, <em>uv=None</em>, <em>tsys=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/libs/lib.html#importuvfitsys"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.libs.lib.importuvfitsys" title="Permalink to this definition">¶</a></dt>
+<dd><p>Imports UVFITS file and does Tsys correction on the output MIRIAD UV file.
+Uses the MIRIAD task WSRTFITS to import the UVFITS file and convert it to MIRIAD UV format.
+Uses the MIRIAD task ATTSYS to do the Tsys correction.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.libs.lib.masher">
+<code class="descclassname">apercal.libs.lib.</code><code class="descname">masher</code><span class="sig-paren">(</span><em>task=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/libs/lib.html#masher"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.libs.lib.masher" title="Permalink to this definition">¶</a></dt>
+<dd><p>masher - Miriad Task Runner
+Usage: masher(task=’sometask’, arg1=val1, arg2=val2)
+Example: masher(task=’invert’, vis=’/home/frank/test.uv/’, options=’mfs,double’, …)
+Each argument is passed to the task through the use of the keywords.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="apercal.libs.lib.maths">
+<em class="property">class </em><code class="descclassname">apercal.libs.lib.</code><code class="descname">maths</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/libs/lib.html#maths"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.libs.lib.maths" title="Permalink to this definition">¶</a></dt>
+<dd><p>Special MIRIAD type class for the stupid task MATHS, which does not know how to refer to
+directories.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.libs.lib.mkdir">
+<code class="descclassname">apercal.libs.lib.</code><code class="descname">mkdir</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/libs/lib.html#mkdir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.libs.lib.mkdir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if path exists, and creates if it doesn’t exist.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.libs.lib.ms2uvfits">
+<code class="descclassname">apercal.libs.lib.</code><code class="descname">ms2uvfits</code><span class="sig-paren">(</span><em>ms=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/libs/lib.html#ms2uvfits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.libs.lib.ms2uvfits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Utility to convert ms to a uvfits file</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.libs.lib.pgflag">
+<code class="descclassname">apercal.libs.lib.</code><code class="descname">pgflag</code><span class="sig-paren">(</span><em>vis=None</em>, <em>flagpar='6</em>, <em>2</em>, <em>2</em>, <em>2</em>, <em>5</em>, <em>3'</em>, <em>settings=None</em>, <em>stokes='qq'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/libs/lib.html#pgflag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.libs.lib.pgflag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper around the MIRIAD task PGFLAG, which in turn is a wrapper for the AOFlagger
+SumThreshold algorithm.
+Defaults:  flagpar=‘6,2,2,2,5,3’,  stokes=’qq’
+Uses parameters from a settings object if this is provided.
+Outputs are written to a log file, which is in the same directory as vis, and has name
+&lt;vis&gt;.pgflag.txt.
+Note: The considerably long output of PGFLAG is written out with the logger at debug level.
+This may not be ideal if you’re having a quick look, so switch the level to info if you want
+to avoid the output of the task appearing in your console.
+Beware: You could lose a LOT of data if you’re not careful!!!</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.libs.lib.qimplot">
+<code class="descclassname">apercal.libs.lib.</code><code class="descname">qimplot</code><span class="sig-paren">(</span><em>image=None</em>, <em>rmin=-2</em>, <em>rmax=2</em>, <em>cmap='gray'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/libs/lib.html#qimplot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.libs.lib.qimplot" title="Permalink to this definition">¶</a></dt>
+<dd><p>qimplot: Quick Image Plot
+Plots image in grayscale. Colorscale is from rmin*RMS to rmax*RMS.
+Defaults:</p>
+<blockquote>
+<div><p>rmin = -2
+rmax = +2
+cmap = ‘gray’</p>
+<blockquote>
+<div>Can be any of the usual cmap values, e.g. ‘YlOrRd’ or ‘jet’</div></blockquote>
+</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.libs.lib.query_yes_no">
+<code class="descclassname">apercal.libs.lib.</code><code class="descname">query_yes_no</code><span class="sig-paren">(</span><em>question</em>, <em>default='yes'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/libs/lib.html#query_yes_no"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.libs.lib.query_yes_no" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ask a yes/no question via raw_input() and return their answer.</p>
+<p>“question” is a string that is presented to the user.
+“default” is the presumed answer if the user just hits &lt;Enter&gt;.</p>
+<blockquote>
+<div>It must be “yes” (the default), “no” or None (meaning
+an answer is required of the user).</div></blockquote>
+<p>The “answer” return value is True for “yes” or False for “no”.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.libs.lib.run_casa">
+<code class="descclassname">apercal.libs.lib.</code><code class="descname">run_casa</code><span class="sig-paren">(</span><em>cmd</em>, <em>raise_on_severe=False</em>, <em>log_output=False</em>, <em>timeout=1800</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/libs/lib.html#run_casa"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.libs.lib.run_casa" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run a list of casa commands</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.libs.lib.show">
+<code class="descclassname">apercal.libs.lib.</code><code class="descname">show</code><span class="sig-paren">(</span><em>config_object</em>, <em>section</em>, <em>showall=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/libs/lib.html#show"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.libs.lib.show" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>show: Prints the current settings of the pipeline. Only shows keywords, which are in the default config file</dt>
+<dd>default.cfg</dd>
+</dl>
+<p>showall: Set to true if you want to see all current settings instead of only the ones from the current step</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.libs.lib.strip_prefixes">
+<code class="descclassname">apercal.libs.lib.</code><code class="descname">strip_prefixes</code><span class="sig-paren">(</span><em>lines</em>, <em>prefixes</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/libs/lib.html#strip_prefixes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.libs.lib.strip_prefixes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove lines starting that start with a given string</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>lines (str): output to be filtered
+prefixes (List[str]): lines to be stripped</dd>
+<dt>Returns:</dt>
+<dd>str: Output with filtered lines</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.libs.lib.uvflag">
+<code class="descclassname">apercal.libs.lib.</code><code class="descname">uvflag</code><span class="sig-paren">(</span><em>vis=None</em>, <em>select=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/libs/lib.html#uvflag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.libs.lib.uvflag" title="Permalink to this definition">¶</a></dt>
+<dd><p>vis: visibility file to be flagged
+select: semi-colon separated list of data selections to be flagged</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.libs.lib.write2file">
+<code class="descclassname">apercal.libs.lib.</code><code class="descname">write2file</code><span class="sig-paren">(</span><em>header</em>, <em>text2write</em>, <em>file2write</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/libs/lib.html#write2file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.libs.lib.write2file" title="Permalink to this definition">¶</a></dt>
+<dd><p>write2file writes the output of some task to a textfile.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../other_modules.html" title="Other modules"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="calculations.html" title="calculations"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../lib_modules.html" >Library modules</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Apercal Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4.
+    </div>
+  </body>
+</html>

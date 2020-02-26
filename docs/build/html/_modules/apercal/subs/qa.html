@@ -1,0 +1,243 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>apercal.subs.qa &#8212; Apercal 2.5.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for apercal.subs.qa</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">string</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">astropy.io.fits</span> <span class="k">as</span> <span class="nn">pyfits</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.stats</span>
+
+<span class="kn">from</span> <span class="nn">backports</span> <span class="k">import</span> <span class="n">tempfile</span>
+
+<span class="kn">from</span> <span class="nn">apercal.libs</span> <span class="k">import</span> <span class="n">lib</span>
+<span class="kn">from</span> <span class="nn">apercal.subs</span> <span class="k">import</span> <span class="n">setinit</span>
+<span class="kn">from</span> <span class="nn">apercal.exceptions</span> <span class="k">import</span> <span class="n">ApercalException</span>
+<span class="kn">from</span> <span class="nn">apercal.subs</span> <span class="k">import</span> <span class="n">imstats</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="checkimagegaussianity"><a class="viewcode-back" href="../../../subs/qa.html#apercal.subs.qa.checkimagegaussianity">[docs]</a><span class="k">def</span> <span class="nf">checkimagegaussianity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">alpha</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Subroutine to check if an image has gaussian distribution</span>
+<span class="sd">    image (string): The path/name of the image to check in FITS-format</span>
+<span class="sd">    returns (boolean): True if image is ok, False otherwise</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">setinit</span><span class="o">.</span><span class="n">setinitdirs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+    <span class="n">char_set</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">ascii_uppercase</span> <span class="o">+</span> <span class="n">string</span><span class="o">.</span><span class="n">digits</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">image</span><span class="p">)</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">image</span><span class="p">):</span>
+        <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tempdir</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">image</span><span class="p">):</span>
+                <span class="n">temp_string</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">char_set</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+                <span class="n">fits</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">miriad</span><span class="p">(</span><span class="s1">&#39;fits&#39;</span><span class="p">)</span>
+                <span class="n">fits</span><span class="o">.</span><span class="n">op</span> <span class="o">=</span> <span class="s1">&#39;xyout&#39;</span>
+                <span class="n">fits</span><span class="o">.</span><span class="n">in_</span> <span class="o">=</span> <span class="n">image</span>
+                <span class="n">fits</span><span class="o">.</span><span class="n">out</span> <span class="o">=</span> <span class="n">tempdir</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="n">temp_string</span> <span class="o">+</span> <span class="s1">&#39;.fits&#39;</span>
+                <span class="n">fits</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
+                <span class="n">pyfile</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">tempdir</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="n">temp_string</span> <span class="o">+</span> <span class="s1">&#39;.fits&#39;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">image</span><span class="p">):</span>
+                <span class="n">pyfile</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">error</span> <span class="o">=</span> <span class="s1">&#39;Image format not supported. Only MIRIAD and FITS formats are supported!&#39;</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">ApercalException</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">pyfile</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">pyfile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="n">k2</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">normaltest</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">nan_policy</span><span class="o">=</span><span class="s1">&#39;omit&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">p</span> <span class="o">&lt;</span> <span class="n">alpha</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">error</span> <span class="o">=</span> <span class="s1">&#39;Image </span><span class="si">{}</span><span class="s1"> does not seem to exist!&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">ApercalException</span><span class="p">(</span><span class="n">error</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="checkdirtyimage"><a class="viewcode-back" href="../../../subs/qa.html#apercal.subs.qa.checkdirtyimage">[docs]</a><span class="k">def</span> <span class="nf">checkdirtyimage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Subroutine to check if a dirty image is valid</span>
+<span class="sd">    image (string): The path/name of the image to check</span>
+<span class="sd">    returns (boolean): True if image is ok, False otherwise</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dirtystats</span> <span class="o">=</span> <span class="n">imstats</span><span class="o">.</span><span class="n">getimagestats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">dirtystats</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">dirtystats</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="ow">and</span> <span class="p">(</span><span class="n">dirtystats</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="checkmaskimage"><a class="viewcode-back" href="../../../subs/qa.html#apercal.subs.qa.checkmaskimage">[docs]</a><span class="k">def</span> <span class="nf">checkmaskimage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Checks if a mask is completely blanked.</span>
+<span class="sd">    image: The input mask to check</span>
+<span class="sd">    return: True if mask is not blank</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">maskstats</span> <span class="o">=</span> <span class="n">imstats</span><span class="o">.</span><span class="n">getimagestats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">maskstats</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">maskstats</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">maskstats</span><span class="p">[</span><span class="mi">2</span><span class="p">]):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="checkmodelimage"><a class="viewcode-back" href="../../../subs/qa.html#apercal.subs.qa.checkmodelimage">[docs]</a><span class="k">def</span> <span class="nf">checkmodelimage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Subroutine to check if a model image is valid</span>
+<span class="sd">    image (string): The path/name of the image to check</span>
+<span class="sd">    returns (boolean): True if image is ok, False otherwise</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">modelstats</span> <span class="o">=</span> <span class="n">imstats</span><span class="o">.</span><span class="n">getimagestats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">modelstats</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="ow">and</span> <span class="n">modelstats</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">10</span> <span class="ow">and</span> <span class="n">modelstats</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="o">-</span><span class="mf">10.0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="checkmodelpolimage"><a class="viewcode-back" href="../../../subs/qa.html#apercal.subs.qa.checkmodelpolimage">[docs]</a><span class="k">def</span> <span class="nf">checkmodelpolimage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Subroutine to check if a model image is valid</span>
+<span class="sd">    image (string): The path/name of the image to check</span>
+<span class="sd">    returns (boolean): True if image is ok, False otherwise</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">modelstats</span> <span class="o">=</span> <span class="n">imstats</span><span class="o">.</span><span class="n">getimagestats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">modelstats</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="ow">and</span> <span class="n">modelstats</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">1000</span> <span class="ow">and</span> <span class="n">modelstats</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="o">-</span><span class="mf">10.0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="checkrestoredimage"><a class="viewcode-back" href="../../../subs/qa.html#apercal.subs.qa.checkrestoredimage">[docs]</a><span class="k">def</span> <span class="nf">checkrestoredimage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Subroutine to check if a restored image is valid</span>
+<span class="sd">    image (string): The path/name of the image to check</span>
+<span class="sd">    returns (boolean): True if image is ok, False otherwise</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">restoredstats</span> <span class="o">=</span> <span class="n">imstats</span><span class="o">.</span><span class="n">getimagestats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">restoredstats</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="ow">and</span> <span class="n">restoredstats</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">1000</span> <span class="ow">and</span> <span class="n">restoredstats</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="checkrestoredpolimage"><a class="viewcode-back" href="../../../subs/qa.html#apercal.subs.qa.checkrestoredpolimage">[docs]</a><span class="k">def</span> <span class="nf">checkrestoredpolimage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Subroutine to check if a restored image is valid</span>
+<span class="sd">    image (string): The path/name of the image to check</span>
+<span class="sd">    returns (boolean): True if image is ok, False otherwise</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">restoredstats</span> <span class="o">=</span> <span class="n">imstats</span><span class="o">.</span><span class="n">getimagestats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">restoredstats</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="ow">and</span> <span class="n">restoredstats</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">10</span> <span class="ow">and</span> <span class="n">restoredstats</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="o">-</span><span class="mf">10.0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<span class="k">def</span> <span class="nf">fieldflux</span><span class="p">(</span><span class="n">infile</span><span class="p">):</span>
+    <span class="n">invert</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">miriad</span><span class="p">(</span><span class="s1">&#39;invert&#39;</span><span class="p">)</span>
+    <span class="n">invert</span><span class="o">.</span><span class="n">vis</span> <span class="o">=</span> <span class="n">infile</span>
+    <span class="n">invert</span><span class="o">.</span><span class="n">map</span> <span class="o">=</span> <span class="s1">&#39;fluxmap&#39;</span>
+    <span class="n">invert</span><span class="o">.</span><span class="n">beam</span> <span class="o">=</span> <span class="s1">&#39;fluxbeam&#39;</span>
+    <span class="n">invert</span><span class="o">.</span><span class="n">imsize</span> <span class="o">=</span> <span class="mi">2049</span>
+    <span class="n">invert</span><span class="o">.</span><span class="n">cell</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">invert</span><span class="o">.</span><span class="n">stokes</span> <span class="o">=</span> <span class="s1">&#39;ii&#39;</span>
+    <span class="n">invert</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="s1">&#39;mfs&#39;</span>
+    <span class="n">invert</span><span class="o">.</span><span class="n">robust</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">invert</span><span class="o">.</span><span class="n">slop</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">invert</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
+    <span class="n">clean</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">miriad</span><span class="p">(</span><span class="s1">&#39;clean&#39;</span><span class="p">)</span>
+    <span class="n">clean</span><span class="o">.</span><span class="n">map</span> <span class="o">=</span> <span class="n">invert</span><span class="o">.</span><span class="n">map</span>
+    <span class="n">clean</span><span class="o">.</span><span class="n">beam</span> <span class="o">=</span> <span class="n">invert</span><span class="o">.</span><span class="n">beam</span>
+    <span class="n">clean</span><span class="o">.</span><span class="n">out</span> <span class="o">=</span> <span class="s1">&#39;fluxmodel&#39;</span>
+    <span class="n">clean</span><span class="o">.</span><span class="n">niters</span> <span class="o">=</span> <span class="mi">10000</span>
+    <span class="n">clean</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
+    <span class="n">fits</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">miriad</span><span class="p">(</span><span class="s1">&#39;fits&#39;</span><span class="p">)</span>
+    <span class="n">fits</span><span class="o">.</span><span class="n">in_</span> <span class="o">=</span> <span class="n">clean</span><span class="o">.</span><span class="n">out</span>
+    <span class="n">fits</span><span class="o">.</span><span class="n">op</span> <span class="o">=</span> <span class="s1">&#39;xyout&#39;</span>
+    <span class="n">fits</span><span class="o">.</span><span class="n">out</span> <span class="o">=</span> <span class="n">clean</span><span class="o">.</span><span class="n">out</span> <span class="o">+</span> <span class="s1">&#39;.fits&#39;</span>
+    <span class="n">fits</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
+    <span class="n">pyfile</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fits</span><span class="o">.</span><span class="n">out</span><span class="p">)</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">pyfile</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">pyfile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="n">intflux</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">&#39;rm -rf flux*&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">intflux</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Apercal Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4.
+    </div>
+  </body>
+</html>
