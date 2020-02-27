@@ -71,7 +71,7 @@ class mosaic(BaseModule):
     # settings for external input
     mosaic_continuum_image_origin = None
     mosaic_polarisation_input_origin = None
-    #mosaic_projection_centre_type = None
+    # mosaic_projection_centre_type = None
     mosaic_projection_centre_ra = None
     mosaic_projection_centre_dec = None
     mosaic_projection_centre_beam = None
@@ -747,7 +747,7 @@ class mosaic(BaseModule):
                     # This function will import a FITS image into Miriad placing it in the mosaicdir
                     fits = lib.miriad('fits')
                     fits.op = 'xyin'
-                    #fits.in_ = '{}/image_mf_00.fits'.format(beam)
+                    # fits.in_ = '{}/image_mf_00.fits'.format(beam)
                     fits.in_ = glob.glob(os.path.join(beam, "*.fits"))[0]
                     fits.out = '{0}/image_{0}.map'.format(beam)
                     fits.inp()
@@ -847,7 +847,15 @@ class mosaic(BaseModule):
         """
         Function to get the image noise for a specific beam
 
-        Based on beam_noise(beam_num) from the notebook)            
+        Based on beam_noise(beam_num) from the notebook)
+
+        Args
+        ----
+        beam (str): the number of the beam
+
+        Return
+        ------
+        (str): Miriad output of noise estimate
         """
 
         # change to directory of continuum images
@@ -1098,7 +1106,7 @@ class mosaic(BaseModule):
 
             # remove (moved to cleanup function)
             # shutil.rmtree(mosaicdir+'mosaic_temp.map')
-            #subs_managefiles.director(self, 'rm', 'mosaic_temp_preproj.map')
+            # subs_managefiles.director(self, 'rm', 'mosaic_temp_preproj.map')
 
             logger.info("Creating template mosaic ... Done")
             mosaic_template_mosaic_status = True
