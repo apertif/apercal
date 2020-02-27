@@ -40,11 +40,11 @@ def make_mosaic(task_id, basedir, centre_ra=None, centre_dec=None, mosaic_beams=
     start_time = time.time()
 
     # configfile
-    #configfile = "/home/schulz/pipeline/apercal_tests/mosaic/mosaic_v2_190428055.cfg"
+    # configfile = "/home/schulz/pipeline/apercal_tests/mosaic/mosaic_v2_190428055.cfg"
     configfile = None
 
     # Setting up log file
-    #task_id = 190822046
+    # task_id = 190822046
     logfile = os.path.join(os.getcwd(), "{0}_mosaic.log".format(
         task_id))
     lib.setup_logger('debug', logfile=logfile)
@@ -62,7 +62,6 @@ def make_mosaic(task_id, basedir, centre_ra=None, centre_dec=None, mosaic_beams=
     mo.mosaic_step_limit = step_limit
 
     # set the output directory
-    #mo.basedir = '/data/schulz/mosaic_test/{}/'.format(task_id)
     mo.basedir = os.path.join(basedir, '{}'.format(task_id))
 
     # enable continuum mosaic
@@ -131,7 +130,7 @@ def make_mosaic(task_id, basedir, centre_ra=None, centre_dec=None, mosaic_beams=
     # =================
     mo.go()
 
-    logger.info("Finished after {0:.0f}s".format(time.time()-start_time))
+    logger.info("Finished after {0:.0f}s".format(time.time() - start_time))
 
 
 if __name__ == "__main__":

@@ -18,8 +18,6 @@ import time
 import subprocess
 import logging
 import apercal.libs.lib as lib
-#from apercal.pipeline.start_pipeline import start_apercal_pipeline
-#from dataqa.run_qa import run_triggered_qa
 from apercal.modules.mosaic_v2 import mosaic
 import os
 import socket
@@ -29,7 +27,7 @@ start_time = time.time()
 
 # set path to configfile
 # note: remove settings below if configfile is used
-#configfile = "/home/schulz/pipeline/apercal_tests/mosaic/mosaic_v2_190428055.cfg"
+# configfile = "/home/schulz/pipeline/apercal_tests/mosaic/mosaic_v2_190428055.cfg"
 configfile = None
 
 # Setting up log file
@@ -74,8 +72,8 @@ mo.mosaic_beam_map_cutoff = 0.1
 # using the a given beam
 mo.mosaic_projection_centre_beam = '00'
 # using ra and dec (untested)
-#mo.mosaic_projection_centre_ra = ''
-#mo.mosaic_projection_centre_dec = ''
+# mo.mosaic_projection_centre_ra = ''
+# mo.mosaic_projection_centre_dec = ''
 
 # type of beam for convolution
 mo.mosaic_common_beam_type = 'circular'

@@ -875,7 +875,7 @@ class mosaic(BaseModule):
 
         Based on the notebook cell
 
-        For the proper beam maps, this should be done by the 
+        For the proper beam maps, this should be done by the
         function make the proper beam maps. Probably best to
         move this function there for the simple beam maps, too
         """
@@ -1010,10 +1010,10 @@ class mosaic(BaseModule):
 
             # Calculate maximum bmaj and bmin and median bpa for final convolved beam shape
             bmajor = [float(x[0]) for x in bmaj]
-            bmajor = 3600.*np.degrees(bmajor)
+            bmajor = 3600. * np.degrees(bmajor)
 
             bminor = [float(x[0]) for x in bmin]
-            bminor = 3600.*np.degrees(bminor)
+            bminor = 3600. * np.degrees(bminor)
 
             bangle = [float(x[0]) for x in bpa]
             bangle = np.degrees(bangle)
@@ -1021,10 +1021,10 @@ class mosaic(BaseModule):
             if self.mosaic_common_beam_type == 'circular':
                 logger.info("Using circular beam")
                 max_axis = np.nanmax([bmajor, bminor])
-                c_beam = [1.05*max_axis, 1.05*max_axis, 0.]
+                c_beam = [1.05 * max_axis, 1.05 * max_axis, 0.]
             elif self.mosaic_common_beam_type == "elliptical":
                 logger.info("Using elliptical beam")
-                c_beam = [1.05*np.nanmax(bmajor), 1.05 *
+                c_beam = [1.05 * np.nanmax(bmajor), 1.05 *
                           np.nanmax(bminor), np.nanmedian(bangle)]
             else:
                 error = "Unknown type of common beam requested. Abort"
@@ -1321,7 +1321,7 @@ class mosaic(BaseModule):
         mosaic_continuum_read_covariance_matrix_status = get_param_def(
             self, 'mosaic_continuum_read_covariance_matrix_status', False)
 
-        #mosaic_continuum_inverse_covariance_matrix = []
+        # mosaic_continuum_inverse_covariance_matrix = []
         mosaic_continuum_inverse_covariance_matrix = get_param_def(
             self, 'mosaic_continuum_inverse_covariance_matrix', [])
 
@@ -1398,7 +1398,7 @@ class mosaic(BaseModule):
                     if (sigma_beam[a] == 0. or sigma_beam[b] == 0) and a == b:
                         noise_cov[a, b] = noise_cor[a, b]
                     else:
-                        noise_cov[a, b] = noise_cor[a, b]*sigma_beam[a] * \
+                        noise_cov[a, b] = noise_cor[a, b] * sigma_beam[a] * \
                             sigma_beam[b]  # The noise covariance matrix is
                     # logger.debug("noise_cov[{0},{1}]={2}".format(a,b,noise_cov[a,b]))
 
@@ -1502,11 +1502,11 @@ class mosaic(BaseModule):
                 while i < len(self.mosaic_beam_list):
                     if os.path.isdir(os.path.join(self.mosaic_continuum_mosaic_subdir, "tmp_{}.map".format(self.mosaic_beam_list[i-1]))) and os.path.isdir(os.path.join(self.mosaic_continuum_mosaic_subdir, "tmp_{}.map".format(self.mosaic_beam_list[i]))):
                         if i == 1:
-                            operate = "'<"+self.mosaic_continuum_mosaic_subdir+"/tmp_{}.map>+<".format(str(
-                                self.mosaic_beam_list[i-1]))+self.mosaic_continuum_mosaic_subdir+"/tmp_{}.map>'".format(str(self.mosaic_beam_list[i]))
+                            operate = "'<" + self.mosaic_continuum_mosaic_subdir + "/tmp_{}.map>+<".format(str(
+                                self.mosaic_beam_list[i-1]))+self.mosaic_continuum_mosaic_subdir + "/tmp_{}.map>'".format(str(self.mosaic_beam_list[i]))
                         else:
-                            operate = "'<"+self.mosaic_continuum_mosaic_subdir+"/tmp_{}.map>".format(str(
-                                self.mosaic_beam_list[i]))+"+<"+self.mosaic_continuum_mosaic_subdir+"/sum_{}.map>'".format(str(self.mosaic_beam_list[i-1]))
+                            operate = "'<" + self.mosaic_continuum_mosaic_subdir + "/tmp_{}.map>".format(str(
+                                self.mosaic_beam_list[i])) + "+<" + self.mosaic_continuum_mosaic_subdir + "/sum_{}.map>'".format(str(self.mosaic_beam_list[i-1]))
                         maths.out = self.mosaic_continuum_mosaic_subdir + \
                             '/sum_{}.map'.format(str(self.mosaic_beam_list[i]))
                         maths.exp = operate
@@ -1521,8 +1521,8 @@ class mosaic(BaseModule):
                     i += 1
 
                 if os.path.isdir(os.path.join(self.mosaic_continuum_mosaic_subdir, 'sum_{}.map'.format(self.mosaic_beam_list[i-1]))):
-                    subs_managefiles.director(self, 'rn', self.mosaic_continuum_mosaic_subdir+'/btci_{}.map'.format(
-                        bm), file_=self.mosaic_continuum_mosaic_subdir+'/sum_{}.map'.format(str(self.mosaic_beam_list[i-1])))
+                    subs_managefiles.director(self, 'rn', self.mosaic_continuum_mosaic_subdir + '/btci_{}.map'.format(
+                        bm), file_=self.mosaic_continuum_mosaic_subdir + '/sum_{}.map'.format(str(self.mosaic_beam_list[i-1])))
                     # os.rename(,self.mosaic_continuum_mosaic_subdir+'/btci_{}.map'.format(bm))
                 else:
                     error = "Could not find temporary sum map for beam {}".format(
@@ -1576,9 +1576,9 @@ class mosaic(BaseModule):
                 beam_mos_map = os.path.join(
                     self.mosaic_continuum_beam_subdir, "beam_{}_mos.map".format(beam))
                 if os.path.isdir(btci_map) and os.path.isdir(beam_mos_map):
-                    operate = "'<"+btci_map+">*<"+beam_mos_map+">'"
+                    operate = "'<"+btci_map + ">*<" + beam_mos_map + ">'"
                     if beam != self.mosaic_beam_list[0]:
-                        operate = operate[:-1]+"+<"+self.mosaic_continuum_mosaic_subdir + \
+                        operate = operate[:-1] + "+<" + self.mosaic_continuum_mosaic_subdir + \
                             "/out_{}_mos.map>'".format(str(i).zfill(2))
                     i += 1
                     logger.debug(
@@ -1612,7 +1612,7 @@ class mosaic(BaseModule):
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
     def math_multiply_beam_matrix_by_covariance_matrix_and_image(self):
         """
-        Function to muliply the beam matrix by covariance matrix and image 
+        Function to muliply the beam matrix by covariance matrix and image
         """
 
         logger.info("Multiplying beam matrix by covariance matrix and image")
@@ -1634,7 +1634,7 @@ class mosaic(BaseModule):
                         "image_{}_mos.map>*<".format(bm) + \
                         "btci_{}.map>'".format(bm)
                     if bm != self.mosaic_beam_list[0]:
-                        operate = operate[:-1]+"+<" + \
+                        operate = operate[:-1] + "+<" + \
                             "mos_{}.map>'".format(str(i).zfill(2))
                     i += 1
                     maths.out = "mos_{}.map".format(str(i).zfill(2))
@@ -1738,7 +1738,7 @@ class mosaic(BaseModule):
             maths.out = 'mosaic_final.map'
             maths.exp = "'<mosaic_im.map>/<variance_mos.map>'"
             maths.mask = "'<variance_mos.map>.gt.0.01*" + \
-                str(mosaic_max_variance)+"'"
+                str(mosaic_max_variance) + "'"
             maths.inp()
             try:
                 maths.go()
@@ -1782,7 +1782,7 @@ class mosaic(BaseModule):
             maths.out = 'mosaic_noise.map'
             maths.exp = "'1./sqrt(<variance_mos.map>)'"
             maths.mask = "'<variance_mos.map>.gt.0.01*" + \
-                str(mosaic_max_variance)+"'"
+                str(mosaic_max_variance) + "'"
             maths.inp()
             try:
                 maths.go()
@@ -1948,7 +1948,7 @@ class mosaic(BaseModule):
             logger.info("Creating continuum image mosaic")
 
             # change into the directory for the continuum mosaic
-            #subs_managefiles.director(self, 'ch', os.path.join(self.mosdir, self.mosaic_continuum_subdir))
+            # subs_managefiles.director(self, 'ch', os.path.join(self.mosdir, self.mosaic_continuum_subdir))
 
             # if no mosaic has already been created
             if not mosaic_continuum_mf_status:
@@ -2272,7 +2272,7 @@ class mosaic(BaseModule):
             logger.info("Creating stokes Q mosaic")
 
             # change into the directory for the continuum mosaic
-            #subs_managefiles.director(self, 'ch', os.path.join(self.mosdir, self.mosaic_continuum_subdir))
+            # subs_managefiles.director(self, 'ch', os.path.join(self.mosdir, self.mosaic_continuum_subdir))
 
             # if no mosaic has already been created
             if not mosaic_continuum_mf_status:

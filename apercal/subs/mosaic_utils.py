@@ -77,7 +77,7 @@ def make_gaussian_beam(beamdir, beamoutname, bm_size, cell, fwhm, cutoff):
         cutoff (float): Relative level to cut beam off at
     """
     # use a temp beam name because you have to apply a cutoff and then clean up
-    tmpbeamname = beamoutname+'_tmp'
+    tmpbeamname = beamoutname + '_tmp'
     # set peak level to 1 and PA = 0, plus arbitrary reference pixel
     pk = 1.
     bpa = 0.
@@ -141,7 +141,7 @@ def get_measured_beam_maps(beam, beam_map_input_path, beam_map_output_path, beam
     # convert beam model to mir file
     # but only if it does not exists
     # if os.path.isdir('./beam_model_{0}_temp.mir'.format(beam)) == False:
-    if os.path.isdir(os.path.join(beam_map_output_path, beam_map_output_name)) == False:
+    if os.path.isdir(os.path.join(beam_map_output_path, beam_map_output_name)) is False:
         logger.debug("Converting beam model of beam {}".format(beam))
         fits = lib.miriad('fits')
         # fits.in_ = './beam_model_{0}_temp.fits'.format(beam)
