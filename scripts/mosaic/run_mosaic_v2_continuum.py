@@ -13,6 +13,13 @@ python run_mosaic_v2_continuum.py <taskid> <output_dir>
 Optional arguments:
 --centre_ra (str): RA coordinate of projection centre
 --centre_dec (str): DEC coordinate of projection centre
+--mosaic_beams (str): Comma-separated list of beams in a single string (no spaces). Default is all available beams
+--primary_beam_map_dir (str): Location of the primary beam maps
+--step_limit (int): The maximum number of steps the mosaic module should do
+--do_validation (bool): Set to enable validation of mosaic (default False)
+--use_noise_correlation (bool): Set to enable using noise correlation (default False)
+--continuum_image_dir (str): Location of the continuum images (default AlTA)
+--do_not_cleanup (bool): Set to enable removing most of the scratch files (default False)
 """
 
 import time
@@ -163,7 +170,7 @@ if __name__ == "__main__":
                         help='Location of the continuum images. Default is AlTA')
 
     parser.add_argument("--do_not_cleanup", action="store_true", default=False,
-                        help='Set to enable validation of mosaic')
+                        help='Set to enable removing most of the scratch files')
 
     args = parser.parse_args()
 
