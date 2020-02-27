@@ -91,7 +91,7 @@ class mosaic(BaseModule):
     mosaic_gaussian_beam_map_cellsize = 4.0
     mosaic_gaussian_beam_map_fwhm_arcsec = 1950.0
     mosaic_beam_map_cutoff = 0.25
-    mosaic_use_askap_based_matrix = True
+    mosaic_use_askap_based_matrix = False
 
     FNULL = open(os.devnull, 'w')
 
@@ -100,6 +100,11 @@ class mosaic(BaseModule):
 
         # class variable not accessible through config
         self.mosaic_continuum_image_list = []
+
+        if self.mosaic_common_beam_type == '':
+            logger.info(
+                "Type of common beam for convolving was not provided. Using circular beam")
+            self.mosaic_common_beam_type = 'circular'
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
     # The main function for the module
@@ -1005,10 +1010,12 @@ class mosaic(BaseModule):
             bangle = [float(x[0]) for x in bpa]
             bangle = np.degrees(bangle)
 
-            if self.mosaic_common_beam_type == 'circular' or self.mosaic_common_beam_type == '':
+            if self.mosaic_common_beam_type == 'circular':
+                logger.info("Using circular beam")
                 max_axis = np.nanmax([bmajor, bminor])
                 c_beam = [1.05*max_axis, 1.05*max_axis, 0.]
             elif self.mosaic_common_beam_type == "elliptical":
+                logger.info("Using elliptical beam")
                 c_beam = [1.05*np.nanmax(bmajor), 1.05 *
                           np.nanmax(bminor), np.nanmedian(bangle)]
             else:
@@ -1247,13 +1254,16 @@ class mosaic(BaseModule):
             for beam in self.mosaic_beam_list:
                 logger.info("Convolving image of beam {}".format(beam))
 
-                if not os.path.isdir(os.path.join(
-                        self.mosaic_continuum_mosaic_subdir, 'image_{0}_mos.map'.format(beam))):
+                # output map and input map
+                output_file = os.path.join(
+                    self.mosaic_continuum_mosaic_subdir, 'image_{0}_mos.map'.format(beam))
+                input_file = os.path.join(
+                    self.mosaic_continuum_images_subdir, 'image_{0}_regrid.map'.format(beam))
+
+                if not os.path.isdir(outputfile):
                     convol = lib.miriad('convol')
-                    convol.map = os.path.join(
-                        self.mosaic_continuum_images_subdir, 'image_{0}_regrid.map'.format(beam))
-                    convol.out = os.path.join(
-                        self.mosaic_continuum_mosaic_subdir, 'image_{0}_mos.map'.format(beam))
+                    convol.map = input_file
+                    convol.out = output_file
                     convol.fwhm = '{0},{1}'.format(
                         str(mosaic_common_beam_values[0]), str(mosaic_common_beam_values[1]))
                     convol.pa = mosaic_common_beam_values[2]
@@ -2046,63 +2056,6 @@ class mosaic(BaseModule):
                 if self.stop_mosaic(i):
                     return None
 
-                # if circular beam is selected (or nothing), first convolve, then regrid
-                # if self.mosaic_common_beam_type == 'circular' or self.mosaic_common_beam_type == '':
-                # pass
-                # logger.info("Circular beam is used for convolution: Convolve images first and then regrid.")
-
-                # # Determing common beam for convolution
-                # # =====================================
-                # logger.info("#### Step {0} ####".format(i))
-                # start_time_step = time.time()
-                # self.get_common_beam()
-                # logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
-                #     i, time.time() - start_time_step))
-                # i += 1
-
-                # # Convolve images
-                # # ===============
-                # logger.info("#### Step {0} ####".format(i))
-                # start_time_step = time.time()
-                # self.mosaic_convolve_images()
-                # logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
-                #     i, time.time() - start_time_step))
-                # i += 1
-
-                # # Regrid images
-                # # =============
-                # logger.info("#### Step {0} ####".format(i))
-                # start_time_step = time.time()
-                # self.regrid_images()
-                # logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
-                #     i, time.time() - start_time_step))
-                # i += 1
-
-                # # Regrid beam maps
-                # # ================
-                # logger.info("#### Step {0} ####".format(i))
-                # start_time_step = time.time()
-                # self.regrid_beam_maps()
-                # logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
-                #     i, time.time() - start_time_step))
-                # i += 1
-
-                # else:
-                # logger.info("Non-Circular beam is used for convolution: Regrid images first and then convolve.")
-
-                # Regrid images
-                # =============
-                logger.info("#### Step {0} ####".format(i))
-                start_time_step = time.time()
-                self.regrid_images()
-                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
-                    i, time.time() - start_time_step))
-                i += 1
-
-                # to allow the mosaic to stop earlier
-                if self.stop_mosaic(i):
-                    return None
-
                 # Regrid beam maps
                 # ================
                 logger.info("#### Step {0} ####".format(i))
@@ -2121,6 +2074,19 @@ class mosaic(BaseModule):
                 logger.info("#### Step {0} ####".format(i))
                 start_time_step = time.time()
                 self.get_common_beam()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                    i, time.time() - start_time_step))
+                i += 1
+
+                # to allow the mosaic to stop earlier
+                if self.stop_mosaic(i):
+                    return None
+
+                # Regrid images
+                # =============
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
+                self.regrid_images()
                 logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
                     i, time.time() - start_time_step))
                 i += 1
