@@ -1,0 +1,269 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>masking &#8212; Apercal 2.5.0 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="misc" href="misc.html" />
+    <link rel="prev" title="managetmp" href="managetmp.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="misc.html" title="misc"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="managetmp.html" title="managetmp"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../subs_modules.html" accesskey="U">Supporting modules</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">masking</a><ul>
+<li><a class="reference internal" href="#module-apercal.subs.masking">Reference</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="managetmp.html"
+                        title="previous chapter">managetmp</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="misc.html"
+                        title="next chapter">misc</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/subs/masking.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="masking">
+<h1>masking<a class="headerlink" href="#masking" title="Permalink to this headline">¶</a></h1>
+<p>This module contains functionality for creating image masks.
+It is used by the <em>selfcal</em>, <em>continuum</em>, and <em>polarisation</em> modules.</p>
+<div class="section" id="module-apercal.subs.masking">
+<span id="reference"></span><h2>Reference<a class="headerlink" href="#module-apercal.subs.masking" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="apercal.subs.masking.blank_corners">
+<code class="descclassname">apercal.subs.masking.</code><code class="descname">blank_corners</code><span class="sig-paren">(</span><em>self</em>, <em>mask</em>, <em>imsize</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/masking.html#blank_corners"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.masking.blank_corners" title="Permalink to this definition">¶</a></dt>
+<dd><p>Blanks the outer edges of a mask to make it always work with mfclean
+mask (string): Input mask in MIRIAD format
+imsize (int): image size in pixels</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.masking.calc_clean_cutoff">
+<code class="descclassname">apercal.subs.masking.</code><code class="descname">calc_clean_cutoff</code><span class="sig-paren">(</span><em>mask_threshold</em>, <em>c1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/masking.html#calc_clean_cutoff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.masking.calc_clean_cutoff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the cutoff for the cleaning
+mask_threshold (float): the mask threshold to calculate the clean cutoff from
+returns (float): the clean cutoff</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.masking.calc_dr_amp">
+<code class="descclassname">apercal.subs.masking.</code><code class="descname">calc_dr_amp</code><span class="sig-paren">(</span><em>drstart</em>, <em>dr0</em>, <em>minorcycles</em>, <em>function_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/masking.html#calc_dr_amp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.masking.calc_dr_amp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to calculate the dynamic range limits during the amplitude self-calibration
+drstart (float): Dynamic range of the last phase calibration mask
+dr0 (float): Coefficient for increasing the dynamic range threshold at each major cycle
+minorcycles (int): Number of maximum minor cycles during cleaning for amplitude calibration
+<a href="#id1"><span class="problematic" id="id2">function_</span></a> (string): The function to follow for increasing the dynamic ranges. Currently ‘square’, ‘power’, and ‘linear’ is supported.
+returns (list of floats): A list of floats for the dynamic range limits within the minor cycles.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.masking.calc_dr_maj">
+<code class="descclassname">apercal.subs.masking.</code><code class="descname">calc_dr_maj</code><span class="sig-paren">(</span><em>drinit</em>, <em>dr0</em>, <em>majorcycles</em>, <em>function_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/masking.html#calc_dr_maj"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.masking.calc_dr_maj" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to calculate the dynamic range limits during major cycles for phase self-calibration
+drinit (float): The initial dynamic range
+dr0 (float): Coefficient for increasing the dynamic range threshold at each major cycle
+majorcycles (int): The number of major cycles to execute
+<a href="#id3"><span class="problematic" id="id4">function_</span></a> (string): The function to follow for increasing the dynamic ranges. Currently ‘power’ is supported.
+returns (list of floats): A list of floats for the dynamic range limits within the major cycles.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.masking.calc_dr_min">
+<code class="descclassname">apercal.subs.masking.</code><code class="descname">calc_dr_min</code><span class="sig-paren">(</span><em>dr_maj</em>, <em>majc</em>, <em>minorcycles</em>, <em>mindr</em>, <em>function_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/masking.html#calc_dr_min"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.masking.calc_dr_min" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to calculate the dynamic range limits during minor cycles for phase self-calibration
+dr_maj (list of floats): List with dynamic range limits for major cycles. Usually from calc_dr_maj
+majc (int): The major cycles you want to calculate the minor cycle dynamic ranges for
+minorcycles (int): The number of minor cycles to use
+<a href="#id5"><span class="problematic" id="id6">function_</span></a> (string): The function to follow for increasing the dynamic ranges. Currently ‘square’, ‘power’, and</p>
+<blockquote>
+<div>‘linear’ is supported.</div></blockquote>
+<p>returns (list of floats): A list of floats for the dynamic range limits within the minor cycles.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.masking.calc_dynamic_range_dr">
+<code class="descclassname">apercal.subs.masking.</code><code class="descname">calc_dynamic_range_dr</code><span class="sig-paren">(</span><em>minor_cycle_list</em>, <em>minor_cycle</em>, <em>dynamic_range_minimum</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/masking.html#calc_dynamic_range_dr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.masking.calc_dynamic_range_dr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the dynamic range hreshold
+imax (float): the maximum in the input image
+dynamic_range (float): the dynamic range you want to calculate the threshold for
+returns (float): the dynamic range threshold</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.masking.calc_dynamic_range_threshold">
+<code class="descclassname">apercal.subs.masking.</code><code class="descname">calc_dynamic_range_threshold</code><span class="sig-paren">(</span><em>imax</em>, <em>dynamic_range_dr</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/masking.html#calc_dynamic_range_threshold"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.masking.calc_dynamic_range_threshold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the dynamic range threshold
+imax (float): the maximum in the input image
+dynamic_range_dr (float): the dynamic range you want to calculate the threshold for
+returns (float): the dynamic range threshold</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.masking.calc_mask_threshold">
+<code class="descclassname">apercal.subs.masking.</code><code class="descname">calc_mask_threshold</code><span class="sig-paren">(</span><em>theoretical_noise_threshold</em>, <em>noise_threshold</em>, <em>dynamic_range_threshold</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/masking.html#calc_mask_threshold"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.masking.calc_mask_threshold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to calculate the actual mask_threshold and the type of mask threshold from the
+theoretical noise threshold, noise threshold, and the dynamic range threshold
+theoretical_noise_threshold (float): The theoretical noise threshold calculated by</p>
+<blockquote>
+<div>calc_theoretical_noise_threshold</div></blockquote>
+<p>noise_threshold (float): The noise threshold calculated by calc_noise_threshold
+dynamic_range_threshold (float): The dynamic range threshold calculated by calc_dynamic_range_threshold
+returns (float, string): The maximum of the three thresholds, the type of the maximum threshold</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.masking.calc_noise_dr">
+<code class="descclassname">apercal.subs.masking.</code><code class="descname">calc_noise_dr</code><span class="sig-paren">(</span><em>minor_cycle</em>, <em>major_cycle</em>, <em>c0</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/masking.html#calc_noise_dr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.masking.calc_noise_dr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the noise dynamic range
+minor_cycle (int): the current minor cycle the self-calibration is in
+major_cycle (int): the current major cycle the self-calibration is in
+returns (float): the noise dynamic range</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.masking.calc_noise_threshold">
+<code class="descclassname">apercal.subs.masking.</code><code class="descname">calc_noise_threshold</code><span class="sig-paren">(</span><em>imax</em>, <em>noise_dr</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/masking.html#calc_noise_threshold"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.masking.calc_noise_threshold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the noise threshold
+imax (float): the maximum in the input image
+noise_dr (float): the noise dynamic range to calculate the threshold for
+returns (float): the noise threshold</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.masking.calc_theoretical_noise_dr">
+<code class="descclassname">apercal.subs.masking.</code><code class="descname">calc_theoretical_noise_dr</code><span class="sig-paren">(</span><em>imax</em>, <em>theoretical_noise</em>, <em>nsigma</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/masking.html#calc_theoretical_noise_dr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.masking.calc_theoretical_noise_dr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the theoretical noise dynamic range
+theoretical_noise (float): the theoretical noise of the observation
+returns (float): the theoretical noise dynamic range</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.masking.calc_theoretical_noise_threshold">
+<code class="descclassname">apercal.subs.masking.</code><code class="descname">calc_theoretical_noise_threshold</code><span class="sig-paren">(</span><em>imax</em>, <em>theoretical_noise_dr</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/masking.html#calc_theoretical_noise_threshold"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.masking.calc_theoretical_noise_threshold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the theoretical noise threshold from the theoretical noise dynamic range
+imax (float): the maximum of the dirty image
+theoretical_noise_dr (float): the theoretical noise dynamic range
+returns (float): the theoretical noise threshold</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.masking.create_mask">
+<code class="descclassname">apercal.subs.masking.</code><code class="descname">create_mask</code><span class="sig-paren">(</span><em>self</em>, <em>image</em>, <em>mask</em>, <em>threshold</em>, <em>theoretical_noise</em>, <em>beampars=None</em>, <em>rms_map=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/masking.html#create_mask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.masking.create_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a mask from an image using pybdsf
+image (string): Input image to use in MIRIAD format
+mask (string): Output mask image in MIRIAD format
+threshold (float): Threshold in Jy to use
+theoretical_noise (float): Theoretical noise for calculating the adaptive threshold parameter inside pybdsf</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.masking.get_beam">
+<code class="descclassname">apercal.subs.masking.</code><code class="descname">get_beam</code><span class="sig-paren">(</span><em>self</em>, <em>image</em>, <em>beam</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/masking.html#get_beam"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.masking.get_beam" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the synthesised beam of an image with has not been cleaned
+image (string): Input image to use in MIRIAD format
+beam (string): Beam image for cleaning in MIRIAD format
+return (tuple): Synthesised beam parameters in the order bmaj, bmin, bpa</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.masking.get_theoretical_noise">
+<code class="descclassname">apercal.subs.masking.</code><code class="descname">get_theoretical_noise</code><span class="sig-paren">(</span><em>self</em>, <em>dataset</em>, <em>gausslimit</em>, <em>startchan=None</em>, <em>endchan=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/masking.html#get_theoretical_noise"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.masking.get_theoretical_noise" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subroutine to create a Stokes V image from a dataset and measure the noise, which should be similar to the theoretical one
+image (string): The path to the dataset file.
+startchan(int): First channel to use for imaging, zero-based
+endchan(int): Last channel to use for imaging, zero-based
+returns (numpy array): The rms of the image</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="misc.html" title="misc"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="managetmp.html" title="managetmp"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../subs_modules.html" >Supporting modules</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Apercal Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4.
+    </div>
+  </body>
+</html>

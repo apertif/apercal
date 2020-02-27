@@ -13,6 +13,7 @@ from apercal.subs.param import get_param_def
 from apercal.subs import param as subs_param
 from apercal.subs import msutils as subs_msutils
 from apercal.libs import lib
+from apercal.exceptions import ApercalException
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +68,26 @@ class convert(BaseModule):
         """
         subs_setinit.setinitdirs(self)
 
+        ccalbeam = 'ccal_B' + str(self.beam).zfill(2)
         cbeam = 'convert_B' + str(self.beam).zfill(2)
+
+        # Read the parameters from crosscal
+        # and check before doing anything
+
+        # Status of the solution transfer for the target, flux calibrator and polarisation calibrator
+        ccal_targetbeams_transfer = get_param_def(
+            self, ccalbeam + '_targetbeams_transfer', False)
+        ccal_calibration_calibrator_finished = get_param_def(
+            self, ccalbeam + '_calibration_calibrator_finished', False)
+
+        if not ccal_calibration_calibrator_finished:
+            error = "Beam {}: Will not convert files to miriad format because cross-calibration failed.".format(str(self.beam).zfill(2))
+            logger.error(error)
+            raise ApercalException(error)
+        elif not ccal_targetbeams_transfer:
+            error = "Beam {}: Will not convert files to miriad format because cross-calibration solutions were not successfully applied to target.".format(str(self.beam).zfill(2))
+            logger.error(error)
+            raise ApercalException(error)
 
         # Create the parameters for the parameter file for converting from MS to UVFITS format
 

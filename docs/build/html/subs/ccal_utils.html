@@ -1,0 +1,163 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>ccal_utils &#8212; Apercal 2.5.0 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="calmodels" href="calmodels.html" />
+    <link rel="prev" title="bandpass" href="bandpass.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="calmodels.html" title="calmodels"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="bandpass.html" title="bandpass"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../subs_modules.html" accesskey="U">Supporting modules</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">ccal_utils</a><ul>
+<li><a class="reference internal" href="#module-apercal.subs.ccal_utils">Reference</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="bandpass.html"
+                        title="previous chapter">bandpass</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="calmodels.html"
+                        title="next chapter">calmodels</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/subs/ccal_utils.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="ccal-utils">
+<h1>ccal_utils<a class="headerlink" href="#ccal-utils" title="Permalink to this headline">¶</a></h1>
+<p>This module contains functionality to support the quality of the cross-calibration.
+It is used by the crosscal module.</p>
+<div class="section" id="module-apercal.subs.ccal_utils">
+<span id="reference"></span><h2>Reference<a class="headerlink" href="#module-apercal.subs.ccal_utils" title="Permalink to this headline">¶</a></h2>
+<p>Module with functionality to support cross-calibration</p>
+<dl class="function">
+<dt id="apercal.subs.ccal_utils.check_bpass_phase">
+<code class="descclassname">apercal.subs.ccal_utils.</code><code class="descname">check_bpass_phase</code><span class="sig-paren">(</span><em>bpath</em>, <em>max_std</em>, <em>plot_name=None</em>, <em>beam=''</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/ccal_utils.html#check_bpass_phase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.ccal_utils.check_bpass_phase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to check the bandpass phase solutions to identify a bad antenna.</p>
+<p>It checks if the standard deviation of the bandpass phase solutions is below
+a maximum standard deviation. The return is a dictionary with entries for each
+antenna and booleans for each polarisation. If the standard deviation is below
+the limit, it is True (i.e., good). If it is below, it is False (i.e., bad).</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>bpath (str): Path to bandpass file
+max_std (float): Maximum standard deviation of phase solutions</dd>
+<dt>Return</dt>
+<dd>results (dict({ant: [XX_phase&lt;max_std, YY_phase&lt;max_std]})): Check for each antenna and polarisaiton</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.ccal_utils.get_autocorr">
+<code class="descclassname">apercal.subs.ccal_utils.</code><code class="descname">get_autocorr</code><span class="sig-paren">(</span><em>msfile</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/ccal_utils.html#get_autocorr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.ccal_utils.get_autocorr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the autocorrelation data from a dataset
+msfile: Input dataset with the autocorrelations</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.ccal_utils.get_ratio_autocorrelation_above_limit">
+<code class="descclassname">apercal.subs.ccal_utils.</code><code class="descname">get_ratio_autocorrelation_above_limit</code><span class="sig-paren">(</span><em>amp</em>, <em>amp_threshold</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/ccal_utils.html#get_ratio_autocorrelation_above_limit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.ccal_utils.get_ratio_autocorrelation_above_limit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the fraction of data that have autocorrelation amplitudes
+above a given threshold</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.subs.ccal_utils.polyfit_autocorr">
+<code class="descclassname">apercal.subs.ccal_utils.</code><code class="descname">polyfit_autocorr</code><span class="sig-paren">(</span><em>autocorrdata</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/ccal_utils.html#polyfit_autocorr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.ccal_utils.polyfit_autocorr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to remove outliers from the auto-correlations, fit a polynomial of 2nd order and issue flagging of dishes dependent on covariance of the fit and the parameters of determination
+autocorrdata: Auto-correlation data in frequency, amp_xx, amp_yy order (usually from function get_autocorr)
+returns: frequency values, cleaned auto-correlation values, polynomially fitted values, covariance of the fit, parameter of determination each for XX and YY</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="calmodels.html" title="calmodels"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="bandpass.html" title="bandpass"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../subs_modules.html" >Supporting modules</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Apercal Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4.
+    </div>
+  </body>
+</html>

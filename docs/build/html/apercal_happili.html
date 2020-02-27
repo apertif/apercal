@@ -1,0 +1,162 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Running Apercal on happili &#8212; Apercal 2.5.0 documentation</title>
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Configuration files" href="configuration_files.html" />
+    <link rel="prev" title="Overview of Apercal pipeline" href="overview.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="configuration_files.html" title="Configuration files"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="overview.html" title="Overview of Apercal pipeline"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Apercal 2.5.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Running Apercal on happili</a><ul>
+<li><a class="reference internal" href="#setting-up-environment">Setting up environment</a></li>
+<li><a class="reference internal" href="#running-without-config-file">Running without config file</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="overview.html"
+                        title="previous chapter">Overview of Apercal pipeline</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="configuration_files.html"
+                        title="next chapter">Configuration files</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/apercal_happili.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="running-apercal-on-happili">
+<h1>Running Apercal on happili<a class="headerlink" href="#running-apercal-on-happili" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="setting-up-environment">
+<h2>Setting up environment<a class="headerlink" href="#setting-up-environment" title="Permalink to this headline">¶</a></h2>
+<p>On happili, the following environment setup should work:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">apercal</span><span class="o">/</span><span class="n">pipeline</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">activate</span>
+<span class="n">source</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">apercal</span><span class="o">/</span><span class="n">atnf_miriad</span><span class="o">/</span><span class="n">miriad</span><span class="o">/</span><span class="n">MIRRC</span><span class="o">.</span><span class="n">sh</span>
+<span class="n">export</span> <span class="n">PATH</span><span class="o">=</span><span class="s2">&quot;$PATH:/home/apercal/casa-release-4.7.0-1-el7/bin&quot;</span>
+</pre></div>
+</div>
+<p>This will run the apercal version installed in the virtualenv /users/apercal/. This should be the most recent release. You can check this in the log, or by typing</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">c</span> <span class="s1">&#39;import apercal; print(apercal.__version__); print(apercal.__file__)&#39;</span>
+</pre></div>
+</div>
+<p>Note that you need to run python from a directory that does not contain an apercal subdirectory (so not your homedirectory), because then python will prefer to run the apercal installed there.</p>
+</div>
+<div class="section" id="running-without-config-file">
+<h2>Running without config file<a class="headerlink" href="#running-without-config-file" title="Permalink to this headline">¶</a></h2>
+<p>Apercal comes a default config file (default.cfg). Current practice is to copy this file and make changes to the config file. This has some problems when the layout of the config file changes. It is possible, and preferable, to always run apercal with the default config file.</p>
+<p>To run one step of the pipeline:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">apercal.modules.preflag</span> <span class="k">import</span> <span class="n">preflag</span>
+
+<span class="n">p</span> <span class="o">=</span> <span class="n">preflag</span><span class="p">()</span>
+<span class="n">p</span><span class="o">.</span><span class="n">basedir</span> <span class="o">=</span> <span class="s1">&#39;/data/dijkema/apertif/181211/&#39;</span>
+<span class="n">p</span><span class="o">.</span><span class="n">fluxcal</span> <span class="o">=</span> <span class="s1">&#39;3C295.MS&#39;</span>
+<span class="n">p</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="s1">&#39;NGC807.MS&#39;</span>
+<span class="n">p</span><span class="o">.</span><span class="n">polcal</span> <span class="o">=</span> <span class="s1">&#39;3C138.MS&#39;</span>
+</pre></div>
+</div>
+<p>To run all steps of the pipeline (or at least all parts that currently work), there is a convenience function start_apercal_pipeline that does this for you. Note however that the function signature may change (and we may forget to update this wiki).</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">apercal.pipeline</span>
+
+<span class="n">taskid_fluxcal</span> <span class="o">=</span> <span class="mi">181201004</span>
+<span class="n">taskid_target</span> <span class="o">=</span> <span class="mi">181201005</span>
+<span class="n">taskid_polcal</span> <span class="o">=</span> <span class="mi">181201006</span>
+<span class="n">beamlist_target</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">40</span><span class="p">))</span>
+<span class="n">beamlist_fluxcal</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">beamlist_polcal</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">name_fluxcal</span> <span class="o">=</span> <span class="s1">&#39;3C295&#39;</span>
+<span class="n">name_polcal</span> <span class="o">=</span> <span class="s1">&#39;3C138&#39;</span>
+<span class="n">name_target</span> <span class="o">=</span> <span class="s1">&#39;NGC807&#39;</span>
+<span class="n">apercal</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">start_pipeline</span><span class="p">((</span><span class="n">taskid_fluxcal</span><span class="p">,</span> <span class="n">name_fluxcal</span><span class="p">,</span> <span class="n">beamlist_fluxcal</span><span class="p">),</span>
+                                <span class="p">(</span><span class="n">taskid_polcal</span><span class="p">,</span> <span class="n">name_polcal</span><span class="p">,</span> <span class="n">beamlist_polcal</span><span class="p">),</span>
+                                <span class="p">(</span><span class="n">taskid_target</span><span class="p">,</span> <span class="n">name_target</span><span class="p">,</span> <span class="n">beamlist_target</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="configuration_files.html" title="Configuration files"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="overview.html" title="Overview of Apercal pipeline"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Apercal 2.5.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Apercal Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4.
+    </div>
+  </body>
+</html>

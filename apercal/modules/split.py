@@ -51,60 +51,74 @@ class split(BaseModule):
         # split the flux calibrator dataset
         logger.debug("self.fluxcal = {}".format(self.fluxcal))
         logger.debug("os.path.isdir(self.get_fluxcal_path()) = {}".format(os.path.isdir(self.get_fluxcal_path())))
-        if self.fluxcal != '' and os.path.isdir(self.get_fluxcal_path()):
-            fluxcal_split = 'split(vis = "' + self.get_fluxcal_path() + '", outputvis = "' + self.get_fluxcal_path().rstrip('.MS') + '_split.MS"' + \
-                ', spw = "0:' + str(self.split_startchannel) + '~' + str(self.split_endchannel) + '", datacolumn = "data")'
-            lib.run_casa([fluxcal_split], log_output=True, timeout=30000)
-            if os.path.isdir(self.get_fluxcal_path().rstrip('.MS') + '_split.MS'):
-                subs_managefiles.director(self, 'rm', self.get_fluxcal_path())
-                subs_managefiles.director(self, 'rn', self.get_fluxcal_path(), file_=self.get_fluxcal_path().rstrip('.MS') + '_split.MS')
-                splitfluxcalstatus = True
+        if splitfluxcalstatus:
+            logger.info(
+                "Beam {0}: Fluxcal has already been split".format(self.beam))
+            splitfluxcalstatus = True
+        else:
+            if self.fluxcal != '' and os.path.isdir(self.get_fluxcal_path()):
+                fluxcal_split = 'split(vis = "' + self.get_fluxcal_path() + '", outputvis = "' + self.get_fluxcal_path().rstrip('.MS') + '_split.MS"' + \
+                    ', spw = "0:' + str(self.split_startchannel) + '~' + str(self.split_endchannel) + '", datacolumn = "data")'
+                lib.run_casa([fluxcal_split], log_output=True, timeout=30000)
+                if os.path.isdir(self.get_fluxcal_path().rstrip('.MS') + '_split.MS'):
+                    subs_managefiles.director(self, 'rm', self.get_fluxcal_path())
+                    subs_managefiles.director(self, 'rn', self.get_fluxcal_path(), file_=self.get_fluxcal_path().rstrip('.MS') + '_split.MS')
+                    splitfluxcalstatus = True
+                else:
+                    splitfluxcalstatus = False
+                    logger.warning('Beam ' + self.beam + ': Splitting of flux calibrator dataset not successful!')
             else:
                 splitfluxcalstatus = False
-                logger.warning('Beam ' + self.beam + ': Splitting of flux calibrator dataset not successful!')
-        else:
-            splitfluxcalstatus = False
-            logger.warning('Beam ' + self.beam + ': Fluxcal not set or dataset not available! Cannot split flux calibrator dataset!')
+                logger.warning('Beam ' + self.beam + ': Fluxcal not set or dataset not available! Cannot split flux calibrator dataset!')
 
         subs_param.add_param(self, sbeam + '_fluxcal_status', splitfluxcalstatus)
 
         # Split the polarised calibrator dataset
         logger.debug("self.polcal = {}".format(self.polcal))
         logger.debug("os.path.isdir(self.get_polcal_path()) = {}".format(os.path.isdir(self.get_polcal_path())))
-        if self.polcal != '' and os.path.isdir(self.get_polcal_path()):
-            polcal_split = 'split(vis = "' + self.get_polcal_path() + '", outputvis = "' + self.get_polcal_path().rstrip('.MS') + '_split.MS"' + \
-                ', spw = "0:' + str(self.split_startchannel) + '~' + str(self.split_endchannel) + '", datacolumn = "data")'
-            lib.run_casa([polcal_split], log_output=True, timeout=30000)
-            if os.path.isdir(self.get_polcal_path().rstrip('.MS') + '_split.MS'):
-                subs_managefiles.director(self, 'rm', self.get_polcal_path())
-                subs_managefiles.director(self, 'rn', self.get_polcal_path(), file_=self.get_polcal_path().rstrip('.MS') + '_split.MS')
-                splitpolcalstatus = True
+        if splitpolcalstatus:
+            logger.info(
+                "Beam {0}: Polcal has already been split".format(self.beam))
+            splitpolcalstatus = True
+        else:
+            if self.polcal != '' and os.path.isdir(self.get_polcal_path()):
+                polcal_split = 'split(vis = "' + self.get_polcal_path() + '", outputvis = "' + self.get_polcal_path().rstrip('.MS') + '_split.MS"' + \
+                    ', spw = "0:' + str(self.split_startchannel) + '~' + str(self.split_endchannel) + '", datacolumn = "data")'
+                lib.run_casa([polcal_split], log_output=True, timeout=30000)
+                if os.path.isdir(self.get_polcal_path().rstrip('.MS') + '_split.MS'):
+                    subs_managefiles.director(self, 'rm', self.get_polcal_path())
+                    subs_managefiles.director(self, 'rn', self.get_polcal_path(), file_=self.get_polcal_path().rstrip('.MS') + '_split.MS')
+                    splitpolcalstatus = True
+                else:
+                    splitpolcalstatus = False
+                    logger.warning('Beam ' + self.beam + ': Splitting of polarised calibrator dataset not successful!')
             else:
                 splitpolcalstatus = False
-                logger.warning('Beam ' + self.beam + ': Splitting of polarised calibrator dataset not successful!')
-        else:
-            splitpolcalstatus = False
-            logger.warning('Beam ' + self.beam + ': Polcal not set or dataset not available! Cannot split polarised calibrator dataset!')
+                logger.warning('Beam ' + self.beam + ': Polcal not set or dataset not available! Cannot split polarised calibrator dataset!')
 
         subs_param.add_param(self, sbeam + '_polcal_status', splitpolcalstatus)
 
         # Split the target dataset
         logger.debug("self.target = {}".format(self.target))
         logger.debug("os.path.isdir(self.get_target_path()) = {}".format(os.path.isdir(self.get_target_path())))
-        if self.target != '' and os.path.isdir(self.get_target_path()):
-            target_split = 'split(vis = "' + self.get_target_path() + '", outputvis = "' + self.get_target_path().rstrip('.MS') + '_split.MS"' + \
-                ', spw = "0:' + str(self.split_startchannel) + '~' + str(self.split_endchannel) + '", datacolumn = "data")'
-            lib.run_casa([target_split], log_output=True, timeout=30000)
-            if os.path.isdir(self.get_target_path().rstrip('.MS') + '_split.MS'):
-                subs_managefiles.director(self, 'rm', self.get_target_path())
-                subs_managefiles.director(self, 'rn', self.get_target_path(), file_=self.get_target_path().rstrip('.MS') + '_split.MS')
-                splittargetbeamsstatus = True
+        if splittargetbeamsstatus:
+            logger.info("Beam {0}: Target has already been split".format(self.beam))
+            splittargetbeamsstatus = True
+        else:
+            if self.target != '' and os.path.isdir(self.get_target_path()):
+                target_split = 'split(vis = "' + self.get_target_path() + '", outputvis = "' + self.get_target_path().rstrip('.MS') + '_split.MS"' + \
+                    ', spw = "0:' + str(self.split_startchannel) + '~' + str(self.split_endchannel) + '", datacolumn = "data")'
+                lib.run_casa([target_split], log_output=True, timeout=30000)
+                if os.path.isdir(self.get_target_path().rstrip('.MS') + '_split.MS'):
+                    subs_managefiles.director(self, 'rm', self.get_target_path())
+                    subs_managefiles.director(self, 'rn', self.get_target_path(), file_=self.get_target_path().rstrip('.MS') + '_split.MS')
+                    splittargetbeamsstatus = True
+                else:
+                    splittargetbeamsstatus = False
+                    logger.warning('Beam ' + self.beam + ': Splitting of target dataset not successful!')
             else:
                 splittargetbeamsstatus = False
-                logger.warning('Beam ' + self.beam + ': Splitting of target dataset not successful!')
-        else:
-            splittargetbeamsstatus = False
-            logger.warning('Beam ' + self.beam + ': Target not set or dataset not available! Cannot split target beam dataset!')
+                logger.warning('Beam ' + self.beam + ': Target not set or dataset not available! Cannot split target beam dataset!')
 
         subs_param.add_param(self, sbeam + '_targetbeams_status', splittargetbeamsstatus)
 

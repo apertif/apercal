@@ -1,0 +1,862 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>apercal.libs.lib &#8212; Apercal 2.5.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for apercal.libs.lib</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">ConfigParser</span> <span class="k">import</span> <span class="n">SafeConfigParser</span><span class="p">,</span> <span class="n">ConfigParser</span>
+
+<span class="kn">import</span> <span class="nn">astropy.io.fits</span> <span class="k">as</span> <span class="nn">pyfits</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s1">&#39;Agg&#39;</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">drivecasa</span>
+
+<span class="kn">from</span> <span class="nn">apercal.subs</span> <span class="k">import</span> <span class="n">setinit</span> <span class="k">as</span> <span class="n">subs_setinit</span>
+<span class="kn">from</span> <span class="nn">apercal.modules</span> <span class="k">import</span> <span class="n">default_cfg</span>
+<span class="kn">from</span> <span class="nn">apercal.exceptions</span> <span class="k">import</span> <span class="n">ApercalException</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="qimplot"><a class="viewcode-back" href="../../../lib/lib.html#apercal.libs.lib.qimplot">[docs]</a><span class="k">def</span> <span class="nf">qimplot</span><span class="p">(</span><span class="n">image</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rmin</span><span class="o">=-</span><span class="mi">2</span><span class="p">,</span> <span class="n">rmax</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    qimplot: Quick Image Plot</span>
+<span class="sd">    Plots image in grayscale. Colorscale is from rmin*RMS to rmax*RMS.</span>
+<span class="sd">    Defaults:</span>
+<span class="sd">        rmin = -2</span>
+<span class="sd">        rmax = +2</span>
+<span class="sd">        cmap = &#39;gray&#39;</span>
+<span class="sd">            Can be any of the usual cmap values, e.g. &#39;YlOrRd&#39; or &#39;jet&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;QIMPLOT&#39;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Quick Image Plot&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">image</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s2">&quot;Please provide input image!&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+    <span class="n">fits</span> <span class="o">=</span> <span class="n">miriad</span><span class="p">(</span><span class="s1">&#39;fits&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">image</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">ApercalException</span><span class="p">(</span><span class="n">image</span> <span class="o">+</span> <span class="s2">&quot; not found!&quot;</span><span class="p">)</span>
+    <span class="n">fits</span><span class="o">.</span><span class="n">in_</span> <span class="o">=</span> <span class="n">image</span>
+    <span class="n">fits</span><span class="o">.</span><span class="n">out</span> <span class="o">=</span> <span class="n">image</span> <span class="o">+</span> <span class="s1">&#39;.fits&#39;</span>
+    <span class="n">fits</span><span class="o">.</span><span class="n">op</span> <span class="o">=</span> <span class="s1">&#39;xyout&#39;</span>
+    <span class="n">fits</span><span class="o">.</span><span class="n">go</span><span class="p">(</span><span class="n">rmfiles</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">imheader</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">image</span> <span class="o">+</span> <span class="s1">&#39;.fits&#39;</span><span class="p">)</span>
+    <span class="n">imdata</span> <span class="o">=</span> <span class="n">imheader</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+    <span class="n">rms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">imdata</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:])</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;RMS = &#39;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="si">{:2.2}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">rms</span><span class="p">))</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Plotting from &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">rmin</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;*RMS to &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">rmax</span><span class="p">)</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;*RMS&quot;</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">flipud</span><span class="p">(</span><span class="n">imdata</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]),</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="n">rmin</span> <span class="o">*</span> <span class="n">rms</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">rmax</span> <span class="o">*</span> <span class="n">rms</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(())</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(())</span></div>
+
+
+<span class="k">class</span> <span class="nc">source</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pathtodata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ms</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">uvf</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">uv</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pathtodata</span> <span class="o">=</span> <span class="n">pathtodata</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ms</span> <span class="o">=</span> <span class="n">ms</span>
+        <span class="k">if</span> <span class="n">uvf</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">uvf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ms</span><span class="o">.</span><span class="n">upper</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.MS&#39;</span><span class="p">,</span> <span class="s1">&#39;UVF&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">uvf</span> <span class="o">=</span> <span class="n">uvf</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uv</span> <span class="o">=</span> <span class="n">uv</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">pathtodata</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+
+    <span class="k">def</span> <span class="nf">make_source</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ms</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pathtodata</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">ms</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;//&#39;</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uvf</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pathtodata</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">uvf</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;//&#39;</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uv</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">uv</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;//&#39;</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="write2file"><a class="viewcode-back" href="../../../lib/lib.html#apercal.libs.lib.write2file">[docs]</a><span class="k">def</span> <span class="nf">write2file</span><span class="p">(</span><span class="n">header</span><span class="p">,</span> <span class="n">text2write</span><span class="p">,</span> <span class="n">file2write</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    write2file writes the output of some task to a textfile.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">file2write</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">text2write</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">):</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">t</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">---- </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+<span class="k">def</span> <span class="nf">setup_logger</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="s1">&#39;info&#39;</span><span class="p">,</span> <span class="n">logfile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">quiet</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">propagate</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">handlers</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">fh_formatter</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%(asctime)s</span><span class="s1"> - </span><span class="si">%(name)s</span><span class="s1"> - </span><span class="si">%(levelname)s</span><span class="s1"> : </span><span class="si">%(message)s</span><span class="s1">&#39;</span><span class="p">,</span>
+                                     <span class="n">datefmt</span><span class="o">=</span><span class="s1">&#39;%m/</span><span class="si">%d</span><span class="s1">/%Y %I:%M:%S %p&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">logfile</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">fh</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">FileHandler</span><span class="p">(</span><span class="s1">&#39;log_filename.txt&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fh</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">FileHandler</span><span class="p">(</span><span class="n">logfile</span><span class="p">)</span>
+    <span class="n">fh</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+    <span class="n">fh</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">fh_formatter</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">fh</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">quiet</span><span class="p">:</span>
+        <span class="n">ch_formatter</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%(name)s</span><span class="s1"> - </span><span class="si">%(levelname)s</span><span class="s1"> : </span><span class="si">%(message)s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">datefmt</span><span class="o">=</span><span class="s1">&#39;%m/</span><span class="si">%d</span><span class="s1">/%Y %I:%M:%S %p&#39;</span><span class="p">)</span>
+        <span class="n">ch</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">level</span> <span class="o">==</span> <span class="s1">&#39;info&#39;</span><span class="p">:</span>
+            <span class="n">ch</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">level</span> <span class="o">==</span> <span class="s1">&#39;debug&#39;</span><span class="p">:</span>
+            <span class="n">ch</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+        <span class="n">ch</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">ch_formatter</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">ch</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Logging started!&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">logfile</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;To see the log in a bash window use the following command:&#39;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;tail -n +1 -f &quot;</span> <span class="o">+</span> <span class="n">logfile</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">logfile</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Logging to file. To see the log in a bash window use the following command:&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;tail -n +1 -f &quot;</span> <span class="o">+</span> <span class="n">logfile</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">logger</span>
+
+
+<div class="viewcode-block" id="FatalMiriadError"><a class="viewcode-back" href="../../../lib/lib.html#apercal.libs.lib.FatalMiriadError">[docs]</a><span class="k">class</span> <span class="nc">FatalMiriadError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Custom  Exception for Fatal MIRIAD Errors</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">error</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">error</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;Fatal MIRIAD Task Error&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;Fatal MIRIAD Task Error: </span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">error</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">FatalMiriadError</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="exceptioner"><a class="viewcode-back" href="../../../lib/lib.html#apercal.libs.lib.exceptioner">[docs]</a><span class="k">def</span> <span class="nf">exceptioner</span><span class="p">(</span><span class="n">O</span><span class="p">,</span> <span class="n">E</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    exceptioner(O, E) where O and E are the stdout outputs and errors.</span>
+<span class="sd">    A simple and stupid way to do exception handling.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">E</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s2">&quot;FATAL&quot;</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">FatalMiriadError</span><span class="p">(</span><span class="n">E</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="run_casa"><a class="viewcode-back" href="../../../lib/lib.html#apercal.libs.lib.run_casa">[docs]</a><span class="k">def</span> <span class="nf">run_casa</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">raise_on_severe</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log_output</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">1800</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Run a list of casa commands&quot;&quot;&quot;</span>
+    <span class="n">casa</span> <span class="o">=</span> <span class="n">drivecasa</span><span class="o">.</span><span class="n">Casapy</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">casa_output</span><span class="p">,</span> <span class="n">casa_error</span> <span class="o">=</span> <span class="n">casa</span><span class="o">.</span><span class="n">run_script</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">raise_on_severe</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">log_output</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">casa_output</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">casa_error</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Casa command failed&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">raise_on_severe</span><span class="p">:</span>
+            <span class="k">raise</span></div>
+
+
+<span class="k">def</span> <span class="nf">str2bool</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;TRUE&#39;</span> <span class="ow">or</span> <span class="n">s</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;T&quot;</span> <span class="ow">or</span> <span class="n">s</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;Y&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">elif</span> <span class="n">s</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;FALSE&#39;</span> <span class="ow">or</span> <span class="n">s</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;F&#39;</span> <span class="ow">or</span> <span class="n">s</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;N&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span>  <span class="c1"># evil ValueError that doesn&#39;t tell you what the wrong value was</span>
+
+
+<div class="viewcode-block" id="mkdir"><a class="viewcode-back" href="../../../lib/lib.html#apercal.libs.lib.mkdir">[docs]</a><span class="k">def</span> <span class="nf">mkdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    mkdir(path)</span>
+<span class="sd">    Checks if path exists, and creates if it doesn&#39;t exist.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Making Path&#39;</span><span class="p">)</span>
+        <span class="n">o</span><span class="p">,</span> <span class="n">e</span> <span class="o">=</span> <span class="n">basher</span><span class="p">(</span><span class="s1">&#39;mkdir &#39;</span> <span class="o">+</span> <span class="n">path</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="masher"><a class="viewcode-back" href="../../../lib/lib.html#apercal.libs.lib.masher">[docs]</a><span class="k">def</span> <span class="nf">masher</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    masher - Miriad Task Runner</span>
+<span class="sd">    Usage: masher(task=&#39;sometask&#39;, arg1=val1, arg2=val2)</span>
+<span class="sd">    Example: masher(task=&#39;invert&#39;, vis=&#39;/home/frank/test.uv/&#39;, options=&#39;mfs,double&#39;, ...)</span>
+<span class="sd">    Each argument is passed to the task through the use of the keywords.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;masher&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">task</span><span class="p">:</span>
+        <span class="n">argstr</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">])</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">!=</span> <span class="s1">&#39;NONE&#39;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="s1">&#39;in_&#39;</span><span class="p">:</span>
+                    <span class="n">argstr</span> <span class="o">+=</span> <span class="s1">&#39;in=&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">k</span> <span class="o">=</span> <span class="n">k</span>
+                    <span class="n">argstr</span> <span class="o">+=</span> <span class="n">k</span> <span class="o">+</span> <span class="s1">&#39;=&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="n">task</span> <span class="o">+</span> <span class="n">argstr</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="s2">&quot;-k&quot;</span> <span class="ow">in</span> <span class="n">cmd</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">basher</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">showasinfo</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">basher</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">showasinfo</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">error</span> <span class="o">=</span> <span class="s2">&quot;Usage = masher(task=&#39;sometask&#39;, arg1=val1, arg2=val2...)&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">ApercalException</span></div>
+
+
+<div class="viewcode-block" id="strip_prefixes"><a class="viewcode-back" href="../../../lib/lib.html#apercal.libs.lib.strip_prefixes">[docs]</a><span class="k">def</span> <span class="nf">strip_prefixes</span><span class="p">(</span><span class="n">lines</span><span class="p">,</span> <span class="n">prefixes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Remove lines starting that start with a given string</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        lines (str): output to be filtered</span>
+<span class="sd">        prefixes (List[str]): lines to be stripped</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: Output with filtered lines</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">):</span>
+        <span class="n">matches</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">start</span> <span class="ow">in</span> <span class="n">prefixes</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">start</span><span class="p">):</span>
+                <span class="n">matches</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">break</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">matches</span><span class="p">:</span>
+            <span class="n">ret</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">line</span>
+    <span class="k">return</span> <span class="n">ret</span></div>
+
+
+<div class="viewcode-block" id="basher"><a class="viewcode-back" href="../../../lib/lib.html#apercal.libs.lib.basher">[docs]</a><span class="k">def</span> <span class="nf">basher</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">showasinfo</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">prefixes_to_strip</span><span class="o">=</span><span class="p">[]):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    basher: shell run - helper function to run commands on the shell.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        cmd (str): command to be run</span>
+<span class="sd">        showasinfo (bool): Log the output to info (default: log to debug)</span>
+<span class="sd">        remove_ouput (List[str]): do not log lines that start with any of these strings</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;basher&#39;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+    <span class="c1"># Replacing brackets so that bash won&#39;t complain.</span>
+    <span class="c1"># cmd = cmd.replace(&#39;&quot;&quot;&#39;,&#39;&quot;&#39;)</span>
+    <span class="k">if</span> <span class="s1">&#39;window&#39;</span> <span class="ow">or</span> <span class="s1">&#39;uvrange&#39;</span> <span class="ow">or</span> <span class="s1">&#39;percentage&#39;</span> <span class="ow">in</span> <span class="n">cmd</span><span class="p">:</span>
+        <span class="c1"># pos = cmd.find(&#39;window&#39;)</span>
+        <span class="c1"># cmdlist = list(cmd)</span>
+        <span class="c1"># cmdlist.insert(pos, &#39;&#39;)</span>
+        <span class="c1"># cmd = &#39;&#39;.join(cmdlist)</span>
+        <span class="c1"># br = cmd.find(&#39;)&#39;)</span>
+        <span class="c1"># cmdlist = list(cmd)</span>
+        <span class="c1"># cmdlist.insert(br+1, &#39;&#39;)</span>
+        <span class="c1"># cmd = &#39;&#39;.join(cmdlist)</span>
+        <span class="c1"># logger.info(cmd)</span>
+        <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="n">cmd</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;(&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">(&quot;</span><span class="p">)</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="n">cmd</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;)&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">)&quot;</span><span class="p">)</span>
+    <span class="n">proc</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+                            <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">out</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">proc</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">showasinfo</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Command = &quot;</span> <span class="o">+</span> <span class="n">cmd</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">strip_prefixes</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">prefixes_to_strip</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Command = &quot;</span> <span class="o">+</span> <span class="n">cmd</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">strip_prefixes</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">prefixes_to_strip</span><span class="p">))</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">err</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+    <span class="c1"># NOTE: Returns the STD output.</span>
+    <span class="n">exceptioner</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">proc</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Error in command &quot;</span> <span class="o">+</span> <span class="n">cmd</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;: </span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">err</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Returning output.&quot;</span><span class="p">)</span>
+    <span class="c1"># Standard output error are returned in a more convenient way</span>
+    <span class="k">return</span> <span class="n">out</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="get_source_names"><a class="viewcode-back" href="../../../lib/lib.html#apercal.libs.lib.get_source_names">[docs]</a><span class="k">def</span> <span class="nf">get_source_names</span><span class="p">(</span><span class="n">vis</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    get_source_names (vis=None)</span>
+<span class="sd">    Helper function that uses the MIRIAD task UVINDEX to grab the name of the</span>
+<span class="sd">    sources from a MIRIAD visibility file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">vis</span><span class="p">:</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="n">masher</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="s1">&#39;uvindex&#39;</span><span class="p">,</span> <span class="n">vis</span><span class="o">=</span><span class="n">vis</span><span class="p">)</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">u</span><span class="p">))</span> <span class="k">if</span> <span class="s2">&quot;pointing&quot;</span> <span class="ow">in</span> <span class="n">u</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+        <span class="n">s_raw</span> <span class="o">=</span> <span class="n">u</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">2</span><span class="p">):</span><span class="n">N</span> <span class="o">-</span> <span class="mi">2</span><span class="p">]</span>
+        <span class="n">sources</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">s_raw</span><span class="p">:</span>
+            <span class="n">sources</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;  &#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">sources</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ApercalException</span><span class="p">(</span><span class="s2">&quot;get_source_names needs a vis!&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="maths"><a class="viewcode-back" href="../../../lib/lib.html#apercal.libs.lib.maths">[docs]</a><span class="k">class</span> <span class="nc">maths</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Special MIRIAD type class for the stupid task MATHS, which does not know how to refer to</span>
+<span class="sd">    directories.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">=</span> <span class="s1">&#39;maths&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exp</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="s1">&#39;mask&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">keywords</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">masher</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">+</span> <span class="s2">&quot; -kw&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">help</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">masher</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">+</span> <span class="s2">&quot; -k&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">go</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">paths</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exp</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">paths</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">paths</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">exp</span> <span class="o">=</span> <span class="n">paths</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">paths</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">masher</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">output</span></div>
+
+
+<span class="k">class</span> <span class="nc">miriad</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        DO NOT DEFINE ANY OTHER VARIABLES HERE</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">=</span> <span class="n">task</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">keywords</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">masher</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">+</span> <span class="s2">&quot; -kw&quot;</span><span class="p">)</span>
+        <span class="n">masher</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">+</span> <span class="s2">&quot; -w&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">help</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">masher</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">+</span> <span class="s2">&quot; -k&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">rmfiles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;miriad &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Cleanup - files will be DELETED.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">==</span> <span class="s1">&#39;invert&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">map</span><span class="p">):</span>
+                <span class="n">basher</span><span class="p">(</span><span class="s2">&quot;rm -r &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">map</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">beam</span><span class="p">):</span>
+                <span class="n">basher</span><span class="p">(</span><span class="s2">&quot;rm -r &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">==</span> <span class="s1">&#39;clean&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="p">):</span>
+                <span class="n">basher</span><span class="p">(</span><span class="s1">&#39;rm -r &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">==</span> <span class="s1">&#39;restor&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="p">):</span>
+                <span class="n">basher</span><span class="p">(</span><span class="s1">&#39;rm -r &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">==</span> <span class="s1">&#39;maths&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="p">):</span>
+                <span class="n">basher</span><span class="p">(</span><span class="s1">&#39;rm -r &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">==</span> <span class="s1">&#39;uvlin&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="p">):</span>
+                <span class="n">basher</span><span class="p">(</span><span class="s1">&#39;rm -r &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">==</span> <span class="s1">&#39;uvcat&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="p">):</span>
+                <span class="n">basher</span><span class="p">(</span><span class="s1">&#39;rm -r &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="p">):</span>
+                <span class="n">basher</span><span class="p">(</span><span class="s1">&#39;rm -r &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">inp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;miriad &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">)</span>
+        <span class="n">attrs</span> <span class="o">=</span> <span class="nb">vars</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">=</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">attrs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="s1">&#39;logger&#39;</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">go</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rmfiles</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;miriad &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rmfiles</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rmfiles</span><span class="p">()</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">masher</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
+        <span class="c1">#        logger.info(&#39;Completed.&#39;)</span>
+        <span class="k">return</span> <span class="n">output</span>
+
+
+<span class="k">class</span> <span class="nc">Bunch</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwds</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwds</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">settings</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">filename</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parser</span> <span class="o">=</span> <span class="n">SafeConfigParser</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">section</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwds</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        settings.set(section, keyword1=value1, keyword2=value2)</span>
+<span class="sd">        Change settings using this method.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">parser</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span>
+        <span class="k">if</span> <span class="n">section</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">parser</span><span class="o">.</span><span class="n">sections</span><span class="p">():</span>
+            <span class="n">parser</span><span class="o">.</span><span class="n">add_section</span><span class="p">(</span><span class="n">section</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">kwds</span><span class="p">:</span>
+            <span class="n">parser</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">section</span><span class="p">,</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kwds</span><span class="p">:</span>
+                <span class="n">parser</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">section</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">kwds</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">section</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        settings.show(section=None)</span>
+<span class="sd">        Output the settings, by section if necessary.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;settings.show&#39;</span><span class="p">)</span>
+        <span class="n">parser</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">section</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[&quot;</span> <span class="o">+</span> <span class="n">section</span> <span class="o">+</span> <span class="s2">&quot;]&quot;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parser</span><span class="o">.</span><span class="n">items</span><span class="p">(</span><span class="n">section</span><span class="p">):</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot; = &quot;</span><span class="p">,</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">parser</span><span class="o">.</span><span class="n">sections</span><span class="p">():</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[&quot;</span> <span class="o">+</span> <span class="n">s</span> <span class="o">+</span> <span class="s2">&quot;]&quot;</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parser</span><span class="o">.</span><span class="n">items</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot; = &quot;</span><span class="p">,</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Settings - Section doesn&#39;t exist.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">section</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">keyword</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;settings.get&#39;</span><span class="p">)</span>
+        <span class="n">parser</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">section</span> <span class="ow">and</span> <span class="n">keyword</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parser</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">section</span><span class="p">,</span> <span class="n">keyword</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;;&#39;</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">parser</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">section</span><span class="p">,</span> <span class="n">keyword</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;;&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">parser</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">section</span><span class="p">,</span> <span class="n">keyword</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">get_params</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="n">section</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Settings - Either section or keyword does not exist.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Read the file again.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;settings.update&#39;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Settings - Updated.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        settings.save()</span>
+<span class="sd">        Saves the new settings.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">parser</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">full_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dirx</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Uses rawdata and base to make the full working path, when necessary.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># full_path = self.get(&#39;data&#39;, &#39;working&#39;)+self.get(&#39;data&#39;, &#39;base&#39;)</span>
+        <span class="n">full_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;working&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="n">dirx</span>
+        <span class="k">return</span> <span class="n">full_path</span>
+
+
+<span class="k">def</span> <span class="nf">get_params</span><span class="p">(</span><span class="n">config_parser</span><span class="p">,</span> <span class="n">section</span><span class="p">):</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">Bunch</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">config_parser</span><span class="o">.</span><span class="n">items</span><span class="p">(</span><span class="n">section</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;;&#39;</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;;&#39;</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">params</span>
+
+
+<div class="viewcode-block" id="ms2uvfits"><a class="viewcode-back" href="../../../lib/lib.html#apercal.libs.lib.ms2uvfits">[docs]</a><span class="k">def</span> <span class="nf">ms2uvfits</span><span class="p">(</span><span class="n">ms</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">uvf</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    ms2uvfits(ms=None)</span>
+<span class="sd">    Utility to convert ms to a uvfits file</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;ms2uvfits&#39;</span><span class="p">)</span>
+    <span class="c1"># Setup the path and input file name.</span>
+    <span class="n">path2ms</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">ms</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">ms</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">ms</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;ms2uvfits: Converting MS to UVFITS Format&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ms</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ApercalException</span><span class="p">(</span><span class="s2">&quot;MS not specified. Please check parameters&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">path2ms</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">path2ms</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Moved to path &quot;</span> <span class="o">+</span> <span class="n">path2ms</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ApercalException</span><span class="p">(</span><span class="s2">&quot;Directory or MS does not exist!&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Start the processing by setting up an output name and reporting the status.</span>
+    <span class="k">if</span> <span class="n">uvf</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">uvfits</span> <span class="o">=</span> <span class="n">ms</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.MS&quot;</span><span class="p">,</span> <span class="s2">&quot;.UVF&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">uvfits</span> <span class="o">=</span> <span class="n">uvf</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">uvfits</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">uvfits</span> <span class="o">+</span> <span class="s2">&quot; exists! Skipping this part....&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Exiting gracefully.&quot;</span><span class="p">)</span>
+        <span class="k">return</span>
+        <span class="c1"># TODO: Decided whether to replace logger.info with logger.debug, since this module is</span>
+    <span class="c1"># wrapped up.</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;MS: &quot;</span> <span class="o">+</span> <span class="n">ms</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;UVFITS: &quot;</span> <span class="o">+</span> <span class="n">uvfits</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Directory: &quot;</span> <span class="o">+</span> <span class="n">path2ms</span><span class="p">)</span>
+    <span class="c1"># NOTE: Here I&#39;m using masher to call ms2uvfits.</span>
+    <span class="n">o</span> <span class="o">=</span> <span class="n">masher</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="s1">&#39;ms2uvfits&#39;</span><span class="p">,</span> <span class="n">ms</span><span class="o">=</span><span class="n">ms</span><span class="p">,</span> <span class="n">fitsfile</span><span class="o">=</span><span class="n">uvfits</span><span class="p">,</span> <span class="n">writesyscal</span><span class="o">=</span><span class="s1">&#39;T&#39;</span><span class="p">,</span>
+               <span class="n">multisource</span><span class="o">=</span><span class="s1">&#39;T&#39;</span><span class="p">,</span> <span class="n">combinespw</span><span class="o">=</span><span class="s1">&#39;T&#39;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Appears to have ended successfully.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="importuvfitsys"><a class="viewcode-back" href="../../../lib/lib.html#apercal.libs.lib.importuvfitsys">[docs]</a><span class="k">def</span> <span class="nf">importuvfitsys</span><span class="p">(</span><span class="n">uvfits</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">uv</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tsys</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Imports UVFITS file and does Tsys correction on the output MIRIAD UV file.</span>
+<span class="sd">    Uses the MIRIAD task WSRTFITS to import the UVFITS file and convert it to MIRIAD UV format.</span>
+<span class="sd">    Uses the MIRIAD task ATTSYS to do the Tsys correction.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;importuvfitsys&#39;</span><span class="p">)</span>
+    <span class="c1"># NOTE: Import the fits file</span>
+    <span class="n">path2uvfits</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">uvfits</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">uvfits</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">uvfits</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">uv</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Default output name if a custom name isn&#39;t provided.</span>
+        <span class="n">uv</span> <span class="o">=</span> <span class="n">uvfits</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;.UV&#39;</span>
+    <span class="k">if</span> <span class="n">uvfits</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ApercalException</span><span class="p">(</span><span class="s2">&quot;UVFITS not specified. Please check parameters&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">path2uvfits</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">path2uvfits</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Moved to path &quot;</span> <span class="o">+</span> <span class="n">path2uvfits</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ApercalException</span><span class="p">(</span><span class="s2">&quot;Error: Directory does not exist!&quot;</span><span class="p">)</span>
+
+    <span class="c1"># cmd = &#39;wsrtfits in=&#39;+uvf+&#39; op=uvin velocity=optbary out=&#39;+uv</span>
+    <span class="k">if</span> <span class="n">uvfits</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;MS&#39;</span><span class="p">:</span>
+        <span class="n">uvfits</span> <span class="o">=</span> <span class="n">uvfits</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;.UVF&#39;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">uvfits</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">ApercalException</span><span class="p">(</span><span class="n">uvfits</span> <span class="o">+</span> <span class="s2">&quot; does not exist!&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">uv</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">uv</span> <span class="o">+</span> <span class="s1">&#39; exists! I won</span><span class="se">\&#39;</span><span class="s1">t clobber. Skipping this part...&#39;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Exiting gracefully.&quot;</span><span class="p">)</span>
+        <span class="k">return</span>
+    <span class="n">masher</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="s1">&#39;wsrtfits&#39;</span><span class="p">,</span> <span class="n">in_</span><span class="o">=</span><span class="n">uvfits</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">uv</span><span class="p">,</span> <span class="n">op</span><span class="o">=</span><span class="s1">&#39;uvin&#39;</span><span class="p">,</span> <span class="n">velocity</span><span class="o">=</span><span class="s1">&#39;optbary&#39;</span><span class="p">)</span>
+
+    <span class="c1"># NOTE: Tsys Calibration</span>
+    <span class="c1"># basher(&quot;attsys vis=&quot;+uv+&quot; out=temp&quot;)</span>
+    <span class="k">if</span> <span class="n">tsys</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s1">&#39;temp&#39;</span><span class="p">):</span>
+            <span class="n">basher</span><span class="p">(</span><span class="s2">&quot;rm -r temp&quot;</span><span class="p">)</span>
+        <span class="n">masher</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="s1">&#39;attsys&#39;</span><span class="p">,</span> <span class="n">vis</span><span class="o">=</span><span class="n">uv</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="s1">&#39;temp&#39;</span><span class="p">)</span>
+        <span class="n">basher</span><span class="p">(</span><span class="s1">&#39;rm -r &#39;</span> <span class="o">+</span> <span class="n">uv</span><span class="p">)</span>
+        <span class="n">basher</span><span class="p">(</span><span class="s1">&#39;mv temp &#39;</span> <span class="o">+</span> <span class="n">uv</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Appears to have ended successfully...&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="uvflag"><a class="viewcode-back" href="../../../lib/lib.html#apercal.libs.lib.uvflag">[docs]</a><span class="k">def</span> <span class="nf">uvflag</span><span class="p">(</span><span class="n">vis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">select</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    vis: visibility file to be flagged</span>
+<span class="sd">    select: semi-colon separated list of data selections to be flagged</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Setup the path and move to it.</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;uvflag&#39;</span><span class="p">)</span>
+    <span class="n">path2vis</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">vis</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">vis</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">vis</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;uvflag: Flagging Tool&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">vis</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">select</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ApercalException</span><span class="p">(</span><span class="s2">&quot;Vis or Flags not specified. Check parameters.&quot;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">path2vis</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Moved to path &quot;</span> <span class="o">+</span> <span class="n">path2vis</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ApercalException</span><span class="p">(</span><span class="s2">&quot;Path to vis does not exist!&quot;</span><span class="p">)</span>
+    <span class="c1"># Flag each selection in a for-loop</span>
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">select</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;;&#39;</span><span class="p">):</span>
+        <span class="n">o</span> <span class="o">=</span> <span class="n">masher</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="s1">&#39;uvflag&#39;</span><span class="p">,</span> <span class="n">vis</span><span class="o">=</span><span class="n">vis</span><span class="p">,</span> <span class="n">select</span><span class="o">=</span><span class="s1">&#39;&quot;&#39;</span> <span class="o">+</span> <span class="n">s</span> <span class="o">+</span> <span class="s1">&#39;&quot;&#39;</span><span class="p">,</span> <span class="n">flagval</span><span class="o">=</span><span class="s1">&#39;flag&#39;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Appears to have ended successfully.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="pgflag"><a class="viewcode-back" href="../../../lib/lib.html#apercal.libs.lib.pgflag">[docs]</a><span class="k">def</span> <span class="nf">pgflag</span><span class="p">(</span><span class="n">vis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">flagpar</span><span class="o">=</span><span class="s1">&#39;6,2,2,2,5,3&#39;</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stokes</span><span class="o">=</span><span class="s1">&#39;qq&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wrapper around the MIRIAD task PGFLAG, which in turn is a wrapper for the AOFlagger</span>
+<span class="sd">    SumThreshold algorithm.</span>
+<span class="sd">    Defaults:  flagpar=&#39;6,2,2,2,5,3&#39;,  stokes=&#39;qq&#39;</span>
+<span class="sd">    Uses parameters from a settings object if this is provided.</span>
+<span class="sd">    Outputs are written to a log file, which is in the same directory as vis, and has name</span>
+<span class="sd">    &lt;vis&gt;.pgflag.txt.</span>
+<span class="sd">    Note: The considerably long output of PGFLAG is written out with the logger at debug level.</span>
+<span class="sd">    This may not be ideal if you&#39;re having a quick look, so switch the level to info if you want</span>
+<span class="sd">    to avoid the output of the task appearing in your console.</span>
+<span class="sd">    Beware: You could lose a LOT of data if you&#39;re not careful!!!</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Exception handling and checking</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;pgflag&#39;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;PGFLAG: Automated Flagging using SumThresholding&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">vis</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">settings</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ApercalException</span><span class="p">(</span><span class="s2">&quot;No inputs - please provide either vis and flagpar or settings.&quot;</span><span class="p">)</span>
+    <span class="n">path2vis</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">vis</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">vis</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">vis</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">path2vis</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Moved to path &quot;</span> <span class="o">+</span> <span class="n">path2vis</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ApercalException</span><span class="p">(</span><span class="s2">&quot;Error: path to vis does not exist!&quot;</span><span class="p">)</span>
+
+    <span class="n">o</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Do pgflag with the settings parameters if provided.</span>
+    <span class="k">if</span> <span class="n">settings</span> <span class="ow">and</span> <span class="n">vis</span><span class="p">:</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;pgflag&#39;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Doing PGFLAG on &quot;</span> <span class="o">+</span> <span class="n">vis</span> <span class="o">+</span> <span class="s2">&quot; using stokes=&quot;</span> <span class="o">+</span> <span class="n">params</span><span class="o">.</span><span class="n">stokes</span> <span class="o">+</span> <span class="s2">&quot; with flagpar=&quot;</span> <span class="o">+</span> <span class="n">params</span><span class="o">.</span><span class="n">flagpar</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Output written to &quot;</span> <span class="o">+</span> <span class="n">vis</span> <span class="o">+</span> <span class="s1">&#39;.pgflag.txt&#39;</span><span class="p">)</span>
+        <span class="n">o</span> <span class="o">=</span> <span class="n">masher</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="s1">&#39;pgflag&#39;</span><span class="p">,</span> <span class="n">vis</span><span class="o">=</span><span class="n">vis</span><span class="p">,</span> <span class="n">stokes</span><span class="o">=</span><span class="n">params</span><span class="o">.</span><span class="n">stokes</span><span class="p">,</span> <span class="n">flagpar</span><span class="o">=</span><span class="n">params</span><span class="o">.</span><span class="n">flagpar</span><span class="p">,</span>
+                   <span class="n">options</span><span class="o">=</span><span class="s1">&#39;nodisp&#39;</span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="s2">&quot;&#39;&lt;&#39;&quot;</span><span class="p">)</span>
+    <span class="c1"># Do PGFLAG with input settings, i.e. no settings file provided.</span>
+    <span class="k">if</span> <span class="n">vis</span> <span class="ow">and</span> <span class="n">settings</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Doing PGFLAG on &quot;</span> <span class="o">+</span> <span class="n">vis</span> <span class="o">+</span> <span class="s2">&quot; using stokes &quot;</span> <span class="o">+</span> <span class="n">stokes</span> <span class="o">+</span> <span class="s2">&quot; with flagpar=&quot;</span> <span class="o">+</span> <span class="n">flagpar</span><span class="p">)</span>
+        <span class="n">o</span> <span class="o">=</span> <span class="n">masher</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="s1">&#39;pgflag&#39;</span><span class="p">,</span> <span class="n">vis</span><span class="o">=</span><span class="n">vis</span><span class="p">,</span> <span class="n">stokes</span><span class="o">=</span><span class="n">stokes</span><span class="p">,</span> <span class="n">flagpar</span><span class="o">=</span><span class="n">flagpar</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="s1">&#39;nodisp&#39;</span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="s2">&quot;&#39;&lt;&#39;&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">o</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Writing output &quot;</span> <span class="o">+</span> <span class="n">path2vis</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="n">vis</span> <span class="o">+</span> <span class="s1">&#39;.pgflag.txt&#39;</span><span class="p">)</span>
+        <span class="n">write2file</span><span class="p">(</span><span class="s1">&#39;pgflag&#39;</span><span class="p">,</span> <span class="n">o</span><span class="p">,</span> <span class="n">vis</span> <span class="o">+</span> <span class="s1">&#39;.pgflag.txt&#39;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;PGFLAG: DONE.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="query_yes_no"><a class="viewcode-back" href="../../../lib/lib.html#apercal.libs.lib.query_yes_no">[docs]</a><span class="k">def</span> <span class="nf">query_yes_no</span><span class="p">(</span><span class="n">question</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;yes&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Ask a yes/no question via raw_input() and return their answer.</span>
+
+<span class="sd">    &quot;question&quot; is a string that is presented to the user.</span>
+<span class="sd">    &quot;default&quot; is the presumed answer if the user just hits &lt;Enter&gt;.</span>
+<span class="sd">        It must be &quot;yes&quot; (the default), &quot;no&quot; or None (meaning</span>
+<span class="sd">        an answer is required of the user).</span>
+
+<span class="sd">    The &quot;answer&quot; return value is True for &quot;yes&quot; or False for &quot;no&quot;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">valid</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;yes&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;ye&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+             <span class="s2">&quot;no&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;n&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">default</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">prompt</span> <span class="o">=</span> <span class="s2">&quot; [y/n] &quot;</span>
+    <span class="k">elif</span> <span class="n">default</span> <span class="o">==</span> <span class="s2">&quot;yes&quot;</span><span class="p">:</span>
+        <span class="n">prompt</span> <span class="o">=</span> <span class="s2">&quot; [Y/n] &quot;</span>
+    <span class="k">elif</span> <span class="n">default</span> <span class="o">==</span> <span class="s2">&quot;no&quot;</span><span class="p">:</span>
+        <span class="n">prompt</span> <span class="o">=</span> <span class="s2">&quot; [y/N] &quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;invalid default answer: &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">default</span><span class="p">)</span>
+
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">question</span> <span class="o">+</span> <span class="n">prompt</span><span class="p">)</span>
+        <span class="n">choice</span> <span class="o">=</span> <span class="n">raw_input</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">default</span> <span class="ow">and</span> <span class="n">choice</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">valid</span><span class="p">[</span><span class="n">default</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">choice</span> <span class="ow">in</span> <span class="n">valid</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">valid</span><span class="p">[</span><span class="n">choice</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Please respond with &#39;yes&#39; or &#39;no&#39; &quot;</span>
+                             <span class="s2">&quot;(or &#39;y&#39; or &#39;n&#39;).</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="director"><a class="viewcode-back" href="../../../lib/lib.html#apercal.libs.lib.director">[docs]</a><span class="k">def</span> <span class="nf">director</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">option</span><span class="p">,</span> <span class="n">dest</span><span class="p">,</span> <span class="n">file_</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    director: Function to move, remove, and copy files and directories</span>
+<span class="sd">    option: &#39;mk&#39;, &#39;ch&#39;, &#39;mv&#39;, &#39;rm&#39;, and &#39;cp&#39; are supported</span>
+<span class="sd">    dest: Destination of a file or directory to move to</span>
+<span class="sd">    file: Which file to move or copy, otherwise None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">option</span> <span class="o">==</span> <span class="s1">&#39;mk&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">dest</span><span class="p">):</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">dest</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Creating directory &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">dest</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="n">option</span> <span class="o">==</span> <span class="s1">&#39;ch&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span> <span class="o">==</span> <span class="n">dest</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>  <span class="c1"># Save the former working directory in a variable</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">dest</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">dest</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Creating directory &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">dest</span><span class="p">))</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">dest</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>  <span class="c1"># Save the current working directory in a variable</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Moved to directory &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">dest</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="n">option</span> <span class="o">==</span> <span class="s1">&#39;mv&#39;</span><span class="p">:</span>  <span class="c1"># Move</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">dest</span><span class="p">):</span>
+            <span class="n">basher</span><span class="p">(</span><span class="s2">&quot;mv &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">file_</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">dest</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">dest</span><span class="p">)</span>
+            <span class="n">basher</span><span class="p">(</span><span class="s2">&quot;mv &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">file_</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">dest</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="n">option</span> <span class="o">==</span> <span class="s1">&#39;rn&#39;</span><span class="p">:</span>  <span class="c1"># Rename</span>
+        <span class="n">basher</span><span class="p">(</span><span class="s2">&quot;mv &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">file_</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">dest</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="n">option</span> <span class="o">==</span> <span class="s1">&#39;cp&#39;</span><span class="p">:</span>  <span class="c1"># Copy</span>
+        <span class="n">basher</span><span class="p">(</span><span class="s2">&quot;cp -r &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">file_</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">dest</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="n">option</span> <span class="o">==</span> <span class="s1">&#39;rm&#39;</span><span class="p">:</span>  <span class="c1"># Remove</span>
+        <span class="n">basher</span><span class="p">(</span><span class="s2">&quot;rm -r &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">dest</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39; Option not supported! Only mk, ch, mv, rm, rn, and cp are supported!&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="show"><a class="viewcode-back" href="../../../lib/lib.html#apercal.libs.lib.show">[docs]</a><span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="n">config_object</span><span class="p">,</span> <span class="n">section</span><span class="p">,</span> <span class="n">showall</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    show: Prints the current settings of the pipeline. Only shows keywords, which are in the default config file</span>
+<span class="sd">            default.cfg</span>
+<span class="sd">    showall: Set to true if you want to see all current settings instead of only the ones from the current step</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">subs_setinit</span><span class="o">.</span><span class="n">setinitdirs</span><span class="p">(</span><span class="n">config_object</span><span class="p">)</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">ConfigParser</span><span class="p">()</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">readfp</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">default_cfg</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">sections</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">showall</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+            <span class="n">o</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">options</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">items</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">o</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="s1">&#39; = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">config_object</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">(</span><span class="n">o</span><span class="p">[</span><span class="mi">0</span><span class="p">])))</span>
+                <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                    <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">s</span> <span class="o">==</span> <span class="n">section</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+                <span class="n">o</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">options</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">items</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">o</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="s1">&#39; = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">config_object</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">(</span><span class="n">o</span><span class="p">[</span><span class="mi">0</span><span class="p">])))</span>
+                    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                        <span class="k">pass</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">pass</span></div>
+
+
+<span class="k">def</span> <span class="nf">load_config</span><span class="p">(</span><span class="n">config_object</span><span class="p">,</span> <span class="n">file_</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;config&#39;</span><span class="p">)</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">ConfigParser</span><span class="p">()</span>  <span class="c1"># Initialise the config parser</span>
+    <span class="k">if</span> <span class="n">file_</span><span class="p">:</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">readfp</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">file_</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39; Non-default configuration file &#39;</span> <span class="o">+</span> <span class="n">file_</span> <span class="o">+</span> <span class="s1">&#39; successfully read!&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">readfp</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">default_cfg</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">sections</span><span class="p">():</span>
+
+        <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">items</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">config_object</span><span class="p">,</span> <span class="n">o</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">eval</span><span class="p">(</span><span class="n">o</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">config</span>  <span class="c1"># Save the loaded config file as defaults for later usage</span>
+
+
+<div class="viewcode-block" id="get_default_config"><a class="viewcode-back" href="../../../lib/lib.html#apercal.libs.lib.get_default_config">[docs]</a><span class="k">def</span> <span class="nf">get_default_config</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function to get the default config settins</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">config</span> <span class="o">=</span> <span class="n">ConfigParser</span><span class="p">()</span>
+
+    <span class="n">config</span><span class="o">.</span><span class="n">readfp</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">default_cfg</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">config</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Apercal Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4.
+    </div>
+  </body>
+</html>

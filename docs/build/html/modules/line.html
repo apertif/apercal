@@ -1,0 +1,249 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Module: line &#8212; Apercal 2.5.0 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Module: polarisation" href="polarisation.html" />
+    <link rel="prev" title="Module: continuum" href="continuum.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="polarisation.html" title="Module: polarisation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="continuum.html" title="Module: continuum"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../pipeline_modules.html" accesskey="U">Pipeline modules</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="continuum.html"
+                        title="previous chapter">Module: continuum</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="polarisation.html"
+                        title="next chapter">Module: polarisation</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/modules/line.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-apercal.modules.line">
+<span id="module-line"></span><h1>Module: line<a class="headerlink" href="#module-apercal.modules.line" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="apercal.modules.line.line">
+<em class="property">class </em><code class="descclassname">apercal.modules.line.</code><code class="descname">line</code><span class="sig-paren">(</span><em>file_=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/line.html#line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.line.line" title="Permalink to this definition">¶</a></dt>
+<dd><p>Line class to do continuum subtraction and prepare data for line imaging.</p>
+<dl class="method">
+<dt id="apercal.modules.line.line.calc_imax">
+<code class="descname">calc_imax</code><span class="sig-paren">(</span><em>image</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/line.html#line.calc_imax"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.line.line.calc_imax" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to calculate the maximum of an image
+image (string): The name of the image file. Must be in MIRIAD-format
+returns (float): the maximum in the image</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.line.line.calc_irms">
+<code class="descname">calc_irms</code><span class="sig-paren">(</span><em>image</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/line.html#line.calc_irms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.line.line.calc_irms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to calculate the maximum of an image
+image (string): The name of the image file. Must be in MIRIAD-format
+returns (float): the maximum in the image</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.line.line.calc_isum">
+<code class="descname">calc_isum</code><span class="sig-paren">(</span><em>image</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/line.html#line.calc_isum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.line.line.calc_isum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to calculate the sum of the values of the pixels in an image
+image (string): The name of the image file. Must be in MIRIAD-format
+returns (float): the sum of the pxiels in the image</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.line.line.calc_max_min_ratio">
+<code class="descname">calc_max_min_ratio</code><span class="sig-paren">(</span><em>image</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/line.html#line.calc_max_min_ratio"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.line.line.calc_max_min_ratio" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to calculate the absolute maximum of the ratio max/min and min/max
+image (string): The name of the image file. Must be in MIRIAD-format
+returns (float): the ratio</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.line.line.check_starting_conditions">
+<code class="descname">check_starting_conditions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/line.html#line.check_starting_conditions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.line.line.check_starting_conditions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check that the miriad file from convert exists.</p>
+<p>If it does not exists, none of the subsequent tasks in go need to be executed.
+This seems necessary as not all the tasks do this check and they do not have
+to. A single task is enough.</p>
+<p>Not sure if it is necessary to add all the param variables from selfcal
+and set them False if the check fails. For now, just use the main one</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>self</dd>
+<dt>Return:</dt>
+<dd>(bool): True if file is found, otherwise False</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.line.line.cleanup">
+<code class="descname">cleanup</code><span class="sig-paren">(</span><em>clean_level=1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/line.html#line.cleanup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.line.line.cleanup" title="Permalink to this definition">¶</a></dt>
+<dd><p>”
+Clean all intermediate products. Leaves the HI-image and HI-beam fits cubes in place.</p>
+<p>There are three levels of cleaning
+- level 1: cleans all data except the final cubes
+- level 2: removes the chunks and auxillary files in the cube dir, so it keeps the mir file
+and existing cubes
+- level 3: removes only the auxillary files in the cube directory and keeps the chunks, 
+mir file and existing cubes.</p>
+<dl class="docutils">
+<dt># Args</dt>
+<dd>clean_level (int): level of cleaning</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.line.line.create_linecube">
+<code class="descname">create_linecube</code><span class="sig-paren">(</span><em>searchpattern</em>, <em>outcube</em>, <em>nchannel</em>, <em>startchan</em>, <em>startfreq</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/line.html#line.create_linecube"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.line.line.create_linecube" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a cube out of a number of input files.
+searchpattern: Searchpattern for the files to combine in the cube. Uses the usual command line wild cards
+outcube: Full name and path of the output cube
+outfreq: Full name and path of the output frequency file</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.line.line.createsubbands">
+<code class="descname">createsubbands</code><span class="sig-paren">(</span><em>threads=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/line.html#line.createsubbands"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.line.line.createsubbands" title="Permalink to this definition">¶</a></dt>
+<dd><p>Applies calibrator corrections to data, splits the data into chunks in frequency and bins it to the given
+frequency resolution for the self-calibration</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.line.line.get_last_major_iteration">
+<code class="descname">get_last_major_iteration</code><span class="sig-paren">(</span><em>chunk</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/line.html#line.get_last_major_iteration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.line.line.get_last_major_iteration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the number of the last major iteration
+chunk: The frequency chunk to look into. Usually an entry generated by list_chunks
+return: The number of the last major clean iteration for a frequency chunk</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.line.line.go">
+<code class="descname">go</code><span class="sig-paren">(</span><em>first_level_threads=None</em>, <em>second_level_threads=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/line.html#line.go"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.line.line.go" title="Permalink to this definition">¶</a></dt>
+<dd><p>Executes the whole continuum subtraction process and line imaging in the following order:
+transfergains
+createsubbands
+subtract
+image line data</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.line.line.image_line">
+<code class="descname">image_line</code><span class="sig-paren">(</span><em>threads=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/line.html#line.image_line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.line.line.image_line" title="Permalink to this definition">¶</a></dt>
+<dd><p>Produces a line cube by imaging each individual channel. Saves the images as well as the beam as a FITS-cube.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.line.line.list_chunks">
+<code class="descname">list_chunks</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/line.html#line.list_chunks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.line.line.list_chunks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks how many chunk directories exist and returns a list of them</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.line.line.reset">
+<code class="descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/line.html#line.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.line.line.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to reset the current step and remove all generated data. Be careful! Deletes all data generated in
+this step!</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.line.line.subtract">
+<code class="descname">subtract</code><span class="sig-paren">(</span><em>threads=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/line.html#line.subtract"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.line.line.subtract" title="Permalink to this definition">¶</a></dt>
+<dd><p>Module for subtracting the continuum from the line data. Supports uvlin and uvmodel (using the
+same model as the one used for the final continuum imaging).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apercal.modules.line.line.transfergains">
+<code class="descname">transfergains</code><span class="sig-paren">(</span><em>nthreads=1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/modules/line.html#line.transfergains"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.modules.line.line.transfergains" title="Permalink to this definition">¶</a></dt>
+<dd><p>Copies the crosscal data to the line directory and then, if selfcal
+has been performed, applies the selfcal phase and amp corrections.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="polarisation.html" title="Module: polarisation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="continuum.html" title="Module: continuum"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../pipeline_modules.html" >Pipeline modules</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Apercal Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4.
+    </div>
+  </body>
+</html>

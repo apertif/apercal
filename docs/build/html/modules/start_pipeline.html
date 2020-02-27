@@ -1,0 +1,155 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Module: Start Pipeline &#8212; Apercal 2.5.0 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Module: base" href="base.html" />
+    <link rel="prev" title="Pipeline modules" href="../pipeline_modules.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="base.html" title="Module: base"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../pipeline_modules.html" title="Pipeline modules"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../pipeline_modules.html" accesskey="U">Pipeline modules</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../pipeline_modules.html"
+                        title="previous chapter">Pipeline modules</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="base.html"
+                        title="next chapter">Module: base</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/modules/start_pipeline.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-apercal.pipeline.start_pipeline">
+<span id="module-start-pipeline"></span><h1>Module: Start Pipeline<a class="headerlink" href="#module-apercal.pipeline.start_pipeline" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="apercal.pipeline.start_pipeline.start_apercal_pipeline">
+<code class="descclassname">apercal.pipeline.start_pipeline.</code><code class="descname">start_apercal_pipeline</code><span class="sig-paren">(</span><em>targets</em>, <em>fluxcals</em>, <em>polcals</em>, <em>dry_run=False</em>, <em>basedir=None</em>, <em>flip_ra=False</em>, <em>steps=None</em>, <em>configfilename=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/pipeline/start_pipeline.html#start_apercal_pipeline"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.pipeline.start_pipeline.start_apercal_pipeline" title="Permalink to this definition">¶</a></dt>
+<dd><p>Trigger the start of a fluxcal pipeline. Returns when pipeline is done.
+Example for taskid, name, beamnr: (190108926, ‘3C147_36’, 36)
+Fluxcals and polcals can be specified in the wrong order, if the polcal is not polarised
+they will be flipped.
+If both polcals and fluxcals are set, they should both be the same length.
+A list of config files can be provided, i.e., one for each beam. If a single config file
+is given, copies of it will be created so that there is one config per beam. If no
+config file is given, the default one is used and copies for each beam are made.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>targets (Tuple[int, str, List[int]]): taskid, name, list of beamnrs
+fluxcals (List[Tuple[int, str, int]]): fluxcals: taskid, name, beamnr
+polcals (List[Tuple[int, str, int]]): polcals: taskid, name, beamnr (can be None)
+dry_run (bool): interpret arguments, do not actually run pipeline
+basedir (str): base directory; if not specified will be /data/apertif/{target_taskid}
+flip_ra (bool): flip RA (for old measurement sets where beamweights were flipped)
+steps (List[str]): list of steps to perform
+configfilename (List[str]): Custom configfile (should be full path for now)</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>Tuple[Dict[int, List[str]], str], str: Tuple of a dict, the formatted runtime, and possibly</dt>
+<dd>an exception. The dict
+contains beam numbers (ints) as keys, a list of failed
+steps as values. Failed is defined here as ‘threw an
+exception’, only for target steps. Please also read logs.</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.pipeline.start_pipeline.validate_taskid">
+<code class="descclassname">apercal.pipeline.start_pipeline.</code><code class="descname">validate_taskid</code><span class="sig-paren">(</span><em>taskid_from_autocal</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/pipeline/start_pipeline.html#validate_taskid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.pipeline.start_pipeline.validate_taskid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parses a taskid from autocal, returns empty string or the proper taskid</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>taskid_from_autocal (str): task id from autocal, e.g. 20180403-003 or None</dd>
+<dt>Returns:</dt>
+<dd>str: Task id that is accepted by prepare step, e.g. ‘003’ or ‘’</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="base.html" title="Module: base"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../pipeline_modules.html" title="Pipeline modules"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../pipeline_modules.html" >Pipeline modules</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Apercal Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4.
+    </div>
+  </body>
+</html>

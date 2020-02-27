@@ -1,0 +1,165 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>parselog &#8212; Apercal 2.5.0 documentation</title>
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="AO strategies" href="ao_strategies.html" />
+    <link rel="prev" title="exceptions" href="exceptions.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="ao_strategies.html" title="AO strategies"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="exceptions.html" title="exceptions"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="other_modules.html" accesskey="U">Other modules</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">parselog</a><ul>
+<li><a class="reference internal" href="#module-apercal.parselog">Reference</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="exceptions.html"
+                        title="previous chapter">exceptions</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="ao_strategies.html"
+                        title="next chapter">AO strategies</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/parselog.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="parselog">
+<h1>parselog<a class="headerlink" href="#parselog" title="Permalink to this headline">¶</a></h1>
+<p>This module contains functionality for parsing the log file.
+Some functions have not been updated to how the log files that
+the full pipeline writes.</p>
+<div class="section" id="module-apercal.parselog">
+<span id="reference"></span><h2>Reference<a class="headerlink" href="#module-apercal.parselog" title="Permalink to this headline">¶</a></h2>
+<p>Parse apercal.log to extract timing info per step</p>
+<p>Usage: ./parselog.py apercal.log</p>
+<dl class="function">
+<dt id="apercal.parselog.parse_and_subtract">
+<code class="descclassname">apercal.parselog.</code><code class="descname">parse_and_subtract</code><span class="sig-paren">(</span><em>logline</em>, <em>prev_time</em>, <em>prev_step</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/apercal/parselog.html#parse_and_subtract"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.parselog.parse_and_subtract" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print time since previous step (or nothing for the first event)</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>logline (str): log line
+prev_time (datetime or None): previous time
+prev_step (str or None): previous step name</dd>
+<dt>Returns:</dt>
+<dd>tuple[datetime, msg]: time parsed from logline, step name, duration</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.parselog.parse_time">
+<code class="descclassname">apercal.parselog.</code><code class="descname">parse_time</code><span class="sig-paren">(</span><em>logline</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/apercal/parselog.html#parse_time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.parselog.parse_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract time from log line, returns None if it doesn’t start with a time.
+Ignores pymp lines</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>logline (str): log line, starting with a time (or not)</dd>
+<dt>Returns:</dt>
+<dd>datetime: Time of the log line, or None if it didn’t start with one</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="apercal.parselog.parselog">
+<code class="descclassname">apercal.parselog.</code><code class="descname">parselog</code><span class="sig-paren">(</span><em>logfilename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/apercal/parselog.html#parselog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.parselog.parselog" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse an apercal log and extract timing info</p>
+<dl class="docutils">
+<dt>Params:</dt>
+<dd>logfilename (str): Name of logfile</dd>
+<dt>Returns:</dt>
+<dd>List[Tuple[str, str]]: list of stepname, duration (both strings)</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="ao_strategies.html" title="AO strategies"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="exceptions.html" title="exceptions"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="other_modules.html" >Other modules</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Apercal Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4.
+    </div>
+  </body>
+</html>

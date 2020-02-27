@@ -1,0 +1,783 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>apercal.modules.mosaic &#8212; Apercal 2.5.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for apercal.modules.mosaic</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">apercal.modules.base</span> <span class="k">import</span> <span class="n">BaseModule</span>
+<span class="kn">from</span> <span class="nn">apercal.subs</span> <span class="k">import</span> <span class="n">setinit</span> <span class="k">as</span> <span class="n">subs_setinit</span>
+<span class="kn">from</span> <span class="nn">apercal.subs</span> <span class="k">import</span> <span class="n">managefiles</span> <span class="k">as</span> <span class="n">subs_managefiles</span>
+<span class="kn">from</span> <span class="nn">apercal.subs</span> <span class="k">import</span> <span class="n">readmirhead</span> <span class="k">as</span> <span class="n">subs_readmirhead</span>
+<span class="kn">from</span> <span class="nn">apercal.subs</span> <span class="k">import</span> <span class="n">imstats</span> <span class="k">as</span> <span class="n">subs_imstats</span>
+<span class="kn">from</span> <span class="nn">apercal.subs</span> <span class="k">import</span> <span class="n">convim</span> <span class="k">as</span> <span class="n">subs_convim</span>
+<span class="kn">from</span> <span class="nn">apercal.subs</span> <span class="k">import</span> <span class="n">param</span> <span class="k">as</span> <span class="n">subs_param</span>
+<span class="kn">from</span> <span class="nn">apercal.subs</span> <span class="k">import</span> <span class="n">combim</span> <span class="k">as</span> <span class="n">subs_combim</span>
+<span class="kn">from</span> <span class="nn">apercal.subs.param</span> <span class="k">import</span> <span class="n">get_param_def</span>
+<span class="kn">from</span> <span class="nn">apercal.libs</span> <span class="k">import</span> <span class="n">lib</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="mosaic"><a class="viewcode-back" href="../../../modules/mosaic.html#apercal.modules.mosaic.mosaic">[docs]</a><span class="k">class</span> <span class="nc">mosaic</span><span class="p">(</span><span class="n">BaseModule</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Mosaic class to produce mosaics of continuum, line and polarisation images.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">module_name</span> <span class="o">=</span> <span class="s1">&#39;MOSAIC&#39;</span>
+
+    <span class="n">mosdir</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">mosaic_continuum_mf</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">default</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">load_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_</span><span class="p">)</span>
+        <span class="n">subs_setinit</span><span class="o">.</span><span class="n">setinitdirs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">subs_setinit</span><span class="o">.</span><span class="n">setdatasetnamestomiriad</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="mosaic.go"><a class="viewcode-back" href="../../../modules/mosaic.html#apercal.modules.mosaic.mosaic.go">[docs]</a>    <span class="k">def</span> <span class="nf">go</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Executes the mosaicing process in the following order</span>
+<span class="sd">        mosaic_continuum_mf</span>
+<span class="sd">        mosaic_continuum_chunk</span>
+<span class="sd">        mosaic_continuum_line</span>
+<span class="sd">        mosaic_continuum_polarisationqu</span>
+<span class="sd">        mosaic_continuum_polarisationv</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting MOSAICKING &quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mosaic_continuum_mf</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;MOSAICKING done &quot;</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">get_target_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">beam</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">subdirification</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;../&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">selfcalsubdir</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span>
+
+
+<div class="viewcode-block" id="mosaic.mosaic_continuum_mf"><a class="viewcode-back" href="../../../modules/mosaic.html#apercal.modules.mosaic.mosaic.mosaic_continuum_mf">[docs]</a>    <span class="k">def</span> <span class="nf">mosaic_continuum_mf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Looks for all available stacked continuum images and mosaics them into one large image.&quot;&quot;&quot;</span>
+        <span class="n">subs_setinit</span><span class="o">.</span><span class="n">setinitdirs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">subs_setinit</span><span class="o">.</span><span class="n">setdatasetnamestomiriad</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="c1">##########################################################################################################</span>
+        <span class="c1"># Check if the parameter is already in the parameter file and load it otherwise create the needed arrays #</span>
+        <span class="c1">##########################################################################################################</span>
+
+        <span class="n">mosaiccontinuummfstatus</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;mosaic_continuum_mf_status&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="c1"># Status of the continuum mf mosaic</span>
+        <span class="n">mosaiccontinuummfcontinuumstatus</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;mosaic_continuum_mf_continuumstatus&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NBEAMS</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span> <span class="c1"># Status of the continuum imaging</span>
+        <span class="n">mosaiccontinuummfcopystatus</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;mosaic_continuum_mf_copystatus&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NBEAMS</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span> <span class="c1"># Status of the copy of the images</span>
+        <span class="n">mosaiccontinuummfconvolstatus</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;mosaic_continuum_mf_convolstatus&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NBEAMS</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span> <span class="c1"># Status of the convolved images</span>
+        <span class="n">mosaiccontinuummfcontinuumbeamparams</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;mosaic_continuum_mf_continuumbeamparams&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">NBEAMS</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">))</span> <span class="c1"># Beam sizes of the input images</span>
+        <span class="n">mosaiccontinuummfcontinuumimagestats</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;mosaic_continuum_mf_continuumimagestats&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">NBEAMS</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">))</span> <span class="c1"># Image statistics of the input images</span>
+
+
+        <span class="c1"># Start the mosaicking of the stacked continuum images</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mosaic_continuum_mf</span><span class="p">:</span>
+            <span class="n">subs_setinit</span><span class="o">.</span><span class="n">setinitdirs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="n">subs_setinit</span><span class="o">.</span><span class="n">setdatasetnamestomiriad</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="n">subs_managefiles</span><span class="o">.</span><span class="n">director</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;ch&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mosdir</span> <span class="o">+</span> <span class="s1">&#39;/continuum&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">mosaiccontinuummfstatus</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Mosaicking multi-frequency continuum images&#39;</span><span class="p">)</span>
+                <span class="c1"># Acquire the results and statistics from continuum mf imaging</span>
+                <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NBEAMS</span><span class="p">):</span>
+                    <span class="n">mosaiccontinuummfcontinuumstatus</span><span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;continuum_B&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_targetbeams_mf_status&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">mosaiccontinuummfcontinuumstatus</span><span class="p">[</span><span class="n">b</span><span class="p">]:</span>
+                        <span class="n">finalminor</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;continuum_B&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_targetbeams_mf_final_minorcycle&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                        <span class="n">subs_managefiles</span><span class="o">.</span><span class="n">director</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;cp&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.fits&#39;</span><span class="p">,</span> <span class="n">file_</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">basedir</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">contsubdir</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="s1">&#39;image_mf_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">finalminor</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.fits&#39;</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.fits&#39;</span><span class="p">):</span>
+                            <span class="n">mosaiccontinuummfcopystatus</span><span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+                            <span class="n">subs_convim</span><span class="o">.</span><span class="n">fitstomir</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.fits&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+                            <span class="n">subs_managefiles</span><span class="o">.</span><span class="n">director</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;rm&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.fits&#39;</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">mosaiccontinuummfcopystatus</span><span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; was not copied successfully!&#39;</span><span class="p">)</span>
+                <span class="c1"># Copy the images over to the mosaic directory</span>
+                <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NBEAMS</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">mosaiccontinuummfcontinuumstatus</span><span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="ow">and</span> <span class="n">mosaiccontinuummfcopystatus</span><span class="p">[</span><span class="n">b</span><span class="p">]:</span>
+                        <span class="c1"># Get the image beam parameters and the image statistics</span>
+                        <span class="n">mosaiccontinuummfcontinuumimagestats</span><span class="p">[</span><span class="n">b</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">subs_imstats</span><span class="o">.</span><span class="n">getimagestats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+                        <span class="n">mosaiccontinuummfcontinuumbeamparams</span><span class="p">[</span><span class="n">b</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">subs_readmirhead</span><span class="o">.</span><span class="n">getbeamimage</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Skipping Beam &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;! Continuum mf-imaging was not successful or continuum image not available!&#39;</span><span class="p">)</span>
+                <span class="c1"># Calculate the synthesised beam and reject outliers (algorithm needs to be updated)</span>
+                <span class="n">rejbeams</span><span class="p">,</span> <span class="n">beamparams</span> <span class="o">=</span> <span class="n">subs_combim</span><span class="o">.</span><span class="n">calc_synbeam</span><span class="p">(</span><span class="n">mosaiccontinuummfcontinuumbeamparams</span><span class="p">)</span>
+                <span class="c1"># Convolve all the images to the calculated beam</span>
+                <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NBEAMS</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">mosaiccontinuummfcontinuumstatus</span><span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="ow">and</span> <span class="n">mosaiccontinuummfcopystatus</span><span class="p">[</span><span class="n">b</span><span class="p">]:</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="n">convol</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">miriad</span><span class="p">(</span><span class="s1">&#39;convol&#39;</span><span class="p">)</span>
+                            <span class="n">convol</span><span class="o">.</span><span class="n">map</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+                            <span class="n">convol</span><span class="o">.</span><span class="n">fwhm</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">beamparams</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="s1">&#39;,&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">beamparams</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                            <span class="n">convol</span><span class="o">.</span><span class="n">pa</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">beamparams</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+                            <span class="n">convol</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="s1">&#39;final&#39;</span>
+                            <span class="n">convol</span><span class="o">.</span><span class="n">out</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_cv&#39;</span>
+                            <span class="n">convol</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
+                            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_cv&#39;</span><span class="p">):</span>
+                                <span class="n">mosaiccontinuummfconvolstatus</span><span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">mosaiccontinuummfconvolstatus</span><span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+                                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; could not be convolved to the calculated beam size! File not there!&#39;</span><span class="p">)</span>
+                        <span class="k">except</span><span class="p">:</span>
+                            <span class="n">mosaiccontinuummfconvolstatus</span><span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; could not be convolved to the calculated beam size!&#39;</span><span class="p">)</span>
+                <span class="c1"># Combine all the images using linmos (needs to be updated with proper primary beam model)</span>
+                <span class="n">linmosimages</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+                <span class="n">linmosrms</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+                <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NBEAMS</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">mosaiccontinuummfcontinuumstatus</span><span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="ow">and</span> <span class="n">mosaiccontinuummfcopystatus</span><span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="ow">and</span> <span class="n">mosaiccontinuummfconvolstatus</span><span class="p">[</span><span class="n">b</span><span class="p">]:</span>
+                        <span class="n">linmosimages</span> <span class="o">=</span> <span class="n">linmosimages</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_cv,&#39;</span>
+                        <span class="n">linmosrms</span> <span class="o">=</span> <span class="n">linmosrms</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">subs_imstats</span><span class="o">.</span><span class="n">getimagestats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_cv&#39;</span><span class="p">)[</span><span class="mi">2</span><span class="p">])</span> <span class="o">+</span> <span class="s1">&#39;,&#39;</span>
+                <span class="n">linmos</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">miriad</span><span class="p">(</span><span class="s1">&#39;linmos&#39;</span><span class="p">)</span>
+                <span class="n">linmos</span><span class="o">.</span><span class="n">in_</span> <span class="o">=</span> <span class="n">linmosimages</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+                <span class="n">linmos</span><span class="o">.</span><span class="n">rms</span> <span class="o">=</span> <span class="n">linmosrms</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+                <span class="n">linmos</span><span class="o">.</span><span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;.MS&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_mf&#39;</span>
+                <span class="n">linmos</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;.MS&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_mf&#39;</span><span class="p">):</span>
+                    <span class="n">mosaiccontinuummfstatus</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="n">subs_convim</span><span class="o">.</span><span class="n">mirtofits</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;.MS&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_mf&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;.MS&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_mf.fits&#39;</span><span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Mosaicking of multi-frequency image successful!&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">mosaiccontinuummfstatus</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Multi-freqeuncy mosaic was not created successfully!&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">mosaiccontinuummfstatus</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Multi-frequency continuum mosaic was already successfully created!&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Save the derived parameters to the parameter file</span>
+
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;mosaic_continuum_mf_status&#39;</span><span class="p">,</span> <span class="n">mosaiccontinuummfstatus</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;mosaic_continuum_mf_continuumstatus&#39;</span><span class="p">,</span> <span class="n">mosaiccontinuummfcontinuumstatus</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;mosaic_continuum_mf_copystatus&#39;</span><span class="p">,</span> <span class="n">mosaiccontinuummfcopystatus</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;mosaic_continuum_mf_convolstatus&#39;</span><span class="p">,</span> <span class="n">mosaiccontinuummfconvolstatus</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;mosaic_continuum_mf_continuumbeamparams&#39;</span><span class="p">,</span> <span class="n">mosaiccontinuummfcontinuumbeamparams</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;mosaic_continuum_mf_continuumimagestats&#39;</span><span class="p">,</span> <span class="n">mosaiccontinuummfcontinuumimagestats</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">showall</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">lib</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;MOSAIC&#39;</span><span class="p">,</span> <span class="n">showall</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="mosaic.reset"><a class="viewcode-back" href="../../../modules/mosaic.html#apercal.modules.mosaic.mosaic.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Function to reset the current step and remove all generated data. Be careful! Deletes all data generated in</span>
+<span class="sd">        this step!</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">subs_setinit</span><span class="o">.</span><span class="n">setinitdirs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">subs_setinit</span><span class="o">.</span><span class="n">setdatasetnamestomiriad</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mosdir</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Deleting all mosaicked data products.&#39;</span><span class="p">)</span>
+            <span class="n">subs_managefiles</span><span class="o">.</span><span class="n">director</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;ch&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">basedir</span><span class="p">)</span>
+            <span class="n">subs_managefiles</span><span class="o">.</span><span class="n">director</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;rm&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mosdir</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Deleting all parameter file entries for MOSAIC module&#39;</span><span class="p">)</span>
+            <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;mosaic_continuum_mf_status&#39;</span><span class="p">)</span>
+            <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;mosaic_continuum_mf_continuumstatus&#39;</span><span class="p">)</span>
+            <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;mosaic_continuum_mf_copystatus&#39;</span><span class="p">)</span>
+            <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;mosaic_continuum_mf_convolstatus&#39;</span><span class="p">)</span>
+            <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;mosaic_continuum_mf_continuumbeamparams&#39;</span><span class="p">)</span>
+            <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;mosaic_continuum_mf_continuumimagestats&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Mosaicked data products are not present!&#39;</span><span class="p">)</span></div></div>
+
+
+    <span class="c1"># Continuum mosaicing of the individual chunk images</span>
+    <span class="c1"># def mosaic_continuum_chunk_images(self):</span>
+    <span class="c1">#     &quot;&quot;&quot;Mosaics the continuum images from the different frequency chunks.&quot;&quot;&quot;</span>
+    <span class="c1">#     subs_setinit.setinitdirs(self)</span>
+    <span class="c1">#     subs_setinit.setdatasetnamestomiriad(self)</span>
+    <span class="c1">#     nch = len(subs_param.get_param(self, &#39;continuum_B00_stackstatus&#39;))</span>
+    <span class="c1">#</span>
+    <span class="c1">#     # Check if the parameter is already in the parameter file and load it otherwise create the needed arrays #</span>
+    <span class="c1">#</span>
+    <span class="c1">#     # Status of the input chunk images for the mosaicing</span>
+    <span class="c1">#     chunks_inputstatus = get_param_def(self, &#39;mosaic_continuum_chunks_beams_inputstatus&#39;, np.full((self.NBEAMS, nch),</span>
+    <span class="c1">#                                                                                                   False))</span>
+    <span class="c1">#</span>
+    <span class="c1">#     # Beam sizes of the input images</span>
+    <span class="c1">#     chunks_inputsynthbeamparams = get_param_def(self, &#39;mosaic_continuum_chunks_beams_inputsynthbeamparams&#39;,</span>
+    <span class="c1">#                                                 np.full((self.NBEAMS, nch, 3), np.nan))</span>
+    <span class="c1">#</span>
+    <span class="c1">#     # Image statistics of the input images</span>
+    <span class="c1">#     chunks_inputimagestats = get_param_def(self, &#39;mosaic_continuum_chunks_beams_inputimagestats&#39;,</span>
+    <span class="c1">#                                            np.full((self.NBEAMS, nch, 3), np.nan))</span>
+    <span class="c1">#</span>
+    <span class="c1">#     # RMS of the input chunk images</span>
+    <span class="c1">#     chunks_inputrms = get_param_def(self, &#39;mosaic_continuum_chunks_beams_inputrms&#39;,</span>
+    <span class="c1">#                                     np.full((self.NBEAMS, nch), np.nan))</span>
+    <span class="c1">#</span>
+    <span class="c1">#     # Was the image accepted based on the synthesised beam?</span>
+    <span class="c1">#     chunks_beamstatus = get_param_def(self, &#39;mosaic_continuum_chunks_beams_beamstatus&#39;, np.full((self.NBEAMS, nch),</span>
+    <span class="c1">#                                                                                                 False))</span>
+    <span class="c1">#</span>
+    <span class="c1">#     # Reason for rejecting an image</span>
+    <span class="c1">#     chunks_rejreason = get_param_def(self, &#39;mosaic_continuum_chunks_beams_rejreason&#39;,</span>
+    <span class="c1">#                                      np.full((self.NBEAMS, nch), &#39;&#39;, dtype=&#39;U50&#39;))</span>
+    <span class="c1">#</span>
+    <span class="c1">#     # Weights of the individual input images (normalised to one)</span>
+    <span class="c1">#     chunks_inputweights = get_param_def(self, &#39;mosaic_continuum_chunks_beams_inputweights&#39;, np.full((self.NBEAMS, nch),</span>
+    <span class="c1">#                                                                                                     np.nan))</span>
+    <span class="c1">#</span>
+    <span class="c1">#     # Synthesised beam parameters for the final continuum chunk mosaics</span>
+    <span class="c1">#     chunks_beams = get_param_def(self, &#39;mosaic_continuum_chunks_beams_synthbeamparams&#39;, np.full((nch, 3),</span>
+    <span class="c1">#                                                                                                 np.nan))</span>
+    <span class="c1">#</span>
+    <span class="c1">#     # Last executed clean iteration for the continuum images</span>
+    <span class="c1">#     chunks_iterations = get_param_def(self, &#39;mosaic_continuum_chunks_beams_iterations&#39;, np.full((self.NBEAMS, nch),</span>
+    <span class="c1">#                                                                                                 np.nan))</span>
+    <span class="c1">#</span>
+    <span class="c1">#     # Status of the input chunk images for the mosaicing</span>
+    <span class="c1">#     chunks_continuumstatus = get_param_def(self, &#39;mosaic_continuum_chunks_beams_continuumstatus&#39;,</span>
+    <span class="c1">#                                            np.full((self.NBEAMS, nch),</span>
+    <span class="c1">#                                                    False))</span>
+    <span class="c1">#</span>
+    <span class="c1">#     # Status of the copying of the individual chunk images</span>
+    <span class="c1">#     chunks_copystatus = get_param_def(self, &#39;mosaic_continuum_chunks_beams_copystatus&#39;,</span>
+    <span class="c1">#                                       np.full((self.NBEAMS, nch), False))</span>
+    <span class="c1">#</span>
+    <span class="c1">#     # Status of the convolution of the individual chunk images</span>
+    <span class="c1">#     chunks_convolstatus = get_param_def(self, &#39;mosaic_continuum_chunks_beams_convolstatus&#39;, np.full((self.NBEAMS, nch),</span>
+    <span class="c1">#                                                                                                     False))</span>
+    <span class="c1">#</span>
+    <span class="c1">#     # Status of the final chunk mosaics</span>
+    <span class="c1">#     chunks_imagestatus = get_param_def(self, &#39;mosaic_continuum_chunks_beams_imagestatus&#39;,</span>
+    <span class="c1">#                                        np.full(nch, False))</span>
+    <span class="c1">#</span>
+    <span class="c1">#     # Start the mosaicing of the individual chunks</span>
+    <span class="c1">#     if self.mosaic_continuum_chunks:</span>
+    <span class="c1">#         logger.info(&#39; Starting mosaicing of continuum images of individual frequency chunks&#39;)</span>
+    <span class="c1">#         subs_managefiles.director(self, &#39;ch&#39;, self.mosdir + &#39;/continuum&#39;)</span>
+    <span class="c1">#</span>
+    <span class="c1">#         for c in np.arange(nch):</span>
+    <span class="c1">#             # Check if a continuum image for a chunk is already present</span>
+    <span class="c1">#             if os.path.isfile(self.target.rstrip(&#39;.mir&#39;) + &#39;_contmosaic&#39; + &#39;_chunk_&#39; + str(c).zfill(2) + &#39;.fits&#39;):</span>
+    <span class="c1">#                 logger.warning(&#39; Continuum mosaic for chunk &#39; + str(c).zfill(2) + &#39; already present.&#39;)</span>
+    <span class="c1">#             else:</span>
+    <span class="c1">#</span>
+    <span class="c1">#                 # Check for which chunks continuum imaging was successful</span>
+    <span class="c1">#                 for b in np.arange(self.NBEAMS):  # Get the status from the continuum entry of the parameter file</span>
+    <span class="c1">#                     if subs_param.check_param(self, &#39;continuum_B&#39; + str(b).zfill(2) + &#39;_imagestatus&#39;):</span>
+    <span class="c1">#                         chunks_inputstatus[b, c] = \</span>
+    <span class="c1">#                             subs_param.get_param(self, &#39;continuum_B&#39; + str(b).zfill(2) + &#39;_imagestatus&#39;)[c, -1]</span>
+    <span class="c1">#                         if chunks_inputstatus[b, c]:</span>
+    <span class="c1">#                             chunks_continuumstatus[b, c] = True</span>
+    <span class="c1">#                             chunks_iterations[b, c] = \</span>
+    <span class="c1">#                                 subs_param.get_param(self, &#39;continuum_B&#39; + str(b).zfill(2) + &#39;_minoriterations&#39;)[c]</span>
+    <span class="c1">#                             logger.debug(</span>
+    <span class="c1">#                                 &#39;Continuum imaging for frequency chunk &#39; + str(c).zfill(2) + &#39; of beam &#39; + str(</span>
+    <span class="c1">#                                     b).zfill(2) + &#39; successful! Added in mosaicing! #&#39;)</span>
+    <span class="c1">#                         else:</span>
+    <span class="c1">#                             chunks_continuumstatus[b, c] = False</span>
+    <span class="c1">#                             chunks_iterations[b, c] = np.nan</span>
+    <span class="c1">#                             chunks_rejreason[b, c] = &#39;Continuum imaging not successful&#39;</span>
+    <span class="c1">#                             logger.warning(</span>
+    <span class="c1">#                                 &#39;Continuum imaging for frequency chunk &#39; + str(c).zfill(2) + &#39; of beam &#39; + str(</span>
+    <span class="c1">#                                     b).zfill(2) + &#39; not successful! Not added in mosaicing! #&#39;)</span>
+    <span class="c1">#                     else:</span>
+    <span class="c1">#                         chunks_rejreason[b, c] = &#39;No data available&#39;</span>
+    <span class="c1">#                         logger.warning(</span>
+    <span class="c1">#                             &#39;No data availbale for chunk &#39; + str(c).zfill(2) + &#39; of beam &#39; + str(b).zfill(</span>
+    <span class="c1">#                                 2) + &#39;! Not added in mosaicing! #&#39;)</span>
+    <span class="c1">#</span>
+    <span class="c1">#                 # Run through each chunk and copy the available images</span>
+    <span class="c1">#                 for b in np.arange(self.NBEAMS):</span>
+    <span class="c1">#                     if chunks_inputstatus[b, c]:</span>
+    <span class="c1">#                         subs_managefiles.director(self, &#39;cp&#39;, &#39;C&#39; + str(c).zfill(2) + &#39;B&#39; + str(b).zfill(2),</span>
+    <span class="c1">#                                                   self.basedir + str(b).zfill(</span>
+    <span class="c1">#                                                       2) + &#39;/&#39; + self.contsubdir + &#39;/&#39; + &#39;stack&#39; + &#39;/&#39; + str(</span>
+    <span class="c1">#                                                       c).zfill(2) + &#39;/&#39; + &#39;image_&#39; + str(</span>
+    <span class="c1">#                                                       int(chunks_iterations[b, c])).zfill(2))</span>
+    <span class="c1">#                         if os.path.isdir(&#39;C&#39; + str(c).zfill(2) + &#39;B&#39; + str(b).zfill(2)):</span>
+    <span class="c1">#                             chunks_copystatus[b, c] = True</span>
+    <span class="c1">#                             logger.debug(&#39;Successfully copyied image of frequency chunk &#39; + str(c).zfill(</span>
+    <span class="c1">#                                 2) + &#39; of beam &#39; + str(b).zfill(2) + &#39;! #&#39;)</span>
+    <span class="c1">#                         else:</span>
+    <span class="c1">#                             chunks_inputstatus[b, c] = False</span>
+    <span class="c1">#                             chunks_copystatus[b, c] = False</span>
+    <span class="c1">#                             chunks_rejreason[b, c] = &#39;Copy of continuum image not successful&#39;</span>
+    <span class="c1">#                             logger.warning(</span>
+    <span class="c1">#                                 &#39;Copying image of frequency chunk &#39; + str(c).zfill(2) + &#39; of beam &#39; + str(b).zfill(</span>
+    <span class="c1">#                                     2) + &#39; failed! #&#39;)</span>
+    <span class="c1">#</span>
+    <span class="c1">#                 # Get the parameters for each image</span>
+    <span class="c1">#                 for b in np.arange(self.NBEAMS):</span>
+    <span class="c1">#                     if chunks_inputstatus[b, c]:</span>
+    <span class="c1">#                         chunks_inputsynthbeamparams[b, c, :] = subs_readmirhead.getbeamimage(</span>
+    <span class="c1">#                             &#39;C&#39; + str(c).zfill(2) + &#39;B&#39; + str(b).zfill(2))</span>
+    <span class="c1">#                         chunks_inputimagestats[b, c, :] = subs_imstats.getimagestats(self, &#39;C&#39; + str(c).zfill(</span>
+    <span class="c1">#                             2) + &#39;B&#39; + str(b).zfill(2))</span>
+    <span class="c1">#                         chunks_inputrms[b, c] = \</span>
+    <span class="c1">#                             subs_param.get_param(self, &#39;continuum_B&#39; + str(b).zfill(2) + &#39;_residualstats&#39;)[</span>
+    <span class="c1">#                                 c, int(chunks_iterations[b, c]), 2]</span>
+    <span class="c1">#                     else:</span>
+    <span class="c1">#                         pass</span>
+    <span class="c1">#</span>
+    <span class="c1">#                 # Calculate the common beam for each frequency chunk and make a list of accepted and rejected</span>
+    <span class="c1">#                 # beams and update the parameters for the parameter file</span>
+    <span class="c1">#                 avbeamlist = np.where(chunks_inputstatus[:, c])[0]</span>
+    <span class="c1">#                 notavbeamlist = np.where(not chunks_inputstatus[:, c])[0]</span>
+    <span class="c1">#                 avbeams = [str(x).zfill(2) for x in list(avbeamlist)]</span>
+    <span class="c1">#                 notavbeams = [str(x).zfill(2) for x in list(notavbeamlist)]</span>
+    <span class="c1">#                 beamarray = chunks_inputsynthbeamparams[avbeamlist, c, :]</span>
+    <span class="c1">#                 rejbeams, chunks_beams[c, :] = subs_combim.calc_synbeam(avbeams, beamarray)</span>
+    <span class="c1">#                 chunks_beamstatus[:, c] = chunks_inputstatus[:, c]</span>
+    <span class="c1">#                 if len(rejbeams) == 0:</span>
+    <span class="c1">#                     logger.debug(</span>
+    <span class="c1">#                         &#39;No beams are rejected due to synthesised beam parameters for chunk &#39; + str(c).zfill(</span>
+    <span class="c1">#                             2) + &#39;! #&#39;)</span>
+    <span class="c1">#                 else:</span>
+    <span class="c1">#                     for rb in rejbeams:</span>
+    <span class="c1">#                         avbeams.remove(rb)</span>
+    <span class="c1">#                         notavbeams.extend(rb)</span>
+    <span class="c1">#                         logger.warning(&#39;Stacked image of beam &#39; + str(rb).zfill(2) + &#39; for chunk &#39; + str(c).zfill(</span>
+    <span class="c1">#                             2) + &#39; was rejected due to synthesised beam parameters! #&#39;)</span>
+    <span class="c1">#                         chunks_inputstatus[int(rb), c] = False</span>
+    <span class="c1">#                         chunks_beamstatus[int(rb), c] = False</span>
+    <span class="c1">#                         chunks_rejreason[int(rb), c] = &#39;Synthesised beam parameters&#39;</span>
+    <span class="c1">#                 sorted(avbeams)</span>
+    <span class="c1">#                 sorted(notavbeams)</span>
+    <span class="c1">#</span>
+    <span class="c1">#                 logger.info(&#39;Final beam size for chunk &#39; + str(c).zfill(2) + &#39; is fwhm = &#39; + str(</span>
+    <span class="c1">#                     chunks_beams[c, 0]) + &#39; arcsec , &#39; + str(chunks_beams[c, 1]) + &#39; arcsec, pa = &#39; + str(</span>
+    <span class="c1">#                     chunks_beams[c, 2]) + &#39; deg&#39;)</span>
+    <span class="c1">#</span>
+    <span class="c1">#                 # Convol the individual frequency chunk images to the same synthesised beam</span>
+    <span class="c1">#                 for b in np.arange(self.NBEAMS):</span>
+    <span class="c1">#                     if chunks_inputstatus[b, c]:</span>
+    <span class="c1">#                         convol = lib.miriad(&#39;convol&#39;)</span>
+    <span class="c1">#                         convol.map = &#39;C&#39; + str(c).zfill(2) + &#39;B&#39; + str(b).zfill(2)</span>
+    <span class="c1">#                         convol.fwhm = str(chunks_beams[c, 0]) + &#39;,&#39; + str(chunks_beams[c, 1])</span>
+    <span class="c1">#                         convol.pa = str(chunks_beams[c, 2])</span>
+    <span class="c1">#                         convol.out = &#39;c&#39; + &#39;C&#39; + str(c).zfill(2) + &#39;B&#39; + str(b).zfill(2)</span>
+    <span class="c1">#                         convol.options = &#39;final&#39;</span>
+    <span class="c1">#                         convol.go()</span>
+    <span class="c1">#                         if os.path.isdir(&#39;c&#39; + &#39;C&#39; + str(c).zfill(2) + &#39;B&#39; + str(b).zfill(</span>
+    <span class="c1">#                                 2)):  # Check if the convolved image was created</span>
+    <span class="c1">#                             convmin, convmax, convstd = subs_imstats.getimagestats(self, &#39;c&#39; + &#39;C&#39; + str(c).zfill(</span>
+    <span class="c1">#                                 2) + &#39;B&#39; + str(b).zfill(2))</span>
+    <span class="c1">#                             # Check if the image is valid</span>
+    <span class="c1">#                             if convstd != np.nan and convmax &lt;= 10000 and convmin &gt;= -10:</span>
+    <span class="c1">#                                 chunks_convolstatus[b, c] = True</span>
+    <span class="c1">#                                 logger.debug(</span>
+    <span class="c1">#                                     &#39;Convolution of image of beam &#39; + str(b).zfill(2) + &#39; for chunk &#39; + str(</span>
+    <span class="c1">#                                         c).zfill(2) + &#39; successful! #&#39;)</span>
+    <span class="c1">#                             else:</span>
+    <span class="c1">#                                 chunks_inputstatus[b, c] = False</span>
+    <span class="c1">#                                 chunks_convolstatus[b, c] = False</span>
+    <span class="c1">#                                 chunks_rejreason[b, c] = &#39;Convolved image not valid&#39;</span>
+    <span class="c1">#                                 logger.warning(</span>
+    <span class="c1">#                                     &#39;Convolved image of beam &#39; + str(b).zfill(2) + &#39; for chunk &#39; + str(c).zfill(</span>
+    <span class="c1">#                                         2) + &#39; is empty or shows high values! #&#39;)</span>
+    <span class="c1">#                         else:</span>
+    <span class="c1">#                             chunks_inputstatus[b, c] = False</span>
+    <span class="c1">#                             chunks_convolstatus[b, c] = False</span>
+    <span class="c1">#                             chunks_rejreason[b, c] = &#39;Convolved image not created&#39;</span>
+    <span class="c1">#                             logger.warning(</span>
+    <span class="c1">#                                 &#39;Convolved image of beam &#39; + str(b).zfill(2) + &#39; for chunk &#39; + str(c).zfill(</span>
+    <span class="c1">#                                     2) + &#39; could not successfully be created! #&#39;)</span>
+    <span class="c1">#                     else:</span>
+    <span class="c1">#                         pass</span>
+    <span class="c1">#</span>
+    <span class="c1">#                 # Finally combine the images using linmos</span>
+    <span class="c1">#                 rmsrej = chunks_inputrms[:, c]</span>
+    <span class="c1">#                 convolimages = &#39;&#39;</span>
+    <span class="c1">#                 rms = &#39;&#39;</span>
+    <span class="c1">#                 for b in np.arange(self.NBEAMS):</span>
+    <span class="c1">#                     if chunks_inputstatus[b, c]:</span>
+    <span class="c1">#                         convolimages = convolimages + &#39;c&#39; + &#39;C&#39; + str(c).zfill(2) + &#39;B&#39; + str(b).zfill(2) + &#39;,&#39;</span>
+    <span class="c1">#                         rms = rms + str(chunks_inputrms[b, c]) + &#39;,&#39;</span>
+    <span class="c1">#                     else:</span>
+    <span class="c1">#                         rmsrej[b] = np.nan</span>
+    <span class="c1">#                 chunks_inputweights[:, c] = ((1.0 / np.square(rmsrej)) / np.nansum(</span>
+    <span class="c1">#                     1.0 / np.square(rmsrej))) / np.nanmean(</span>
+    <span class="c1">#                     ((1.0 / np.square(rmsrej)) / np.nansum(1.0 / np.square(rmsrej))))</span>
+    <span class="c1">#                 linmos = lib.miriad(&#39;linmos&#39;)</span>
+    <span class="c1">#                 linmos.in_ = convolimages.rstrip(&#39;,&#39;)</span>
+    <span class="c1">#                 linmos.rms = rms.rstrip(&#39;,&#39;)</span>
+    <span class="c1">#                 linmos.out = self.target.rstrip(&#39;.mir&#39;) + &#39;_contmosaic&#39; + &#39;_chunk_&#39; + str(c).zfill(2)</span>
+    <span class="c1">#                 linmos.go()</span>
+    <span class="c1">#</span>
+    <span class="c1">#                 # Check if the final images are there, are valid and convert them to fits</span>
+    <span class="c1">#                 if os.path.isdir(self.target.rstrip(&#39;.mir&#39;) + &#39;_contmosaic&#39; + &#39;_chunk_&#39; + str(c).zfill(2)):</span>
+    <span class="c1">#                     logger.debug(&#39;Continuum mosaic of chunk &#39; + str(c).zfill(2) + &#39; created successfully! #&#39;)</span>
+    <span class="c1">#                     contmosmin, contmosmax, contmosstd = subs_imstats.getimagestats(self, self.target.rstrip(</span>
+    <span class="c1">#                         &#39;.mir&#39;) + &#39;_contmosaic&#39; + &#39;_chunk_&#39; + str(c).zfill(2))</span>
+    <span class="c1">#</span>
+    <span class="c1">#                     # Check if the image is valid</span>
+    <span class="c1">#                     if contmosstd != np.nan and contmosmax &lt;= 10000 and contmosmin &gt;= -10:</span>
+    <span class="c1">#                         logger.debug(&#39;Continuum mosaic of chunk &#39; + str(c).zfill(2) + &#39; is valid! #&#39;)</span>
+    <span class="c1">#                         subs_managefiles.imagetofits(self,</span>
+    <span class="c1">#                                                      self.target.rstrip(&#39;.mir&#39;) + &#39;_contmosaic&#39; + &#39;_chunk_&#39; + str(</span>
+    <span class="c1">#                                                          c).zfill(2),</span>
+    <span class="c1">#                                                      self.target.rstrip(&#39;.mir&#39;) + &#39;_contmosaic&#39; + &#39;_chunk_&#39; + str(</span>
+    <span class="c1">#                                                          c).zfill(2) + &#39;.fits&#39;)</span>
+    <span class="c1">#                         chunks_imagestatus[c] = True</span>
+    <span class="c1">#                         for b in np.arange(self.NBEAMS):  # Remove the obsolete files</span>
+    <span class="c1">#                             subs_managefiles.director(self, &#39;rm&#39;,</span>
+    <span class="c1">#                                                       self.target.rstrip(&#39;.mir&#39;) + &#39;_contmosaic&#39; + &#39;_chunk_&#39; + str(</span>
+    <span class="c1">#                                                           c).zfill(2))</span>
+    <span class="c1">#                             subs_managefiles.director(self, &#39;rm&#39;, &#39;C&#39; + str(c).zfill(2) + &#39;B&#39; + str(b).zfill(2))</span>
+    <span class="c1">#                             subs_managefiles.director(self, &#39;rm&#39;,</span>
+    <span class="c1">#                                                       &#39;c&#39; + &#39;C&#39; + str(c).zfill(2) + &#39;B&#39; + str(b).zfill(2))</span>
+    <span class="c1">#                         logger.debug(&#39;Removed all obsolete files #&#39;)</span>
+    <span class="c1">#                         logger.info(&#39; Mosaicing of continuum images successful for chunk &#39; + str(c).zfill(2) + &#39;!&#39;)</span>
+    <span class="c1">#                     else:</span>
+    <span class="c1">#                         chunks_imagestatus[c] = False</span>
+    <span class="c1">#                         logger.warning(</span>
+    <span class="c1">#                             &#39;Final continuum mosaic is empty or shows high values for chunk &#39; + str(c).zfill(</span>
+    <span class="c1">#                                 2) + &#39;! #&#39;)</span>
+    <span class="c1">#                 else:</span>
+    <span class="c1">#                     chunks_imagestatus[c] = False</span>
+    <span class="c1">#                     logger.warning(</span>
+    <span class="c1">#                         &#39;Final continuum mosaic could not be created for chunk &#39; + str(c).zfill(2) + &#39;! #&#39;)</span>
+    <span class="c1">#</span>
+    <span class="c1">#         logger.info(&#39; Mosaicing of continuum images for individual frequency chunks done&#39;)</span>
+    <span class="c1">#</span>
+    <span class="c1">#         # Save the derived parameters to the parameter file</span>
+    <span class="c1">#</span>
+    <span class="c1">#         subs_param.add_param(self, &#39;mosaic_continuum_chunks_beams_inputstatus&#39;, chunks_inputstatus)</span>
+    <span class="c1">#         subs_param.add_param(self, &#39;mosaic_continuum_chunks_beams_inputsynthbeamparams&#39;,</span>
+    <span class="c1">#                              chunks_inputsynthbeamparams)</span>
+    <span class="c1">#         subs_param.add_param(self, &#39;mosaic_continuum_chunks_beams_inputimagestats&#39;, chunks_inputimagestats)</span>
+    <span class="c1">#         subs_param.add_param(self, &#39;mosaic_continuum_chunks_beams_inputrms&#39;, chunks_inputrms)</span>
+    <span class="c1">#         subs_param.add_param(self, &#39;mosaic_continuum_chunks_beams_inputweights&#39;, chunks_inputweights)</span>
+    <span class="c1">#         subs_param.add_param(self, &#39;mosaic_continuum_chunks_beams_iterations&#39;, chunks_iterations)</span>
+    <span class="c1">#         subs_param.add_param(self, &#39;mosaic_continuum_chunks_beams_rejreason&#39;, chunks_rejreason)</span>
+    <span class="c1">#         subs_param.add_param(self, &#39;mosaic_continuum_chunks_beams_synthbeamparams&#39;, chunks_beams)</span>
+    <span class="c1">#         subs_param.add_param(self, &#39;mosaic_continuum_chunks_beams_imagestatus&#39;, chunks_imagestatus)</span>
+    <span class="c1">#         subs_param.add_param(self, &#39;mosaic_continuum_chunks_beams_continuumstatus&#39;, chunks_continuumstatus)</span>
+    <span class="c1">#         subs_param.add_param(self, &#39;mosaic_continuum_chunks_beams_copystatus&#39;, chunks_copystatus)</span>
+    <span class="c1">#         subs_param.add_param(self, &#39;mosaic_continuum_chunks_beams_convolstatus&#39;, chunks_convolstatus)</span>
+    <span class="c1">#         subs_param.add_param(self, &#39;mosaic_continuum_chunks_beams_beamstatus&#39;, chunks_beamstatus)</span>
+    <span class="c1">#</span>
+    <span class="c1"># # Mosaicing of line cubes #</span>
+    <span class="c1">#</span>
+    <span class="c1"># def mosaic_line_cubes(self):</span>
+    <span class="c1">#     &quot;&quot;&quot;Creates a mosaicked line cube of all the individual line cubes from the different beams&quot;&quot;&quot;</span>
+    <span class="c1">#     subs_setinit.setinitdirs(self)</span>
+    <span class="c1">#     subs_setinit.setdatasetnamestomiriad(self)</span>
+    <span class="c1">#     if self.mosaic_line:</span>
+    <span class="c1">#         logger.error(&#39; Mosaicing of line cubes not implemented yet&#39;)</span>
+    <span class="c1">#</span>
+    <span class="c1"># def mosaic_stokes_images(self):</span>
+    <span class="c1">#     &quot;&quot;&quot;Creates a mosaic of all the Stokes Q- and U-cubes from the different beams&quot;&quot;&quot;</span>
+    <span class="c1">#     subs_setinit.setinitdirs(self)</span>
+    <span class="c1">#     subs_setinit.setdatasetnamestomiriad(self)</span>
+    <span class="c1">#     if self.mosaic_polarisation:</span>
+    <span class="c1">#         logger.error(&#39; Mosaicing of Stokes cubes not implemented yet&#39;)</span>
+    <span class="c1">#</span>
+    <span class="c1"># def summary_continuumstacked(self):</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#     Creates a general summary of the parameters in the parameter file generated during the mosaicing of the</span>
+    <span class="c1">#     tacked continuum images. A more detailed summary can be generated by the detailed_summary_continuumstacked</span>
+    <span class="c1">#     function.</span>
+    <span class="c1">#</span>
+    <span class="c1">#     returns (DataFrame): A python pandas dataframe object, which can be looked at with the style function in the</span>
+    <span class="c1">#                        notebook</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#</span>
+    <span class="c1">#     # Load the parameters from the parameter file</span>
+    <span class="c1">#</span>
+    <span class="c1">#     IS = subs_param.get_param(self, &#39;mosaic_continuum_stacked_beams_inputstatus&#39;)</span>
+    <span class="c1">#     WG = subs_param.get_param(self, &#39;mosaic_continuum_stacked_beams_inputweights&#39;)</span>
+    <span class="c1">#     RR = subs_param.get_param(self, &#39;mosaic_continuum_stacked_beams_rejreason&#39;)</span>
+    <span class="c1">#</span>
+    <span class="c1">#     # Create the data frame</span>
+    <span class="c1">#</span>
+    <span class="c1">#     beam_indices = range(self.NBEAMS)</span>
+    <span class="c1">#     beam_indices = [str(item).zfill(2) for item in beam_indices]</span>
+    <span class="c1">#</span>
+    <span class="c1">#     df_is = pd.DataFrame(np.ndarray.flatten(IS), index=beam_indices, columns=[&#39;Image accepted?&#39;])</span>
+    <span class="c1">#     df_wg = pd.DataFrame(np.ndarray.flatten(WG), index=beam_indices, columns=[&#39;Weight&#39;])</span>
+    <span class="c1">#     df_rr = pd.DataFrame(np.ndarray.flatten(RR), index=beam_indices, columns=[&#39;Reason&#39;])</span>
+    <span class="c1">#</span>
+    <span class="c1">#     df = pd.concat([df_is, df_wg, df_rr], axis=1)</span>
+    <span class="c1">#</span>
+    <span class="c1">#     return df</span>
+    <span class="c1">#</span>
+    <span class="c1"># def detailed_summary_continuumstacked(self):</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#     Creates a detailed summary of the parameters in the parameter file generated during the mosaicing of the</span>
+    <span class="c1">#     stacked continuum images.</span>
+    <span class="c1">#</span>
+    <span class="c1">#     returns (DataFrame): A python pandas dataframe object, which can be looked at with the style function in the</span>
+    <span class="c1">#                          notebook</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#</span>
+    <span class="c1">#     # Load the parameters from the parameter file</span>
+    <span class="c1">#</span>
+    <span class="c1">#     CS = subs_param.get_param(self, &#39;mosaic_continuum_stacked_beams_continuumstatus&#39;)</span>
+    <span class="c1">#     CP = subs_param.get_param(self, &#39;mosaic_continuum_stacked_beams_copystatus&#39;)</span>
+    <span class="c1">#     SBEAMS = subs_param.get_param(self, &#39;mosaic_continuum_stacked_beams_inputsynthbeamparams&#39;)</span>
+    <span class="c1">#     BS = subs_param.get_param(self, &#39;mosaic_continuum_stacked_beams_beamstatus&#39;)</span>
+    <span class="c1">#     CV = subs_param.get_param(self, &#39;mosaic_continuum_stacked_beams_convolstatus&#39;)</span>
+    <span class="c1">#     WG = subs_param.get_param(self, &#39;mosaic_continuum_stacked_beams_inputweights&#39;)</span>
+    <span class="c1">#     RMS = subs_param.get_param(self, &#39;mosaic_continuum_stacked_beams_inputrms&#39;)</span>
+    <span class="c1">#     IS = subs_param.get_param(self, &#39;mosaic_continuum_stacked_beams_inputstatus&#39;)</span>
+    <span class="c1">#</span>
+    <span class="c1">#     # Create the data frame</span>
+    <span class="c1">#</span>
+    <span class="c1">#     beam_indices = range(self.NBEAMS)</span>
+    <span class="c1">#     beam_indices = [str(item).zfill(2) for item in beam_indices]</span>
+    <span class="c1">#</span>
+    <span class="c1">#     df_cs = pd.DataFrame(np.ndarray.flatten(CS), index=beam_indices, columns=[&#39;Continuum calibration?&#39;])</span>
+    <span class="c1">#     df_cp = pd.DataFrame(np.ndarray.flatten(CP), index=beam_indices, columns=[&#39;Copy successful?&#39;])</span>
+    <span class="c1">#     df_bmaj = pd.DataFrame(np.around(np.ndarray.flatten(SBEAMS[:, 0]), decimals=2), index=beam_indices,</span>
+    <span class="c1">#                            columns=[&#39;Bmaj [&quot;]&#39;])</span>
+    <span class="c1">#     df_bmin = pd.DataFrame(np.around(np.ndarray.flatten(SBEAMS[:, 1]), decimals=2), index=beam_indices,</span>
+    <span class="c1">#                            columns=[&#39;Bmin [&quot;]&#39;])</span>
+    <span class="c1">#     df_bpa = pd.DataFrame(np.around(np.ndarray.flatten(SBEAMS[:, 2]), decimals=2), index=beam_indices,</span>
+    <span class="c1">#                           columns=[&#39;Bpa [deg]&#39;])</span>
+    <span class="c1">#     df_bs = pd.DataFrame(np.ndarray.flatten(BS), index=beam_indices, columns=[&#39;Beam parameters?&#39;])</span>
+    <span class="c1">#     df_cv = pd.DataFrame(np.ndarray.flatten(CV), index=beam_indices, columns=[&#39;Convol successful?&#39;])</span>
+    <span class="c1">#     df_wg = pd.DataFrame(np.ndarray.flatten(WG), index=beam_indices, columns=[&#39;Weight&#39;])</span>
+    <span class="c1">#     df_rms = pd.DataFrame(np.ndarray.flatten(RMS), index=beam_indices, columns=[&#39;Residual RMS&#39;])</span>
+    <span class="c1">#     df_is = pd.DataFrame(np.ndarray.flatten(IS), index=beam_indices, columns=[&#39;Image accepted?&#39;])</span>
+    <span class="c1">#</span>
+    <span class="c1">#     df = pd.concat([df_cs, df_cp, df_bmaj, df_bmin, df_bpa, df_bs, df_cv, df_wg, df_rms, df_is], axis=1)</span>
+    <span class="c1">#</span>
+    <span class="c1">#     return df</span>
+    <span class="c1">#</span>
+    <span class="c1"># def summary_continuumchunks(self):</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#     Creates a general summary of the parameters in the parameter file generated during the mosaicing of the chunk</span>
+    <span class="c1">#     continuum images. A more detailed summary can be generated by the detailed_summary_continuumchunks function</span>
+    <span class="c1">#</span>
+    <span class="c1">#     returns (DataFrame): A python pandas dataframe object, which can be looked at with the style function in the</span>
+    <span class="c1">#                          notebook</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#</span>
+    <span class="c1">#     # Load the parameters from the parameter file</span>
+    <span class="c1">#</span>
+    <span class="c1">#     IS = subs_param.get_param(self, &#39;mosaic_continuum_chunks_beams_imagestatus&#39;)</span>
+    <span class="c1">#     SBEAMS = subs_param.get_param(self, &#39;mosaic_continuum_chunks_beams_synthbeamparams&#39;)</span>
+    <span class="c1">#     C = subs_param.get_param(self, &#39;mosaic_continuum_chunks_beams_inputstatus&#39;)</span>
+    <span class="c1">#</span>
+    <span class="c1">#     # Create the data frame</span>
+    <span class="c1">#</span>
+    <span class="c1">#     chunks = len(subs_param.get_param(self, &#39;mosaic_continuum_chunks_beams_imagestatus&#39;))</span>
+    <span class="c1">#     chunk_indices = range(chunks)</span>
+    <span class="c1">#     chunk_indices = [str(item).zfill(2) for item in chunk_indices]</span>
+    <span class="c1">#</span>
+    <span class="c1">#     COM = np.full(chunks, &#39;Beam(s) &#39;, dtype=&#39;U150&#39;)  # Comment for mosaicing</span>
+    <span class="c1">#     for c in range(chunks):</span>
+    <span class="c1">#         for b in range(self.NBEAMS):</span>
+    <span class="c1">#             if C[b, c]:</span>
+    <span class="c1">#                 pass</span>
+    <span class="c1">#             else:</span>
+    <span class="c1">#                 COM[c] = COM[c] + str(b).zfill(2) + &#39;,&#39;</span>
+    <span class="c1">#         COM[c] = COM[c].rstrip(&#39;,&#39;) + &#39; not accepted&#39;</span>
+    <span class="c1">#</span>
+    <span class="c1">#     df_is = pd.DataFrame(np.ndarray.flatten(IS), index=chunk_indices, columns=[&#39;Mosaic successful?&#39;])</span>
+    <span class="c1">#     df_bmaj = pd.DataFrame(np.around(np.ndarray.flatten(SBEAMS[:, 0]), decimals=2), index=chunk_indices,</span>
+    <span class="c1">#                            columns=[&#39;Bmaj [&quot;]&#39;])</span>
+    <span class="c1">#     df_bmin = pd.DataFrame(np.around(np.ndarray.flatten(SBEAMS[:, 1]), decimals=2), index=chunk_indices,</span>
+    <span class="c1">#                            columns=[&#39;Bmin [&quot;]&#39;])</span>
+    <span class="c1">#     df_bpa = pd.DataFrame(np.around(np.ndarray.flatten(SBEAMS[:, 2]), decimals=2), index=chunk_indices,</span>
+    <span class="c1">#                           columns=[&#39;Bpa [deg]&#39;])</span>
+    <span class="c1">#     df_c = pd.DataFrame(np.ndarray.flatten(COM), index=chunk_indices, columns=[&#39;Comments&#39;])</span>
+    <span class="c1">#</span>
+    <span class="c1">#     df = pd.concat([df_is, df_bmaj, df_bmin, df_bpa, df_c], axis=1)</span>
+    <span class="c1">#</span>
+    <span class="c1">#     return df</span>
+    <span class="c1">#</span>
+    <span class="c1"># def detailed_summary_continuumchunks(self, chunk=None):</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#     Creates a detailed summary of the parameters in the parameter file generated during the mosaicing of the chunk</span>
+    <span class="c1">#     continuum images.</span>
+    <span class="c1">#</span>
+    <span class="c1">#     returns (DataFrame): A python pandas dataframe object, which can be looked at with the style function in the</span>
+    <span class="c1">#                          notebook</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#</span>
+    <span class="c1">#     # Load the parameters from the parameter file</span>
+    <span class="c1">#</span>
+    <span class="c1">#     CS = subs_param.get_param(self, &#39;mosaic_continuum_chunks_beams_continuumstatus&#39;)</span>
+    <span class="c1">#     CP = subs_param.get_param(self, &#39;mosaic_continuum_chunks_beams_copystatus&#39;)</span>
+    <span class="c1">#     SBEAMS = subs_param.get_param(self, &#39;mosaic_continuum_chunks_beams_inputsynthbeamparams&#39;)</span>
+    <span class="c1">#     BMAJ = SBEAMS[:, :, 0]</span>
+    <span class="c1">#     BMIN = SBEAMS[:, :, 1]</span>
+    <span class="c1">#     BPA = SBEAMS[:, :, 2]</span>
+    <span class="c1">#     BS = subs_param.get_param(self, &#39;mosaic_continuum_chunks_beams_beamstatus&#39;)</span>
+    <span class="c1">#     CV = subs_param.get_param(self, &#39;mosaic_continuum_chunks_beams_convolstatus&#39;)</span>
+    <span class="c1">#     WG = subs_param.get_param(self, &#39;mosaic_continuum_chunks_beams_inputweights&#39;)</span>
+    <span class="c1">#     RMS = subs_param.get_param(self, &#39;mosaic_continuum_chunks_beams_inputrms&#39;)</span>
+    <span class="c1">#     IS = subs_param.get_param(self, &#39;mosaic_continuum_chunks_beams_inputstatus&#39;)</span>
+    <span class="c1">#     RR = subs_param.get_param(self, &#39;mosaic_continuum_chunks_beams_rejreason&#39;)</span>
+    <span class="c1">#</span>
+    <span class="c1">#     # Create the data frame</span>
+    <span class="c1">#</span>
+    <span class="c1">#     if chunk is None:</span>
+    <span class="c1">#         chunks = len(subs_param.get_param(self, &#39;mosaic_continuum_chunks_beams_imagestatus&#39;))</span>
+    <span class="c1">#         chunk_indices = range(chunks)</span>
+    <span class="c1">#         chunk_indices = [str(item).zfill(2) for item in chunk_indices]</span>
+    <span class="c1">#     else:</span>
+    <span class="c1">#         chunk_indices = [str(chunk).zfill(2)]</span>
+    <span class="c1">#     beam_indices = range(self.NBEAMS)</span>
+    <span class="c1">#     beam_indices = [str(item).zfill(2) for item in beam_indices]</span>
+    <span class="c1">#</span>
+    <span class="c1">#     chunk_beam_indices = pd.MultiIndex.from_product([chunk_indices, beam_indices], names=[&#39;Chunk&#39;, &#39;Beam&#39;])</span>
+    <span class="c1">#</span>
+    <span class="c1">#     if chunk is None:</span>
+    <span class="c1">#         df_cs = pd.DataFrame(np.ndarray.flatten(np.swapaxes(CS, 0, 1)), index=chunk_beam_indices,</span>
+    <span class="c1">#                              columns=[&#39;Continuum calibration?&#39;])</span>
+    <span class="c1">#         df_cp = pd.DataFrame(np.ndarray.flatten(np.swapaxes(CP, 0, 1)), index=chunk_beam_indices,</span>
+    <span class="c1">#                              columns=[&#39;Copy successful?&#39;])</span>
+    <span class="c1">#         df_bmaj = pd.DataFrame(np.around(np.ndarray.flatten(np.swapaxes(BMAJ, 0, 1)), decimals=2),</span>
+    <span class="c1">#                                index=chunk_beam_indices, columns=[&#39;Bmaj [&quot;]&#39;])</span>
+    <span class="c1">#         df_bmin = pd.DataFrame(np.around(np.ndarray.flatten(np.swapaxes(BMIN, 0, 1)), decimals=2),</span>
+    <span class="c1">#                                index=chunk_beam_indices, columns=[&#39;Bmin [&quot;]&#39;])</span>
+    <span class="c1">#         df_bpa = pd.DataFrame(np.around(np.ndarray.flatten(np.swapaxes(BPA, 0, 1)), decimals=2),</span>
+    <span class="c1">#                               index=chunk_beam_indices, columns=[&#39;Bpa [deg]&#39;])</span>
+    <span class="c1">#         df_bs = pd.DataFrame(np.ndarray.flatten(np.swapaxes(BS, 0, 1)), index=chunk_beam_indices,</span>
+    <span class="c1">#                              columns=[&#39;Beam parameters?&#39;])</span>
+    <span class="c1">#         df_cv = pd.DataFrame(np.ndarray.flatten(np.swapaxes(CV, 0, 1)), index=chunk_beam_indices,</span>
+    <span class="c1">#                              columns=[&#39;Convol successful?&#39;])</span>
+    <span class="c1">#         df_wg = pd.DataFrame(np.ndarray.flatten(np.swapaxes(WG, 0, 1)), index=chunk_beam_indices,</span>
+    <span class="c1">#                              columns=[&#39;Weight&#39;])</span>
+    <span class="c1">#         df_rms = pd.DataFrame(np.ndarray.flatten(np.swapaxes(RMS, 0, 1)), index=chunk_beam_indices,</span>
+    <span class="c1">#                               columns=[&#39;Residual RMS&#39;])</span>
+    <span class="c1">#         df_is = pd.DataFrame(np.ndarray.flatten(np.swapaxes(IS, 0, 1)), index=chunk_beam_indices,</span>
+    <span class="c1">#                              columns=[&#39;Image accepted?&#39;])</span>
+    <span class="c1">#         df_rr = pd.DataFrame(np.ndarray.flatten(np.swapaxes(RR, 0, 1)), index=chunk_beam_indices,</span>
+    <span class="c1">#                              columns=[&#39;Reason&#39;])</span>
+    <span class="c1">#     else:</span>
+    <span class="c1">#         df_cs = pd.DataFrame(np.ndarray.flatten(CS[:, chunk]), index=chunk_beam_indices,</span>
+    <span class="c1">#                              columns=[&#39;Continuum calibration?&#39;])</span>
+    <span class="c1">#         df_cp = pd.DataFrame(np.ndarray.flatten(CP[:, chunk]), index=chunk_beam_indices,</span>
+    <span class="c1">#                              columns=[&#39;Copy successful?&#39;])</span>
+    <span class="c1">#         df_bmaj = pd.DataFrame(np.around(np.ndarray.flatten(BMAJ[:, chunk]), decimals=2), index=chunk_beam_indices,</span>
+    <span class="c1">#                                columns=[&#39;Bmaj [&quot;]&#39;])</span>
+    <span class="c1">#         df_bmin = pd.DataFrame(np.around(np.ndarray.flatten(BMIN[:, chunk]), decimals=2), index=chunk_beam_indices,</span>
+    <span class="c1">#                                columns=[&#39;Bmin [&quot;]&#39;])</span>
+    <span class="c1">#         df_bpa = pd.DataFrame(np.around(np.ndarray.flatten(BPA[:, chunk]), decimals=2), index=chunk_beam_indices,</span>
+    <span class="c1">#                               columns=[&#39;Bpa [deg]&#39;])</span>
+    <span class="c1">#         df_bs = pd.DataFrame(np.ndarray.flatten(BS[:, chunk]), index=chunk_beam_indices,</span>
+    <span class="c1">#                              columns=[&#39;Beam parameters?&#39;])</span>
+    <span class="c1">#         df_cv = pd.DataFrame(np.ndarray.flatten(CV[:, chunk]), index=chunk_beam_indices,</span>
+    <span class="c1">#                              columns=[&#39;Convol successful?&#39;])</span>
+    <span class="c1">#         df_wg = pd.DataFrame(np.ndarray.flatten(WG[:, chunk]), index=chunk_beam_indices, columns=[&#39;Weight&#39;])</span>
+    <span class="c1">#         df_rms = pd.DataFrame(np.ndarray.flatten(RMS[:, chunk]), index=chunk_beam_indices, columns=[&#39;Residual RMS&#39;])</span>
+    <span class="c1">#         df_is = pd.DataFrame(np.ndarray.flatten(IS[:, chunk]), index=chunk_beam_indices,</span>
+    <span class="c1">#                              columns=[&#39;Image accepted?&#39;])</span>
+    <span class="c1">#         df_rr = pd.DataFrame(np.ndarray.flatten(RR[:, chunk]), index=chunk_beam_indices, columns=[&#39;Reason&#39;])</span>
+    <span class="c1">#</span>
+    <span class="c1">#     df = pd.concat([df_cs, df_cp, df_bmaj, df_bmin, df_bpa, df_bs, df_cv, df_wg, df_rms, df_is, df_rr], axis=1)</span>
+    <span class="c1">#</span>
+    <span class="c1">#     return df</span>
+    <span class="c1">#</span>
+    <span class="c1"># def reset(self):</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#     Function to reset the current step and remove all generated data. Be careful! Deletes all data generated in</span>
+    <span class="c1">#     this step!</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#     subs_setinit.setinitdirs(self)</span>
+    <span class="c1">#     subs_setinit.setdatasetnamestomiriad(self)</span>
+    <span class="c1">#     logger.warning(&#39; Deleting all mosaicked data products.&#39;)</span>
+    <span class="c1">#     subs_managefiles.director(self, &#39;ch&#39;, self.basedir)</span>
+    <span class="c1">#     subs_managefiles.director(self, &#39;rm&#39;, self.mosdir)</span>
+    <span class="c1">#     logger.warning(&#39; Deleteing all parameter file entries for MOSAIC module&#39;)</span>
+    <span class="c1">#     subs_param.del_param(self, &#39;mosaic_continuum_stacked_beams_inputstatus&#39;)</span>
+    <span class="c1">#     subs_param.del_param(self, &#39;mosaic_continuum_stacked_beams_inputsynthbeamparams&#39;)</span>
+    <span class="c1">#     subs_param.del_param(self, &#39;mosaic_continuum_stacked_beams_inputimagestats&#39;)</span>
+    <span class="c1">#     subs_param.del_param(self, &#39;mosaic_continuum_stacked_beams_inputrms&#39;)</span>
+    <span class="c1">#     subs_param.del_param(self, &#39;mosaic_continuum_stacked_beams_inputweights&#39;)</span>
+    <span class="c1">#     subs_param.del_param(self, &#39;mosaic_continuum_stacked_beams_rejreason&#39;)</span>
+    <span class="c1">#     subs_param.del_param(self, &#39;mosaic_continuum_stacked_beams_synthbeamparams&#39;)</span>
+    <span class="c1">#     subs_param.del_param(self, &#39;mosaic_continuum_stacked_beams_imagestatus&#39;)</span>
+    <span class="c1">#     subs_param.del_param(self, &#39;mosaic_continuum_stacked_beams_continuumstatus&#39;)</span>
+    <span class="c1">#     subs_param.del_param(self, &#39;mosaic_continuum_stacked_beams_copystatus&#39;)</span>
+    <span class="c1">#     subs_param.del_param(self, &#39;mosaic_continuum_stacked_beams_convolstatus&#39;)</span>
+    <span class="c1">#     subs_param.del_param(self, &#39;mosaic_continuum_stacked_beams_beamstatus&#39;)</span>
+    <span class="c1">#     subs_param.del_param(self, &#39;mosaic_continuum_chunks_beams_inputstatus&#39;)</span>
+    <span class="c1">#     subs_param.del_param(self, &#39;mosaic_continuum_chunks_beams_inputsynthbeamparams&#39;)</span>
+    <span class="c1">#     subs_param.del_param(self, &#39;mosaic_continuum_chunks_beams_inputimagestats&#39;)</span>
+    <span class="c1">#     subs_param.del_param(self, &#39;mosaic_continuum_chunks_beams_inputrms&#39;)</span>
+    <span class="c1">#     subs_param.del_param(self, &#39;mosaic_continuum_chunks_beams_inputweights&#39;)</span>
+    <span class="c1">#     subs_param.del_param(self, &#39;mosaic_continuum_chunks_beams_iterations&#39;)</span>
+    <span class="c1">#     subs_param.del_param(self, &#39;mosaic_continuum_chunks_beams_rejreason&#39;)</span>
+    <span class="c1">#     subs_param.del_param(self, &#39;mosaic_continuum_chunks_beams_synthbeamparams&#39;)</span>
+    <span class="c1">#     subs_param.del_param(self, &#39;mosaic_continuum_chunks_beams_imagestatus&#39;)</span>
+    <span class="c1">#     subs_param.del_param(self, &#39;mosaic_continuum_chunks_beams_continuumstatus&#39;)</span>
+    <span class="c1">#     subs_param.del_param(self, &#39;mosaic_continuum_chunks_beams_copystatus&#39;)</span>
+    <span class="c1">#     subs_param.del_param(self, &#39;mosaic_continuum_chunks_beams_convolstatus&#39;)</span>
+    <span class="c1">#     subs_param.del_param(self, &#39;mosaic_continuum_chunks_beams_beamstatus&#39;)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Apercal Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4.
+    </div>
+  </body>
+</html>

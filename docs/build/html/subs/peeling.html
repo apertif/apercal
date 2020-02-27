@@ -1,0 +1,136 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>peeling &#8212; Apercal 2.5.0 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="qa" href="qa.html" />
+    <link rel="prev" title="pb" href="pb.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="qa.html" title="qa"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="pb.html" title="pb"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../subs_modules.html" accesskey="U">Supporting modules</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">peeling</a><ul>
+<li><a class="reference internal" href="#module-apercal.subs.peeling">Reference</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="pb.html"
+                        title="previous chapter">pb</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="qa.html"
+                        title="next chapter">qa</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/subs/peeling.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="peeling">
+<h1>peeling<a class="headerlink" href="#peeling" title="Permalink to this headline">¶</a></h1>
+<p>This module contains functionality for peeling. Still in development</p>
+<div class="section" id="module-apercal.subs.peeling">
+<span id="reference"></span><h2>Reference<a class="headerlink" href="#module-apercal.subs.peeling" title="Permalink to this headline">¶</a></h2>
+<p>Functions to check if a strong source outside of the orimary beam needs to be peeled</p>
+<dl class="function">
+<dt id="apercal.subs.peeling.check_lsm">
+<code class="descclassname">apercal.subs.peeling.</code><code class="descname">check_lsm</code><span class="sig-paren">(</span><em>infile</em>, <em>cutoff</em>, <em>r1</em>, <em>r2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/apercal/subs/peeling.html#check_lsm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apercal.subs.peeling.check_lsm" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>checkpeeling: module to check if a source has an apparant flux density in the NVSS-catalogue higher than the</dt>
+<dd>cutoff between r1 and r2 from the pointing centre.</dd>
+</dl>
+<p>infile: The input file to calibrate on. Needed for coordinate extraction and freqeuncy information
+cutoff: apparent flux density to consider a source as to be peeled
+r1: radius of primary beam (sources to ignore)
+r2: query radius for NVSS. Only sources between r1 and r2 from the pointing centre will be considered for peeling</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="qa.html" title="qa"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="pb.html" title="pb"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../subs_modules.html" >Supporting modules</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Apercal Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4.
+    </div>
+  </body>
+</html>

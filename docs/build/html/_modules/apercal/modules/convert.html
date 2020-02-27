@@ -1,0 +1,612 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>apercal.modules.convert &#8212; Apercal 2.5.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for apercal.modules.convert</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">os</span> <span class="k">import</span> <span class="n">path</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">apercal.modules.base</span> <span class="k">import</span> <span class="n">BaseModule</span>
+<span class="kn">from</span> <span class="nn">apercal.subs</span> <span class="k">import</span> <span class="n">setinit</span> <span class="k">as</span> <span class="n">subs_setinit</span>
+<span class="kn">from</span> <span class="nn">apercal.subs</span> <span class="k">import</span> <span class="n">managefiles</span> <span class="k">as</span> <span class="n">subs_managefiles</span>
+<span class="kn">from</span> <span class="nn">apercal.subs.param</span> <span class="k">import</span> <span class="n">get_param_def</span>
+<span class="kn">from</span> <span class="nn">apercal.subs</span> <span class="k">import</span> <span class="n">param</span> <span class="k">as</span> <span class="n">subs_param</span>
+<span class="kn">from</span> <span class="nn">apercal.subs</span> <span class="k">import</span> <span class="n">msutils</span> <span class="k">as</span> <span class="n">subs_msutils</span>
+<span class="kn">from</span> <span class="nn">apercal.libs</span> <span class="k">import</span> <span class="n">lib</span>
+<span class="kn">from</span> <span class="nn">apercal.exceptions</span> <span class="k">import</span> <span class="n">ApercalException</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">exportuvfits_cmd</span> <span class="o">=</span> <span class="s1">&#39;exportuvfits(vis=&quot;</span><span class="si">{vis}</span><span class="s1">&quot;, fitsfile=&quot;</span><span class="si">{fits}</span><span class="s1">&quot;,datacolumn=&quot;</span><span class="si">{datacolumn}</span><span class="s1">&quot;, &#39;</span> \
+                  <span class="s1">&#39;combinespw=True, padwithflags=True, multisource=True, writestation=True)&#39;</span>
+
+
+<span class="k">def</span> <span class="nf">mspath_to_fitspath</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">ms</span><span class="p">,</span> <span class="n">ext</span><span class="o">=</span><span class="s1">&#39;UVFITS&#39;</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">ms</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;MS&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="n">ext</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="convert"><a class="viewcode-back" href="../../../modules/convert.html#apercal.modules.convert.convert">[docs]</a><span class="k">class</span> <span class="nc">convert</span><span class="p">(</span><span class="n">BaseModule</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class to convert data from MS-format into UVFITS, and from UVFITS into MIRIAD format. Resulting datasets will</span>
+<span class="sd">    have the endings .MS, .UVFITS, and .mir.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">module_name</span> <span class="o">=</span> <span class="s1">&#39;CONVERT&#39;</span>
+
+    <span class="n">convert_fluxcal</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># Convert the flux calibrator dataset</span>
+    <span class="n">convert_polcal</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># Convert the polarised calibrator dataset</span>
+    <span class="n">convert_target</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># Convert the target beam dataset</span>
+    <span class="n">convert_removeuvfits</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># Remove the UVFITS files</span>
+    <span class="n">convert_removems</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># Remove measurement sets</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">default</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">load_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_</span><span class="p">)</span>
+        <span class="n">subs_setinit</span><span class="o">.</span><span class="n">setinitdirs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_crosscalsubdir_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">beam</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">beam</span><span class="p">:</span>
+            <span class="n">beam</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">subdirification</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basedir</span><span class="p">,</span> <span class="n">beam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">crosscalsubdir</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+
+<div class="viewcode-block" id="convert.go"><a class="viewcode-back" href="../../../modules/convert.html#apercal.modules.convert.convert.go">[docs]</a>    <span class="k">def</span> <span class="nf">go</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Executes the whole conversion from MS format to MIRIAD format of the flux calibrator, polarisation calibrator</span>
+<span class="sd">         and target dataset in the following order:</span>
+<span class="sd">        ms2uvfits</span>
+<span class="sd">        uvfits2miriad</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: FILE CONVERSION started&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ms2miriad</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: FILE CONVERSION done&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="convert.ms2miriad"><a class="viewcode-back" href="../../../modules/convert.html#apercal.modules.convert.convert.ms2miriad">[docs]</a>    <span class="k">def</span> <span class="nf">ms2miriad</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Converts the data from MS to MIRIAD format via UVFITS using drivecasa. Does it for the flux calibrator,</span>
+<span class="sd">        polarisation calibrator, and target field independently.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">subs_setinit</span><span class="o">.</span><span class="n">setinitdirs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="n">ccalbeam</span> <span class="o">=</span> <span class="s1">&#39;ccal_B&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">beam</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">cbeam</span> <span class="o">=</span> <span class="s1">&#39;convert_B&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">beam</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="c1"># Read the parameters from crosscal</span>
+        <span class="c1"># and check before doing anything</span>
+
+        <span class="c1"># Status of the solution transfer for the target, flux calibrator and polarisation calibrator</span>
+        <span class="n">ccal_targetbeams_transfer</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">ccalbeam</span> <span class="o">+</span> <span class="s1">&#39;_targetbeams_transfer&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="n">ccal_calibration_calibrator_finished</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">ccalbeam</span> <span class="o">+</span> <span class="s1">&#39;_calibration_calibrator_finished&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ccal_calibration_calibrator_finished</span><span class="p">:</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="s2">&quot;Beam </span><span class="si">{}</span><span class="s2">: Will not convert files to miriad format because cross-calibration failed.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">beam</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">ApercalException</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">ccal_targetbeams_transfer</span><span class="p">:</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="s2">&quot;Beam </span><span class="si">{}</span><span class="s2">: Will not convert files to miriad format because cross-calibration solutions were not successfully applied to target.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">beam</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">ApercalException</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+
+        <span class="c1"># Create the parameters for the parameter file for converting from MS to UVFITS format</span>
+
+        <span class="c1"># Flux calibrator MS dataset available?</span>
+        <span class="n">convertfluxcalmsavailable</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_fluxcal_MSavailable&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Polarised calibrator MS dataset available?</span>
+        <span class="n">convertpolcalmsavailable</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_polcal_MSavailable&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Target beam MS dataset available?</span>
+        <span class="n">converttargetbeamsmsavailable</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_targetbeams_MSavailable&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Flux calibrator MS dataset converted to UVFITS?</span>
+        <span class="n">convertfluxcalms2uvfits</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_fluxcal_MS2UVFITS&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Polarised calibrator MS dataset converted to UVFITS?</span>
+        <span class="n">convertpolcalms2uvfits</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_polcal_MS2UVFITS&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Target beam MS dataset converted to UVFITS?</span>
+        <span class="n">converttargetbeamsms2uvfits</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_targetbeams_MS2UVFITS&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Flux calibrator UVFITS dataset available?</span>
+        <span class="n">convertfluxcaluvfitsavailable</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_fluxcal_UVFITSavailable&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Polarised calibrator UVFITS dataset available?</span>
+        <span class="n">convertpolcaluvfitsavailable</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_polcal_UVFITSavailable&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Target beam UVFITS dataset available?</span>
+        <span class="n">converttargetbeamsuvfitsavailable</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_targetbeams_UVFITSavailable&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Flux calibrator UVFITS dataset converted to MIRIAD?</span>
+        <span class="n">convertfluxcaluvfits2miriad</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_fluxcal_UVFITS2MIRIAD&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Polarised calibrator UVFITS dataset converted to MIRIAD?</span>
+        <span class="n">convertpolcaluvfits2miriad</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_polcal_UVFITS2MIRIAD&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Target beam UVFITS dataset converted to MIRIAD?</span>
+        <span class="n">converttargetbeamsuvfits2miriad</span> <span class="o">=</span> <span class="n">get_param_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_targetbeams_UVFITS2MIRIAD&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Check which datasets are available in MS format #</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluxcal</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="n">convertfluxcalmsavailable</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_fluxcal_path</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Flux calibrator dataset not specified. Cannot convert flux calibrator!&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">polcal</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="n">convertpolcalmsavailable</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_polcal_path</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Polarised calibrator dataset not specified. Cannot convert polarised calibrator!&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="n">converttargetbeamsmsavailable</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_target_path</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Target beam dataset not specified. Cannot convert target beams!&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Save the derived parameters for the availability to the parameter file</span>
+
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_fluxcal_MSavailable&#39;</span><span class="p">,</span> <span class="n">convertfluxcalmsavailable</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_polcal_MSavailable&#39;</span><span class="p">,</span> <span class="n">convertpolcalmsavailable</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_targetbeams_MSavailable&#39;</span><span class="p">,</span> <span class="n">converttargetbeamsmsavailable</span><span class="p">)</span>
+
+        <span class="c1"># Convert the flux calibrator</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert_fluxcal</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluxcal</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">convertfluxcaluvfits2miriad</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">convertfluxcalmsavailable</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Converting flux calibrator dataset from MS to UVFITS format.&#39;</span><span class="p">)</span>
+                        <span class="n">subs_managefiles</span><span class="o">.</span><span class="n">director</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;mk&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_crosscalsubdir_path</span><span class="p">(),</span>
+                                                  <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                        <span class="n">fluxcal_ms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_fluxcal_path</span><span class="p">()</span>
+
+                        <span class="c1"># convert only if corrected data column exists</span>
+                        <span class="k">if</span> <span class="n">subs_msutils</span><span class="o">.</span><span class="n">has_correcteddata</span><span class="p">(</span><span class="n">fluxcal_ms</span><span class="p">):</span>
+                            <span class="n">datacolumn</span> <span class="o">=</span> <span class="s2">&quot;corrected&quot;</span>
+
+                            <span class="n">fluxcal_fits</span> <span class="o">=</span> <span class="n">mspath_to_fitspath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_crosscalsubdir_path</span><span class="p">(),</span> <span class="n">fluxcal_ms</span><span class="p">)</span>
+
+                            <span class="n">fc_convert</span> <span class="o">=</span> <span class="n">exportuvfits_cmd</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">vis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_fluxcal_path</span><span class="p">(),</span> <span class="n">fits</span><span class="o">=</span><span class="n">fluxcal_fits</span><span class="p">,</span> <span class="n">datacolumn</span><span class="o">=</span><span class="n">datacolumn</span><span class="p">)</span>
+
+                            <span class="n">lib</span><span class="o">.</span><span class="n">run_casa</span><span class="p">([</span><span class="n">fc_convert</span><span class="p">],</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">3600</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fluxcal_fits</span><span class="p">):</span>
+                                <span class="n">convertfluxcalms2uvfits</span> <span class="o">=</span> <span class="kc">True</span>
+                                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Converted flux calibrator dataset from MS to UVFITS format!&#39;</span><span class="p">)</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">convertfluxcalms2uvfits</span> <span class="o">=</span> <span class="kc">False</span>
+                                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Could not convert flux calibrator dataset </span><span class="si">{}</span><span class="s1"> &#39;</span>
+                                               <span class="s1">&#39;from MS to UVFITS format!&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fluxcal_fits</span><span class="p">))</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Flux calibrator does not have a corrected_data column! Not &#39;</span>
+                                           <span class="s1">&#39;converting flux calibrator dataset!&#39;</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Flux calibrator dataset </span><span class="si">{}</span><span class="s1"> not available!&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_fluxcal_path</span><span class="p">()))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Flux calibrator dataset was already converted from MS to UVFITS format&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Flux calibrator dataset not specified. Cannot convert flux calibrator!&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Not converting flux calibrator dataset!&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Convert the polarised calibrator</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert_polcal</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">polcal</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">convertpolcaluvfits2miriad</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">convertpolcalmsavailable</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Converting polarised calibrator dataset from MS to UVFITS format.&#39;</span><span class="p">)</span>
+                        <span class="n">subs_managefiles</span><span class="o">.</span><span class="n">director</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;mk&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_crosscalsubdir_path</span><span class="p">(),</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                        <span class="n">polcal_ms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_polcal_path</span><span class="p">()</span>
+
+                        <span class="c1"># convert only if corrected data column exists</span>
+                        <span class="k">if</span> <span class="n">subs_msutils</span><span class="o">.</span><span class="n">has_correcteddata</span><span class="p">(</span><span class="n">polcal_ms</span><span class="p">):</span>
+                            <span class="n">datacolumn</span> <span class="o">=</span> <span class="s2">&quot;corrected&quot;</span>
+
+                            <span class="n">polcal_fits</span> <span class="o">=</span> <span class="n">mspath_to_fitspath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_crosscalsubdir_path</span><span class="p">(),</span> <span class="n">polcal_ms</span><span class="p">)</span>
+
+                            <span class="n">pc_convert</span> <span class="o">=</span> <span class="n">exportuvfits_cmd</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">vis</span><span class="o">=</span><span class="n">polcal_ms</span><span class="p">,</span> <span class="n">fits</span><span class="o">=</span><span class="n">polcal_fits</span><span class="p">,</span> <span class="n">datacolumn</span><span class="o">=</span><span class="n">datacolumn</span><span class="p">)</span>
+
+                            <span class="n">lib</span><span class="o">.</span><span class="n">run_casa</span><span class="p">([</span><span class="n">pc_convert</span><span class="p">],</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">3600</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">polcal_fits</span><span class="p">):</span>
+                                <span class="n">convertpolcalms2uvfits</span> <span class="o">=</span> <span class="kc">True</span>
+                                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Converted polarised calibrator dataset from MS to UVFITS format!&#39;</span><span class="p">)</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">convertpolcalms2uvfits</span> <span class="o">=</span> <span class="kc">False</span>
+                                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Could not convert polarised calibrator dataset from MS to UVFITS format!&#39;</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Polarised calibrator does not have a corrected_data column! Not &#39;</span>
+                                           <span class="s1">&#39;converting polarised calibrator dataset!&#39;</span><span class="p">)</span>
+
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Polarised calibrator dataset not available!&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Polarised calibrator dataset was already converted from MS to UVFITS format&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Polarised calibrator dataset not specified. Cannot convert polarised calibrator!&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Not converting polarised calibrator dataset!&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Convert the target beams</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert_target</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Converting target beam dataset from MS to UVFITS format.&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">converttargetbeamsuvfits2miriad</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">converttargetbeamsmsavailable</span><span class="p">:</span>
+                        <span class="n">subs_managefiles</span><span class="o">.</span><span class="n">director</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;mk&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_crosscalsubdir_path</span><span class="p">(),</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+                        <span class="n">target_ms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_target_path</span><span class="p">()</span>
+                        <span class="n">target_fits</span> <span class="o">=</span> <span class="n">mspath_to_fitspath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_crosscalsubdir_path</span><span class="p">(),</span> <span class="n">target_ms</span><span class="p">)</span>
+
+                        <span class="c1"># only convert if corrected data column exists</span>
+                        <span class="k">if</span> <span class="n">subs_msutils</span><span class="o">.</span><span class="n">has_correcteddata</span><span class="p">(</span><span class="n">target_ms</span><span class="p">):</span>
+                            <span class="n">datacolumn</span> <span class="o">=</span> <span class="s2">&quot;corrected&quot;</span>
+
+                            <span class="n">tg_convert</span> <span class="o">=</span> <span class="n">exportuvfits_cmd</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">vis</span><span class="o">=</span><span class="n">target_ms</span><span class="p">,</span> <span class="n">fits</span><span class="o">=</span><span class="n">target_fits</span><span class="p">,</span> <span class="n">datacolumn</span><span class="o">=</span><span class="n">datacolumn</span><span class="p">)</span>
+
+                            <span class="n">lib</span><span class="o">.</span><span class="n">run_casa</span><span class="p">([</span><span class="n">tg_convert</span><span class="p">],</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">target_fits</span><span class="p">):</span>
+                                <span class="n">converttargetbeamsms2uvfits</span> <span class="o">=</span> <span class="kc">True</span>
+                                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Converted dataset of target beam  from MS to UVFITS format!&#39;</span><span class="p">)</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">converttargetbeamsms2uvfits</span> <span class="o">=</span> <span class="kc">False</span>
+                                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Could not convert dataset for target beam from MS to UVFITS format!&#39;</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Target beam dataset does not have a corrected_data column! Not &#39;</span>
+                                           <span class="s1">&#39;converting target beam dataset!&#39;</span><span class="p">)</span>
+
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Target beam dataset not available!&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Target beam dataset was already &#39;</span>
+                                <span class="s1">&#39;converted from MS to UVFITS format&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Target beam dataset not specified. Cannot convert target beam dataset!&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Not converting target beam dataset!&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Save the derived parameters for the MS to UVFITS conversion to the parameter file</span>
+
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_fluxcal_MS2UVFITS&#39;</span><span class="p">,</span> <span class="n">convertfluxcalms2uvfits</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_polcal_MS2UVFITS&#39;</span><span class="p">,</span> <span class="n">convertpolcalms2uvfits</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_targetbeams_MS2UVFITS&#39;</span><span class="p">,</span> <span class="n">converttargetbeamsms2uvfits</span><span class="p">)</span>
+
+        <span class="c1"># Check which datasets are available in UVFITS format #</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluxcal</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="n">crosscal_fluxcal</span> <span class="o">=</span> <span class="n">mspath_to_fitspath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_crosscalsubdir_path</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluxcal</span><span class="p">)</span>
+            <span class="n">convertfluxcaluvfitsavailable</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">crosscal_fluxcal</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Flux calibrator dataset not specified. Cannot convert flux calibrator!&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">polcal</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="n">crosscal_polcal</span> <span class="o">=</span> <span class="n">mspath_to_fitspath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_crosscalsubdir_path</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">polcal</span><span class="p">)</span>
+            <span class="n">convertpolcaluvfitsavailable</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">crosscal_polcal</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Polarised calibrator dataset not specified. Cannot convert polarised calibrator!&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="n">crosscal_target</span> <span class="o">=</span> <span class="n">mspath_to_fitspath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_crosscalsubdir_path</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+            <span class="n">converttargetbeamsuvfitsavailable</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">crosscal_target</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Target beam dataset not specified. Cannot convert target beam!&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Save the derived parameters for the availability to the parameter file</span>
+
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_fluxcal_UVFITSavailable&#39;</span><span class="p">,</span> <span class="n">convertfluxcaluvfitsavailable</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_polcal_UVFITSavailable&#39;</span><span class="p">,</span> <span class="n">convertpolcaluvfitsavailable</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_targetbeams_UVFITSavailable&#39;</span><span class="p">,</span> <span class="n">converttargetbeamsuvfitsavailable</span><span class="p">)</span>
+
+        <span class="c1"># Convert the available UVFITS-datasets to MIRIAD format #</span>
+
+        <span class="c1"># Convert the flux calibrator</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert_fluxcal</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluxcal</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">convertfluxcaluvfits2miriad</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">convertfluxcaluvfitsavailable</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Converting flux calibrator dataset from UVFITS to MIRIAD format.&#39;</span><span class="p">)</span>
+                        <span class="n">subs_managefiles</span><span class="o">.</span><span class="n">director</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;ch&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_crosscalsubdir_path</span><span class="p">(),</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                        <span class="n">fits</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">miriad</span><span class="p">(</span><span class="s1">&#39;fits&#39;</span><span class="p">)</span>
+                        <span class="n">fits</span><span class="o">.</span><span class="n">op</span> <span class="o">=</span> <span class="s1">&#39;uvin&#39;</span>
+                        <span class="n">fits</span><span class="o">.</span><span class="n">in_</span> <span class="o">=</span> <span class="n">mspath_to_fitspath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_crosscalsubdir_path</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluxcal</span><span class="p">)</span>
+                        <span class="n">fits</span><span class="o">.</span><span class="n">out</span> <span class="o">=</span> <span class="n">mspath_to_fitspath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_crosscalsubdir_path</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluxcal</span><span class="p">,</span> <span class="n">ext</span><span class="o">=</span><span class="s1">&#39;mir&#39;</span><span class="p">)</span>
+                        <span class="n">fits</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
+                        <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">fits</span><span class="o">.</span><span class="n">out</span><span class="p">):</span>
+                            <span class="n">convertfluxcaluvfits2miriad</span> <span class="o">=</span> <span class="kc">True</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Converted flux calibrator dataset from UVFITS to MIRIAD format!&#39;</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">convertfluxcaluvfits2miriad</span> <span class="o">=</span> <span class="kc">False</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Could not convert flux calibrator dataset </span><span class="si">{}</span><span class="s1"> from UVFITS to &#39;</span>
+                                           <span class="s1">&#39;MIRIAD format!&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fits</span><span class="o">.</span><span class="n">out</span><span class="p">))</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Flux calibrator dataset not available!&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Flux calibrator dataset was already converted from UVFITS to MIRIAD format&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Flux calibrator dataset not specified. Cannot convert flux calibrator!&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Not converting flux calibrator dataset!&#39;</span><span class="p">)</span>
+        <span class="c1"># Convert the polarised calibrator</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert_polcal</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">polcal</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">convertpolcaluvfits2miriad</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">convertpolcaluvfitsavailable</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Converting polarised calibrator dataset from UVFITS to MIRIAD format.&#39;</span><span class="p">)</span>
+                        <span class="n">subs_managefiles</span><span class="o">.</span><span class="n">director</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;ch&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_crosscalsubdir_path</span><span class="p">(),</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                        <span class="n">fits</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">miriad</span><span class="p">(</span><span class="s1">&#39;fits&#39;</span><span class="p">)</span>
+                        <span class="n">fits</span><span class="o">.</span><span class="n">op</span> <span class="o">=</span> <span class="s1">&#39;uvin&#39;</span>
+                        <span class="n">fits</span><span class="o">.</span><span class="n">in_</span> <span class="o">=</span> <span class="n">mspath_to_fitspath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_crosscalsubdir_path</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">polcal</span><span class="p">)</span>
+                        <span class="n">fits</span><span class="o">.</span><span class="n">out</span> <span class="o">=</span> <span class="n">mspath_to_fitspath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_crosscalsubdir_path</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">polcal</span><span class="p">,</span> <span class="n">ext</span><span class="o">=</span><span class="s1">&#39;mir&#39;</span><span class="p">)</span>
+                        <span class="n">fits</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
+                        <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">fits</span><span class="o">.</span><span class="n">out</span><span class="p">):</span>
+                            <span class="n">convertpolcaluvfits2miriad</span> <span class="o">=</span> <span class="kc">True</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Converted polarised calibrator dataset from UVFITS to MIRIAD format!&#39;</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">convertpolcaluvfits2miriad</span> <span class="o">=</span> <span class="kc">False</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                                <span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Could not convert polarised calibrator dataset from UVFITS to MIRIAD format!&#39;</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Polarised calibrator dataset not available!&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Polarised calibrator dataset was already converted from UVFITS to MIRIAD format&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Polarised calibrator dataset not specified. Cannot convert polarised calibrator!&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Not converting polarised calibrator dataset!&#39;</span><span class="p">)</span>
+        <span class="c1"># Convert the target beams</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert_target</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Converting target beam dataset from UVFITS to MIRIAD format.&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">converttargetbeamsuvfits2miriad</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">converttargetbeamsuvfitsavailable</span><span class="p">:</span>
+                        <span class="n">subs_managefiles</span><span class="o">.</span><span class="n">director</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;ch&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_crosscalsubdir_path</span><span class="p">(),</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                        <span class="n">fits</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">miriad</span><span class="p">(</span><span class="s1">&#39;fits&#39;</span><span class="p">)</span>
+                        <span class="n">fits</span><span class="o">.</span><span class="n">op</span> <span class="o">=</span> <span class="s1">&#39;uvin&#39;</span>
+                        <span class="n">fits</span><span class="o">.</span><span class="n">in_</span> <span class="o">=</span> <span class="n">mspath_to_fitspath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_crosscalsubdir_path</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+                        <span class="n">fits</span><span class="o">.</span><span class="n">out</span> <span class="o">=</span> <span class="n">mspath_to_fitspath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_crosscalsubdir_path</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="n">ext</span><span class="o">=</span><span class="s1">&#39;mir&#39;</span><span class="p">)</span>
+                        <span class="n">fits</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
+                        <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">fits</span><span class="o">.</span><span class="n">out</span><span class="p">):</span>
+                            <span class="n">converttargetbeamsuvfits2miriad</span> <span class="o">=</span> <span class="kc">True</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Converted target beam dataset from &#39;</span>
+                                         <span class="s1">&#39;UVFITS to MIRIAD format!&#39;</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">converttargetbeamsuvfits2miriad</span> <span class="o">=</span> <span class="kc">False</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Could not convert target beam dataset &#39;</span>
+                                           <span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> from UVFITS to MIRIAD format!&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fits</span><span class="o">.</span><span class="n">out</span><span class="p">))</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Target beam dataset not available!&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Target beam dataset was already converted &#39;</span>
+                                <span class="s1">&#39;from MS to UVFITS format&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Target beam dataset not specified. Cannot convert target beam datasets!&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Not converting target beam dataset!&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Save the derived parameters for the MS to UVFITS conversion to the parameter file</span>
+
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_fluxcal_UVFITS2MIRIAD&#39;</span><span class="p">,</span> <span class="n">convertfluxcaluvfits2miriad</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_polcal_UVFITS2MIRIAD&#39;</span><span class="p">,</span> <span class="n">convertpolcaluvfits2miriad</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_targetbeams_UVFITS2MIRIAD&#39;</span><span class="p">,</span> <span class="n">converttargetbeamsuvfits2miriad</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert_averagems</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">subdirification</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span>
+                        <span class="s1">&#39;: Averaging down target measurement set&#39;</span><span class="p">)</span>
+            <span class="n">average_cmd</span> <span class="o">=</span> <span class="s1">&#39;mstransform(vis=&quot;</span><span class="si">{vis}</span><span class="s1">&quot;, outputvis=&quot;</span><span class="si">{outputvis}</span><span class="s1">&quot;, chanaverage=True, chanbin=64)&#39;</span>
+            <span class="n">vis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_target_path</span><span class="p">()</span>
+            <span class="n">outputvis</span> <span class="o">=</span> <span class="n">vis</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.MS&quot;</span><span class="p">,</span> <span class="s2">&quot;_avg.MS&quot;</span><span class="p">)</span>
+            <span class="n">lib</span><span class="o">.</span><span class="n">run_casa</span><span class="p">([</span><span class="n">average_cmd</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">vis</span><span class="o">=</span><span class="n">vis</span><span class="p">,</span> <span class="n">outputvis</span><span class="o">=</span><span class="n">outputvis</span><span class="p">)],</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
+
+        <span class="c1"># Remove measurement sets if wanted</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert_removems</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">subdirification</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Removing measurement sets&#39;</span><span class="p">)</span>
+            <span class="n">vis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_target_path</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">vis</span><span class="p">):</span>
+                <span class="n">subs_managefiles</span><span class="o">.</span><span class="n">director</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;rm&#39;</span><span class="p">,</span> <span class="n">vis</span><span class="p">)</span>
+
+        <span class="c1"># Remove the UVFITS files if wanted</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert_removeuvfits</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">subdirification</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Removing all UVFITS files&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluxcal</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span> <span class="ow">and</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">mspath_to_fitspath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_crosscalsubdir_path</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluxcal</span><span class="p">))</span> <span class="ow">and</span> <span class="n">convertfluxcalms2uvfits</span><span class="p">:</span>
+                <span class="n">subs_managefiles</span><span class="o">.</span><span class="n">director</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;rm&#39;</span><span class="p">,</span> <span class="n">mspath_to_fitspath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_crosscalsubdir_path</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluxcal</span><span class="p">))</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Removed fluxcal UVFITS files&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span>
+                               <span class="s1">&#39;: No fluxcal UVFITS file available for removing&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">polcal</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span> <span class="ow">and</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">mspath_to_fitspath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_crosscalsubdir_path</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">polcal</span><span class="p">))</span> <span class="ow">and</span> <span class="n">convertpolcalms2uvfits</span><span class="p">:</span>
+                <span class="n">subs_managefiles</span><span class="o">.</span><span class="n">director</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;rm&#39;</span><span class="p">,</span> <span class="n">mspath_to_fitspath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_crosscalsubdir_path</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">polcal</span><span class="p">))</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span>
+                            <span class="s1">&#39;: Removed polcal UVFITS files&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span>
+                               <span class="s1">&#39;: No polcal UVFITS file available for removing&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span> <span class="ow">and</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">mspath_to_fitspath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_crosscalsubdir_path</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">))</span> <span class="ow">and</span> <span class="n">convertfluxcalms2uvfits</span><span class="p">:</span>
+                <span class="n">subs_managefiles</span><span class="o">.</span><span class="n">director</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;rm&#39;</span><span class="p">,</span> <span class="n">mspath_to_fitspath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_crosscalsubdir_path</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">))</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span>
+                            <span class="s1">&#39;: Removed target UVFITS files&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span>
+                               <span class="s1">&#39;: No target UVFITS file available for removing&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="convert.summary"><a class="viewcode-back" href="../../../modules/convert.html#apercal.modules.convert.convert.summary">[docs]</a>    <span class="k">def</span> <span class="nf">summary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a general summary of the parameters in the parameter file generated during CONVERT. No detailed summary</span>
+<span class="sd">        is available for CONVERT.</span>
+
+<span class="sd">        returns (DataFrame): A python pandas dataframe object, which can be looked at with the style function in the</span>
+<span class="sd">                             notebook</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Load the parameters from the parameter file</span>
+
+        <span class="n">FMSA</span> <span class="o">=</span> <span class="n">subs_param</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;convert_fluxcal_MSavailable&#39;</span><span class="p">)</span>
+        <span class="n">PMSA</span> <span class="o">=</span> <span class="n">subs_param</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;convert_polcal_MSavailable&#39;</span><span class="p">)</span>
+        <span class="n">TMSA</span> <span class="o">=</span> <span class="n">subs_param</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;convert_targetbeams_MSavailable&#39;</span><span class="p">)</span>
+
+        <span class="n">FMS2UV</span> <span class="o">=</span> <span class="n">subs_param</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;convert_fluxcal_MS2UVFITS&#39;</span><span class="p">)</span>
+        <span class="n">PMS2UV</span> <span class="o">=</span> <span class="n">subs_param</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;convert_polcal_MS2UVFITS&#39;</span><span class="p">)</span>
+        <span class="n">TMS2UV</span> <span class="o">=</span> <span class="n">subs_param</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;convert_targetbeams_MS2UVFITS&#39;</span><span class="p">)</span>
+
+        <span class="n">FUV2mir</span> <span class="o">=</span> <span class="n">subs_param</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;convert_fluxcal_UVFITS2MIRIAD&#39;</span><span class="p">)</span>
+        <span class="n">PUV2mir</span> <span class="o">=</span> <span class="n">subs_param</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;convert_polcal_UVFITS2MIRIAD&#39;</span><span class="p">)</span>
+        <span class="n">TUV2mir</span> <span class="o">=</span> <span class="n">subs_param</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;convert_targetbeams_UVFITS2MIRIAD&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Create the data frame</span>
+
+        <span class="n">beam_range</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NBEAMS</span><span class="p">)</span>
+        <span class="n">dataset_beams</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39; Beam &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">beam_range</span><span class="p">]</span>
+        <span class="n">dataset_indices</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Flux calibrator (&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluxcal</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;)&#39;</span><span class="p">,</span>
+                           <span class="s1">&#39;Polarised calibrator (&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">polcal</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;)&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">dataset_beams</span>
+
+        <span class="n">all_MA</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="mi">39</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="n">all_MA</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">FMSA</span>
+        <span class="n">all_MA</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">PMSA</span>
+        <span class="n">all_MA</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span> <span class="o">=</span> <span class="n">TMSA</span>
+
+        <span class="n">all_M2U</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="mi">39</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="n">all_M2U</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">FMS2UV</span>
+        <span class="n">all_M2U</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">PMS2UV</span>
+        <span class="n">all_M2U</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span> <span class="o">=</span> <span class="n">TMS2UV</span>
+
+        <span class="n">all_U2mir</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="mi">39</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="n">all_U2mir</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">FUV2mir</span>
+        <span class="n">all_U2mir</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">PUV2mir</span>
+        <span class="n">all_U2mir</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span> <span class="o">=</span> <span class="n">TUV2mir</span>
+
+        <span class="n">df_msav</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">all_MA</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="n">dataset_indices</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Available?&#39;</span><span class="p">])</span>
+        <span class="n">df_ms2uv</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">all_M2U</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="n">dataset_indices</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;MS -&gt; UVFITS&#39;</span><span class="p">])</span>
+        <span class="n">df_uv2mir</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">all_U2mir</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="n">dataset_indices</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;UVFITS -&gt; MIRIAD&#39;</span><span class="p">])</span>
+
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">df_msav</span><span class="p">,</span> <span class="n">df_ms2uv</span><span class="p">,</span> <span class="n">df_uv2mir</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">df</span></div>
+
+
+<div class="viewcode-block" id="convert.reset"><a class="viewcode-back" href="../../../modules/convert.html#apercal.modules.convert.convert.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Function to reset the current step and remove all generated data. Be careful! Deletes all data generated in</span>
+<span class="sd">        this step!</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">subs_setinit</span><span class="o">.</span><span class="n">setinitdirs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="n">cbeam</span> <span class="o">=</span> <span class="s1">&#39;convert_B&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">beam</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Deleting all converted data.&#39;</span><span class="p">)</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_crosscalsubdir_path</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="n">subs_managefiles</span><span class="o">.</span><span class="n">director</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;rm&#39;</span><span class="p">,</span> <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;/*&#39;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">beam</span> <span class="o">+</span> <span class="s1">&#39;: Deleting all parameter file entries for CONVERT module&#39;</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_fluxcal_MSavailable&#39;</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_polcal_MSavailable&#39;</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_targetbeams_MSavailable&#39;</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_fluxcal_MS2UVFITS&#39;</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_polcal_MS2UVFITS&#39;</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_targetbeams_MS2UVFITS&#39;</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_fluxcal_UVFITSavailable&#39;</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_polcal_UVFITSavailable&#39;</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_targetbeams_UVFITSavailable&#39;</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_fluxcal_UVFITS2MIRIAD&#39;</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_polcal_UVFITS2MIRIAD&#39;</span><span class="p">)</span>
+        <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_targetbeams_UVFITS2MIRIAD&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="convert.reset_all"><a class="viewcode-back" href="../../../modules/convert.html#apercal.modules.convert.convert.reset_all">[docs]</a>    <span class="k">def</span> <span class="nf">reset_all</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Function to reset the current step and remove all generated data for all beams. Be careful! Deletes all data generated in</span>
+<span class="sd">        this step!</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">subs_setinit</span><span class="o">.</span><span class="n">setinitdirs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NBEAMS</span><span class="p">):</span>
+            <span class="n">cbeam</span> <span class="o">=</span> <span class="s1">&#39;convert_B&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;: Deleting all converted data.&#39;</span><span class="p">)</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_crosscalsubdir_path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+                <span class="n">subs_managefiles</span><span class="o">.</span><span class="n">director</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;rm&#39;</span><span class="p">,</span> <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;/*&#39;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Beam &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;: Deleting all parameter file entries for CONVERT module&#39;</span><span class="p">)</span>
+            <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_fluxcal_MSavailable&#39;</span><span class="p">)</span>
+            <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_polcal_MSavailable&#39;</span><span class="p">)</span>
+            <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_targetbeams_MSavailable&#39;</span><span class="p">)</span>
+            <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_fluxcal_MS2UVFITS&#39;</span><span class="p">)</span>
+            <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_polcal_MS2UVFITS&#39;</span><span class="p">)</span>
+            <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_targetbeams_MS2UVFITS&#39;</span><span class="p">)</span>
+            <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_fluxcal_UVFITSavailable&#39;</span><span class="p">)</span>
+            <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_polcal_UVFITSavailable&#39;</span><span class="p">)</span>
+            <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_targetbeams_UVFITSavailable&#39;</span><span class="p">)</span>
+            <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_fluxcal_UVFITS2MIRIAD&#39;</span><span class="p">)</span>
+            <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_polcal_UVFITS2MIRIAD&#39;</span><span class="p">)</span>
+            <span class="n">subs_param</span><span class="o">.</span><span class="n">del_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbeam</span> <span class="o">+</span> <span class="s1">&#39;_targetbeams_UVFITS2MIRIAD&#39;</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Apercal 2.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Apercal Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,230 @@
+Configuration: 150-MHz pipeline
+*******************************
+
+This is a copy/backup of the default configuration file for processing the upper 150MHz.
+
+::
+
+    # ============================================================================
+    # Pipeline settings for processing data above ~1290MHz
+    # However, split needs to happen at ~1280MHz (or half the band)
+    # because of line cube specifications
+    # ============================================================================
+
+    [INITIAL]
+    fluxcal = ''                                        # Flux calibrator dataset, e.g. '3C295.MS'
+    polcal = ''                                         # Polarised calibrator dataset, e.g. '3C286.MS'
+    target = ''                                         # Target dataset, e.g. 'LH_WSRT.MS'
+    basedir = ''                                        # Base directory for your data reduction, e.g '/data/adebahr/apertif/LH_WSRT/'
+    beam = '10'                                         # Beam number to work on for SELFCAL, CONTINUUM, LINE and POLARISATIOn module, e.g. '00'
+    rawsubdir = 'raw'                                   # Sub-directory for raw datasets, e.g. 'raw'
+    crosscalsubdir = 'crosscal'                         # Sub-directory for cross calibration, e.g. 'crosscal'
+    selfcalsubdir = 'selfcal'                           # Sub-directory for self calibration, e.g. 'selfcal'
+    linesubdir = 'line'                                 # Sub-directory for line imaging, e.g. 'line'
+    contsubdir = 'continuum'                            # Sub-directory for continuum imaging, e.g. 'continuum'
+    polsubdir = 'polarisation'                          # Sub-directory for polarisation imaging, e.g. 'polarisation'
+    mossubdir = 'mosaics'                               # Sub-directory for masaicking, e.g. 'mosaics'
+    transfersubdir = 'transfer'                         # Sub-directory for the transfer of the final (u,v)-datasets, e.g. 'transfer'
+    subdirification = True                              # assume data is in /basedir/beamnum/rawsubdir/fluxcal format
+
+    [PREPARE]
+    prepare_date = None                                 # Date of the observation, format: YYMMDD, e.g. '180817'
+    prepare_obsnum_fluxcal = None                       # Observation number of the flux calibrator, format: NNN, e.g. '001'
+    prepare_obsnum_polcal = None                        # Observation number of the polarised calibrator, format: NNN, e.g. '002'
+    prepare_obsnum_target = None                        # Observation number of the target, format: NNN, e.g. '003'
+    prepare_target_beams = None                         # Target beam numbers to copy, format: 'all' for all beams, '' for no target, and 'NN,MM,...' for certain beam numbers, e.g. '00,01'
+    prepare_bypass_alta = False                         # Set to true if you don't want to fetch data from the ALTA archive
+
+    [PHASESLOPE]
+    phaseslope_correction = False                       # Enable/Disable phase slope correction
+
+    [SPLIT]
+    split_startchannel = 12288                          # First channel to split out
+    split_endchannel = 24575                           # Last channel to split out
+
+    [PREFLAG]
+    preflag_shadow = True                               # Flag all datasets for shadowed antennas
+    preflag_edges = True                                # Flag subband egdes for all datasets
+    preflag_ghosts = False                              # Flag ghost channels for all datasets
+    preflag_manualflag = True                           # Run the manualflag options
+    preflag_manualflag_fluxcal = True                   # Run manualflag options for the flux calibrator
+    preflag_manualflag_polcal = True                    # Run manualflag options for the polarised calibrator
+    preflag_manualflag_target = True                    # Run manualflag options for the target beams
+    preflag_manualflag_auto = False                     # Flag auto-correlations
+    preflag_manualflag_antenna = ''                     # Antennas to flag, e.g. 'RT2,RT3,RT4'
+    preflag_manualflag_corr = ''                        # Correlations to flag, e.g. 'XX,YX'
+    preflag_manualflag_baseline = 'RTC&RTD'             # Flag certai baselines, e.g. 'RT2&RT3,RT5&RT6'
+    preflag_manualflag_channel = '0~1024'               # Channels or channel ranges to flag, e.g. '0~3054;10977~16384'
+    preflag_manualflag_time = ''                        # Time range to flag, e.g. '09:14:0~09:54:0'
+    preflag_manualflag_clipzeros = False                # Flags all Zero-valued data (done by default AOFlagger strategies as well)
+    preflag_manualflag_file = ''                        # File with flagging information
+    preflag_manualflag_file_path = ''                   # Path to file with flagging information, if empty it is assumed to be in `basedir`
+    preflag_aoflagger = True                            # Run the aoflagger step
+    preflag_aoflagger_bandpass = True                   # Derive a preliminary bandpass for AOFlagging
+    preflag_aoflagger_fluxcal = True                    # AOFlag the flux calibrator
+    preflag_aoflagger_polcal = True                     # AOFlag the polarised calibrator
+    preflag_aoflagger_target = True                     # AOFlag the target beams
+    preflag_aoflagger_fluxcalstrat = 'fluxcal.rfis'     # Flagging strategy for the flux calibrator
+    preflag_aoflagger_polcalstrat = 'polcal.rfis'       # Flagging strategy for the polarised calibrator
+    preflag_aoflagger_targetstrat = 'target.rfis'       # Flagging strategy for the target beams
+    preflag_aoflagger_threads = 48                      # Number of threads used by Aoflagger
+    preflag_aoflagger_use_interval = True               # Use interval of time steps to process data
+    preflag_aoflagger_delta_interval = 450              # Length of interval
+
+    [CROSSCAL]
+    crosscal_refant = 'RT2'                             # Reference antenna used through all cross calibration steps
+    crosscal_initial_phase = True                       # Initial phase calibration from the flux calibrator
+    crosscal_global_delay = True                        # Global delay corrections
+    crosscal_bandpass = True                            # Bandpass correction from the flux calibrator
+    crosscal_gains = True                               # Gain and flux corrections for the flux calibrator
+    crosscal_crosshand_delay = True                     # Cross-hand delay corrections
+    crosscal_leakage = True                             # Polarisation leakage corrections
+    crosscal_polarisation_angle = True                  # Polarisation angle corrections
+    crosscal_transfer_to_cal = True                     # Transfer corrections to calibrators
+    crosscal_transfer_to_target = True                  # Transfer corrections to the target fields
+    crosscal_autocorrelation_data_fraction_limit = 0.5  # Fraction of autocorrelation amplitude that is above threshold for flagging
+
+    [CONVERT]
+    convert_fluxcal = True                              # Convert the flux calibrator dataset
+    convert_polcal = True                               # Convert the polarised calibrator dataset
+    convert_target = True                               # Convert the target beam dataset
+    convert_removeuvfits = True                         # Remove the UVFITS files
+    convert_removems = True                             # Remove target measurement sets
+    convert_averagems = True                            # Save averaged down target measurement sets
+
+    [SELFCAL]
+    selfcal_image_imsize = 3073                         # Image size in pixels
+    selfcal_image_cellsize = 4                          # Pixel size in arcseconds
+    selfcal_refant = '1'                                # Reference antenna used for self-calibration, MIRIAD numbering here
+    selfcal_gaussianity = 1e-2                          # Gaussianity parameter for residual images in all steps to verify them as good (see scipy.stats.normaltest)
+    selfcal_average = True                              # Average the data to one channel per subband for self-calibration
+    selfcal_flagline = True                             # Flag residual RFI/HI emission for self-calibration and continuum imaging
+    selfcal_flagline_sigma = 0.5                        # Sensitivity parameter to flag RFI/HI emission
+    selfcal_parametric = True                           # Do parametric self-calibration
+    selfcal_parametric_skymodel_radius = 0.5            # Radius from the pointing centre in degrees until which sources are considered
+    selfcal_parametric_skymodel_cutoff = 0.8            # Cutoff for the appaerant flux in the skymodel to use sources (1.0 = all sources in catalogues)
+    selfcal_parametric_skymodel_distance = 30           # Distance between NVSS/FIRST and WENSS sources in arcseconds to count as the same source
+    selfcal_parametric_solint = 'auto'                  # Time solution interval in minutes or 'auto' for automatic calculation
+    selfcal_parametric_uvmin = 0.5                      # minimum u,v-limit in klambda
+    selfcal_parametric_uvmax = 3000                     # maximum u,v-limit in klambda
+    selfcal_parametric_amp = False                      # Parametric amplitude calibration
+    selfcal_parametric_nfbin = 32                       # Number of solution intervals over frequency for parametric calibration
+    selfcal_phase = True                                # Do the standard iterative self-calibration
+    selfcal_phase_majorcycle = 6                        # Maximum number of major cycles
+    selfcal_phase_majorcycle_function = 'power'         # Type of function to decrease threshold for major cycles, possible values: 'power'
+    selfcal_phase_minorcycle = 3                        # Maximum number of minor cycles within each major cycle
+    selfcal_phase_minorcycle_function = 'square'        # Type of function to decrease threshold for minor cycles, possible values: 'square', 'power', 'linear'
+    selfcal_phase_c0 = 10.0                             # c0 parameter to calculate noise DR with (c0 + minor_cycle * c0) * (major_cycle + 1)
+    selfcal_phase_c1 = 5.0                              # c1 parameter for clean threshold with mask_threshold / c1
+    selfcal_phase_drinit = 30                           # drinit parmeter to calculate dynamcic range limits in major cycles with drinit * np.power(dr0, major cycle)
+    selfcal_phase_dr0 = 2.0                             # dr0 parameter to calculate dynamcic range limits in major cycles with drinit * np.power(dr0, major cycle)
+    selfcal_phase_mindr = 5.0                           # minimum dynamic range for masking if calculated thresholds are lower
+    selfcal_phase_nsigma = 5                            # Factor to calculate theoretical noise threshold with nsigma * theoretical_noise
+    selfcal_phase_uvmin = [0.5,0.3,0.0,0.0,0.0,0.0]     # Minimum u,v-range to use for phase self-calibration during major cylces, 1 value per cycle
+    selfcal_phase_uvmax = [3000,3000,3000,3000,3000,3000]    # Maximum u,v-range to use for phase self-calibration during major cylces, 1 value per cycle
+    selfcal_phase_solint = 'auto'                       # Selfcal solution intervals for each major cycle as a list (e.g. [10,5,3]) or 'auto' for an automatic calculation
+    selfcal_phase_nfbin = 32                            # Number of frequency solution intervals
+    selfcal_phase_robust = -2                           # Robust weighting setting
+    selfcal_amp = 'auto'                                # Do amplitude calibration, possible values True, False, 'auto'
+    selfcal_amp_auto_limit = 1.0                        # Threshold for the sum of clean components in Jy in the last model to set amp calibration True in auto mode
+    selfcal_amp_minorcycle = 3                          # Maximum number of additional minor cycles to create amplitude model
+    selfcal_amp_minorcycle_function = 'square'          # Type of function to decrease threshold for minor cycles, possible values: 'square', 'power', 'linear', should be the same as for phase calibration
+    selfcal_amp_c0 = 10.0                               # c0 parameter to calculate noise DR with (c0 + minor_cycle * c0) * (major_cycle + 1), should be the same as for phase calibration
+    selfcal_amp_c1 = 5.0                                # c1 parameter for clean threshold with mask_threshold / c1, should be the same as for phase calibration
+    selfcal_amp_drinit = 30                             # drinit parmeter to calculate dynamcic range limits in major cycles with drinit * np.power(dr0, major cycle), should be the same as for phase calibration
+    selfcal_amp_dr0 = 2.0                               # dr0 parameter to calculate dynamcic range limits in major cycles with drinit * np.power(dr0, major cycle), should be the same as for phase calibration
+    selfcal_amp_mindr = 5.0                             # minimum dynamic range for masking if calculated thresholds are lower, should be the same as for phase calibration
+    selfcal_amp_nsigma = 5                              # Factor to calculate theoretical noise threshold with nsigma * theoretical_noise, should be the same as for phase calibration
+    selfcal_amp_uvmin = 0.0                             # Minimum u,v-range to use for amplitude self-calibration during major cycles
+    selfcal_amp_uvmax = 3000                            # Maximum u,v-range to use for amplitude self-calibration during major cycles
+    selfcal_amp_solint = 'auto'                         # Selfcal solution interval for amplitude calibration (e.g. 20) or 'auto' for an automatic calculation
+    selfcal_amp_nfbin = 32                              # Number of solution intervals over frequency for amplitude calibration
+    selfcal_amp_ratio = 1.2                             # Ratio of the dirty image min, max, std before and after amplitude calibration to verify amplitude calibration as good
+    selfcal_amp_robust = -2                             # Robust weighting setting
+
+    [CONTINUUM]
+    continuum_gaussianity = 1e-2                        # Gaussianity parameter for residual images in all steps to verify them as good (see scipy.stats.normaltest)
+    continuum_mfimage = True                            # Multi-frequency continuum imaging
+    continuum_mfimage_imsize = 3073                     # Image size in pixels
+    continuum_mfimage_cellsize = 4                      # Pixel size in arcseconds
+    continuum_mfimage_minorcycle = 5                    # Maximum number of cycles to clean the continuum image before automatic stop
+    continuum_mfimage_c1 = 5.0                          # c1 parameter for clean threshold with mask_threshold/c1
+    continuum_mfimage_drinc = 10.0                      # Increment for each iteration for the masking using max(residual map)/drinc
+    continuum_mfimage_mindr = 10.0                      # Minimum increase in dynamic range for the first cycle (in case calculated DR is lower)
+    continuum_mfimage_nsigma = 5                        # Factor to calculate theoretical noise threshold with nsigma * theoretical_noise
+    continuum_mfimage_robust = -2                       # Robust weighting setting
+    continuum_chunkimage = True                         # Chunk continuum imaging
+    continuum_chunkimage_startchannels = [0,32,64,96,128,160]      # Starting subbands for each chunk
+    continuum_chunkimage_endchannels = [31,63,95,127,159,191]          # Ending subband for each chunk
+    continuum_chunkimage_imsize = 2049                  # Image size of the chunk images
+    continuum_chunkimage_cellsize = 4                   # Cell size of the chunk images
+    continuum_chunkimage_minorcycle = 5                 # Maximum minor cycles after iterative chunk imaging is stopped
+    continuum_chunkimage_c1 = 5.0                       # c1 parameter for clean threshold with mask_threshold / c1
+    continuum_chunkimage_drinc = 10.0                   # Increment for each iteration for the masking using max(residual map)/drinc
+    continuum_chunkimage_mindr = 5.0                    # Minimum increase in dynamic range for the first cycle (in case calculated DR is lower)
+    continuum_chunkimage_nsigma = 5                     # Factor to calculate theoretical noise threshold with nsigma * theoretical_noise
+    continuum_chunkimage_robust = -2                       # Robust weighting setting
+
+    [LINE]
+    line_beams = 'all'                                  # Beams to run line imaging on, list of integers (e.g. 1,2,3) or 'all'
+    line_first_level_threads = 32                       # set the first level threads for line
+    line_second_level_threads = 16                      # set the second level threads for line
+    line_cube_channel_list =  [[1057, 4710], [4387, 8040], [7717, 11370], [11047, 12265]]
+    line_cube_channelwidth_list = [3.6621e-05, 3.6621e-05, 3.6621e-05, 1.2207e-05] # list of channel widths of the cube for splitting data
+    line_splitdata = True                               # if True: split the band into subbands for faster processing
+    line_splitdata_chunkbandwidth = 0.0046875           # in GHz: defines number of subbands and is 0.15/(number of subbands): default for 16 subbands is 0.009375 = 0.3/16 GHz or 32 chunks with 0.0046875
+    line_splitdata_channelbandwidth = 0.000036621       # [Deprecated, will be overridden by values in line_cube_channelwidth_list], in GHz
+    line_transfergains = True 	  		                # if False no selfcal solutions will be applied to the data. Default is True.
+    line_subtract = True                                # Subtract continuum from the uv data
+    line_subtract_mode = 'uvmodel'                      # Continuum subtraction method: if 'uvmodel' the last continuum model is taken, if 'uvlin' uvlin is applied to each subband
+    line_subtract_mode_uvmodel_majorcycle_function = 'square'
+    line_subtract_mode_uvmodel_minorcycle_function = 'square'
+    line_subtract_mode_uvmodel_minorcycle = 3
+    line_subtract_mode_uvmodel_c0 = 10.0
+    line_subtract_mode_uvmodel_c1 = 5.0
+    line_subtract_mode_uvmodel_drinit = 25
+    line_subtract_mode_uvmodel_dr0 = 2.0
+    line_subtract_mode_uvmodel_nsigma = 30
+    line_subtract_mode_uvmodel_imsize = 513
+    line_subtract_mode_uvmodel_cellsize = 10
+    line_subtract_mode_uvmodel_minorcycle0_dr = 3.0
+    line_image = True
+    line_image_channels = '2800,3600' # [Deprecated, will be overriden] Two comma seperated values as a string with the beginning and end channels, zero based, in the binned channel range
+    line_image_imsize = 661
+    line_image_cellsize = 6
+    line_image_centre = ''
+    line_image_robust = 0.0
+    line_clean = False
+    line_image_ratio_limit = 1.05
+    line_image_c0 = 10.0
+    line_image_c1 = 5.0
+    line_image_nsigma = 45
+    line_image_minorcycle0_dr = 5.0
+    line_image_dr0 = 2.0
+    line_image_restorbeam = ''
+    line_image_convolbeam = ''
+    line_always_cleanup = True                         # In case line fails, auxiliary files are going to be deleted
+
+    [POLARISATION]
+    polarisation_qu = True                              # Create Q-/U-images
+    polarisation_qu_startsubband = 0                    # First subband to image
+    polarisation_qu_endsubband = 191                    # Last subband to image
+    polarisation_qu_nsubband = 8                        # Number of subbands to combine for one image
+    polarisation_qu_imsize = 2049                       # Image size of the Q-/U-images
+    polarisation_qu_cellsize = 4                        # Cell size of the Q-/U-images
+    polarisation_qu_clean_sigma = 1.0                   # Clean threshold factor (sigma*std of map)
+    polarisation_qu_cube = True                         # Create a cube from the Q- and U-images
+    polarisation_qu_cube_delete = True                  # Delete the individual channel products after successfully creating the cubes
+    polarisation_v = True                               # Create V-image
+    polarisation_v_imsize = 3073                        # Image size of the V-image
+    polarisation_v_cellsize = 4                         # Cell size of the V-image
+    polarisation_v_clean_sigma = 1.0                    # Clean threshold factor (sigma*std of map)
+
+    [MOSAIC]
+    mosaic_continuum_mf = True
+    mosaic_continuum_chunks = False
+    mosaic_line = False
+    mosaic_polarisation = False
+
+    [TRANSFER]
+    transfer_convert_selfcaluv2uvfits = True              # Copy the selfcal solutions to the original dataset and export as UVFITS
