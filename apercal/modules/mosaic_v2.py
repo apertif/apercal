@@ -1268,7 +1268,7 @@ class mosaic(BaseModule):
                 input_file = os.path.join(
                     self.mosaic_continuum_images_subdir, 'image_{0}_regrid.map'.format(beam))
 
-                if not os.path.isdir(outputfile):
+                if not os.path.isdir(output_file):
                     convol = lib.miriad('convol')
                     convol.map = input_file
                     convol.out = output_file
