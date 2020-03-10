@@ -252,13 +252,14 @@ class mosaic(BaseModule):
 
         """
 
-        logger.info("Creating sub-directories for mosaic")
-
         # Status of the continuum mf mosaic
         mosaic_create_subdirs_status = get_param_def(
             self, 'mosaic_create_subdirs_status', False)
 
         if self.mosaic_continuum_mf:
+
+            logger.info("Setting sub-directories for mosaic")
+
             # create the directory for the continuunm mosaic
             if not self.mosaic_continuum_subdir:
                 self.mosaic_continuum_subdir = 'continuum'
@@ -295,7 +296,7 @@ class mosaic(BaseModule):
                 subs_managefiles.director(
                     self, 'mk', self.mosaic_continuum_mosaic_dir)
 
-            logger.info("Creating sub-directories for mosaic ... Done")
+            logger.info("Setting sub-directories for mosaic ... Done")
 
             mosaic_create_subdirs_status = True
         else:
@@ -1893,6 +1894,13 @@ class mosaic(BaseModule):
             import dataqa
             from dataqa.continuum.validation_tool import validation
 
+            # to be sure, in case this step is run independently, set the paths
+            self.set_mosaic_subdirs()
+
+            # switch to mosaic directory
+            subs_managefiles.director(
+                self, 'ch', self.mosaic_continuum_mosaic_dir)
+
             logger.info("Running image validation")
 
             # Validate final continuum mosaic
@@ -1900,9 +1908,13 @@ class mosaic(BaseModule):
             finder = 'pybdsf'
             start_time_validation = time.time()
 
+            # set the mosaic name
+            if not self.mosaic_name:
+                self.mosaic_name = "{}_mosaic.fits".format(self.mosaic_taskid)
+
             validation.run(self.mosaic_name, finder=finder)
 
-            logger.info("Writing mosaic fits files ... Done ({0:.0f}s)".format(
+            logger.info("Running image validation ... Done ({0:.0f}s)".format(
                 time.time() - start_time_validation))
             mosaic_run_image_validation_status = True
         else:
@@ -2210,54 +2222,48 @@ class mosaic(BaseModule):
                 self.write_mosaic_fits_files()
                 logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
                     i, time.time() - start_time_step))
-                i += 1
-
-                # to allow the mosaic to stop earlier
-                if self.stop_mosaic(i):
-                    return None
-
-                # Image validation
-                # ================
-                if self.mosaic_image_validation:
-                    logger.info("#### Step {0} ####".format(i))
-                    start_time_step = time.time()
-                    try:
-                        self.run_image_validation()
-                    except Exception as e:
-                        logger.warning("#### Step {0} ... Failed (after {1:.0f}s) ####".format(
-                            i, time.time() - start_time_step))
-                        logger.exception(e)
-                    else:
-                        logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
-                            i, time.time() - start_time_step))
-                i += 1
 
                 # Save the derived parameters to the parameter file
                 mosaic_continuum_mf_status = True
 
-                # to allow the mosaic to stop earlier
-                if self.stop_mosaic(i):
-                    return None
-
+                # Remove scratch files
+                # ====================
                 if self.mosaic_clean_up:
-                    logger.info("#### Step {0} ####".format(i))
+                    logger.info("#### Step: clean up ####")
                     start_time_step = time.time()
                     self.clean_up(level=self.mosaic_clean_up_level)
-                    logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
-                        i, time.time() - start_time_step))
+                    logger.info("#### Step: clean up ... Done (after {0:.0f}s) ####".format(
+                        time.time() - start_time_step))
+
             else:
                 logger.info("Continuum image mosaic was already created")
+
+            # Image validation
+            # ================
+            if self.mosaic_image_validation:
+                logger.info("#### Step: mosaic validation ####")
+                start_time_step = time.time()
+                try:
+                    self.run_image_validation()
+                except Exception as e:
+                    logger.warning("#### Step: mosaic validation ... Failed (after {0:.0f}s) ####".format(
+                        time.time() - start_time_step))
+                    logger.exception(e)
+                else:
+                    logger.info("#### Step: mosaic validation ... Done (after {0:.0f}s) ####".format(
+                        time.time() - start_time_step))
+
+            subs_param.add_param(
+                self, 'mosaic_continuum_mf_status', mosaic_continuum_mf_status)
 
             logger.info("Creating continuum image mosaic ... Done")
         else:
             pass
 
-        subs_param.add_param(
-            self, 'mosaic_continuum_mf_status', mosaic_continuum_mf_status)
-
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
     # Function to create the polarisation q mosaic
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
+
     def create_mosaic_polarisation_q(self, mosaic_type=None):
         """
         Function to create the different mosaics
@@ -2498,6 +2504,9 @@ class mosaic(BaseModule):
         """
         # subs_setinit.setinitdirs(self)
         logger.info("Removing scratch files")
+
+        # to be sure, in case this step is run independently, set the paths
+        self.set_mosaic_subdirs()
 
         # remove file from creating template mosaic
         # shutil.rmtree(mosaicdir+'mosaic_temp.map')
