@@ -115,6 +115,7 @@ def make_mosaic(task_id, basedir, centre_ra=None, centre_dec=None, mosaic_beams=
 
     # run the image validation tool on the mosaic
     if do_validation:
+        logger.info("Enabling mosaic image validation")
         mo.mosaic_image_validation = True
     else:
         mo.mosaic_image_validation = False
@@ -122,6 +123,7 @@ def make_mosaic(task_id, basedir, centre_ra=None, centre_dec=None, mosaic_beams=
     # clean up
     mo.mosaic_clean_up_level = 1
     if do_not_cleanup:
+        logger.info("Enabling cleaning up scratch files")
         mo.mosaic_clean_up = False
     else:
         mo.mosaic_clean_up = True
