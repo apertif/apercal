@@ -2210,13 +2210,13 @@ class mosaic(BaseModule):
                 self.write_mosaic_fits_files()
                 logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
                     i, time.time() - start_time_step))
-                
+
                 # Save the derived parameters to the parameter file
                 mosaic_continuum_mf_status = True
 
             else:
                 logger.info("Continuum image mosaic was already created")
-            
+
             # Remove scratch files
             # ====================
             if self.mosaic_clean_up:
@@ -2240,7 +2240,9 @@ class mosaic(BaseModule):
                 else:
                     logger.info("#### Step: mosaic validation ... Done (after {0:.0f}s) ####".format(
                         time.time() - start_time_step))
-            
+            else:
+                logger.debug(self.mosaic_image_validation)
+
             subs_param.add_param(
                 self, 'mosaic_continuum_mf_status', mosaic_continuum_mf_status)
 
@@ -2248,10 +2250,10 @@ class mosaic(BaseModule):
         else:
             pass
 
-
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
     # Function to create the polarisation q mosaic
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
+
     def create_mosaic_polarisation_q(self, mosaic_type=None):
         """
         Function to create the different mosaics
