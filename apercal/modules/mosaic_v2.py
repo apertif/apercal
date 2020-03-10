@@ -252,13 +252,14 @@ class mosaic(BaseModule):
 
         """
 
-        logger.info("Creating sub-directories for mosaic")
-
         # Status of the continuum mf mosaic
         mosaic_create_subdirs_status = get_param_def(
             self, 'mosaic_create_subdirs_status', False)
 
         if self.mosaic_continuum_mf:
+
+            logger.info("Setting sub-directories for mosaic")
+
             # create the directory for the continuunm mosaic
             if not self.mosaic_continuum_subdir:
                 self.mosaic_continuum_subdir = 'continuum'
@@ -295,7 +296,7 @@ class mosaic(BaseModule):
                 subs_managefiles.director(
                     self, 'mk', self.mosaic_continuum_mosaic_dir)
 
-            logger.info("Creating sub-directories for mosaic ... Done")
+            logger.info("Setting sub-directories for mosaic ... Done")
 
             mosaic_create_subdirs_status = True
         else:
@@ -2214,17 +2215,17 @@ class mosaic(BaseModule):
                 # Save the derived parameters to the parameter file
                 mosaic_continuum_mf_status = True
 
+                # Remove scratch files
+                # ====================
+                if self.mosaic_clean_up:
+                    logger.info("#### Step: clean up ####")
+                    start_time_step = time.time()
+                    self.clean_up(level=self.mosaic_clean_up_level)
+                    logger.info("#### Step: clean up ... Done (after {0:.0f}s) ####".format(
+                        time.time() - start_time_step))
+
             else:
                 logger.info("Continuum image mosaic was already created")
-
-            # Remove scratch files
-            # ====================
-            if self.mosaic_clean_up:
-                logger.info("#### Step: clean up ####")
-                start_time_step = time.time()
-                self.clean_up(level=self.mosaic_clean_up_level)
-                logger.info("#### Step: clean up ... Done (after {0:.0f}s) ####".format(
-                    time.time() - start_time_step))
 
             # Image validation
             # ================
@@ -2492,6 +2493,9 @@ class mosaic(BaseModule):
         """
         # subs_setinit.setinitdirs(self)
         logger.info("Removing scratch files")
+
+        # to be sure, in case this step is run independently, set the paths
+        self.set_mosaic_subdirs()
 
         # remove file from creating template mosaic
         # shutil.rmtree(mosaicdir+'mosaic_temp.map')
