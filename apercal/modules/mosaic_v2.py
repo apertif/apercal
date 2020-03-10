@@ -1894,12 +1894,23 @@ class mosaic(BaseModule):
             import dataqa
             from dataqa.continuum.validation_tool import validation
 
+            # to be sure, in case this step is run independently, set the paths
+            self.set_mosaic_subdirs()
+
+            # switch to mosaic directory
+            subs_managefiles.director(
+                self, 'ch', self.mosaic_continuum_mosaic_dir)
+
             logger.info("Running image validation")
 
             # Validate final continuum mosaic
 
             finder = 'pybdsf'
             start_time_validation = time.time()
+
+            # set the mosaic name
+            if not self.mosaic_name:
+                self.mosaic_name = "{}_mosaic.fits".format(self.mosaic_taskid)
 
             validation.run(self.mosaic_name, finder=finder)
 
