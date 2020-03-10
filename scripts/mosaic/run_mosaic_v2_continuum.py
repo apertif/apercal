@@ -123,9 +123,9 @@ def make_mosaic(task_id, basedir, centre_ra=None, centre_dec=None, mosaic_beams=
     # clean up
     mo.mosaic_clean_up_level = 1
     if do_not_cleanup:
-        logger.info("Enabling cleaning up scratch files")
         mo.mosaic_clean_up = False
     else:
+        logger.info("Enabling cleaning up scratch files")
         mo.mosaic_clean_up = True
 
     # create the mosaic
