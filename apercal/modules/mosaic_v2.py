@@ -2210,50 +2210,44 @@ class mosaic(BaseModule):
                 self.write_mosaic_fits_files()
                 logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
                     i, time.time() - start_time_step))
-                i += 1
-
-                # to allow the mosaic to stop earlier
-                if self.stop_mosaic(i):
-                    return None
-
-                # Image validation
-                # ================
-                if self.mosaic_image_validation:
-                    logger.info("#### Step {0} ####".format(i))
-                    start_time_step = time.time()
-                    try:
-                        self.run_image_validation()
-                    except Exception as e:
-                        logger.warning("#### Step {0} ... Failed (after {1:.0f}s) ####".format(
-                            i, time.time() - start_time_step))
-                        logger.exception(e)
-                    else:
-                        logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
-                            i, time.time() - start_time_step))
-                i += 1
-
+                
                 # Save the derived parameters to the parameter file
                 mosaic_continuum_mf_status = True
 
-                # to allow the mosaic to stop earlier
-                if self.stop_mosaic(i):
-                    return None
-
-                if self.mosaic_clean_up:
-                    logger.info("#### Step {0} ####".format(i))
-                    start_time_step = time.time()
-                    self.clean_up(level=self.mosaic_clean_up_level)
-                    logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
-                        i, time.time() - start_time_step))
             else:
                 logger.info("Continuum image mosaic was already created")
+            
+            # Remove scratch files
+            # ====================
+            if self.mosaic_clean_up:
+                logger.info("#### Step: clean up ####")
+                start_time_step = time.time()
+                self.clean_up(level=self.mosaic_clean_up_level)
+                logger.info("#### Step: clean up ... Done (after {0:.0f}s) ####".format(
+                    time.time() - start_time_step))
+
+            # Image validation
+            # ================
+            if self.mosaic_image_validation:
+                logger.info("#### Step: mosaic validation ####")
+                start_time_step = time.time()
+                try:
+                    self.run_image_validation()
+                except Exception as e:
+                    logger.warning("#### Step: mosaic validation ... Failed (after {0:.0f}s) ####".format(
+                        ime.time() - start_time_step))
+                    logger.exception(e)
+                else:
+                    logger.info("#### Step: mosaic validation ... Done (after {0:.0f}s) ####".format(
+                        time.time() - start_time_step))
+            
+            subs_param.add_param(
+                self, 'mosaic_continuum_mf_status', mosaic_continuum_mf_status)
 
             logger.info("Creating continuum image mosaic ... Done")
         else:
             pass
 
-        subs_param.add_param(
-            self, 'mosaic_continuum_mf_status', mosaic_continuum_mf_status)
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
     # Function to create the polarisation q mosaic
