@@ -2240,8 +2240,6 @@ class mosaic(BaseModule):
                 else:
                     logger.info("#### Step: mosaic validation ... Done (after {0:.0f}s) ####".format(
                         time.time() - start_time_step))
-            else:
-                logger.debug(self.mosaic_image_validation)
 
             subs_param.add_param(
                 self, 'mosaic_continuum_mf_status', mosaic_continuum_mf_status)
