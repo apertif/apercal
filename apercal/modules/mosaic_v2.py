@@ -302,8 +302,8 @@ class mosaic(BaseModule):
         else:
             pass
 
-        subs_param.add_param(
-            self, 'mosaic_create_subdirs_status', mosaic_create_subdirs_status)
+        # subs_param.add_param(
+        #     self, 'mosaic_create_subdirs_status', mosaic_create_subdirs_status)
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
     # Function to get the continuum images from different
@@ -1914,7 +1914,7 @@ class mosaic(BaseModule):
 
             validation.run(self.mosaic_name, finder=finder)
 
-            logger.info("Writing mosaic fits files ... Done ({0:.0f}s)".format(
+            logger.info("Running image validation ... Done ({0:.0f}s)".format(
                 time.time() - start_time_validation))
             mosaic_run_image_validation_status = True
         else:
