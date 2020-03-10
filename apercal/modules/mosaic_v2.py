@@ -302,8 +302,8 @@ class mosaic(BaseModule):
         else:
             pass
 
-        # subs_param.add_param(
-        #     self, 'mosaic_create_subdirs_status', mosaic_create_subdirs_status)
+        subs_param.add_param(
+            self, 'mosaic_create_subdirs_status', mosaic_create_subdirs_status)
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
     # Function to get the continuum images from different
