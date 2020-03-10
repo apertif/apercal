@@ -2236,7 +2236,7 @@ class mosaic(BaseModule):
                     self.run_image_validation()
                 except Exception as e:
                     logger.warning("#### Step: mosaic validation ... Failed (after {0:.0f}s) ####".format(
-                        ime.time() - start_time_step))
+                        time.time() - start_time_step))
                     logger.exception(e)
                 else:
                     logger.info("#### Step: mosaic validation ... Done (after {0:.0f}s) ####".format(
