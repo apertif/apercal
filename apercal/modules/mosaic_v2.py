@@ -5,18 +5,13 @@ import os
 import socket
 import subprocess
 import glob
-import copy
 import time
-import pymp
 
 from apercal.modules.base import BaseModule
 from apercal.subs import setinit as subs_setinit
 from apercal.subs import managefiles as subs_managefiles
 from apercal.subs import readmirhead as subs_readmirhead
-from apercal.subs import imstats as subs_imstats
-from apercal.subs import convim as subs_convim
 from apercal.subs import param as subs_param
-from apercal.subs import combim as subs_combim
 from apercal.subs.param import get_param_def
 from apercal.libs import lib
 import apercal.subs.mosaic_utils as mosaic_utils
@@ -57,41 +52,59 @@ class mosaic(BaseModule):
     mosaic_name = None
     mosaic_continuum_mf = None
     mosaic_line = None
-    mosaic_polarisation_v = None
-    mosaic_polarisation_q = None
-    mosaic_polarisation_u = None
-    mosaic_common_beam_type = ''
-    mosaic_image_validation = None
+    mosaic_polarisation = None
+
     mosaic_step_limit = None
-    mosaic_clean_up = None
-    mosaic_clean_up_level = None
+
     mosaic_parallelisation = None
     mosaic_parallelisation_cpus = None
 
     # settings for external input
     mosaic_continuum_image_origin = None
-    mosaic_polarisation_input_origin = None
-    # mosaic_projection_centre_type = None
-    mosaic_projection_centre_ra = None
-    mosaic_projection_centre_dec = None
-    mosaic_projection_centre_beam = None
-    mosaic_projection_centre_file = None
+    mosaic_polarisation_image_origin = None
     mosaic_primary_beam_type = None
     mosaic_primary_beam_shape_files_location = None
     mosaic_line_cube = None
+
+    # general mosaic settings
+    mosaic_gaussian_beam_map_size = 3073
+    mosaic_gaussian_beam_map_cellsize = 4.0
+    mosaic_gaussian_beam_map_fwhm_arcsec = 1950.0
+    mosaic_beam_map_cutoff = 0.25
+    mosaic_use_askap_based_matrix = False
+    mosaic_common_beam_type = ''
 
     # continuumm-specific settings
     mosaic_continuum_subdir = None
     mosaic_continuum_images_subdir = None
     mosaic_continuum_beam_subdir = None
     mosaic_continuum_mosaic_subdir = None
+    mosaic_continuum_projection_centre_ra = None
+    mosaic_continuum_projection_centre_dec = None
+    mosaic_continuum_projection_centre_beam = None
+    mosaic_continuum_projection_centre_file = None
     mosaic_continuum_imsize = 5121
     mosaic_continuum_cellsize = 4
-    mosaic_gaussian_beam_map_size = 3073
-    mosaic_gaussian_beam_map_cellsize = 4.0
-    mosaic_gaussian_beam_map_fwhm_arcsec = 1950.0
-    mosaic_beam_map_cutoff = 0.25
-    mosaic_use_askap_based_matrix = False
+    mosaic_continuum_common_beam_type = ''
+    mosaic_continuum_clean_up = None
+    mosaic_continuum_clean_up_level = None
+    mosaic_continuum_image_validation = None
+
+    # polarisation specific settings
+    mosaic_polarisation_subdir = None
+    mosaic_polarisation_images_subdir = None
+    mosaic_polarisation_beam_subdir = None
+    mosaic_polarisation_mosaic_subdir = None
+    mosaic_polarisation_projection_centre_beam = 'continuum'
+    mosaic_polarisation_projection_centre_ra = None
+    mosaic_polarisation_projection_centre_dec = None
+    mosaic_polarisation_projection_centre_file= None
+    mosaic_polarisation_imsize = 5121
+    mosaic_polarisation_cellsize = 4
+    mosaic_polarisation_common_beam_type = ''
+    mosaic_polarisation_clean_up = None
+    mosaic_polarisation_clean_up_level = None
+    mosaic_polarisation_image_validation = None
 
     FNULL = open(os.devnull, 'w')
 
@@ -115,9 +128,7 @@ class mosaic(BaseModule):
 
         mosaic_continuum_mf
         mosaic_line
-        mosaic_polarisation_q
-        mosaic_polarisation_u
-        mosaic_polarisation_v
+        mosaic_polarisation
         """
 
         if self.mosaic_continuum_mf:
@@ -135,20 +146,12 @@ class mosaic(BaseModule):
             # self.create_mosaic_continuum_mf()
             # logger.info("MOSAICKING of continuum done in ({0:.0f}s)".format(time.time() - start_time_continuum))
 
-        if self.mosaic_polarisation_q or self.mosaic_polarisation_u:
-            self.abort_module(
-                "Creating stokes Q or U mosaic is not yet possible")
-            # start_time_continuum = time.time()
-            # logger.info("Starting MOSAICKING of continuum")
-            # self.create_mosaic_continuum_mf()
-            # logger.info("MOSAICKING of continuum done in ({0:.0f}s)".format(time.time() - start_time_continuum))
+        if self.mosaic_polarisation:
+            start_time_polarisation = time.time()
+            logger.info("Starting MOSAICKING of polarisation")
+            self.create_mosaic_polarisation()
+            logger.info("MOSAICKING of polarisation done in ({0:.0f}s)".format(time.time() - start_time_polarisation))
 
-        if self.mosaic_polarisation_v:
-            self.abort_module("Creating stokes V mosaic is not yet possible")
-            # start_time_continuum = time.time()
-            # logger.info("Starting MOSAICKING of continuum")
-            # self.create_mosaic_continuum_mf()
-            # logger.info("MOSAICKING of continuum done in ({0:.0f}s)".format(time.time() - start_time_continuum))
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
     # Just a small helper function to abort the module
@@ -243,6 +246,7 @@ class mosaic(BaseModule):
             logger.error(error)
             raise RuntimeError(error)
 
+
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
     # Create all the sub-directories for the mosaic
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -253,12 +257,16 @@ class mosaic(BaseModule):
         """
 
         # Status of the continuum mf mosaic
-        mosaic_create_subdirs_status = get_param_def(
-            self, 'mosaic_create_subdirs_status', False)
+        mosaic_continuum_create_subdirs_status = get_param_def(
+            self, 'mosaic_continuum_create_subdirs_status', False)
+
+        # Status of the polarisation mosaic
+        mosaic_polarisation_create_subdirs_status = get_param_def(
+            self, 'mosaic_polarisation_create_subdirs_status', False)
 
         if self.mosaic_continuum_mf:
 
-            logger.info("Setting sub-directories for mosaic")
+            logger.info("Setting sub-directories for continuum mosaic")
 
             # create the directory for the continuunm mosaic
             if not self.mosaic_continuum_subdir:
@@ -296,14 +304,62 @@ class mosaic(BaseModule):
                 subs_managefiles.director(
                     self, 'mk', self.mosaic_continuum_mosaic_dir)
 
-            logger.info("Setting sub-directories for mosaic ... Done")
+            logger.info("Setting sub-directories for continuum mosaic ... Done")
 
-            mosaic_create_subdirs_status = True
+            mosaic_continuum_create_subdirs_status = True
+        else:
+            pass
+
+        if self.mosaic_polarisation:
+
+            logger.info("Setting sub-directories for polarisation mosaic")
+
+            # create the directory for the polarisation mosaic
+            if not self.mosaic_polarisation_subdir:
+                self.mosaic_polarisation_subdir = 'polarisation'
+            self.mosaic_polarisation_dir = os.path.join(
+                self.mosdir, self.mosaic_polarisation_subdir)
+            if not os.path.exists(self.mosaic_polarisation_dir):
+                subs_managefiles.director(
+                    self, 'mk', self.mosaic_polarisation_dir)
+
+            # create the sub-directory to store the polarisation images
+            if not self.mosaic_polarisation_images_subdir:
+                self.mosaic_polarisation_images_subdir = 'images'
+            self.mosaic_polarisation_images_dir = os.path.join(
+                self.mosdir, self.mosaic_polarisation_subdir, self.mosaic_polarisation_images_subdir)
+            if not os.path.exists(self.mosaic_polarisation_images_dir):
+                subs_managefiles.director(
+                    self, 'mk', self.mosaic_polarisation_images_dir)
+
+            # create the directory to store the beam maps
+            if not self.mosaic_polarisation_beam_subdir:
+                self.mosaic_polarisation_beam_subdir = 'beams'
+            self.mosaic_polarisation_beam_dir = os.path.join(
+                self.mosdir, self.mosaic_polarisation_subdir, self.mosaic_polarisation_beam_subdir)
+            if not os.path.exists(self.mosaic_polarisation_beam_dir):
+                subs_managefiles.director(
+                    self, 'mk', self.mosaic_polarisation_beam_dir)
+
+            # create the directory to store the actual mosaic
+            if not self.mosaic_polarisation_mosaic_subdir:
+                self.mosaic_polarisation_mosaic_subdir = 'mosaic'
+            self.mosaic_polarisation_mosaic_dir = os.path.join(
+                self.mosdir, self.mosaic_polarisation_subdir, self.mosaic_polarisation_mosaic_subdir)
+            if not os.path.exists(self.mosaic_polarisation_mosaic_dir):
+                subs_managefiles.director(
+                    self, 'mk', self.mosaic_polarisation_mosaic_dir)
+
+            logger.info("Setting sub-directories for polarisation mosaic ... Done")
+
+            mosaic_polarisation_create_subdirs_status = True
         else:
             pass
 
         subs_param.add_param(
-            self, 'mosaic_create_subdirs_status', mosaic_create_subdirs_status)
+            self, 'mosaic_continuum_create_subdirs_status', mosaic_continuum_create_subdirs_status)
+        subs_param.add_param(
+            self, 'mosaic_polarisation_create_subdirs_status', mosaic_polarisation_create_subdirs_status)
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
     # Function to get the continuum images from different
@@ -325,8 +381,8 @@ class mosaic(BaseModule):
         mosaic_continuum_images_status = get_param_def(
             self, 'mosaic_continuum_images_status', False)
 
-        mosaic_failed_beams = get_param_def(
-            self, 'mosaic_failed_beams', [])
+        mosaic_continuum_failed_beams = get_param_def(
+            self, 'mosaic_continuum_failed_beams', [])
 
         # collect here which beams failed
         failed_beams = []
@@ -450,7 +506,7 @@ class mosaic(BaseModule):
 
                     # check that the beam is available on ALTA
                     if self.check_alta_path(alta_taskid_beam_dir) == 0:
-                        logger.info("Found beam {} of taskid {} on ALTA".format(
+                        logger.debug("Found beam {} of taskid {} on ALTA".format(
                             beam, self.mosaic_taskid))
 
                         # look for continuum image
@@ -486,14 +542,14 @@ class mosaic(BaseModule):
                                 return_msg = self.getdata_from_alta(
                                     alta_beam_image_path, continuum_image_beam_dir)
                                 if return_msg == 0:
-                                    logger.info("Getting image of beam {0} of taskid {1} ... Done".format(
+                                    logger.debug("Getting image of beam {0} of taskid {1} ... Done".format(
                                         beam, self.mosaic_taskid))
                                 else:
                                     logger.warning("Getting image of beam {0} of taskid {1} ... Failed".format(
                                         beam, self.mosaic_taskid))
                                     failed_beams.append(beam)
                             else:
-                                logger.info("Image of beam {0} of taskid {1} already on disk".format(
+                                logger.debug("Image of beam {0} of taskid {1} already on disk".format(
                                     beam, self.mosaic_taskid))
                     else:
                         logger.warning("Did not find beam {0} of taskid {1}".format(
@@ -513,12 +569,12 @@ class mosaic(BaseModule):
                     # go through the beams
                     for beam in self.mosaic_beam_list:
 
-                        logger.info(
+                        logger.debug(
                             "Getting continuum image of beam {}".format(beam))
 
                         # check that a directory with the beam exists
                         image_beam_dir = os.path.join(
-                            self.mosaic_continuum_image_origin, beam)
+                            self.mosaic_continuum_image_origin, beam, self.contsubdir)
                         if not os.path.isdir(image_beam_dir):
                             logger.warning(
                                 "Did not find beam {} to get continuum image.".format(beam))
@@ -550,10 +606,10 @@ class mosaic(BaseModule):
                             subs_managefiles.director(self, 'cp', os.path.join(
                                 local_beam_dir, os.path.basename(fits_file)), file_=fits_file)
                         else:
-                            logger.info(
+                            logger.debug(
                                 "Continuum file of beam {} is already available".format(beam))
 
-                        logger.info(
+                        logger.debug(
                             "Getting continuum image of beam {} ... Done".format(beam))
                 else:
                     error = "The directory {} does not exists. Abort".format(
@@ -570,11 +626,11 @@ class mosaic(BaseModule):
             logger.info("Continuum image fits files are already available.")
 
         # assign list of failed beams to variable that will be stored
-        if len(mosaic_failed_beams) == 0:
-            mosaic_failed_beams = failed_beams
+        if len(mosaic_continuum_failed_beams) == 0:
+            mosaic_continuum_failed_beams = failed_beams
         # or the other way round in case of a restart
         else:
-            failed_beams = mosaic_failed_beams
+            failed_beams = mosaic_continuum_failed_beams
 
         # check the failed beams
         if len(failed_beams) == len(self.mosaic_beam_list):
@@ -595,10 +651,215 @@ class mosaic(BaseModule):
             mosaic_continuum_images_status = True
 
         subs_param.add_param(
-            self, 'mosaic_failed_beams', mosaic_failed_beams)
+            self, 'mosaic_continuum_failed_beams', mosaic_continuum_failed_beams)
 
         subs_param.add_param(
             self, 'mosaic_continuum_images_status', mosaic_continuum_images_status)
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Function to get the polarisation images from different
+    # locations depending on the config
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    def get_mosaic_polarisation_images(self):
+        """
+        Function to get the polarisation images.
+
+        Possible locations are
+        1. The directories of the taskids on happili, but only if run from happili-01
+        2. An existing directory with all fits files
+        3. ALTA (default)
+
+        Polarisation images are put into
+        """
+
+        # Status of the polarisation mosaic
+        mosaic_polarisation_images_status = get_param_def(
+            self, 'mosaic_polarisation_images_status', False)
+
+        mosaic_polarisation_failed_beams = get_param_def(
+            self, 'mosaic_polarisation_failed_beams', [])
+
+        # collect here which beams failed
+        failed_beams = []
+
+        # check whether the fits files are already there:
+        if not mosaic_polarisation_images_status:
+
+            if self.mosaic_polarisation_image_origin == "happili":
+                logger.info(
+                    "Assuming to get the data is on happili in the taskid directories")
+                if socket.gethostname() == "happili-01":
+                    # abort as it is not finished
+                    self.abort_module(
+                        "Using the default taskid directories to the polarisation images has not been implemented yet.")
+                else:
+                    error = "This does not work from {}. It only works from happili 01. Abort".format(
+                        socket.gethostname())
+                    logger.error(error)
+                    raise RuntimeError(error)
+            # in case the data is on ALTA
+            # ===========================
+            elif self.mosaic_polarisation_image_origin == "ALTA" or self.mosaic_polarisation_image_origin is None:
+                logger.info(
+                    "Assuming to get the data from ALTA")
+
+                # store failed beams
+                failed_beams = []
+                # go through the list of beams
+                # but make a copy to be able to remove beams if they are not available
+                for beam in self.mosaic_beam_list:
+                    # /altaZone/archive/apertif_main/visibilities_default/<taskid>_AP_B0XY
+                    alta_taskid_beam_dir = "/altaZone/archive/apertif_main/visibilities_default/{0}_AP_B{1}".format(
+                        self.mosaic_taskid, beam.zfill(3))
+
+                    # check that the beam is available on ALTA
+                    if self.check_alta_path(alta_taskid_beam_dir) == 0:
+                        logger.debug("Found beam {} of taskid {} on ALTA".format(
+                            beam, self.mosaic_taskid))
+
+                        # look for continuum image
+                        # look for the image file (not perhaps the best way with the current setup)
+                        polarisation_image_names = ["Qcube.fits","Ucube.fits","image_mf_V.fits"]
+                        alta_beam_image_path = ''
+                        for im in polarisation_image_names:
+                            alta_beam_image_path = os.path.join(
+                                alta_taskid_beam_dir, im)
+                            if self.check_alta_path(alta_beam_image_path) == 0:
+                                break
+                            else:
+                                # make empty again when no image was found
+                                polarisation_image_names = ''
+                                continue
+                        if polarisation_image_names == '':
+                            logger.warning(
+                                "No image found on ALTA for beam {0} of taskid {1}".format(beam, self.mosaic_taskid))
+                            failed_beams.append(beam)
+                        else:
+                            # create directory for beam in the image of the continuum mosaic
+                            polarisation_image_beam_dir = os.path.join(
+                                self.mosaic_polarisation_images_dir, beam)
+                            if not os.path.exists(polarisation_image_beam_dir):
+                                subs_managefiles.director(
+                                    self, 'mk', polarisation_image_beam_dir)
+
+                            # check whether file already there:
+                            if not os.path.exists(os.path.join(polarisation_image_beam_dir, os.path.basename(alta_beam_image_path))):
+                                # copy the continuum image to this directory
+                                return_msg = self.getdata_from_alta(
+                                    alta_beam_image_path, polarisation_image_beam_dir)
+                                if return_msg == 0:
+                                    logger.debug("Getting image of beam {0} of taskid {1} ... Done".format(
+                                        beam, self.mosaic_taskid))
+                                else:
+                                    logger.warning("Getting image of beam {0} of taskid {1} ... Failed".format(
+                                        beam, self.mosaic_taskid))
+                                    failed_beams.append(beam)
+                            else:
+                                logger.debug("Image of beam {0} of taskid {1} already on disk".format(
+                                    beam, self.mosaic_taskid))
+                    else:
+                        logger.warning("Did not find beam {0} of taskid {1}".format(
+                            beam, self.mosaic_taskid))
+                        # remove the beam
+                        failed_beams.append(beam)
+
+            # in case a directory has been specified
+            # (not stable)
+            # ======================================
+            elif self.mosaic_polarisation_image_origin != "":
+                # check that the directory exists
+                logger.info(
+                    "Assuming to get the data from a specific directory")
+                if os.path.isdir(self.mosaic_polarisation_image_origin):
+
+                    # go through the beams
+                    for beam in self.mosaic_beam_list:
+
+                        logger.debug(
+                            "Getting polarisation images of beam {}".format(beam))
+
+                        # check that a directory with the beam exists
+                        image_beam_dir = os.path.join(
+                            self.mosaic_polarisation_image_origin, beam, self.polsubdir)
+                        if not os.path.isdir(image_beam_dir):
+                            logger.warning(
+                                "Did not find beam {} to get polarisation images.".format(beam))
+                            failed_beams.append(beam)
+                            continue
+
+                        # find the fits file
+                        image_beam_fits_path = os.path.join(
+                            image_beam_dir, "*.fits")
+                        fits_files = glob.glob(image_beam_fits_path)
+                        fits_files.sort() # not needed here, but still do
+                        if len(fits_files) == 0:
+                            logger.warning(
+                                "Did not find polarisation images for beam {}.".format(beam))
+                            failed_beams.append(beam)
+                            continue
+
+                        # create local beam dir only if it doesn't already exists
+                        local_beam_dir = os.path.join(
+                            self.mosaic_polarisation_images_dir, beam)
+                        if local_beam_dir != image_beam_dir:
+                            subs_managefiles.director(
+                                self, 'mk', local_beam_dir)
+
+                            # copy the fits file to the beam directory
+                            for fits_file in fits_files:
+                                subs_managefiles.director(self, 'cp', os.path.join(
+                                    local_beam_dir, os.path.basename(fits_file)), file_=fits_file)
+                        else:
+                            logger.debug(
+                                "Polarisation files of beam {} is already available".format(beam))
+
+                        logger.debug(
+                            "Getting polarisation images of beam {} ... Done".format(beam))
+                else:
+                    error = "The directory {} does not exists. Abort".format(
+                        self.mosaic_polarisation_image_origin)
+                    logger.error(error)
+                    raise RuntimeError(error)
+            else:
+                logger.info("Assuming the data is on ALTA")
+                error = "Cannot get data from ALTA yet. Abort"
+                logger.error(error)
+                raise RuntimeError(error)
+
+        else:
+            logger.info("Polarisation image fits files are already available.")
+
+        # assign list of failed beams to variable that will be stored
+        if len(mosaic_polarisation_failed_beams) == 0:
+            mosaic_polarisation_failed_beams = failed_beams
+        # or the other way round in case of a restart
+        else:
+            failed_beams = mosaic_polarisation_failed_beams
+
+        # check the failed beams
+        if len(failed_beams) == len(self.mosaic_beam_list):
+            self.abort_module("Did not find polarisation images for all beams.")
+        elif len(failed_beams) != 0:
+            logger.warning("Could not find polarisation images for beams {}. Removing those beams".format(
+                str(failed_beams)))
+            for beam in failed_beams:
+                self.mosaic_beam_list.remove(beam)
+            logger.warning("Will only process polarisation images from {0} beams ({1})".format(
+                len(self.mosaic_beam_list), str(self.mosaic_beam_list)))
+
+            # setting parameter of getting continuum images to True
+            mosaic_polarisation_images_status = True
+        else:
+            logger.info("Found images for all beams")
+            # setting parameter of getting continuum images to True
+            mosaic_polarisation_images_status = True
+
+        subs_param.add_param(
+            self, 'mosaic_polarisation_failed_beams', mosaic_polarisation_failed_beams)
+
+        subs_param.add_param(
+            self, 'mosaic_polarisation_images_status', mosaic_polarisation_images_status)
+
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
     # Function to get the beam maps
@@ -608,7 +869,7 @@ class mosaic(BaseModule):
         Getting the information for each beam if they are not already present
         """
 
-        logger.info("Creating beam maps")
+        logger.info("Creating beam maps for continuum")
 
         mosaic_continuum_beam_status = get_param_def(
             self, 'mosaic_continuum_beam_status', False)
@@ -616,7 +877,7 @@ class mosaic(BaseModule):
         if not mosaic_continuum_beam_status:
 
             for beam in self.mosaic_beam_list:
-                logger.info("Creating map of beam {}".format(beam))
+                logger.info("Creating continuum beam map of beam {}".format(beam))
                 # change to directory of continuum images
                 subs_managefiles.director(
                     self, 'ch', self.mosaic_continuum_dir)
@@ -628,92 +889,75 @@ class mosaic(BaseModule):
                                              fwhm=self.mosaic_gaussian_beam_map_fwhm_arcsec,
                                              cutoff=self.mosaic_beam_map_cutoff)
                 except Exception as e:
-                    error = "Creating map of beam {} ... Failed".format(beam)
+                    error = "Creating continuum beam map of beam {} ... Failed".format(beam)
                     logger.warning(error)
                     logger.exception(e)
                     raise RuntimeError(error)
                 else:
-                    logger.info(
-                        "Creating map of beam {} ... Done".format(beam))
+                    logger.debug(
+                        "Creating continuum beam map of beam {} ... Done".format(beam))
                     mosaic_continuum_beam_status = True
         else:
-            logger.info("Beam maps are already available.")
+            logger.info("Continuum beam maps are already available.")
 
-        logger.info("Creating beam maps ... Done")
+        logger.info("Creating continuum beam maps ... Done")
 
         subs_param.add_param(
             self, 'mosaic_continuum_beam_status', mosaic_continuum_beam_status)
 
+
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    # Function to get the projection centre based on
-    # the config
+    # Function to get the beam maps
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    def get_mosaic_projection_centre(self):
+
+    def get_mosaic_polarisation_beams(self):
         """
-        Getting the information for the projection center
+        Getting the information for each beam if they are not already present
         """
 
-        mosaic_projection_centre_status = get_param_def(
-            self, 'mosaic_projection_centre_status', False)
+        logger.info("Creating polarisation beam maps")
 
-        mosaic_projection_centre_values = get_param_def(
-            self, 'mosaic_projection_centre_values', ['', ''])
+        mosaic_polarisation_beam_status = get_param_def(
+            self, 'mosaic_polarisation_beam_status', False)
 
-        if self.mosaic_projection_centre_ra is not None and self.mosaic_projection_centre_dec is not None:
-            logger.info("Using input projection center: RA={0} and DEC={1}".format(
-                self.mosaic_projection_centre_ra, self.mosaic_projection_centre_dec))
-            mosaic_projection_centre_status = True
-        elif self.mosaic_projection_centre_beam is not None:
-            logger.info("Using pointing centre of beam {} as the projection centre".format(
-                self.mosaic_projection_centre_beam))
+        if not mosaic_polarisation_beam_status:
 
-            # change to directory of continuum images
-            subs_managefiles.director(
-                self, 'ch', self.mosaic_continuum_images_dir)
+            for beam in self.mosaic_beam_list:
+                logger.debug("Creating polarisation beam maps of beam {}".format(beam))
+                # change to directory of polarisation images
+                subs_managefiles.director(
+                    self, 'ch', self.mosaic_polarisation_dir)
 
-            # Extract central RA and Dec for Apertif pointing from a chosen beam
-            if self.mosaic_projection_centre_beam in self.mosaic_beam_list:
-                gethd = lib.miriad('gethd')
-                gethd.in_ = '{0}/image_{0}.map/crval1'.format(
-                    str(self.mosaic_projection_centre_beam).zfill(2))
-                gethd.format = 'hms'
-                ra_ref = gethd.go()
-                gethd.in_ = '{0}/image_{0}.map/crval2'.format(
-                    str(self.mosaic_projection_centre_beam).zfill(2))
-                gethd.format = 'dms'
-                dec_ref = gethd.go()
-            else:
-                error = "Failed reading projection centre from beam {}. Beam not available".format(
-                    self.mosaic_projection_centre_beam)
-                logger.error(error)
-                raise RuntimeError(error)
-
-            # assigning ra and dec
-            self.mosaic_projection_centre_ra = ra_ref[0]
-            self.mosaic_projection_centre_dec = dec_ref[0]
-        elif self.mosaic_projection_centre_file != '':
-            logger.info("Reading projection center from file {}".format(
-                self.mosaic_projection_centre_file))
-
-            # not available yet
-            self.abort_module(
-                "Reading projection center from file has not been implemented yet")
+                try:
+                    mosaic_utils.create_beam(beam, self.mosaic_polarisation_beam_subdir, corrtype=self.mosaic_primary_beam_type, primary_beam_path=self.mosaic_primary_beam_shape_files_location,
+                                             bm_size=self.mosaic_gaussian_beam_map_size,
+                                             cell=self.mosaic_gaussian_beam_map_cellsize,
+                                             fwhm=self.mosaic_gaussian_beam_map_fwhm_arcsec,
+                                             cutoff=self.mosaic_beam_map_cutoff)
+                except Exception as e:
+                    error = "Creating polarisation beam maps of beam {} ... Failed".format(beam)
+                    logger.warning(error)
+                    logger.exception(e)
+                    raise RuntimeError(error)
+                else:
+                    logger.debug(
+                        "Creating polarisation beam maps of beam {} ... Done".format(beam))
+                    mosaic_polarisation_beam_status = True
         else:
-            self.abort_module("Did not recognise projection centre option")
+            logger.info("Polarisation beam maps are already available.")
 
-        logger.info("Projection centre will be RA={0} and DEC={1}".format(
-            self.mosaic_projection_centre_ra, self.mosaic_projection_centre_dec))
+        logger.info("Creating polarisation beam maps ... Done")
 
         subs_param.add_param(
-            self, 'mosaic_projection_centre_status', mosaic_projection_centre_status)
-        subs_param.add_param(
-            self, 'mosaic_projection_centre_values', [self.mosaic_projection_centre_ra, self.mosaic_projection_centre_dec])
+            self, 'mosaic_polarisation_beam_status', mosaic_polarisation_beam_status)
+
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
     # Function to convert images to miriad
     # Can be moved to mosaic_utils.py
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    def convert_images_to_miriad(self):
+
+    def convert_continuum_images_to_miriad(self):
         """
         Convert continuum fits images to miriad format
 
@@ -726,7 +970,7 @@ class mosaic(BaseModule):
             Conversion should be parallelised.
         """
 
-        logger.info("Converting fits images to miriad images")
+        logger.info("Converting continuum fits images to miriad images")
 
         mosaic_continuum_convert_fits_images_status = get_param_def(
             self, 'mosaic_continuum_convert_fits_images_status', False)
@@ -739,8 +983,8 @@ class mosaic(BaseModule):
             # go through the list of beams
             for beam in self.mosaic_beam_list:
 
-                logger.info(
-                    "Converting fits image of beam {} to miriad image".format(beam))
+                logger.debug(
+                    "Converting continuum fits image of beam {} to miriad image".format(beam))
 
                 mir_map_name = '{0}/image_{0}.map'.format(beam)
 
@@ -748,15 +992,13 @@ class mosaic(BaseModule):
                     # This function will import a FITS image into Miriad placing it in the mosaicdir
                     fits = lib.miriad('fits')
                     fits.op = 'xyin'
-                    # fits.in_ = '{}/image_mf_00.fits'.format(beam)
                     fits.in_ = glob.glob(os.path.join(beam, "*.fits"))[0]
                     fits.out = '{0}/image_{0}.map'.format(beam)
-                    fits.inp()
                     try:
                         fits.go()
                     except Exception as e:
                         mosaic_continuum_convert_fits_images_status = False
-                        error = "Converting fits image of beam {} to miriad image ... Failed".format(
+                        error = "Converting continuum fits image of beam {} to miriad image ... Failed".format(
                             beam)
                         logger.error(error)
                         logger.exception(e)
@@ -764,7 +1006,7 @@ class mosaic(BaseModule):
                     else:
                         mosaic_continuum_convert_fits_images_status = True
                         logger.debug(
-                            "Converting fits image of beam {} to miriad image ... Done".format(beam))
+                            "Converting continuum fits image of beam {} to miriad image ... Done".format(beam))
 
                 else:
                     logger.warning(
@@ -773,104 +1015,281 @@ class mosaic(BaseModule):
 
             if mosaic_continuum_convert_fits_images_status:
                 logger.info(
-                    "Converting fits images to miriad images ... Successful")
+                    "Converting continuum fits images to miriad images ... Done")
             else:
                 logger.warning(
-                    "Converting fits images to miriad images ... Failed for at least one beam. Please check the log")
+                    "Converting continuum fits images to miriad images ... Failed for at least one beam. Please check the log")
         else:
-            logger.info("Images have already been converted.")
+            logger.info("Continuum images have already been converted.")
 
         subs_param.add_param(
             self, 'mosaic_continuum_convert_fits_images_status', mosaic_continuum_convert_fits_images_status)
 
+
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    # Function to convert beam maps from fits to miriad
-    # May not be necessary in the end.
+    # Function to convert the Q and U cubes and the V image into MIRIAD
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    def convert_beams_to_miriad(self):
+
+    def convert_polarisation_images_to_miriad(self):
         """
-        Convert beam fits images to miriad format
-
-        Based on notebook function import_beam(beam_num)
-
-        At the moment the function is only successful
-        if all beams were successfully.
-
-        TODO:
-            Conversion should be parallelised.
-            Could be moved to submodule taking care of creating beam maps
         """
 
-        logger.info("Converting fits beam images to miriad images")
+        mosaic_polarisation_convert_fits_images_status = get_param_def(
+            self, 'mosaic_polarisation_convert_fits_images_status', False)
 
-        mosaic_continuum_convert_fits_beam_status = get_param_def(
-            self, 'mosaic_continuum_convert_fits_beam_status', False)
+        # change to directory of polarisation images
+        subs_managefiles.director(self, 'ch', self.mosaic_polarisation_images_dir)
 
-        # change to directory of continuum images
-        subs_managefiles.director(self, 'ch', self.mosaic_continuum_beam_dir)
+        if not mosaic_polarisation_convert_fits_images_status:
 
-        for beam in self.mosaic_beam_list:
-            # This function will import the FITS image of a beam into Miriad format, placing it in the mosaicdir
-            fits = lib.miriad('fits')
-            fits.op = 'xyin'
-            fits.in_ = 'beam_{}.fits'.format(beam)
-            fits.out = 'beam_{}.map'.format(beam)
-            fits.inp()
-            try:
-                fits.go()
-            except Exception as e:
-                mosaic_continuum_convert_fits_beam_status = False
-                error = "Converting fits image of beam {} to miriad image ... Failed".format(
-                    beam)
-                logger.error(error)
-                logger.exception(e)
-                raise RuntimeError(error)
+            for beam in self.mosaic_beam_list:
+                # Convert the Q and U cubes to MIRIAD
+                try:
+                    fits = lib.miriad('fits')
+                    fits.op = "xyin"
+                    fits.in_ = os.path.join(beam, "Qcube.fits")
+                    fits.out = os.path.join(beam, "Qcube")
+                    fits.go()
+                    fits.in_ = os.path.join(beam, "Ucube.fits")
+                    fits.out = os.path.join(beam, "Ucube")
+                    fits.go()
+                    fits.in_ = os.path.join(beam, "image_mf_V.fits")
+                    fits.out = os.path.join(beam, "image_mf_V")
+                    fits.go()
+                except Exception as e:
+                    mosaic_polarisation_convert_fits_images_status = False
+                    error = "Converting polarisation fits images of beam {} to miriad image ... Failed".format(
+                        beam)
+                    logger.error(error)
+                    logger.exception(e)
+                    raise RuntimeError(error)
+                else:
+                    mosaic_polarisation_convert_fits_images_status = True
+                    logger.debug(
+                        "Converting polarisation fits images of beam {} to miriad image ... Done".format(beam))
+
+            if mosaic_polarisation_convert_fits_images_status:
+                logger.info(
+                    "Converting polarisation fits images to miriad images ... Successful")
             else:
-                mosaic_continuum_convert_fits_beam_status = True
-                logger.debug(
-                    "Converting fits image of beam {} to miriad image ... Done".format(beam))
-
-        if mosaic_continuum_convert_fits_beam_status:
-            logger.info(
-                "Converting fits images to miriad images ... Successful")
+                logger.warning(
+                    "Converting polarisation fits images to miriad images ... Failed for at least one beam. Please check the log.")
         else:
-            logger.warning(
-                "Converting fits images to miriad images ... Failed for at least one beam. Please check the log")
+            logger.info("Polarisation images have already been converted.")
 
         subs_param.add_param(
-            self, 'mosaic_continuum_convert_fits_beam_status', mosaic_continuum_convert_fits_beam_status)
+            self, 'mosaic_polarisation_convert_fits_images_status', mosaic_polarisation_convert_fits_images_status)
+
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    # Function to get the image noise for a specific beam
+    # Function to split the Q and U cubes into single images
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    def get_beam_noise(self, beam):
+    def split_polarisation_images(self):
+
+        mosaic_polarisation_split_cubes_status = get_param_def(
+            self, 'mosaic_polarisation_split_cubes_status', False)
+
+        # change to directory of polarisation images
+        subs_managefiles.director(self, 'ch', self.mosaic_polarisation_images_dir)
+
+        if not mosaic_polarisation_split_cubes_status:
+
+            for beam in self.mosaic_beam_list:
+
+                # Get the needed parameters
+                pbeam = 'polarisation_B' + str(beam).zfill(2)
+                polbeamimagestatus = get_param_def(self, pbeam + '_targetbeams_qu_imagestatus', False)
+                polbeamimagebeams = get_param_def(self, pbeam + '_targetbeams_qu_beamparams', False)
+                qimages = len(polbeamimagestatus)
+
+                # Split the Q cube into single images
+                for qplane in range(qimages):
+                    try:
+                        imsub = lib.miriad('imsub')
+                        imsub.in_ = os.path.join(beam, "Qcube")
+                        imsub.out = os.path.join(beam, "Qcube_" + str(qplane).zfill(3))
+                        imsub.region = 'percentage"(100,100)(' + str(qplane) + ',' + str(qplane) + ')"'
+                        imsub.go()
+                        # Add the right beam to the header of the Q images
+                        beamparms = polbeamimagebeams[qplane, :, 0]
+                        subs_readmirhead.putbeamimage(imsub.out, beamparms)
+                        mosaic_polarisation_split_cubes_status = True
+                    except:
+                        warning = "Polarisation Q-image #{1} of beam {0} is empty or has no beam information".format(
+                            beam, qplane)
+                        logger.warning(warning)
+
+                # Split the U cube into single images
+                uimages = len(polbeamimagestatus)
+                for uplane in range(uimages):
+                    try:
+                        imsub = lib.miriad('imsub')
+                        imsub.in_ = os.path.join(beam, "Ucube")
+                        imsub.out = os.path.join(beam, "Ucube_" + str(uplane).zfill(3))
+                        imsub.region = 'percentage"(100,100)(' + str(uplane) + ',' + str(uplane) + ')"'
+                        imsub.go()
+                        # Add the right beam to the header of the U images
+                        beamparms = polbeamimagebeams[uplane, :, 1]
+                        subs_readmirhead.putbeamimage(imsub.out, beamparms)
+                        mosaic_polarisation_split_cubes_status = True
+                    except:
+                        warning = "Polarisation U-image #{1} of beam {0} is empty or has no beam information".format(
+                            beam, uplane)
+                        logger.warning(warning)
+
+        else:
+            logger.info("Q- and U-polarisation images have already been split.")
+
+        subs_param.add_param(
+            self, 'mosaic_polarisation_split_cubes_status', mosaic_polarisation_split_cubes_status)
+
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Function to get the projection centre based on
+    # the config
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    def get_mosaic_continuum_projection_centre(self):
         """
-        Function to get the image noise for a specific beam
-
-        Based on beam_noise(beam_num) from the notebook)
-
-        Args
-        ----
-        beam (str): the number of the beam
-
-        Return
-        ------
-        (str): Miriad output of noise estimate
+        Getting the information for the projection center
         """
 
-        # change to directory of continuum images
-        subs_managefiles.director(self, 'ch', self.mosaic_continuum_images_dir)
+        mosaic_continuum_projection_centre_status = get_param_def(
+            self, 'mosaic_continuum_projection_centre_status', False)
 
-        sigest = lib.miriad('sigest')
-        sigest.in_ = '{0}/image_{0}.map'.format(str(beam).zfill(2))
+        mosaic_continuum_projection_centre_values = get_param_def(
+            self, 'mosaic_continuum_projection_centre_values', ['', ''])
 
-        return sigest.go()
+        if self.mosaic_continuum_projection_centre_ra is not None and self.mosaic_continuum_projection_centre_dec is not None:
+            logger.info("Using input projection center: RA={0} and DEC={1}".format(
+                self.mosaic_continuum_projection_centre_ra, self.mosaic_continuum_projection_centre_dec))
+            mosaic_continuum_projection_centre_status = True
+        elif self.mosaic_continuum_projection_centre_beam is not None:
+            logger.info("Using pointing centre of beam {} as the projection centre".format(
+                self.mosaic_continuum_projection_centre_beam))
+
+            # change to directory of continuum images
+            subs_managefiles.director(
+                self, 'ch', self.mosaic_continuum_images_dir)
+
+            # Extract central RA and Dec for Apertif pointing from a chosen beam
+            if self.mosaic_continuum_projection_centre_beam in self.mosaic_beam_list:
+                gethd = lib.miriad('gethd')
+                gethd.in_ = '{0}/image_{0}.map/crval1'.format(
+                    str(self.mosaic_continuum_projection_centre_beam).zfill(2))
+                gethd.format = 'hms'
+                ra_ref = gethd.go()
+                gethd.in_ = '{0}/image_{0}.map/crval2'.format(
+                    str(self.mosaic_continuum_projection_centre_beam).zfill(2))
+                gethd.format = 'dms'
+                dec_ref = gethd.go()
+            else:
+                error = "Failed reading projection centre from beam {}. Beam not available".format(
+                    self.mosaic_continuum_projection_centre_beam)
+                logger.error(error)
+                raise RuntimeError(error)
+
+            # assigning ra and dec
+            self.mosaic_continuum_projection_centre_ra = ra_ref[0]
+            self.mosaic_continuum_projection_centre_dec = dec_ref[0]
+        elif self.mosaic_continuum_projection_centre_file != '':
+            logger.info("Reading projection center from file {}".format(
+                self.mosaic_continuum_projection_centre_file))
+
+            # not available yet
+            self.abort_module(
+                "Reading projection center from file has not been implemented yet")
+        else:
+            self.abort_module("Did not recognise projection centre option")
+
+        logger.info("Projection centre will be RA={0} and DEC={1}".format(
+            self.mosaic_continuum_projection_centre_ra, self.mosaic_continuum_projection_centre_dec))
+
+        subs_param.add_param(
+            self, 'mosaic_continuum_projection_centre_status', mosaic_continuum_projection_centre_status)
+        subs_param.add_param(
+            self, 'mosaic_continuum_projection_centre_values', [self.mosaic_continuum_projection_centre_ra, self.mosaic_continuum_projection_centre_dec])
+
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Function to get the projection centre based on
+    # the config
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    def get_mosaic_polarisation_projection_centre(self):
+        """
+        Getting the information for the projection center
+        """
+
+        mosaic_polarisation_projection_centre_status = get_param_def(
+            self, 'mosaic_polarisation_projection_centre_status', False)
+
+        mosaic_polarisation_projection_centre_values = get_param_def(
+            self, 'mosaic_polarisation_projection_centre_values', ['', ''])
+
+        if self.mosaic_polarisation_projection_centre_ra is not None and self.mosaic_polarisation_projection_centre_dec is not None:
+            logger.info("Using input projection center: RA={0} and DEC={1}".format(
+                self.mosaic_polarisation_projection_centre_ra, self.mosaic_polarisation_projection_centre_dec))
+            mosaic_polarisation_projection_centre_status = True
+        elif self.mosaic_polarisation_projection_centre_beam is not None:
+            # change to directory of polarisation images
+            subs_managefiles.director(self, 'ch', self.mosaic_polarisation_images_dir)
+            if self.mosaic_polarisation_projection_centre_beam == 'continuum':
+                logger.info("Using the same projection centre as for continuum")
+                if subs_param.check_param(self,  'mosaic_continuum_projection_centre_values'):
+                    mosaic_polarisation_projection_centre_values = subs_param.get_param_def(self, 'mosaic_continuum_projection_centre_values', ['', ''])
+                    self.mosaic_polarisation_projection_centre_ra = mosaic_polarisation_projection_centre_values[0]
+                    self.mosaic_polarisation_projection_centre_dec = mosaic_polarisation_projection_centre_values[1]
+                    mosaic_polarisation_projection_centre_status = True
+                else:
+                    mosaic_polarisation_projection_centre_status = False
+                    error = "Failed using the same projection centre as for continuum. Information not available!"
+                    logger.error(error)
+                    raise RuntimeError(error)
+            else:
+                logger.info("Using pointing centre of beam {} as the projection centre".format(
+                    self.mosaic_polarisation_projection_centre_beam))
+
+                # Extract central RA and Dec for Apertif pointing from a chosen beam from the Stokes V image
+                if self.mosaic_polarisation_projection_centre_beam in self.mosaic_beam_list:
+                    gethd = lib.miriad('gethd')
+                    gethd.in_ = '{0}/image_mf_V/crval1'.format(
+                        str(self.mosaic_polarisation_projection_centre_beam).zfill(2))
+                    gethd.format = 'hms'
+                    ra_ref = gethd.go()
+                    gethd.in_ = '{0}/image_mf_V/crval2'.format(
+                        str(self.mosaic_polarisation_projection_centre_beam).zfill(2))
+                    gethd.format = 'dms'
+                    dec_ref = gethd.go()
+                else:
+                    error = "Failed reading projection centre from beam {}. Beam not available".format(
+                        self.mosaic_polarisation_projection_centre_beam)
+                    logger.error(error)
+                    raise RuntimeError(error)
+                # assigning ra and dec
+                self.mosaic_polarisation_projection_centre_ra = ra_ref[0]
+                self.mosaic_polarisation_projection_centre_dec = dec_ref[0]
+        elif self.mosaic_polarisation_projection_centre_file != '':
+            logger.info("Reading projection center from file {}".format(self.mosaic_polarisation_projection_centre_file))
+
+            # not available yet
+            self.abort_module("Reading projection center from file has not been implemented yet")
+        else:
+            self.abort_module("Did not recognise projection centre option")
+
+        logger.info("Projection centre will be RA={0} and DEC={1}".format(
+            self.mosaic_polarisation_projection_centre_ra, self.mosaic_polarisation_projection_centre_dec))
+
+        subs_param.add_param(self, 'mosaic_polarisation_projection_centre_status', mosaic_polarisation_projection_centre_status)
+        subs_param.add_param(self, 'mosaic_polarisation_projection_centre_values', [self.mosaic_polarisation_projection_centre_ra, self.mosaic_polarisation_projection_centre_dec])
+
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
     # Function to transfer image coordinates to beam maps
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    def transfer_coordinates(self):
+
+    def transfer_continuum_coordinates(self):
         """
         Function to transfer image coordinates to beam maps
 
@@ -881,19 +1300,19 @@ class mosaic(BaseModule):
         move this function there for the simple beam maps, too
         """
 
-        logger.info("Transfer image coordinates to beam maps")
+        logger.info("Transfering image coordinates to beam maps for continuum")
 
-        mosaic_transfer_coordinates_to_beam_status = get_param_def(
-            self, 'mosaic_transfer_coordinates_to_beam_status', False)
+        mosaic_continuum_transfer_coordinates_to_beam_status = get_param_def(
+            self, 'mosaic_continuum_transfer_coordinates_to_beam_status', False)
 
         # change to directory of continuum images
         subs_managefiles.director(self, 'ch', self.mosaic_continuum_dir)
 
-        if not mosaic_transfer_coordinates_to_beam_status:
+        if not mosaic_continuum_transfer_coordinates_to_beam_status:
 
             for beam in self.mosaic_beam_list:
 
-                logger.info("Processing beam {}".format(beam))
+                logger.debug("Processing beam {}".format(beam))
 
                 # get RA
                 gethd = lib.miriad('gethd')
@@ -902,13 +1321,13 @@ class mosaic(BaseModule):
                 try:
                     ra1 = gethd.go()
                 except Exception as e:
-                    mosaic_transfer_coordinates_to_beam_status = False
+                    mosaic_continuum_transfer_coordinates_to_beam_status = False
                     error = "Reading RA of beam {} failed".format(beam)
                     logger.error(error)
                     logger.exception(e)
                     raise RuntimeError(error)
                 else:
-                    mosaic_transfer_coordinates_to_beam_status = True
+                    mosaic_continuum_transfer_coordinates_to_beam_status = True
 
                 # write RA
                 puthd = lib.miriad('puthd')
@@ -918,13 +1337,13 @@ class mosaic(BaseModule):
                 try:
                     puthd.go()
                 except Exception as e:
-                    mosaic_transfer_coordinates_to_beam_status = False
+                    mosaic_continuum_transfer_coordinates_to_beam_status = False
                     error = "Writing RA of beam {} failed".format(beam)
                     logger.error(error)
                     logger.exception(e)
                     raise RuntimeError(error)
                 else:
-                    mosaic_transfer_coordinates_to_beam_status = True
+                    mosaic_continuum_transfer_coordinates_to_beam_status = True
 
                 # get DEC
                 gethd.in_ = os.path.join(
@@ -932,13 +1351,13 @@ class mosaic(BaseModule):
                 try:
                     dec1 = gethd.go()
                 except Exception as e:
-                    mosaic_transfer_coordinates_to_beam_status = False
+                    mosaic_continuum_transfer_coordinates_to_beam_status = False
                     error = "Reading DEC of beam {} failed".format(beam)
                     logger.error(error)
                     logger.exception(e)
                     raise RuntimeError(error)
                 else:
-                    mosaic_transfer_coordinates_to_beam_status = True
+                    mosaic_continuum_transfer_coordinates_to_beam_status = True
 
                 # write DEC
                 puthd.in_ = os.path.join(
@@ -947,31 +1366,549 @@ class mosaic(BaseModule):
                 try:
                     puthd.go()
                 except Exception as e:
-                    mosaic_transfer_coordinates_to_beam_status = False
+                    mosaic_continuum_transfer_coordinates_to_beam_status = False
                     error = "Writing DEC of beam {} failed".format(beam)
                     logger.error(error)
                     logger.exception(e)
                     raise RuntimeError(error)
                 else:
-                    mosaic_transfer_coordinates_to_beam_status = True
+                    mosaic_continuum_transfer_coordinates_to_beam_status = True
 
-                logger.info("Processing beam {} ... Done".format(beam))
+                logger.debug("Processing continuum beam {} ... Done".format(beam))
 
-            if mosaic_transfer_coordinates_to_beam_status:
-                logger.info("Transfer image coordinates to beam maps ... Done")
+            if mosaic_continuum_transfer_coordinates_to_beam_status:
+                logger.info("Transfering image coordinates to beam maps for continuum ... Done")
             else:
-                logger.info(
-                    "Transfer image coordinates to beam maps ... Failed")
+                logger.info("Transfering image coordinates to beam maps for continuum ... Failed")
         else:
-            logger.info("Image coordinates have already been transferred")
+            logger.info("Continuum image coordinates have already been transferred")
 
         subs_param.add_param(
-            self, 'mosaic_transfer_coordinates_to_beam_status', mosaic_transfer_coordinates_to_beam_status)
+            self, 'mosaic_continuum_transfer_coordinates_to_beam_status', mosaic_continuum_transfer_coordinates_to_beam_status)
+
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    # Function to calculate a common beam to convolve images
+    # Function to transfer image coordinates to beam maps
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    def get_common_beam(self):
+
+    def transfer_polarisation_coordinates(self):
+        """
+        Function to transfer image coordinates to beam maps
+
+        Based on the notebook cell
+
+        For the proper beam maps, this should be done by the
+        function make the proper beam maps. Probably best to
+        move this function there for the simple beam maps, too
+        """
+
+        logger.info("Transfering image coordinates to beam maps for polarisation")
+
+        mosaic_polarisation_transfer_coordinates_to_beam_status = get_param_def(
+            self, 'mosaic_polarisation_transfer_coordinates_to_beam_status', False)
+
+        # change to directory of polarisation images
+        subs_managefiles.director(self, 'ch', self.mosaic_polarisation_dir)
+
+        if not mosaic_polarisation_transfer_coordinates_to_beam_status:
+
+            for beam in self.mosaic_beam_list:
+
+                logger.debug("Processing beam {}".format(beam))
+
+                # get RA
+                gethd = lib.miriad('gethd')
+                gethd.in_ = os.path.join(
+                    self.mosaic_polarisation_images_subdir, '{0}/image_mf_V/crval1'.format(beam))
+                try:
+                    ra1 = gethd.go()
+                except Exception as e:
+                    mosaic_polarisation_transfer_coordinates_to_beam_status = False
+                    error = "Reading RA of beam {} failed".format(beam)
+                    logger.error(error)
+                    logger.exception(e)
+                    raise RuntimeError(error)
+                else:
+                    mosaic_polarisation_transfer_coordinates_to_beam_status = True
+
+                # write RA
+                puthd = lib.miriad('puthd')
+                puthd.in_ = os.path.join(
+                    self.mosaic_polarisation_beam_subdir, 'beam_{}.map/crval1'.format(beam))
+                puthd.value = float(ra1[0])
+                try:
+                    puthd.go()
+                except Exception as e:
+                    mosaic_polarisation_transfer_coordinates_to_beam_status = False
+                    error = "Writing RA of beam {} failed".format(beam)
+                    logger.error(error)
+                    logger.exception(e)
+                    raise RuntimeError(error)
+                else:
+                    mosaic_polarisation_transfer_coordinates_to_beam_status = True
+
+                # get DEC
+                gethd.in_ = os.path.join(
+                    self.mosaic_polarisation_images_subdir, '{0}/image_mf_V/crval2'.format(beam))
+                try:
+                    dec1 = gethd.go()
+                except Exception as e:
+                    mosaic_polarisation_transfer_coordinates_to_beam_status = False
+                    error = "Reading DEC of beam {} failed".format(beam)
+                    logger.error(error)
+                    logger.exception(e)
+                    raise RuntimeError(error)
+                else:
+                    mosaic_polarisation_transfer_coordinates_to_beam_status = True
+
+                # write DEC
+                puthd.in_ = os.path.join(
+                    self.mosaic_polarisation_beam_subdir, 'beam_{}.map/crval2'.format(beam))
+                puthd.value = float(dec1[0])
+                try:
+                    puthd.go()
+                except Exception as e:
+                    mosaic_polarisation_transfer_coordinates_to_beam_status = False
+                    error = "Writing DEC of beam {} failed".format(beam)
+                    logger.error(error)
+                    logger.exception(e)
+                    raise RuntimeError(error)
+                else:
+                    mosaic_polarisation_transfer_coordinates_to_beam_status = True
+
+                logger.debug("Processing beam {} ... Done".format(beam))
+
+            if mosaic_polarisation_transfer_coordinates_to_beam_status:
+                logger.info("Transfering image coordinates to beam maps for polarisation ... Done")
+            else:
+                logger.info("Transfering image coordinates to beam maps for polarisation ... Failed")
+        else:
+            logger.info("Polarisation image coordinates have already been transfered")
+
+        subs_param.add_param(
+            self, 'mosaic_polarisation_transfer_coordinates_to_beam_status', mosaic_polarisation_transfer_coordinates_to_beam_status)
+
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Function to create the template mosaic for continuum
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    def create_continuum_template_mosaic(self):
+        """
+        Create an template mosaic to be filled in later
+        """
+
+        logger.info("Creating continuum template mosaic")
+
+        mosaic_continuum_template_mosaic_status = get_param_def(
+            self, 'mosaic_continuum_template_mosaic_status', False)
+
+        template_continuum_mosaic_name = "mosaic_continuum_template.map"
+
+        # switch to mosaic directory
+        subs_managefiles.director(self, 'ch', self.mosaic_continuum_mosaic_dir)
+
+        if mosaic_continuum_template_mosaic_status and os.path.isdir(template_continuum_mosaic_name):
+            logger.info("Continuum template mosaic already exists")
+        else:
+            # This will create a template for the mosaic using "imgen" in Miriad
+            # number of pixels of mosaic maps
+            imsize = self.mosaic_continuum_imsize
+            # cell size in arcsec
+            cell = self.mosaic_continuum_cellsize
+
+            # create template prior to changing projection
+            imgen = lib.miriad('imgen')
+            imgen.out = 'mosaic_continuum_temp_preproj.map'
+            imgen.imsize = imsize
+            imgen.cell = cell
+            imgen.object = 'level'
+            imgen.spar = '0.'
+            imgen.radec = '{0},{1}'.format(
+                str(self.mosaic_continuum_projection_centre_ra), str(self.mosaic_continuum_projection_centre_dec))
+            try:
+                imgen.go()
+            except Exception as e:
+                error = "Error creating continuum template mosaic image"
+                logger.error(error)
+                logger.exception(e)
+                raise RuntimeError(error)
+
+            # Now change projection to NCP
+            regrid = lib.miriad('regrid')
+            regrid.in_ = 'mosaic_continuum_temp_preproj.map'
+            regrid.out = template_continuum_mosaic_name
+            regrid.project = 'NCP'
+            try:
+                regrid.go()
+            except Exception as e:
+                error = "Error changing projection to NCP"
+                logger.error(error)
+                logger.exception(e)
+                raise RuntimeError(error)
+
+            logger.info("Creating continuum template mosaic ... Done")
+            mosaic_continuum_template_mosaic_status = True
+
+        subs_param.add_param(
+            self, 'mosaic_continuum_template_mosaic_status', mosaic_continuum_template_mosaic_status)
+
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Function to create the template mosaic for polarisation
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    def create_polarisation_template_mosaic(self):
+        """
+        Create an template mosaic to be filled in later
+        """
+
+        logger.info("Creating polarisation template mosaic")
+
+        mosaic_polarisation_template_mosaic_status = get_param_def(
+            self, 'mosaic_polarisation_template_mosaic_status', False)
+
+        template_polarisation_mosaic_name = "mosaic_polarisation_template.map"
+
+        # switch to mosaic directory
+        subs_managefiles.director(self, 'ch', self.mosaic_polarisation_mosaic_dir)
+
+        if mosaic_polarisation_template_mosaic_status and os.path.isdir(template_polarisation_mosaic_name):
+            logger.info("Polarisation template mosaic already exists")
+        else:
+            # This will create a template for the mosaic using "imgen" in Miriad
+            # number of pixels of mosaic maps
+            imsize = self.mosaic_polarisation_imsize
+            # cell size in arcsec
+            cell = self.mosaic_polarisation_cellsize
+
+            # create template prior to changing projection
+            imgen = lib.miriad('imgen')
+            imgen.out = 'mosaic_polarisation_temp_preproj.map'
+            imgen.imsize = imsize
+            imgen.cell = cell
+            imgen.object = 'level'
+            imgen.spar = '0.'
+            imgen.radec = '{0},{1}'.format(
+                str(self.mosaic_polarisation_projection_centre_ra), str(self.mosaic_polarisation_projection_centre_dec))
+            try:
+                imgen.go()
+            except Exception as e:
+                error = "Error creating polarisation template mosaic image"
+                logger.error(error)
+                logger.exception(e)
+                raise RuntimeError(error)
+
+            # Now change projection to NCP
+            regrid = lib.miriad('regrid')
+            regrid.in_ = 'mosaic_polarisation_temp_preproj.map'
+            regrid.out = template_polarisation_mosaic_name
+            regrid.project = 'NCP'
+            try:
+                regrid.go()
+            except Exception as e:
+                error = "Error changing projection to NCP"
+                logger.error(error)
+                logger.exception(e)
+                raise RuntimeError(error)
+
+            logger.info("Creating polarisation template mosaic ... Done")
+            mosaic_polarisation_template_mosaic_status = True
+
+        subs_param.add_param(
+            self, 'mosaic_polarisation_template_mosaic_status', mosaic_polarisation_template_mosaic_status)
+
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Function to regrid continuum images based on mosaic template
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    def regrid_continuum_images(self):
+        """
+        Function to regrid continuum images using the template mosaic
+        """
+
+        logger.info("Regridding continuum images")
+
+        mosaic_continuum_regrid_images_status = get_param_def(
+            self, 'mosaic_continuum_regrid_images_status', False)
+
+        if not mosaic_continuum_regrid_images_status:
+            # switch to continuum mosaic directory
+            subs_managefiles.director(self, 'ch', self.mosaic_continuum_dir)
+
+            # Put images on mosaic template grid
+            for beam in self.mosaic_beam_list:
+                logger.debug("Regridding continuum beam {}".format(beam))
+                regrid = lib.miriad('regrid')
+                input_file = os.path.join(self.mosaic_continuum_images_subdir, '{0}/image_{0}.map'.format(beam))
+                output_file = os.path.join(self.mosaic_continuum_images_subdir, 'image_{}_regrid.map'.format(beam))
+                template_continuum_mosaic_file = os.path.join(self.mosaic_continuum_mosaic_subdir, "mosaic_continuum_template.map")
+                if not os.path.isdir(output_file):
+                    if os.path.isdir(input_file):
+                        regrid.in_ = input_file
+                        regrid.out = output_file
+                        regrid.tin = template_continuum_mosaic_file
+                        regrid.axes = '1,2'
+                        try:
+                            regrid.go()
+                        except Exception as e:
+                            error = "Failed regridding continuum image of beam {}".format(beam)
+                            logger.error(error)
+                            logger.exception(e)
+                            raise RuntimeError(error)
+                    else:
+                        error = "Did not find convolved continuum image for beam {}".format(beam)
+                        logger.error(error)
+                        raise RuntimeError(error)
+                else:
+                    logger.warning("Regridded continuum image of beam {} already exists".format(beam))
+
+            logger.info("Regridding continuum images ... Done")
+            mosaic_continuum_regrid_images_status = True
+        else:
+            logger.info("Continuum images have already been regridded")
+
+        subs_param.add_param(
+            self, 'mosaic_continuum_regrid_images_status', mosaic_continuum_regrid_images_status)
+
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Function to regrid polarisation images based on mosaic template
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    def regrid_polarisation_images(self):
+        """
+        Function to regrid polarisation images using the template mosaic
+        """
+
+        logger.info("Regridding polarisation images")
+
+        mosaic_polarisation_regrid_images_status = get_param_def(self, 'mosaic_polarisation_regrid_images_status', False)
+
+        if not mosaic_polarisation_regrid_images_status:
+            # switch to polarisation mosaic directory
+            subs_managefiles.director(self, 'ch', self.mosaic_polarisation_dir)
+
+            # Put images on mosaic template grid
+            for beam in self.mosaic_beam_list:
+
+                # Get the needed information from the param files
+                pbeam = 'polarisation_B' + str(beam).zfill(2)
+                polbeamimagestatus = get_param_def(self, pbeam + '_targetbeams_qu_imagestatus', False)
+                qimages = len(polbeamimagestatus)
+                # Do the regridding for each individual image
+                for qplane in range(qimages):
+                    logger.debug("Regridding Stokes Q image #{0} of beam {1}".format(qplane, beam))
+                    regrid = lib.miriad('regrid')
+                    input_file = os.path.join(
+                        self.mosaic_polarisation_images_subdir, beam, "Qcube_" + str(qplane).zfill(3))
+                    output_file = os.path.join(
+                        self.mosaic_polarisation_images_subdir, "Qcube_" + str(beam).zfill(2) + '_' + str(qplane).zfill(3) + '_regrid.map')
+                    template_polarisation_mosaic_file = os.path.join(
+                        self.mosaic_polarisation_mosaic_subdir, "mosaic_polarisation_template.map")
+                    if not os.path.isdir(output_file):
+                        if os.path.isdir(input_file):
+                            regrid.in_ = input_file
+                            regrid.out = output_file
+                            regrid.tin = template_polarisation_mosaic_file
+                            regrid.axes = '1,2'
+                            try:
+                                regrid.go()
+                            except Exception as e:
+                                error = "Failed regridding Stokes Q image #{0} of beam {1}".format(
+                                    qplane, beam)
+                                logger.error(error)
+                                logger.exception(e)
+                                raise RuntimeError(error)
+                        else:
+                            warning = "Did not find convolved Stokes Q image #{0} for beam {1}".format(
+                                qplane, beam)
+                            logger.warning(warning)
+                    else:
+                        logger.warning(
+                            "Regridded Stokes Q image #{0} of beam {1} already exists".format(qplane, beam))
+
+                for uplane in range(qimages):
+                    logger.debug("Regridding Stokes U image #{0} of beam {1}".format(uplane, beam))
+                    regrid = lib.miriad('regrid')
+                    input_file = os.path.join(
+                        self.mosaic_polarisation_images_subdir, beam, "Ucube_" + str(uplane).zfill(3))
+                    output_file = os.path.join(
+                        self.mosaic_polarisation_images_subdir, "Ucube_" + str(beam).zfill(2) + '_' + str(uplane).zfill(3) + '_regrid.map')
+                    template_polarisation_mosaic_file = os.path.join(
+                        self.mosaic_polarisation_mosaic_subdir, "mosaic_polarisation_template.map")
+                    if not os.path.isdir(output_file):
+                        if os.path.isdir(input_file):
+                            regrid.in_ = input_file
+                            regrid.out = output_file
+                            regrid.tin = template_polarisation_mosaic_file
+                            regrid.axes = '1,2'
+                            try:
+                                regrid.go()
+                            except Exception as e:
+                                error = "Failed regridding Stokes U image #{0} of beam {1}".format(uplane, beam)
+                                logger.error(error)
+                                logger.exception(e)
+                                raise RuntimeError(error)
+                        else:
+                            warning = "Did not find convolved Stokes U image #{0} for beam {1}".format(uplane, beam)
+                            logger.warning(warning)
+                    else:
+                        logger.warning("Regridded Stokes U image #{0} of beam {1} already exists".format(uplane, beam))
+
+                logger.debug("Regridding Stokes V image of beam {}".format(beam))
+                regrid = lib.miriad('regrid')
+                input_file = os.path.join(
+                    self.mosaic_polarisation_images_subdir, '{0}/image_mf_V'.format(beam))
+                output_file = os.path.join(
+                    self.mosaic_polarisation_images_subdir, 'image_mf_V_{0}_regrid.map'.format(beam))
+                template_polarisation_mosaic_file = os.path.join(
+                    self.mosaic_polarisation_mosaic_subdir, "mosaic_polarisation_template.map")
+                if not os.path.isdir(output_file):
+                    if os.path.isdir(input_file):
+                        regrid.in_ = input_file
+                        regrid.out = output_file
+                        regrid.tin = template_polarisation_mosaic_file
+                        regrid.axes = '1,2'
+                        try:
+                            regrid.go()
+                        except Exception as e:
+                            error = "Failed regridding Stokes V image of beam {}".format(
+                                beam)
+                            logger.error(error)
+                            logger.exception(e)
+                            raise RuntimeError(error)
+                    else:
+                        error = "Did not find convolved Stokes V image for beam {}".format(
+                            beam)
+                        logger.error(error)
+                        raise RuntimeError(error)
+                else:
+                    logger.warning("Regridded Stokes V image of beam {} already exists".format(beam))
+
+            logger.info("Regridding polarisation images ... Done")
+            mosaic_polarisation_regrid_images_status = True
+        else:
+            logger.info("polarisation images have already been regridded")
+
+        subs_param.add_param(
+            self, 'mosaic_polarisation_regrid_images_status', mosaic_polarisation_regrid_images_status)
+
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Function to regrid continuum beam maps based on mosaic template
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    def regrid_continuum_beam_maps(self):
+        """
+        Function to regrid beam images using the template mosaic
+        """
+
+        logger.info("Regridding continuum beam maps")
+
+        mosaic_continuum_regrid_beam_maps_status = get_param_def(
+            self, 'mosaic_continuum_regrid_beam_maps_status', False)
+
+        if not mosaic_continuum_regrid_beam_maps_status:
+            # switch to mosaic directory
+            subs_managefiles.director(self, 'ch', self.mosaic_continuum_dir)
+
+            # Put images on mosaic template grid
+            for beam in self.mosaic_beam_list:
+                input_file = os.path.join(
+                    self.mosaic_continuum_beam_subdir, 'beam_{}.map'.format(beam))
+                output_file = os.path.join(
+                    self.mosaic_continuum_beam_subdir, 'beam_{}_mos.map'.format(beam))
+                template_continuum_mosaic_file = os.path.join(
+                    self.mosaic_continuum_mosaic_subdir, "mosaic_continuum_template.map")
+                regrid = lib.miriad('regrid')
+                if not os.path.isdir(output_file):
+                    if os.path.isdir(input_file):
+                        regrid.in_ = input_file
+                        regrid.out = output_file
+                        regrid.tin = template_continuum_mosaic_file
+                        regrid.axes = '1,2'
+                        try:
+                            regrid.go()
+                        except Exception as e:
+                            error = "Failed regridding continuum beam_maps of beam {}".format(beam)
+                            logger.error(error)
+                            logger.exception(e)
+                            raise RuntimeError(error)
+                    else:
+                        error = "Did not find continuum beam map for beam {}".format(beam)
+                        logger.error(error)
+                        raise RuntimeError(error)
+                else:
+                    logger.warning("Regridded continuum beam map of beam {} already exists".format(beam))
+
+            logger.info("Regridding continuum beam maps ... Done")
+
+            mosaic_continuum_regrid_beam_maps_status = True
+        else:
+            logger.info("Regridding of continuum beam maps has already been done")
+
+        subs_param.add_param(
+            self, 'mosaic_continuum_regrid_beam_maps_status', mosaic_continuum_regrid_beam_maps_status)
+
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Function to regrid polarisation beam maps based on mosaic template
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    def regrid_polarisation_beam_maps(self):
+        """
+        Function to regrid beam images using the template mosaic
+        """
+
+        logger.info("Regridding polarisation beam maps")
+
+        mosaic_polarisation_regrid_beam_maps_status = get_param_def(
+            self, 'mosaic_polarisation_regrid_beam_maps_status', False)
+
+        if not mosaic_polarisation_regrid_beam_maps_status:
+            # switch to mosaic directory
+            subs_managefiles.director(self, 'ch', self.mosaic_polarisation_dir)
+
+            # Put images on mosaic template grid
+            for beam in self.mosaic_beam_list:
+                input_file = os.path.join(
+                    self.mosaic_polarisation_beam_subdir, 'beam_{}.map'.format(beam))
+                output_file = os.path.join(
+                    self.mosaic_polarisation_beam_subdir, 'beam_{}_mos.map'.format(beam))
+                template_polarisation_mosaic_file = os.path.join(
+                    self.mosaic_polarisation_mosaic_subdir, "mosaic_polarisation_template.map")
+                regrid = lib.miriad('regrid')
+                if not os.path.isdir(output_file):
+                    if os.path.isdir(input_file):
+                        regrid.in_ = input_file
+                        regrid.out = output_file
+                        regrid.tin = template_polarisation_mosaic_file
+                        regrid.axes = '1,2'
+                        try:
+                            regrid.go()
+                        except Exception as e:
+                            error = "Failed regridding polarisation beam_maps of beam {}".format(beam)
+                            logger.error(error)
+                            logger.exception(e)
+                            raise RuntimeError(error)
+                    else:
+                        error = "Did not find polarisation beam map for beam {}".format(beam)
+                        logger.error(error)
+                        raise RuntimeError(error)
+                else:
+                    logger.warning("Regridded polarisation beam map of beam {} already exists".format(beam))
+
+            logger.info("Regridding polarisation beam maps ... Done")
+
+            mosaic_polarisation_regrid_beam_maps_status = True
+        else:
+            logger.info("Regridding of polarisation beam maps has already been done")
+
+        subs_param.add_param(
+            self, 'mosaic_polarisation_regrid_beam_maps_status', mosaic_polarisation_regrid_beam_maps_status)
+
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Function to get the common beam for the continuum images
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    def get_continuum_common_beam(self):
         """
         Function to calculate a common beam to convolve images
 
@@ -982,18 +1919,18 @@ class mosaic(BaseModule):
         2. Calculate the maximum beam
         """
 
-        logger.info("Calculate common beam for convolution")
+        mosaic_continuum_common_beam_status = get_param_def(
+            self, 'mosaic_continuum_common_beam_status', False)
 
-        mosaic_common_beam_status = get_param_def(
-            self, 'mosaic_common_beam_status', False)
+        mosaic_continuum_common_beam_values = get_param_def(
+            self, 'mosaic_continuum_common_beam_values', np.zeros(3))
 
-        mosaic_common_beam_values = get_param_def(
-            self, 'mosaic_common_beam_values', np.zeros(3))
+        logger.info("Calculating common beam for convolution of continuum images")
 
         # change to directory of continuum images
         subs_managefiles.director(self, 'ch', self.mosaic_continuum_images_dir)
 
-        if not mosaic_common_beam_status:
+        if not mosaic_continuum_common_beam_status:
             # this is where the beam information will be stored
             bmaj = []
             bmin = []
@@ -1019,12 +1956,12 @@ class mosaic(BaseModule):
             bangle = [float(x[0]) for x in bpa]
             bangle = np.degrees(bangle)
 
-            if self.mosaic_common_beam_type == 'circular':
-                logger.info("Using circular beam")
+            if self.mosaic_continuum_common_beam_type == 'circular':
+                logger.debug("Using circular beam")
                 max_axis = np.nanmax([bmajor, bminor])
                 c_beam = [1.05 * max_axis, 1.05 * max_axis, 0.]
-            elif self.mosaic_common_beam_type == "elliptical":
-                logger.info("Using elliptical beam")
+            elif self.mosaic_continuum_common_beam_type == "elliptical":
+                logger.debug("Using elliptical beam")
                 c_beam = [1.05 * np.nanmax(bmajor), 1.05 *
                           np.nanmax(bminor), np.nanmedian(bangle)]
             else:
@@ -1032,213 +1969,209 @@ class mosaic(BaseModule):
                 logger.error(error)
                 raise RuntimeError(error)
 
-            logger.info(
+            logger.debug(
                 'The final, convolved, synthesized beam has bmaj, bmin, bpa of: {}'.format(str(c_beam)))
 
-            mosaic_common_beam_status = True
-            mosaic_common_beam_values = c_beam
+            mosaic_continuum_common_beam_status = True
+            mosaic_continuum_common_beam_values = c_beam
         else:
-            logger.info("Common beam already available as bmaj, bmin, bpa of: {}".format(
-                str(mosaic_common_beam_values)))
+            logger.info("Continuum common beam already available as bmaj, bmin, bpa of: {}".format(
+                str(mosaic_continuum_common_beam_values)))
 
         subs_param.add_param(
-            self, 'mosaic_common_beam_status', mosaic_common_beam_status)
+            self, 'mosaic_continuum_common_beam_status', mosaic_continuum_common_beam_status)
 
         subs_param.add_param(
-            self, 'mosaic_common_beam_values', mosaic_common_beam_values)
+            self, 'mosaic_continuum_common_beam_values', mosaic_continuum_common_beam_values)
 
-    # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    # Function to create template mosaic
-    # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    def create_template_mosaic(self):
+        # +++++++++++++++++++++++++++++++++++++++++++++++++++
+        # Function to get the common beam for the polarisation images
+        # +++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    def get_polarisation_common_beam(self):
         """
-        Create an template mosaic to be filled in later
+        Function to calculate a common beam to convolve images
+
+        Based on the cell on the same synthesized beam.
+
+        There are several options
+        1. Calculate a circular beam (default)
+        2. Calculate the maximum beam
         """
 
-        logger.info("Creating template mosaic")
+        mosaic_polarisation_common_beam_status = get_param_def(
+            self, 'mosaic_polarisation_common_beam_status', False)
 
-        mosaic_template_mosaic_status = get_param_def(
-            self, 'mosaic_template_mosaic_status', False)
+        # Get the needed information from the param files
+        pbeam = 'polarisation_B' + str(self.mosaic_beam_list[0]).zfill(2)
+        polbeamimagestatus = get_param_def(self, pbeam + '_targetbeams_qu_imagestatus', False)
+        qimages = len(polbeamimagestatus)
 
-        template_mosaic_name = "mosaic_template.map"
+        mosaic_polarisation_common_beam_values_qu = get_param_def(
+            self, 'mosaic_polarisation_common_beam_values_qu', np.zeros((2, qimages, 3)))
 
-        # switch to mosaic directory
-        subs_managefiles.director(self, 'ch', self.mosaic_continuum_mosaic_dir)
+        mosaic_polarisation_common_beam_values_v = get_param_def(
+            self, 'mosaic_polarisation_common_beam_values_v', np.zeros(3))
 
-        if mosaic_template_mosaic_status and os.path.isdir(template_mosaic_name):
-            logger.info("Template mosaic already exists")
-        else:
-            # This will create a template for the mosaic using "imgen" in Miriad
-            # number of pixels of mosaic maps
-            imsize = self.mosaic_continuum_imsize
-            # cell size in arcsec
-            cell = self.mosaic_continuum_cellsize
+        logger.info("Calculating common beam for convolution of polarisation images")
 
-            # create template prior to changing projection
-            imgen = lib.miriad('imgen')
-            imgen.out = 'mosaic_temp_preproj.map'
-            imgen.imsize = imsize
-            imgen.cell = cell
-            imgen.object = 'level'
-            imgen.spar = '0.'
-            imgen.radec = '{0},{1}'.format(
-                str(self.mosaic_projection_centre_ra), str(self.mosaic_projection_centre_dec))
-            imgen.inp()
-            try:
-                imgen.go()
-            except Exception as e:
-                error = "Error creating template mosaic image"
+        # change to directory of polarisation images
+        subs_managefiles.director(self, 'ch', self.mosaic_polarisation_images_dir)
+
+        if not mosaic_polarisation_common_beam_status:
+
+            # Calculate the common beam values for the Stokes Q images
+            for qplane in range(qimages):
+                # this is where the beam information will be stored
+                bmaj = []
+                bmin = []
+                bpa = []
+
+                # go through the beams and get the information
+                for beam in self.mosaic_beam_list:
+                    gethd = lib.miriad('gethd')
+                    gethd.in_ = os.path.join(beam, "Qcube_" + str(qplane).zfill(3) + '/bmaj')
+                    bmaj.append(gethd.go())
+                    gethd.in_ = os.path.join(beam, "Qcube_" + str(qplane).zfill(3) + '/bmin')
+                    bmin.append(gethd.go())
+                    gethd.in_ = os.path.join(beam, "Qcube_" + str(qplane).zfill(3) + '/bpa')
+                    bpa.append(gethd.go())
+
+                # Calculate maximum bmaj and bmin and median bpa for final convolved beam shape
+                bmajor = [float(x[0]) for x in bmaj]
+                bmajor = 3600. * np.degrees(bmajor)
+
+                bminor = [float(x[0]) for x in bmin]
+                bminor = 3600. * np.degrees(bminor)
+
+                bangle = [float(x[0]) for x in bpa]
+                bangle = np.degrees(bangle)
+
+                if self.mosaic_polarisation_common_beam_type == 'circular':
+                    logger.debug("Using circular beam")
+                    max_axis = np.nanmax([bmajor, bminor])
+                    c_beam = [1.05 * max_axis, 1.05 * max_axis, 0.]
+                elif self.mosaic_polarisation_common_beam_type == "elliptical":
+                    logger.debug("Using elliptical beam")
+                    c_beam = [1.05 * np.nanmax(bmajor), 1.05 *
+                              np.nanmax(bminor), np.nanmedian(bangle)]
+                else:
+                    error = "Unknown type of common beam requested. Abort"
+                    logger.error(error)
+                    raise RuntimeError(error)
+
+                logger.debug('The final, convolved, synthesized beam has bmaj, bmin, bpa of: {}'.format(str(c_beam)))
+
+                mosaic_polarisation_common_beam_values_qu[0, qplane, :] = c_beam
+
+            # Calculate the common beam values for the Stokes U images
+            for uplane in range(qimages):
+                # this is where the beam information will be stored
+                bmaj = []
+                bmin = []
+                bpa = []
+
+                # go through the beams and get the information
+                for beam in self.mosaic_beam_list:
+                    gethd = lib.miriad('gethd')
+                    gethd.in_ = os.path.join(beam, "Ucube_" + str(uplane).zfill(3) + '/bmaj')
+                    bmaj.append(gethd.go())
+                    gethd.in_ = os.path.join(beam, "Ucube_" + str(uplane).zfill(3) + '/bmin')
+                    bmin.append(gethd.go())
+                    gethd.in_ = os.path.join(beam, "Ucube_" + str(uplane).zfill(3) + '/bpa')
+                    bpa.append(gethd.go())
+
+                # Calculate maximum bmaj and bmin and median bpa for final convolved beam shape
+                bmajor = [float(x[0]) for x in bmaj]
+                bmajor = 3600. * np.degrees(bmajor)
+
+                bminor = [float(x[0]) for x in bmin]
+                bminor = 3600. * np.degrees(bminor)
+
+                bangle = [float(x[0]) for x in bpa]
+                bangle = np.degrees(bangle)
+
+                if self.mosaic_polarisation_common_beam_type == 'circular':
+                    logger.debug("Using circular beam")
+                    max_axis = np.nanmax([bmajor, bminor])
+                    c_beam = [1.05 * max_axis, 1.05 * max_axis, 0.]
+                elif self.mosaic_polarisation_common_beam_type == "elliptical":
+                    logger.debug("Using elliptical beam")
+                    c_beam = [1.05 * np.nanmax(bmajor), 1.05 *
+                              np.nanmax(bminor), np.nanmedian(bangle)]
+                else:
+                    error = "Unknown type of common beam requested. Abort"
+                    logger.error(error)
+                    raise RuntimeError(error)
+
+                logger.debug('The final, convolved, synthesized beam has bmaj, bmin, bpa of: {}'.format(str(c_beam)))
+
+                mosaic_polarisation_common_beam_values_qu[1, uplane, :] = c_beam
+
+            # Calculate the common beam values for the Stokes V images
+            # this is where the beam information will be stored
+            bmaj = []
+            bmin = []
+            bpa = []
+
+            # go through the beams and get the information
+            for beam in self.mosaic_beam_list:
+                gethd = lib.miriad('gethd')
+                gethd.in_ = '{0}/image_mf_V/bmaj'.format(beam)
+                bmaj.append(gethd.go())
+                gethd.in_ = '{0}/image_mf_V/bmin'.format(beam)
+                bmin.append(gethd.go())
+                gethd.in_ = '{0}/image_mf_V/bpa'.format(beam)
+                bpa.append(gethd.go())
+
+            # Calculate maximum bmaj and bmin and median bpa for final convolved beam shape
+            bmajor = [float(x[0]) for x in bmaj]
+            bmajor = 3600. * np.degrees(bmajor)
+
+            bminor = [float(x[0]) for x in bmin]
+            bminor = 3600. * np.degrees(bminor)
+
+            bangle = [float(x[0]) for x in bpa]
+            bangle = np.degrees(bangle)
+
+            if self.mosaic_polarisation_common_beam_type == 'circular':
+                logger.debug("Using circular beam")
+                max_axis = np.nanmax([bmajor, bminor])
+                c_beam = [1.05 * max_axis, 1.05 * max_axis, 0.]
+            elif self.mosaic_polarisation_common_beam_type == "elliptical":
+                logger.debug("Using elliptical beam")
+                c_beam = [1.05 * np.nanmax(bmajor), 1.05 *
+                          np.nanmax(bminor), np.nanmedian(bangle)]
+            else:
+                error = "Unknown type of common beam requested. Abort"
                 logger.error(error)
-                logger.exception(e)
                 raise RuntimeError(error)
 
-            # Now change projection to NCP
-            regrid = lib.miriad('regrid')
-            regrid.in_ = 'mosaic_temp_preproj.map'
-            regrid.out = template_mosaic_name
-            regrid.project = 'NCP'
-            try:
-                regrid.go()
-            except Exception as e:
-                error = "Error changing projection to NCP"
-                logger.error(error)
-                logger.exception(e)
-                raise RuntimeError(error)
+            logger.debug('The final, convolved, synthesized beam has bmaj, bmin, bpa of: {}'.format(str(c_beam)))
 
-            # remove (moved to cleanup function)
-            # shutil.rmtree(mosaicdir+'mosaic_temp.map')
-            # subs_managefiles.director(self, 'rm', 'mosaic_temp_preproj.map')
+            mosaic_polarisation_common_beam_values_v = c_beam
 
-            logger.info("Creating template mosaic ... Done")
-            mosaic_template_mosaic_status = True
+            mosaic_polarisation_common_beam_status = True
 
-        subs_param.add_param(
-            self, 'mosaic_template_mosaic_status', mosaic_template_mosaic_status)
-
-    # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    # Function to regrid images based on mosaic template
-    # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    def regrid_images(self):
-        """
-        Function to regrid images using the template mosaic
-        """
-
-        logger.info("Regridding images")
-
-        mosaic_regrid_images_status = get_param_def(
-            self, 'mosaic_regrid_images_status', False)
-
-        if not mosaic_regrid_images_status:
-            # switch to mosaic directory
-            subs_managefiles.director(self, 'ch', self.mosaic_continuum_dir)
-
-            # Put images on mosaic template grid
-            for beam in self.mosaic_beam_list:
-                logger.info("Regridding beam {}".format(beam))
-                regrid = lib.miriad('regrid')
-                input_file = os.path.join(
-                    self.mosaic_continuum_images_subdir, '{0}/image_{0}.map'.format(beam))
-                output_file = os.path.join(
-                    self.mosaic_continuum_images_subdir, 'image_{}_regrid.map'.format(beam))
-                template_mosaic_file = os.path.join(
-                    self.mosaic_continuum_mosaic_subdir, "mosaic_template.map")
-                if not os.path.isdir(output_file):
-                    if os.path.isdir(input_file):
-                        regrid.in_ = input_file
-                        regrid.out = output_file
-                        regrid.tin = template_mosaic_file
-                        regrid.axes = '1,2'
-                        regrid.inp()
-                        try:
-                            regrid.go()
-                        except Exception as e:
-                            error = "Failed regridding image of beam {}".format(
-                                beam)
-                            logger.error(error)
-                            logger.exception(e)
-                            raise RuntimeError(error)
-                    else:
-                        error = "Did not find convolved image for beam {}".format(
-                            beam)
-                        logger.error(error)
-                        raise RuntimeError(error)
-                else:
-                    logger.warning(
-                        "Regridded image of beam {} already exists".format(beam))
-
-            logger.info("Regridding images ... Done")
-            mosaic_regrid_images_status = True
         else:
-            logger.info("Images have already been regridded")
+            logger.info("Polarisation common beams already available")
 
         subs_param.add_param(
-            self, 'mosaic_regrid_images_status', mosaic_regrid_images_status)
-
-    # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    # Function to regrid beam maps based on mosaic template
-    # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    def regrid_beam_maps(self):
-        """
-        Function to regrid beam images using the template mosaic
-        """
-
-        logger.info("Regridding beam maps")
-
-        mosaic_regrid_beam_maps_status = get_param_def(
-            self, 'mosaic_regrid_beam_maps_status', False)
-
-        if not mosaic_regrid_beam_maps_status:
-            # switch to mosaic directory
-            subs_managefiles.director(self, 'ch', self.mosaic_continuum_dir)
-
-            # Put images on mosaic template grid
-            for beam in self.mosaic_beam_list:
-                input_file = os.path.join(
-                    self.mosaic_continuum_beam_subdir, 'beam_{}.map'.format(beam))
-                output_file = os.path.join(
-                    self.mosaic_continuum_beam_subdir, 'beam_{}_mos.map'.format(beam))
-                template_mosaic_file = os.path.join(
-                    self.mosaic_continuum_mosaic_subdir, "mosaic_template.map")
-                regrid = lib.miriad('regrid')
-                if not os.path.isdir(output_file):
-                    if os.path.isdir(input_file):
-                        regrid.in_ = input_file
-                        regrid.out = output_file
-                        regrid.tin = template_mosaic_file
-                        regrid.axes = '1,2'
-                        regrid.inp()
-                        try:
-                            regrid.go()
-                        except Exception as e:
-                            error = "Failed regridding beam_maps of beam {}".format(
-                                beam)
-                            logger.error(error)
-                            logger.exception(e)
-                            raise RuntimeError(error)
-                    else:
-                        error = "Did not find beam map for beam {}".format(
-                            beam)
-                        logger.error(error)
-                        raise RuntimeError(error)
-                else:
-                    logger.warning(
-                        "Regridded beam map of beam {} already exists".format(beam))
-
-            logger.info("Regridding beam maps ... Done")
-
-            mosaic_regrid_beam_maps_status = True
-        else:
-            logger.info("Regridding of beam maps has already been done")
+            self, 'mosaic_polarisation_common_beam_status', mosaic_polarisation_common_beam_status)
 
         subs_param.add_param(
-            self, 'mosaic_regrid_beam_maps_status', mosaic_regrid_beam_maps_status)
+            self, 'mosaic_polarisation_common_beam_values_qu', mosaic_polarisation_common_beam_values_qu)
+
+        subs_param.add_param(
+            self, 'mosaic_polarisation_common_beam_values_v', mosaic_polarisation_common_beam_values_v)
+
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    # Function to convolve images
+    # Function to convolve continuum images
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    def mosaic_convolve_images(self):
+    def mosaic_continuum_convolve_images(self):
         """
-        Function to convolve images with the common beam
+        Function to convolve continuum images with the common beam
 
         Should be executed after gridding unless a circular common beam is chosen
 
@@ -1246,207 +2179,375 @@ class mosaic(BaseModule):
             Could be moved
         """
 
-        mosaic_convolve_images_status = get_param_def(
-            self, 'mosaic_convolve_images_status', False)
+        mosaic_continuum_convolve_images_status = get_param_def(
+            self, 'mosaic_continuum_convolve_images_status', False)
 
-        mosaic_common_beam_values = get_param_def(
-            self, 'mosaic_common_beam_values', np.zeros(3))
+        mosaic_continuum_common_beam_values = get_param_def(
+            self, 'mosaic_continuum_common_beam_values', np.zeros(3))
 
-        logger.info("Convolving images with common beam with beam {}".format(
-            mosaic_common_beam_values))
+        logger.info("Convolving continuum images with common beam with beam {}".format(
+            mosaic_continuum_common_beam_values))
 
         # change to directory of continuum images
         subs_managefiles.director(self, 'ch', self.mosaic_continuum_dir)
 
-        if not mosaic_convolve_images_status:
+        if not mosaic_continuum_convolve_images_status:
 
             for beam in self.mosaic_beam_list:
-                logger.info("Convolving image of beam {}".format(beam))
+                logger.info("Convolving continuum image of beam {}".format(beam))
 
                 # output map and input map
-                output_file = os.path.join(
-                    self.mosaic_continuum_mosaic_subdir, 'image_{0}_mos.map'.format(beam))
                 input_file = os.path.join(
                     self.mosaic_continuum_images_subdir, 'image_{0}_regrid.map'.format(beam))
+                output_file = os.path.join(
+                    self.mosaic_continuum_mosaic_subdir, 'image_{0}_mos.map'.format(beam))
 
                 if not os.path.isdir(output_file):
                     convol = lib.miriad('convol')
                     convol.map = input_file
                     convol.out = output_file
                     convol.fwhm = '{0},{1}'.format(
-                        str(mosaic_common_beam_values[0]), str(mosaic_common_beam_values[1]))
-                    convol.pa = mosaic_common_beam_values[2]
+                        str(mosaic_continuum_common_beam_values[0]), str(mosaic_continuum_common_beam_values[1]))
+                    convol.pa = mosaic_continuum_common_beam_values[2]
                     convol.options = 'final'
-                    convol.inp()
                     try:
                         convol.go()
                     except Exception as e:
-                        error = "Convolving image of beam {} ... Failed".format(
+                        error = "Convolving continuum image of beam {} ... Failed".format(beam)
+                        logger.error(error)
+                        logger.exception(e)
+                        raise RuntimeError(error)
+                    else:
+                        logger.debug("Convolving continuum image of beam {} ... Done".format(beam))
+                else:
+                    logger.warning("Convolved continuum image of beam {} already exists".format(beam))
+
+                    mosaic_continuum_convolve_images_status = True
+
+            logger.info("Convolving continuum images with common beam ... Done")
+        else:
+            logger.info("Continuum images have already been convolved")
+
+        subs_param.add_param(
+            self, 'mosaic_continuum_convolve_images_status', mosaic_continuum_convolve_images_status)
+
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Function to convolve polarisation images
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    def mosaic_polarisation_convolve_images(self):
+        """
+        Function to convolve polarisation images with the common beam
+
+        Should be executed after gridding unless a circular common beam is chosen
+
+        Note:
+            Could be moved
+        """
+
+        # Get the needed information from the param files
+        pbeam = 'polarisation_B' + str(self.mosaic_beam_list[0]).zfill(2)
+        polbeamimagestatus = get_param_def(self, pbeam + '_targetbeams_qu_imagestatus', False)
+        qimages = len(polbeamimagestatus)
+
+        mosaic_polarisation_common_beam_values_qu = get_param_def(
+            self, 'mosaic_polarisation_common_beam_values_qu', np.zeros((2, qimages, 3)))
+
+        mosaic_polarisation_common_beam_values_v = get_param_def(
+            self, 'mosaic_polarisation_common_beam_values_v', np.zeros(3))
+
+        mosaic_polarisation_convolve_images_status = get_param_def(
+            self, 'mosaic_polarisation_convolve_images_status', False)
+
+        logger.info("Convolving polarisation images with common beams")
+
+        # change to directory of polarisation images
+        subs_managefiles.director(self, 'ch', self.mosaic_polarisation_dir)
+
+        if not mosaic_polarisation_convolve_images_status:
+
+            # Calculate the common beam values for the Stokes Q images
+            for qplane in range(qimages):
+                for beam in self.mosaic_beam_list:
+                    logger.debug("Convolving Stokes Q image of beam {}".format(beam))
+
+                    # output map and input map
+                    input_file = os.path.join(
+                        self.mosaic_polarisation_images_subdir, "Qcube_" + str(beam).zfill(2) + '_' + str(qplane).zfill(3) + '_regrid.map')
+                    output_file = os.path.join(
+                        self.mosaic_polarisation_mosaic_subdir, "Qcube_" + str(beam).zfill(2) + '_' + str(qplane).zfill(3) + '_mos.map')
+
+                    if not os.path.isdir(output_file):
+                        convol = lib.miriad('convol')
+                        convol.map = input_file
+                        convol.out = output_file
+                        convol.fwhm = '{0},{1}'.format(
+                            str(mosaic_polarisation_common_beam_values_qu[0, qplane, 0]), str(mosaic_polarisation_common_beam_values_qu[0, qplane, 1]))
+                        convol.pa = mosaic_polarisation_common_beam_values_qu[0, qplane, 2]
+                        convol.options = 'final'
+                        try:
+                            convol.go()
+                        except Exception as e:
+                            error = "Convolving Stokes Q image {0} of beam {1} ... Failed".format(
+                                qplane, beam)
+                            logger.error(error)
+                            logger.exception(e)
+                            raise RuntimeError(error)
+                        else:
+                            logger.debug("Convolving Stokes Q image {0} of beam {1} ... Done".format(qplane, beam))
+                    else:
+                        logger.warning(
+                            "Convolved Stokes Q image {0} of beam {1} already exists".format(qplane, beam))
+
+            # Calculate the common beam values for the Stokes Q images
+            for uplane in range(qimages):
+                for beam in self.mosaic_beam_list:
+                    logger.info("Convolving Stokes U image of beam {}".format(beam))
+
+                    # output map and input map
+                    input_file = os.path.join(
+                        self.mosaic_polarisation_images_subdir, "Ucube_" + str(beam).zfill(2) + '_' + str(uplane).zfill(3) + '_regrid.map')
+                    output_file = os.path.join(
+                        self.mosaic_polarisation_mosaic_subdir, "Ucube_" + str(beam).zfill(2) + '_' + str(uplane).zfill(3) + '_mos.map')
+
+                    if not os.path.isdir(output_file):
+                        convol = lib.miriad('convol')
+                        convol.map = input_file
+                        convol.out = output_file
+                        convol.fwhm = '{0},{1}'.format(
+                            str(mosaic_polarisation_common_beam_values_qu[1, uplane, 0]),
+                            str(mosaic_polarisation_common_beam_values_qu[1, uplane, 1]))
+                        convol.pa = mosaic_polarisation_common_beam_values_qu[1, uplane, 2]
+                        convol.options = 'final'
+                        try:
+                            convol.go()
+                        except Exception as e:
+                            error = "Convolving Stokes U image {0} of beam {1} ... Failed".format(
+                                uplane, beam)
+                            logger.error(error)
+                            logger.exception(e)
+                            raise RuntimeError(error)
+                        else:
+                            logger.debug(
+                                "Convolving Stokes U image {0} of beam {1} ... Done".format(uplane, beam))
+                    else:
+                        logger.warning(
+                            "Convolved Stokes U image {0} of beam {1} already exists".format(uplane, beam))
+
+            for beam in self.mosaic_beam_list:
+                logger.info("Convolving Stokes V image of beam {}".format(beam))
+
+                # output map and input map
+                input_file = os.path.join(
+                    self.mosaic_polarisation_images_subdir, 'image_mf_V_{}_regrid.map'.format(beam))
+                output_file = os.path.join(
+                    self.mosaic_polarisation_mosaic_subdir, 'image_mf_V_{}_mos.map'.format(beam))
+
+                if not os.path.isdir(output_file):
+                    convol = lib.miriad('convol')
+                    convol.map = input_file
+                    convol.out = output_file
+                    convol.fwhm = '{0},{1}'.format(
+                        str(mosaic_polarisation_common_beam_values_v[0]), str(mosaic_polarisation_common_beam_values_v[1]))
+                    convol.pa = mosaic_polarisation_common_beam_values_v[2]
+                    convol.options = 'final'
+                    try:
+                        convol.go()
+                    except Exception as e:
+                        error = "Convolving Stokes V image of beam {} ... Failed".format(
                             beam)
                         logger.error(error)
                         logger.exception(e)
                         raise RuntimeError(error)
                     else:
-                        logger.info(
-                            "Convolving image of beam {} ... Done".format(beam))
+                        logger.debug("Convolving Stokes V image of beam {} ... Done".format(beam))
                 else:
-                    logger.warning(
-                        "Convolved image of beam {} already exists".format(beam))
+                    logger.warning("Convolved Stokes V image of beam {} already exists".format(beam))
 
-            mosaic_common_beam_values = True
+            mosaic_polarisation_convolve_images_status = True
 
-            logger.info("Convolving images with common beam ... Done")
+            logger.info("Convolving polarisation images with common beam ... Done")
         else:
-            logger.info("Images have already been convolved")
+            logger.info("Polarisation images have already been convolved")
 
         subs_param.add_param(
-            self, 'mosaic_convolve_images_status', mosaic_common_beam_values)
+            self, 'mosaic_polarisation_convolve_images_status', mosaic_polarisation_convolve_images_status)
+
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
     # Function to get the correlation matrix
-    # This should go to mosaic_utils
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    def get_inverted_covariance_matrix(self):
+    def get_continuum_inverted_covariance_matrix(self):
         """
         Function to get the covariance matrix
 
         Based on the cell that reads-in the correlation matrix
         """
 
-        logger.info("Calculating inverse covariance matrix")
+        logger.info("Calculating inverse covariance matrix for continuum")
 
-        mosaic_continuum_write_covariance_matrix_status = get_param_def(
-            self, 'mosaic_continuum_write_covariance_matrix_status', False)
+        mosaic_continuum_correlation_matrix_status = get_param_def(
+            self, 'mosaic_continuum_correlation_matrix_status', False)
 
-        mosaic_continuum_read_covariance_matrix_status = get_param_def(
-            self, 'mosaic_continuum_read_covariance_matrix_status', False)
-
-        # mosaic_continuum_inverse_covariance_matrix = []
         mosaic_continuum_inverse_covariance_matrix = get_param_def(
             self, 'mosaic_continuum_inverse_covariance_matrix', [])
 
-        noise_cov = get_param_def(
-            self, 'mosaic_continuum_noise_covariance_matrix', [])
+        # change to directory of continuum images
+        subs_managefiles.director(self, 'ch', self.mosaic_continuum_dir)
 
-        sigma_beam = get_param_def(
-            self, 'mosaic_continuum_image_noise', [])
+        correlation_matrix_file = os.path.join(self.mosaic_continuum_dir, 'correlation.txt')
 
-        correlation_matrix_file = os.path.join(
-            self.mosaic_continuum_dir, 'correlation.txt')
-
-        if not mosaic_continuum_write_covariance_matrix_status:
-
-            logger.info("Writing covariance matrix")
-            try:
-                mosaic_utils.create_correlation_matrix(
-                    correlation_matrix_file, use_askap_based_matrix=self.mosaic_use_askap_based_matrix)
-            except Exception as e:
-                warning = "Writing covariance matrix ... Failed"
-                logger.warning(warning)
-                logger.exception(e)
+        if not mosaic_continuum_correlation_matrix_status:
+            logger.info("Writing continuum correlation matrix")
+            mosaic_utils.create_correlation_matrix(correlation_matrix_file, use_askap_based_matrix=self.mosaic_use_askap_based_matrix)
+            if os.path.isfile(correlation_matrix_file):
+                mosaic_continuum_correlation_matrix_status = True
+                logger.info("Writing continuum correlation matrix ... Done")
             else:
-                logger.info("Writing covariance matrix ... Done")
-                mosaic_continuum_write_covariance_matrix_status = True
+                logger.error("Writing continuum correlation matrix ... Failed")
+                mosaic_continuum_correlation_matrix_status = False
         else:
-            logger.info("Covariance matrix already available on file.")
+            logger.info("Continuum correlation matrix already available as file on disk.")
 
-        if len(mosaic_continuum_inverse_covariance_matrix) == 0:
-
-            logger.info("Reading covariance matrix")
-            # Read in noise correlation matrix
-            try:
-                noise_cor = np.loadtxt(
-                    correlation_matrix_file, dtype=np.float64)
-            except Exception as e:
-                warning = "Reading covariance matrix ... Failed"
-                logger.warning(warning)
-                logger.exception(e)
+        if mosaic_continuum_correlation_matrix_status:
+            if len(mosaic_continuum_inverse_covariance_matrix) == 0:
+                logger.info("Calculating inverse continuum covariance matrix ...")
+                mosaic_continuum_inverse_covariance_matrix = mosaic_utils.inverted_covariance_matrix('images/{0}/image_{0}.map', correlation_matrix_file, self.NBEAMS, self.mosaic_beam_list)
+                logger.info("Calculating inverse continuum covariance matrix ... Done")
             else:
-                mosaic_continuum_read_covariance_matrix_status = True
-
-            logger.info("Getting covariance matrix ...")
-
-            # Initialize covariance matrix
-            noise_cov = copy.deepcopy(noise_cor)
-
-            # Measure noise in the image for each beam
-            # same size as the correlation matrix
-            sigma_beam = np.zeros(self.NBEAMS, np.float64)
-
-            # number of beams used to go through beam list using indices
-            # no need to use indices because the beams are indices themselves
-            n_beams = len(self.mosaic_beam_list)
-            # for bm in range(n_beams):
-            for bm in self.mosaic_beam_list:
-                noise_val = self.get_beam_noise(bm)
-                sigma_beam[int(bm)] = float(
-                    noise_val[4].lstrip('Estimated rms is '))
-                logger.info("Beam {0}: {1}".format(bm, sigma_beam[int(bm)]))
-
-            # write the matrix
-            # take into account that there are not always 40 beams
-            # this is different from the notebook, because the notebook code
-            # does not set non-diagonal matrix elements to zero
-            # for missing beams
-            # for k in self.mosaic_beam_list:
-            #     for m in self.mosaic_beam_list:
-            #         a = int(k)
-            #         b = int(m)
-            for a in range(self.NBEAMS):
-                for b in range(self.NBEAMS):
-                    # logger.debug("noise_cor[{0},{1}]={2}".format(a,b,noise_cor[a,b]))
-                    if (sigma_beam[a] == 0. or sigma_beam[b] == 0) and a == b:
-                        noise_cov[a, b] = noise_cor[a, b]
-                    else:
-                        noise_cov[a, b] = noise_cor[a, b] * sigma_beam[a] * \
-                            sigma_beam[b]  # The noise covariance matrix is
-                    # logger.debug("noise_cov[{0},{1}]={2}".format(a,b,noise_cov[a,b]))
-
-            logger.info("Getting covariance matrix ... Done")
-
-            # Only the inverse of this matrix is ever used:
-            logger.info("Getting inverse of covariance matrix")
-            mosaic_continuum_inverse_covariance_matrix = np.linalg.inv(
-                noise_cov)
-            logger.info("Getting inverse of covariance matrix ... Done")
-
-            logger.info("Calculating inverse covariance matrix ... Done")
-        else:
-            logger.info("Inverse of covariance matrix is already available")
+                logger.info("Inverse of covariance matrix for continuum is available on disk already.")
 
         subs_param.add_param(
-            self, 'mosaic_continuum_write_covariance_matrix_status', mosaic_continuum_write_covariance_matrix_status)
-
-        subs_param.add_param(
-            self, 'mosaic_continuum_read_covariance_matrix_status', mosaic_continuum_read_covariance_matrix_status)
+            self, 'mosaic_continuum_correlation_matrix_status', mosaic_continuum_correlation_matrix_status)
 
         subs_param.add_param(
             self, 'mosaic_continuum_inverse_covariance_matrix', mosaic_continuum_inverse_covariance_matrix)
 
-        subs_param.add_param(
-            self, 'mosaic_continuum_noise_covariance_matrix', noise_cov)
-
-        subs_param.add_param(
-            self, 'mosaic_continuum_image_noise', sigma_beam)
-
-        # return inv_cov
-
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    # Function to calculate the product of beam matrix and covariance matrix
+    # Function to get the correlation matrix
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    def math_multiply_beam_and_covariance_matrix(self):
+    def get_polarisation_inverted_covariance_matrix(self):
         """
-        Function to multiply the transpose of the beam matrix by the covariance matrix
+        Function to get the covariance matrix
+
+        Based on the cell that reads-in the correlation matrix
         """
 
-        logger.info("Multiplying beam matrix by covariance matrix")
+        logger.info("Calculating inverse covariance matrix for polarisation")
 
-        mosaic_product_beam_covariance_matrix_status = get_param_def(
-            self, 'mosaic_product_beam_covariance_matrix_status', False)
+        # Get the needed information from the param files
+        pbeam = 'polarisation_B' + str(self.mosaic_beam_list[0]).zfill(2)
+        polbeamimagestatus = get_param_def(self, pbeam + '_targetbeams_qu_imagestatus', False)
+        qimages = len(polbeamimagestatus)
 
-        # get covariance matrix from numpy file
+        mosaic_polarisation_correlation_matrix_status = get_param_def(
+            self, 'mosaic_polarisation_correlation_matrix_status', False)
+
+        mosaic_polarisation_inverse_covariance_matrix_q = get_param_def(
+            self, 'mosaic_polarisation_inverse_covariance_matrix_q', [None]*qimages)
+
+        mosaic_polarisation_inverse_covariance_matrix_u = get_param_def(
+            self, 'mosaic_polarisation_inverse_covariance_matrix_u', [None]*qimages)
+
+        mosaic_polarisation_inverse_covariance_matrix_v = get_param_def(
+            self, 'mosaic_polarisation_inverse_covariance_matrix_v', [])
+
+        mosaic_polarisation_inverse_covariance_matrix_status = get_param_def(
+            self, 'mosaic_polarisation_inverse_covariance_matrix_status', False)
+
+        subs_managefiles.director(self, 'ch', self.mosaic_polarisation_dir)
+
+        correlation_matrix_file = os.path.join(self.mosaic_polarisation_dir, 'correlation.txt')
+
+        mosaic_continuum_correlation_matrix_status = get_param_def(
+            self, 'mosaic_continuum_correlation_matrix_status', False)
+
+        if not mosaic_polarisation_correlation_matrix_status:
+            logger.info("Writing polarisation correlation matrix")
+            if mosaic_continuum_correlation_matrix_status:
+                logger.info("Copying correlation matrix from continuum")
+                subs_managefiles.director(self, 'cp', correlation_matrix_file,  os.path.join(self.mosaic_continuum_dir, 'correlation.txt'))
+                mosaic_polarisation_correlation_matrix_status = True
+            else:
+                mosaic_utils.create_correlation_matrix(correlation_matrix_file, use_askap_based_matrix=self.mosaic_use_askap_based_matrix)
+                if os.path.isfile(correlation_matrix_file):
+                    mosaic_polarisation_correlation_matrix_status = True
+                    logger.info("Writing polarisation correlation matrix ... Done")
+                else:
+                    logger.error("Writing polarisation correlation matrix ... Failed")
+                    mosaic_polarisation_correlation_matrix_status = False
+        else:
+            logger.info("Polarisation correlation matrix already available as file on disk.")
+
+        if mosaic_polarisation_correlation_matrix_status:
+
+            logger.info("Calculating inverse polarisation covariance matrix for Stokes Q images ...")
+            for qplane in range(qimages):
+                if mosaic_polarisation_inverse_covariance_matrix_q[qplane] is np.ndarray:
+                    logger.info("Inverse of covariance matrix for polarisation Stokes Q image {} is available on disk already.".format(qplane))
+                else:
+                    try:
+                        mosaic_polarisation_inverse_covariance_matrix_q[qplane] = mosaic_utils.inverted_covariance_matrix('images/{0}/Qcube_' + str(qplane).zfill(3), correlation_matrix_file, self.NBEAMS, self.mosaic_beam_list)
+                    except:
+                        logger.warning("Could not derive inverse covariance matrix for Stokes Q plane {}!".format(qplane))
+                        continue
+            logger.info("Calculating inverse polarisation covariance matrix for Stokes Q images ... Done")
+
+            logger.info("Calculating inverse polarisation covariance matrix for Stokes U images ...")
+            for uplane in range(qimages):
+                if mosaic_polarisation_inverse_covariance_matrix_u[uplane] == np.ndarray:
+                    logger.info("Inverse of covariance matrix for polarisation Stokes U image {} is available on disk already.".format(uplane))
+                else:
+                    try:
+                        mosaic_polarisation_inverse_covariance_matrix_u[uplane] = mosaic_utils.inverted_covariance_matrix('images/{0}/Ucube_' + str(uplane).zfill(3), correlation_matrix_file, self.NBEAMS, self.mosaic_beam_list)
+                    except:
+                        logger.warning("Could not derive inverse covariance matrix for Stokes U plane {}!".format(uplane))
+                        continue
+            logger.info("Calculating inverse polarisation covariance matrix for Stokes U images ... Done")
+
+            if len(mosaic_polarisation_inverse_covariance_matrix_v) == 0:
+                logger.info("Calculating inverse polarisation covariance matrix for Stokes V images ...")
+                mosaic_polarisation_inverse_covariance_matrix_v = mosaic_utils.inverted_covariance_matrix('images/{0}/image_mf_V', correlation_matrix_file, self.NBEAMS, self.mosaic_beam_list)
+                logger.info("Calculating inverse polarisation covariance matrix for Stokes V images ... Done")
+            else:
+                logger.info("Inverse of covariance matrix for polarisation Stokes V is available on disk already.")
+        else:
+            logger.error("Polarisation correlation matrix not available!")
+
+        if all(q is None for q in mosaic_polarisation_inverse_covariance_matrix_q) and all(u is None for u in mosaic_polarisation_inverse_covariance_matrix_u) and mosaic_polarisation_inverse_covariance_matrix_v == 0:
+            mosaic_polarisation_inverse_covariance_matrix_status = False
+            logger.error("Not all inverted polarisation covariance matrices have been calculated successfully!")
+        else:
+            mosaic_polarisation_inverse_covariance_matrix_status = True
+
+
+        subs_param.add_param(self, 'mosaic_polarisation_correlation_matrix_status', mosaic_polarisation_correlation_matrix_status)
+
+        subs_param.add_param(self, 'mosaic_polarisation_inverse_covariance_matrix_q', mosaic_polarisation_inverse_covariance_matrix_q)
+
+        subs_param.add_param(self, 'mosaic_polarisation_inverse_covariance_matrix_u', mosaic_polarisation_inverse_covariance_matrix_u)
+
+        subs_param.add_param(self, 'mosaic_polarisation_inverse_covariance_matrix_v', mosaic_polarisation_inverse_covariance_matrix_v)
+
+        subs_param.add_param(self, 'mosaic_polarisation_inverse_covariance_matrix_status', mosaic_polarisation_inverse_covariance_matrix_status)
+
+
+    # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Function to calculate the product of continuum beam matrix and continuum covariance matrix
+    # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    def math_continuum_multiply_beam_and_covariance_matrix(self):
+        """
+        Function to multiply the transpose of the continuum beam matrix by the continuum covariance matrix
+        """
+
+        logger.info("Multiplying continuum beam matrix by continuum covariance matrix")
+
+        mosaic_continuum_product_beam_covariance_matrix_status = get_param_def(self, 'mosaic_continuum_product_beam_covariance_matrix_status', False)
+
+        # get continuum covariance matrix from numpy file
         mosaic_continuum_inverse_covariance_matrix = get_param_def(
             self, 'mosaic_continuum_inverse_covariance_matrix', [])
         if len(mosaic_continuum_inverse_covariance_matrix) == 0:
@@ -1460,7 +2561,7 @@ class mosaic(BaseModule):
         # important because previous step switched to a different dir
         subs_managefiles.director(self, 'ch', self.mosaic_continuum_dir)
 
-        if not mosaic_product_beam_covariance_matrix_status:
+        if not mosaic_continuum_product_beam_covariance_matrix_status:
             # First calculate transpose of beam matrix multiplied by the inverse covariance matrix
             # Will use *maths* in Miriad
 
@@ -1468,7 +2569,7 @@ class mosaic(BaseModule):
             # Only doing math where inv_cov value is non-zero
             maths = lib.miriad('maths')
             for bm in self.mosaic_beam_list:
-                logger.info("Processing beam {}".format(bm))
+                logger.debug("Processing beam {}".format(bm))
                 # This was not in the notebook.
                 # Are you it should be here ???? Yes, according to DJ
                 operate = ""
@@ -1480,23 +2581,15 @@ class mosaic(BaseModule):
                         self.mosaic_continuum_beam_subdir, "beam_{0}_mos.map".format(b))
                     if os.path.isdir(beam_map):
                         if inv_cov[int(b), int(bm)] != 0.:
-                            operate = "'<{0}>*({1})'".format(beam_map,
-                                                             inv_cov[int(b), int(bm)])
-                            # if operate == "":
-                            #     #operate+="<"+self.mosaic_continuum_beam_subdir+"/beam_{0}_mos.map>*{1}+".format(b,inv_cov[int(b),int(bm)])
-                            # else:
-                            #     operate+="'+<{0}>*({1})'".format(beam_map,inv_cov[int(b),int(bm)])
+                            operate = "'<{0}>*({1})'".format(beam_map, inv_cov[int(b), int(bm)])
                         else:
                             operate = "'<{0}>*(0)'".format(beam_map)
-                        logger.debug(
-                            "for beam combination {0},{1}: operate = {2}".format(bm, b, operate))
+                        logger.debug("for beam combination {0},{1}: operate = {2}".format(bm, b, operate))
                         maths.exp = operate
                         maths.options = 'unmask'
-                        maths.inp()
                         maths.go()
                     else:
-                        error = "Could not find mosaic beam map for beam {}".format(
-                            b)
+                        error = "Could not find continuum mosaic beam map for beam {}".format(b)
                         logger.error(error)
                         raise RuntimeError(error)
                 i = 1
@@ -1512,10 +2605,9 @@ class mosaic(BaseModule):
                             '/sum_{}.map'.format(str(self.mosaic_beam_list[i]))
                         maths.exp = operate
                         maths.options = 'unmask'
-                        maths.inp()
                         maths.go()
                     else:
-                        error = "Could not find temporary maps for beam {0} or beam {1}".format(
+                        error = "Could not find temporary continuum maps for beam {0} or beam {1}".format(
                             self.mosaic_beam_list[i-1], self.mosaic_beam_list[i])
                         logger.error(error)
                         raise RuntimeError(error)
@@ -1526,163 +2618,645 @@ class mosaic(BaseModule):
                         bm), file_=self.mosaic_continuum_mosaic_subdir + '/sum_{}.map'.format(str(self.mosaic_beam_list[i-1])))
                     # os.rename(,self.mosaic_continuum_mosaic_subdir+'/btci_{}.map'.format(bm))
                 else:
-                    error = "Could not find temporary sum map for beam {}".format(
+                    error = "Could not find temporary continuum sum map for beam {}".format(
                         self.mosaic_beam_list[i-1])
                     logger.error(error)
                     raise RuntimeError(error)
 
                 # remove the scratch files
-                logger.info("Removing scratch files")
+                logger.debug("Removing scratch files")
                 for fl in glob.glob(os.path.join(self.mosaic_continuum_mosaic_dir, 'tmp_*.map')):
-                    subs_managefiles.director(
-                        self, 'rm', fl, ignore_nonexistent=True)
+                    subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
                 for fl in glob.glob(os.path.join(self.mosaic_continuum_mosaic_dir, 'sum_*.map')):
-                    subs_managefiles.director(
-                        self, 'rm', fl, ignore_nonexistent=True)
+                    subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
 
             logger.info(
-                "Multiplying beam matrix by covariance matrix ... Done")
-            mosaic_product_beam_covariance_matrix_status = True
+                "Multiplying continuum beam matrix by continuum covariance matrix ... Done")
+            mosaic_continuum_product_beam_covariance_matrix_status = True
         else:
             logger.info(
-                "Multiplying beam matrix by covariance matrix has already been done.")
+                "Multiplying continuum beam matrix by continuum covariance matrix has already been done.")
 
         subs_param.add_param(
-            self, 'mosaic_product_beam_covariance_matrix_status', mosaic_product_beam_covariance_matrix_status)
+            self, 'mosaic_continuum_product_beam_covariance_matrix_status', mosaic_continuum_product_beam_covariance_matrix_status)
+
+    # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Function to calculate the product of polarisation beam matrix and polarisation covariance matrix
+    # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    def math_polarisation_multiply_beam_and_covariance_matrix(self):
+        """
+        Function to multiply the transpose of the polarisation beam matrix by the polarisation covariance matrix
+        """
+
+        logger.info("Multiplying polarisation beam matrices by polarisation covariance matrices")
+
+        mosaic_polarisation_product_beam_covariance_matrix_status_q = get_param_def(self, 'mosaic_polarisation_product_beam_covariance_matrix_status_q', False)
+        mosaic_polarisation_product_beam_covariance_matrix_status_u = get_param_def(self, 'mosaic_polarisation_product_beam_covariance_matrix_status_u', False)
+        mosaic_polarisation_product_beam_covariance_matrix_status_v = get_param_def(self, 'mosaic_polarisation_product_beam_covariance_matrix_status_v', False)
+
+        # Get the needed information from the param files
+        pbeam = 'polarisation_B' + str(self.mosaic_beam_list[0]).zfill(2)
+        polbeamimagestatus = get_param_def(self, pbeam + '_targetbeams_qu_imagestatus', False)
+        qimages = len(polbeamimagestatus)
+
+        # get polarisation covariance matrices from numpy file
+        mosaic_polarisation_inverse_covariance_matrix_q = get_param_def(self, 'mosaic_polarisation_inverse_covariance_matrix_q', [None]*qimages)
+        mosaic_polarisation_inverse_covariance_matrix_u = get_param_def(self, 'mosaic_polarisation_inverse_covariance_matrix_u', [None]*qimages)
+        mosaic_polarisation_inverse_covariance_matrix_v = get_param_def(self, 'mosaic_polarisation_inverse_covariance_matrix_v', [])
+
+        inv_cov_q = mosaic_polarisation_inverse_covariance_matrix_q
+        inv_cov_u = mosaic_polarisation_inverse_covariance_matrix_u
+        inv_cov_v = mosaic_polarisation_inverse_covariance_matrix_v
+
+        # switch to mosaic directory
+        subs_managefiles.director(self, 'ch', self.mosaic_polarisation_dir)
+
+        if not mosaic_polarisation_product_beam_covariance_matrix_status_q:
+            # First calculate transpose of beam matrix multiplied by the inverse covariance matrix
+            # Will use *maths* in Miriad
+            # Using "beams" list to account for missing beams/images
+            # Only doing math where inv_cov value is non-zero
+            for qplane in range(qimages):
+                maths = lib.miriad('maths')
+                for bm in self.mosaic_beam_list:
+                    logger.debug("Processing beam {}".format(bm))
+                    operate = ""
+                    for b in self.mosaic_beam_list:
+                        maths.out = os.path.join(
+                            self.mosaic_polarisation_mosaic_subdir, 'tmp_{0}_{1}.map'.format(b, str(qplane).zfill(3)))
+                        # since the beam list is made of strings, need to convert to integers
+                        beam_map = os.path.join(
+                            self.mosaic_polarisation_beam_subdir, "beam_{0}_mos.map".format(b))
+                        if os.path.isdir(beam_map):
+                            if inv_cov_q[qplane][int(b), int(bm)] != 0.:
+                                operate = "'<{0}>*({1})'".format(beam_map,
+                                                                 inv_cov_q[qplane][int(b), int(bm)])
+                            else:
+                                operate = "'<{0}>*(0)'".format(beam_map)
+                            logger.debug("for beam combination {0},{1}: operate = {2}".format(bm, b, operate))
+                            maths.exp = operate
+                            maths.options = 'unmask'
+                            maths.go()
+                        else:
+                            error = "Could not find polarisation Stokes Q mosaic beam map for beam {0} and image plane {1}".format(b, qplane)
+                            logger.error(error)
+                            raise RuntimeError(error)
+                    i = 1
+                    while i < len(self.mosaic_beam_list):
+                        if os.path.isdir(os.path.join(self.mosaic_polarisation_mosaic_subdir, 'tmp_{0}_{1}.map'.format(self.mosaic_beam_list[i-1], str(qplane).zfill(3)))) and os.path.isdir(os.path.join(self.mosaic_polarisation_mosaic_subdir, 'tmp_{0}_{1}.map'.format(self.mosaic_beam_list[i], str(qplane).zfill(3)))):
+                            if i == 1:
+                                operate = "'<" + self.mosaic_polarisation_mosaic_subdir + "/tmp_{0}_{1}.map>+<".format(self.mosaic_beam_list[i-1], str(qplane).zfill(3)) + self.mosaic_polarisation_mosaic_subdir + "/tmp_{0}_{1}.map>'".format(self.mosaic_beam_list[i], str(qplane).zfill(3))
+                            else:
+                                operate = "'<" + self.mosaic_polarisation_mosaic_subdir + "/tmp_{0}_{1}.map>".format(self.mosaic_beam_list[i], str(qplane).zfill(3)) + "+<" + self.mosaic_polarisation_mosaic_subdir + "/sum_{0}_{1}.map>'".format(str(self.mosaic_beam_list[i-1]), str(qplane).zfill(3))
+                            maths.out = self.mosaic_polarisation_mosaic_subdir + '/sum_{0}_{1}.map'.format(str(self.mosaic_beam_list[i]), str(qplane).zfill(3))
+                            maths.exp = operate
+                            maths.options = 'unmask'
+                            maths.go()
+                        else:
+                            error = "Could not find temporary Stokes Q maps for image plane {2} beam {0} or beam {1}".format(self.mosaic_beam_list[i-1], self.mosaic_beam_list[i], qplane)
+                            logger.error(error)
+                            raise RuntimeError(error)
+                        i += 1
+
+                    if os.path.isdir(os.path.join(self.mosaic_polarisation_mosaic_subdir, 'sum_{0}_{1}.map'.format(str(self.mosaic_beam_list[i-1]), str(qplane).zfill(3)))):
+                        subs_managefiles.director(self, 'rn', self.mosaic_polarisation_mosaic_subdir + '/btci_Q_{0}_{1}.map'.format(bm, str(qplane).zfill(3)), file_=self.mosaic_polarisation_mosaic_subdir + '/sum_{0}_{1}.map'.format(str(self.mosaic_beam_list[i-1]), str(qplane).zfill(3)))
+                    else:
+                        error = "Could not find temporary Stokes Q sum map for image plane {1} and beam {0}".format(self.mosaic_beam_list[i-1], qplane)
+                        logger.error(error)
+                        raise RuntimeError(error)
+
+                    # remove the scratch files
+                    logger.debug("Removing Stokes Q scratch files")
+                    for fl in glob.glob(os.path.join(self.mosaic_polarisation_mosaic_dir, 'tmp_*.map')):
+                        subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
+                    for fl in glob.glob(os.path.join(self.mosaic_polarisation_mosaic_dir, 'sum_*.map')):
+                        subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
+
+                logger.info(
+                    "Multiplying Stokes Q beam matrix by Stokes Q covariance matrix ... Done")
+                mosaic_polarisation_product_beam_covariance_matrix_status_q = True
+        else:
+            logger.info(
+                "Multiplying Stokes Q beam matrix by Stokes Q covariance matrix has already been done.")
+
+        if not mosaic_polarisation_product_beam_covariance_matrix_status_u:
+            # First calculate transpose of beam matrix multiplied by the inverse covariance matrix
+            # Will use *maths* in Miriad
+            # Using "beams" list to account for missing beams/images
+            # Only doing math where inv_cov value is non-zero
+            for uplane in range(qimages):
+                maths = lib.miriad('maths')
+                for bm in self.mosaic_beam_list:
+                    logger.debug("Processing beam {}".format(bm))
+                    operate = ""
+                    for b in self.mosaic_beam_list:
+                        maths.out = os.path.join(
+                            self.mosaic_polarisation_mosaic_subdir, 'tmp_{0}_{1}.map'.format(b, str(uplane).zfill(3)))
+                        # since the beam list is made of strings, need to convert to integers
+                        beam_map = os.path.join(
+                            self.mosaic_polarisation_beam_subdir, "beam_{0}_mos.map".format(b))
+                        if os.path.isdir(beam_map):
+                            if inv_cov_u[uplane][int(b), int(bm)] != 0.:
+                                operate = "'<{0}>*({1})'".format(beam_map,
+                                                                 inv_cov_u[uplane][int(b), int(bm)])
+                            else:
+                                operate = "'<{0}>*(0)'".format(beam_map)
+                            logger.debug("for beam combination {0},{1}: operate = {2}".format(bm, b, operate))
+                            maths.exp = operate
+                            maths.options = 'unmask'
+                            maths.go()
+                        else:
+                            error = "Could not find polarisation Stokes U mosaic beam map for beam {0} and image plane {1}".format(b, uplane)
+                            logger.error(error)
+                            raise RuntimeError(error)
+                    i = 1
+                    while i < len(self.mosaic_beam_list):
+                        if os.path.isdir(os.path.join(self.mosaic_polarisation_mosaic_subdir, 'tmp_{0}_{1}.map'.format(self.mosaic_beam_list[i-1], str(uplane).zfill(3)))) and os.path.isdir(os.path.join(self.mosaic_polarisation_mosaic_subdir, 'tmp_{0}_{1}.map'.format(self.mosaic_beam_list[i], str(uplane).zfill(3)))):
+                            if i == 1:
+                                operate = "'<" + self.mosaic_polarisation_mosaic_subdir + "/tmp_{0}_{1}.map>+<".format(self.mosaic_beam_list[i-1], str(uplane).zfill(3)) + self.mosaic_polarisation_mosaic_subdir + "/tmp_{0}_{1}.map>'".format(self.mosaic_beam_list[i], str(uplane).zfill(3))
+                            else:
+                                operate = "'<" + self.mosaic_polarisation_mosaic_subdir + "/tmp_{0}_{1}.map>".format(self.mosaic_beam_list[i], str(uplane).zfill(3)) + "+<" + self.mosaic_polarisation_mosaic_subdir + "/sum_{0}_{1}.map>'".format(str(self.mosaic_beam_list[i-1]), str(uplane).zfill(3))
+                            maths.out = self.mosaic_polarisation_mosaic_subdir + '/sum_{0}_{1}.map'.format(str(self.mosaic_beam_list[i]), str(uplane).zfill(3))
+                            maths.exp = operate
+                            maths.options = 'unmask'
+                            maths.go()
+                        else:
+                            error = "Could not find temporary Stokes U maps for image plane {2} beam {0} or beam {1}".format(self.mosaic_beam_list[i-1], self.mosaic_beam_list[i], uplane)
+                            logger.error(error)
+                            raise RuntimeError(error)
+                        i += 1
+
+                    if os.path.isdir(os.path.join(self.mosaic_polarisation_mosaic_subdir, 'sum_{0}_{1}.map'.format(str(self.mosaic_beam_list[i-1]), str(uplane).zfill(3)))):
+                        subs_managefiles.director(self, 'rn', self.mosaic_polarisation_mosaic_subdir + '/btci_U_{0}_{1}.map'.format(bm, str(uplane).zfill(3)), file_=self.mosaic_polarisation_mosaic_subdir + '/sum_{0}_{1}.map'.format(str(self.mosaic_beam_list[i-1]), str(uplane).zfill(3)))
+                    else:
+                        error = "Could not find temporary Stokes U sum map for image plane {1} and beam {0}".format(self.mosaic_beam_list[i-1], uplane)
+                        logger.error(error)
+                        raise RuntimeError(error)
+
+                    # remove the scratch files
+                    logger.info("Removing Stokes U scratch files")
+                    for fl in glob.glob(os.path.join(self.mosaic_polarisation_mosaic_dir, 'tmp_*.map')):
+                        subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
+                    for fl in glob.glob(os.path.join(self.mosaic_polarisation_mosaic_dir, 'sum_*.map')):
+                        subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
+
+                logger.info(
+                    "Multiplying Stokes U beam matrix by Stokes U covariance matrix ... Done")
+                mosaic_polarisation_product_beam_covariance_matrix_status_u = True
+        else:
+            logger.info(
+                "Multiplying Stokes U beam matrix by Stokes U covariance matrix has already been done.")
+
+        if not mosaic_polarisation_product_beam_covariance_matrix_status_v:
+            # First calculate transpose of beam matrix multiplied by the inverse covariance matrix
+            # Will use *maths* in Miriad
+            # Using "beams" list to account for missing beams/images
+            # Only doing math where inv_cov value is non-zero
+            maths = lib.miriad('maths')
+            for bm in self.mosaic_beam_list:
+                logger.info("Processing Stokes V image of beam {}".format(bm))
+                operate = ""
+                for b in self.mosaic_beam_list:
+                    maths.out = os.path.join(
+                        self.mosaic_polarisation_mosaic_subdir, 'tmp_{}.map'.format(b))
+                    beam_map = os.path.join(
+                        self.mosaic_polarisation_beam_subdir, "beam_{0}_mos.map".format(b))
+                    if os.path.isdir(beam_map):
+                        if inv_cov_v[int(b), int(bm)] != 0.:
+                            operate = "'<{0}>*({1})'".format(beam_map, inv_cov_v[int(b), int(bm)])
+                        else:
+                            operate = "'<{0}>*(0)'".format(beam_map)
+                        logger.debug("for beam combination {0},{1}: operate = {2}".format(bm, b, operate))
+                        maths.exp = operate
+                        maths.options = 'unmask'
+                        maths.go()
+                    else:
+                        error = "Could not find polaristion Stokes V mosaic beam map for beam {}".format(
+                            b)
+                        logger.error(error)
+                        raise RuntimeError(error)
+                i = 1
+                while i < len(self.mosaic_beam_list):
+                    if os.path.isdir(os.path.join(self.mosaic_polarisation_mosaic_subdir, "tmp_{}.map".format(self.mosaic_beam_list[i-1]))) and os.path.isdir(os.path.join(self.mosaic_polarisation_mosaic_subdir, "tmp_{}.map".format(self.mosaic_beam_list[i]))):
+                        if i == 1:
+                            operate = "'<" + self.mosaic_polarisation_mosaic_subdir + "/tmp_{}.map>+<".format(str(
+                                self.mosaic_beam_list[i-1]))+self.mosaic_polarisation_mosaic_subdir + "/tmp_{}.map>'".format(str(self.mosaic_beam_list[i]))
+                        else:
+                            operate = "'<" + self.mosaic_polarisation_mosaic_subdir + "/tmp_{}.map>".format(str(
+                                self.mosaic_beam_list[i])) + "+<" + self.mosaic_polarisation_mosaic_subdir + "/sum_{}.map>'".format(str(self.mosaic_beam_list[i-1]))
+                        maths.out = self.mosaic_polarisation_mosaic_subdir + \
+                            '/sum_{}.map'.format(str(self.mosaic_beam_list[i]))
+                        maths.exp = operate
+                        maths.options = 'unmask'
+                        maths.go()
+                    else:
+                        error = "Could not find temporary polarisation Stokes V maps for beam {0} or beam {1}".format(
+                            self.mosaic_beam_list[i-1], self.mosaic_beam_list[i])
+                        logger.error(error)
+                        raise RuntimeError(error)
+                    i += 1
+
+                if os.path.isdir(os.path.join(self.mosaic_polarisation_mosaic_subdir, 'sum_{}.map'.format(self.mosaic_beam_list[i-1]))):
+                    subs_managefiles.director(self, 'rn', self.mosaic_polarisation_mosaic_subdir + '/btci_V_{}.map'.format(
+                        bm), file_=self.mosaic_polarisation_mosaic_subdir + '/sum_{}.map'.format(str(self.mosaic_beam_list[i-1])))
+                else:
+                    error = "Could not find temporary Stokes V polarisation sum map for beam {}".format(self.mosaic_beam_list[i-1])
+                    logger.error(error)
+                    raise RuntimeError(error)
+
+                # remove the scratch files
+                logger.debug("Removing scratch files")
+                for fl in glob.glob(os.path.join(self.mosaic_polarisation_mosaic_dir, 'tmp_*.map')):
+                    subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
+                for fl in glob.glob(os.path.join(self.mosaic_polarisation_mosaic_dir, 'sum_*.map')):
+                    subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
+
+            logger.info("Multiplying polarisation Stokes V beam matrix by polarisation Stokes V covariance matrix ... Done")
+            mosaic_polarisation_product_beam_covariance_matrix_status_v = True
+        else:
+            logger.info("Multiplying polarisation Stokes V beam matrix by polarisation Stokes V covariance matrix has already been done.")
+
+        subs_param.add_param(self, 'mosaic_polarisation_product_beam_covariance_matrix_status_q', mosaic_polarisation_product_beam_covariance_matrix_status_q)
+        subs_param.add_param(self, 'mosaic_polarisation_product_beam_covariance_matrix_status_u', mosaic_polarisation_product_beam_covariance_matrix_status_u)
+        subs_param.add_param(self, 'mosaic_polarisation_product_beam_covariance_matrix_status_v', mosaic_polarisation_product_beam_covariance_matrix_status_v)
+
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    # Function to calculate the variance map
+    # Function to calculate the continuum variance map
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    def math_calculate_variance_map(self):
+    def math_continuum_calculate_variance_map(self):
         """
-        Function to calculate the variance map
+        Function to calculate the continuum variance map
         """
 
-        logger.info("Calculate variance map")
+        logger.info("Calculating continuum variance maps")
 
-        mosaic_variance_map_status = get_param_def(
-            self, 'mosaic_variance_map_status', False)
+        mosaic_continuum_variance_map_status = get_param_def(self, 'mosaic_continuum_variance_map_status', False)
 
         # switch to mosaic directory
         subs_managefiles.director(self, 'ch', self.mosaic_continuum_dir)
 
-        if not mosaic_variance_map_status:
+        if not mosaic_continuum_variance_map_status:
             # Calculate variance map (using beams and noise covariance matrix over entire map)
             # This is the denominator for I(mosaic)
             maths = lib.miriad('maths')
             i = 0
             for beam in self.mosaic_beam_list:
-                btci_map = os.path.join(
-                    self.mosaic_continuum_mosaic_subdir, "btci_{}.map".format(beam))
-                beam_mos_map = os.path.join(
-                    self.mosaic_continuum_beam_subdir, "beam_{}_mos.map".format(beam))
+                btci_map = os.path.join(self.mosaic_continuum_mosaic_subdir, "btci_{}.map".format(beam))
+                beam_mos_map = os.path.join(self.mosaic_continuum_beam_subdir, "beam_{}_mos.map".format(beam))
                 if os.path.isdir(btci_map) and os.path.isdir(beam_mos_map):
-                    operate = "'<"+btci_map + ">*<" + beam_mos_map + ">'"
+                    operate = "'<" + btci_map + ">*<" + beam_mos_map + ">'"
                     if beam != self.mosaic_beam_list[0]:
-                        operate = operate[:-1] + "+<" + self.mosaic_continuum_mosaic_subdir + \
-                            "/out_{}_mos.map>'".format(str(i).zfill(2))
+                        operate = operate[:-1] + "+<" + self.mosaic_continuum_mosaic_subdir + "/out_{}_mos.map>'".format(str(i).zfill(2))
                     i += 1
-                    logger.debug(
-                        "Beam {0}: operate = {1}".format(beam, operate))
-                    maths.out = self.mosaic_continuum_mosaic_subdir + \
-                        "/out_{}_mos.map".format(str(i).zfill(2))
+                    logger.debug("Beam {0}: operate = {1}".format(beam, operate))
+                    maths.out = self.mosaic_continuum_mosaic_subdir + "/out_{}_mos.map".format(str(i).zfill(2))
                     maths.exp = operate
                     maths.options = 'unmask'
-                    maths.inp()
                     maths.go()
                 else:
-                    error = "Could not find the maps for beam {0}".format(beam)
+                    error = "Could not find the continuum maps for beam {0}".format(beam)
                     logger.error(error)
                     raise RuntimeError(error)
 
             subs_managefiles.director(self, 'rn', os.path.join(self.mosaic_continuum_mosaic_subdir, 'variance_mos.map'), file_=os.path.join(
                 self.mosaic_continuum_mosaic_subdir, 'out_{}_mos.map'.format(str(i).zfill(2))))
-            # os.rename(mosaicdir+'out_{}_mos.map'.format(str(i).zfill(2)),mosaicdir+'variance_mos.map')
 
-            logger.info("Calculate variance map ... Done")
+            logger.info("Calculating continuum variance maps ... Done")
 
-            mosaic_variance_map_status = True
+            mosaic_continuum_variance_map_status = True
         else:
-            logger.info("Variance map has already been calculated.")
+            logger.info("Continuum variance maps have already been calculated.")
 
-        subs_param.add_param(
-            self, 'mosaic_variance_map_status', mosaic_variance_map_status)
+        subs_param.add_param(self, 'mosaic_continuum_variance_map_status', mosaic_continuum_variance_map_status)
 
-    # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    # Function to calculate the beam  matrix multiplied by the covariance matrix
-    # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    def math_multiply_beam_matrix_by_covariance_matrix_and_image(self):
+        # +++++++++++++++++++++++++++++++++++++++++++++++++++
+        # Function to calculate the continuum variance map
+        # +++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    def math_polarisation_calculate_variance_map(self):
         """
-        Function to muliply the beam matrix by covariance matrix and image
+        Function to calculate the continuum variance map
         """
 
-        logger.info("Multiplying beam matrix by covariance matrix and image")
+        logger.info("Calculating polarisation variance maps")
 
-        mosaic_product_beam_covariance_matrix_image_status = get_param_def(
-            self, 'mosaic_product_beam_covariance_matrix_image_status', False)
+        mosaic_polarisation_variance_map_status_q = get_param_def(self, 'mosaic_polarisation_variance_map_status_q', False)
+        mosaic_polarisation_variance_map_status_u = get_param_def(self, 'mosaic_polarisation_variance_map_status_u', False)
+        mosaic_polarisation_variance_map_status_v = get_param_def(self, 'mosaic_polarisation_variance_map_status_v', False)
+
+        # Get the needed information from the param files
+        pbeam = 'polarisation_B' + str(self.mosaic_beam_list[0]).zfill(2)
+        polbeamimagestatus = get_param_def(self, pbeam + '_targetbeams_qu_imagestatus', False)
+        qimages = len(polbeamimagestatus)
+
+        # switch to mosaic directory
+        subs_managefiles.director(self, 'ch', self.mosaic_polarisation_dir)
+
+        if not mosaic_polarisation_variance_map_status_q:
+            logger.info("Calculating variance maps for Stokes Q")
+            for qplane in range(qimages):
+                # Calculate variance map (using beams and noise covariance matrix over entire map)
+                # This is the denominator for I(mosaic)
+                maths = lib.miriad('maths')
+                i = 0
+                for beam in self.mosaic_beam_list:
+                    btci_map_q = os.path.join(self.mosaic_polarisation_mosaic_subdir + '/btci_Q_{0}_{1}.map'.format(beam, str(qplane).zfill(3)))
+                    beam_mos_map_q = os.path.join(self.mosaic_polarisation_beam_subdir, "beam_{}_mos.map".format(beam))
+                    if os.path.isdir(btci_map_q) and os.path.isdir(beam_mos_map_q):
+                        operate = "'<" + btci_map_q + ">*<" + beam_mos_map_q + ">'"
+                        if beam != self.mosaic_beam_list[0]:
+                            operate = operate[:-1] + "+<" + self.mosaic_polarisation_mosaic_subdir + "/out_Q_{0}_{1}_mos.map>'".format(str(i).zfill(2), str(qplane).zfill(3))
+                        i += 1
+                        logger.debug("Beam {0}: operate = {1}".format(beam, operate))
+                        maths.out = self.mosaic_polarisation_mosaic_subdir + "/out_Q_{0}_{1}_mos.map".format(str(i).zfill(2), str(qplane).zfill(3))
+                        maths.exp = operate
+                        maths.options = 'unmask'
+                        maths.go()
+                    else:
+                        error = "Could not find the Stokes Q maps for beam {0} and image plane {1}".format(beam, qplane)
+                        logger.error(error)
+                        raise RuntimeError(error)
+
+                subs_managefiles.director(self, 'rn', os.path.join(self.mosaic_polarisation_mosaic_subdir, 'variance_Q_{}_mos.map'.format(str(qplane).zfill(3))),
+                                          file_=os.path.join(
+                                              self.mosaic_polarisation_mosaic_subdir,
+                                              'out_Q_{0}_{1}_mos.map'.format(str(i).zfill(2), str(qplane).zfill(3))))
+
+                logger.info("Calculating polarisation Stokes Q variance maps ... Done")
+
+                mosaic_polarisation_variance_map_status_q = True
+        else:
+            logger.info("Polarisation Stokes Q variance maps have already been calculated.")
+
+        if not mosaic_polarisation_variance_map_status_u:
+            logger.info("Calculating variance maps for Stokes U")
+            for uplane in range(qimages):
+                # Calculate variance map (using beams and noise covariance matrix over entire map)
+                # This is the denominator for I(mosaic)
+                maths = lib.miriad('maths')
+                i = 0
+                for beam in self.mosaic_beam_list:
+                    btci_map_u = os.path.join(self.mosaic_polarisation_mosaic_subdir + '/btci_U_{0}_{1}.map'.format(beam, str(uplane).zfill(3)))
+                    beam_mos_map_u = os.path.join(self.mosaic_polarisation_beam_subdir, "beam_{}_mos.map".format(beam))
+                    if os.path.isdir(btci_map_u) and os.path.isdir(beam_mos_map_u):
+                        operate = "'<" + btci_map_u + ">*<" + beam_mos_map_u + ">'"
+                        if beam != self.mosaic_beam_list[0]:
+                            operate = operate[:-1] + "+<" + self.mosaic_polarisation_mosaic_subdir + "/out_U_{0}_{1}_mos.map>'".format(str(i).zfill(2), str(uplane).zfill(3))
+                        i += 1
+                        logger.debug("Beam {0}: operate = {1}".format(beam, operate))
+                        maths.out = self.mosaic_polarisation_mosaic_subdir + "/out_U_{0}_{1}_mos.map".format(str(i).zfill(2), str(uplane).zfill(3))
+                        maths.exp = operate
+                        maths.options = 'unmask'
+                        maths.go()
+                    else:
+                        error = "Could not find the Stokes U maps for beam {0} and image plane {1}".format(beam, uplane)
+                        logger.error(error)
+                        raise RuntimeError(error)
+
+                subs_managefiles.director(self, 'rn', os.path.join(self.mosaic_polarisation_mosaic_subdir, 'variance_U_{}_mos.map'.format(str(uplane).zfill(3))),
+                                          file_=os.path.join(
+                                              self.mosaic_polarisation_mosaic_subdir,
+                                              'out_U_{0}_{1}_mos.map'.format(str(i).zfill(2), str(uplane).zfill(3))))
+
+                logger.info("Calculating polarisation Stokes U variance maps ... Done")
+
+                mosaic_polarisation_variance_map_status_u = True
+        else:
+            logger.info("Polarisation Stokes U variance maps have already been calculated.")
+
+        if not mosaic_polarisation_variance_map_status_v:
+            logger.info("Calculating variance maps for Stokes V")
+            # Calculate variance map (using beams and noise covariance matrix over entire map)
+            # This is the denominator for I(mosaic)
+            maths = lib.miriad('maths')
+            i = 0
+            for beam in self.mosaic_beam_list:
+                btci_map_v = os.path.join(self.mosaic_polarisation_mosaic_subdir, "btci_V_{}.map".format(beam))
+                beam_mos_map_v = os.path.join(self.mosaic_polarisation_beam_subdir, "beam_{}_mos.map".format(beam))
+                if os.path.isdir(btci_map_v) and os.path.isdir(beam_mos_map_v):
+                    operate = "'<" + btci_map_v + ">*<" + beam_mos_map_v + ">'"
+                    if beam != self.mosaic_beam_list[0]:
+                        operate = operate[:-1] + "+<" + self.mosaic_polarisation_mosaic_subdir + "/out_V_{}_mos.map>'".format(str(i).zfill(2))
+                    i += 1
+                    logger.debug("Beam {0}: operate = {1}".format(beam, operate))
+                    maths.out = self.mosaic_polarisation_mosaic_subdir + "/out_V_{}_mos.map".format(str(i).zfill(2))
+                    maths.exp = operate
+                    maths.options = 'unmask'
+                    maths.go()
+                else:
+                    error = "Could not find the Stokes V maps for beam {0}".format(beam)
+                    logger.error(error)
+                    raise RuntimeError(error)
+
+            subs_managefiles.director(self, 'rn', os.path.join(self.mosaic_polarisation_mosaic_subdir, 'variance_V_mos.map'), file_=os.path.join(
+                self.mosaic_polarisation_mosaic_subdir, 'out_V_{}_mos.map'.format(str(i).zfill(2))))
+
+            logger.info("Calculating Stokes V variance maps ... Done")
+
+            mosaic_polarisation_variance_map_status_v = True
+        else:
+            logger.info("Stokes V variance maps have already been calculated.")
+
+        subs_param.add_param(self, 'mosaic_polarisation_variance_map_status_q', mosaic_polarisation_variance_map_status_q)
+        subs_param.add_param(self, 'mosaic_polarisation_variance_map_status_u', mosaic_polarisation_variance_map_status_u)
+        subs_param.add_param(self, 'mosaic_polarisation_variance_map_status_v', mosaic_polarisation_variance_map_status_v)
+
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Function to calculate the beam matrix multiplied by the covariance matrix for continuum
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    def math_continuum_multiply_beam_matrix_by_covariance_matrix_and_image(self):
+        """
+        Function to muliply the beam matrix by covariance matrix and image for continuum
+        """
+
+        logger.info("Multiplying continuum beam matrix by continuum covariance matrix and continuum image")
+
+        mosaic_continuum_product_beam_covariance_matrix_image_status = get_param_def(
+            self, 'mosaic_continuum_product_beam_covariance_matrix_image_status', False)
 
         # switch to mosaic directory
         subs_managefiles.director(self, 'ch', self.mosaic_continuum_mosaic_dir)
 
-        if not mosaic_product_beam_covariance_matrix_image_status:
+        if not mosaic_continuum_product_beam_covariance_matrix_image_status:
             # Calculate transpose of beam matrix multiplied by noise_cov multiplied by image from each beam for each position
             # in the final image
             maths = lib.miriad('maths')
             i = 0
             for bm in self.mosaic_beam_list:
                 if os.path.isdir("image_{}_mos.map".format(bm)) and os.path.isdir("btci_{}.map".format(bm)):
-                    operate = "'<" + \
-                        "image_{}_mos.map>*<".format(bm) + \
-                        "btci_{}.map>'".format(bm)
+                    operate = "'<" + "image_{}_mos.map>*<".format(bm) + "btci_{}.map>'".format(bm)
                     if bm != self.mosaic_beam_list[0]:
-                        operate = operate[:-1] + "+<" + \
-                            "mos_{}.map>'".format(str(i).zfill(2))
+                        operate = operate[:-1] + "+<" + "mos_{}.map>'".format(str(i).zfill(2))
                     i += 1
                     maths.out = "mos_{}.map".format(str(i).zfill(2))
                     maths.exp = operate
                     maths.options = 'unmask,grow'
-                    maths.inp()
                     maths.go()
                 else:
-                    error = "Could not find the necessary files for beam {}".format(
-                        bm)
+                    error = "Could not find the necessary files for beam {}".format(bm)
                     logger.error(error)
                     raise RuntimeError(error)
 
             subs_managefiles.director(
                 self, 'rn', 'mosaic_im.map', file_='mos_{}.map'.format(str(i).zfill(2)))
-            # os.rename('mos_{}.map'.format(str(i).zfill(2)),'mosaic_im.map')
 
             logger.info(
-                "Multiplying beam matrix by covariance matrix and image ... Done")
+                "Multiplying continuum beam matrix by continuum covariance matrix and continuum image ... Done")
 
-            mosaic_product_beam_covariance_matrix_image_status = True
+            mosaic_continuum_product_beam_covariance_matrix_image_status = True
         else:
-            logger.info("Multiplication has already been done.")
+            logger.info("Multiplication for continuum has already been done.")
 
-        subs_param.add_param(
-            self, 'mosaic_product_beam_covariance_matrix_image_status', mosaic_product_beam_covariance_matrix_image_status)
+        subs_param.add_param(self, 'mosaic_continuum_product_beam_covariance_matrix_image_status', mosaic_continuum_product_beam_covariance_matrix_image_status)
+
+    # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Function to calculate the beam matrix multiplied by the covariance matrix for polarisation
+    # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    def math_polarisation_multiply_beam_matrix_by_covariance_matrix_and_image(self):
+        """
+        Function to muliply the beam matrix by covariance matrix and image for polarisation
+        """
+
+        mosaic_polarisation_product_beam_covariance_matrix_image_status_q = get_param_def(
+            self, 'mosaic_polarisation_product_beam_covariance_matrix_image_status_q', False)
+
+        mosaic_polarisation_product_beam_covariance_matrix_image_status_u = get_param_def(
+            self, 'mosaic_polarisation_product_beam_covariance_matrix_image_status_u', False)
+
+        mosaic_polarisation_product_beam_covariance_matrix_image_status_v = get_param_def(
+            self, 'mosaic_polarisation_product_beam_covariance_matrix_image_status_v', False)
+
+        # Get the needed information from the param files
+        pbeam = 'polarisation_B' + str(self.mosaic_beam_list[0]).zfill(2)
+        polbeamimagestatus = get_param_def(self, pbeam + '_targetbeams_qu_imagestatus', False)
+        qimages = len(polbeamimagestatus)
+
+        # switch to mosaic directory
+        subs_managefiles.director(self, 'ch', self.mosaic_polarisation_mosaic_dir)
+
+        if not mosaic_polarisation_product_beam_covariance_matrix_image_status_q:
+            logger.info("Multiplying Stokes Q beam matrices by Stokes Q covariance matrices and Stokes Q images")
+            # Calculate transpose of beam matrix multiplied by noise_cov multiplied by image from each beam for each position
+            # in the final image
+            for qplane in range(qimages):
+                maths = lib.miriad('maths')
+                i = 0
+                for bm in self.mosaic_beam_list:
+                    if os.path.isdir("Qcube_{0}_{1}_mos.map".format(bm, str(qplane).zfill(3))) and os.path.isdir("btci_Q_{0}_{1}.map".format(bm, str(qplane).zfill(3))):
+                        operate = "'<" + "Qcube_{0}_{1}_mos.map>*<".format(bm, str(qplane).zfill(3)) + "btci_Q_{0}_{1}.map>'".format(bm, str(qplane).zfill(3))
+                        if bm != self.mosaic_beam_list[0]:
+                            operate = operate[:-1] + "+<" + "mos_Q_{0}_{1}.map>'".format(str(i).zfill(2), str(qplane).zfill(3))
+                        i += 1
+                        maths.out = "mos_Q_{0}_{1}.map".format(str(i).zfill(2), str(qplane).zfill(3))
+                        maths.exp = operate
+                        maths.options = 'unmask,grow'
+                        maths.go()
+                    else:
+                        error = "Could not find the necessary files for Stokes Q image plane {1} beam {0}".format(bm, qplane)
+                        logger.error(error)
+                        raise RuntimeError(error)
+
+                subs_managefiles.director(
+                    self, 'rn', 'mosaic_Q_{}_im.map'.format(str(qplane).zfill(3)), file_='mos_Q_{0}_{1}.map'.format(str(i).zfill(2), str(qplane).zfill(3)))
+
+            logger.info(
+                "Multiplying Stokes Q beam matrices by Stokes Q covariance matrices and Stokes Q images ... Done")
+
+            mosaic_polarisation_product_beam_covariance_matrix_image_status_q = True
+        else:
+            logger.info("Multiplication for Stokes Q has already been done.")
+
+        if not mosaic_polarisation_product_beam_covariance_matrix_image_status_u:
+            logger.info("Multiplying Stokes U beam matrices by Stokes U covariance matrices and Stokes U images")
+            # Calculate transpose of beam matrix multiplied by noise_cov multiplied by image from each beam for each position
+            # in the final image
+            for uplane in range(qimages):
+                maths = lib.miriad('maths')
+                i = 0
+                for bm in self.mosaic_beam_list:
+                    if os.path.isdir("Ucube_{0}_{1}_mos.map".format(bm, str(uplane).zfill(3))) and os.path.isdir("btci_U_{0}_{1}.map".format(bm, str(uplane).zfill(3))):
+                        operate = "'<" + "Ucube_{0}_{1}_mos.map>*<".format(bm, str(uplane).zfill(3)) + "btci_U_{0}_{1}.map>'".format(bm, str(uplane).zfill(3))
+                        if bm != self.mosaic_beam_list[0]:
+                            operate = operate[:-1] + "+<" + "mos_U_{0}_{1}.map>'".format(str(i).zfill(2), str(uplane).zfill(3))
+                        i += 1
+                        maths.out = "mos_U_{0}_{1}.map".format(str(i).zfill(2), str(uplane).zfill(3))
+                        maths.exp = operate
+                        maths.options = 'unmask,grow'
+                        maths.go()
+                    else:
+                        error = "Could not find the necessary files for Stokes U image plane {1} beam {0}".format(bm, uplane)
+                        logger.error(error)
+                        raise RuntimeError(error)
+
+                subs_managefiles.director(
+                    self, 'rn', 'mosaic_U_{}_im.map'.format(str(uplane).zfill(3)), file_='mos_U_{0}_{1}.map'.format(str(i).zfill(2), str(uplane).zfill(3)))
+
+            logger.info(
+                "Multiplying Stokes U beam matrices by Stokes U covariance matrices and Stokes U images ... Done")
+
+            mosaic_polarisation_product_beam_covariance_matrix_image_status_u = True
+        else:
+            logger.info("Multiplication for Stokes U has already been done.")
+
+        if not mosaic_polarisation_product_beam_covariance_matrix_image_status_v:
+            # Calculate transpose of beam matrix multiplied by noise_cov multiplied by image from each beam for each position
+            # in the final image
+            maths = lib.miriad('maths')
+            i = 0
+            for bm in self.mosaic_beam_list:
+                if os.path.isdir("image_mf_V_{}_mos.map".format(bm)) and os.path.isdir("btci_V_{}.map".format(bm)):
+                    operate = "'<" + "image_mf_V_{}_mos.map>*<".format(bm) + "btci_V_{}.map>'".format(bm)
+                    if bm != self.mosaic_beam_list[0]:
+                        operate = operate[:-1] + "+<" + "mos_V_{}.map>'".format(str(i).zfill(2))
+                    i += 1
+                    maths.out = "mos_V_{}.map".format(str(i).zfill(2))
+                    maths.exp = operate
+                    maths.options = 'unmask,grow'
+                    maths.go()
+                else:
+                    error = "Could not find the necessary files for Stokes V for beam {}".format(bm)
+                    logger.error(error)
+                    raise RuntimeError(error)
+
+            subs_managefiles.director(
+                self, 'rn', 'mosaic_V_im.map', file_='mos_V_{}.map'.format(str(i).zfill(2)))
+
+            logger.info(
+                "Multiplying Stokes V beam matrix by Stokes V covariance matrix and Stokes V image ... Done")
+
+            mosaic_polarisation_product_beam_covariance_matrix_image_status_v = True
+        else:
+            logger.info("Multiplication for Stokes V has already been done.")
+
+        subs_param.add_param(self, 'mosaic_polarisation_product_beam_covariance_matrix_image_status_v', mosaic_polarisation_product_beam_covariance_matrix_image_status_v)
+
+
+        subs_param.add_param(self, 'mosaic_polarisation_product_beam_covariance_matrix_image_status_q', mosaic_polarisation_product_beam_covariance_matrix_image_status_q)
+        subs_param.add_param(self, 'mosaic_polarisation_product_beam_covariance_matrix_image_status_u', mosaic_polarisation_product_beam_covariance_matrix_image_status_u)
+        subs_param.add_param(self, 'mosaic_polarisation_product_beam_covariance_matrix_image_status_v', mosaic_polarisation_product_beam_covariance_matrix_image_status_v)
+
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
     # Function to find maximum of variance map
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    def math_get_max_variance_map(self):
+    def math_continuum_get_max_variance_map(self):
         """
         Function to determine the maximum of the variance map
         """
 
-        logger.info("Getting maximum of variance map")
+        logger.info("Getting maximum of continuum variance map")
 
-        mosaic_get_max_variance_status = get_param_def(
-            self, 'mosaic_get_max_variance_status', False)
+        mosaic_continuum_get_max_variance_status = get_param_def(self, 'mosaic_continuum_get_max_variance_status', False)
 
-        mosaic_max_variance = get_param_def(
-            self, 'mosaic_beam_max_variance', 0.)
+        mosaic_continuum_max_variance = get_param_def(self, 'mosaic_continuum_beam_max_variance', 0.)
 
         # switch to mosaic directory
         subs_managefiles.director(self, 'ch', self.mosaic_continuum_mosaic_dir)
 
-        if not mosaic_get_max_variance_status and mosaic_max_variance == 0.:
+        if not mosaic_continuum_get_max_variance_status and mosaic_continuum_max_variance == 0.:
             # Find maximum value of variance map
             imstat = lib.miriad('imstat')
             imstat.in_ = "'variance_mos.map'"
@@ -1691,7 +3265,7 @@ class mosaic(BaseModule):
             try:
                 a = imstat.go()
             except Exception as e:
-                error = "Getting maximum of varianc map ... Failed"
+                error = "Getting maximum of continuum varianc map ... Failed"
                 logger.error(error)
                 logger.exception(e)
                 raise RuntimeError(error)
@@ -1699,96 +3273,299 @@ class mosaic(BaseModule):
             # Always outputs max value at same point
             var_max = a[10].lstrip().split(" ")[3]
 
-            logger.info("Maximum of variance map is {}".format(var_max))
+            logger.debug("Maximum of continuum variance map is {}".format(var_max))
 
-            logger.info("Getting maximum of variance map ... Done")
+            logger.info("Getting maximum of continuum variance map ... Done")
 
-            mosaic_get_max_variance_status = True
-            mosaic_max_variance = var_max
+            mosaic_continuum_get_max_variance_status = True
+            mosaic_continuum_max_variance = var_max
         else:
-            logger.info("Maximum of variance map has already been determined.")
+            logger.info("Maximum of continuum variance map has already been determined.")
 
         subs_param.add_param(
-            self, 'mosaic_get_max_variance_status', mosaic_get_max_variance_status)
+            self, 'mosaic_continuum_get_max_variance_status', mosaic_continuum_get_max_variance_status)
 
         subs_param.add_param(
-            self, 'mosaic_max_variance', mosaic_max_variance)
+            self, 'mosaic_continuum_max_variance', mosaic_continuum_max_variance)
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    # Function to divide image by variance map
+    # Function to find maximum of variance map
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    def math_divide_image_by_variance_map(self):
+    def math_polarisation_get_max_variance_map(self):
         """
-        Function to divide the image by the variance map
+        Function to determine the maximum of the variance map for polarisation
         """
 
-        logger.info("Dividing image by variance map")
+        logger.info("Getting maximum of continuum variance map")
 
-        mosaic_divide_image_variance_status = get_param_def(
-            self, 'mosaic_divide_image_variance_status', False)
+        # Get the needed information from the param files
+        pbeam = 'polarisation_B' + str(self.mosaic_beam_list[0]).zfill(2)
+        polbeamimagestatus = get_param_def(self, pbeam + '_targetbeams_qu_imagestatus', False)
+        qimages = len(polbeamimagestatus)
 
-        mosaic_max_variance = get_param_def(
-            self, 'mosaic_beam_max_variance', 0.)
+        mosaic_polarisation_get_max_variance_status_q = get_param_def(self, 'mosaic_polarisation_get_max_variance_status_q', False)
+        mosaic_polarisation_max_variance_q = get_param_def(self, 'mosaic_polarisation_beam_max_variance_q', np.zeros(qimages))
+        mosaic_polarisation_get_max_variance_status_u = get_param_def(self, 'mosaic_polarisation_get_max_variance_status_u', False)
+        mosaic_polarisation_max_variance_u = get_param_def(self, 'mosaic_polarisation_beam_max_variance_u', np.zeros(qimages))
+        mosaic_polarisation_get_max_variance_status_v = get_param_def(self, 'mosaic_polarisation_get_max_variance_status_v', False)
+        mosaic_polarisation_max_variance_v = get_param_def(self, 'mosaic_polarisation_beam_max_variance_v', 0.)
 
         # switch to mosaic directory
-        subs_managefiles.director(self, 'ch', self.mosaic_continuum_mosaic_dir)
+        subs_managefiles.director(self, 'ch', self.mosaic_polarisation_mosaic_dir)
 
-        if not mosaic_divide_image_variance_status:
-            # Divide image by variance map
-            maths = lib.miriad('maths')
-            maths.out = 'mosaic_final.map'
-            maths.exp = "'<mosaic_im.map>/<variance_mos.map>'"
-            maths.mask = "'<variance_mos.map>.gt.0.01*" + \
-                str(mosaic_max_variance) + "'"
-            maths.inp()
+        if not mosaic_polarisation_get_max_variance_status_q:
+            for qplane in range(qimages):
+                # Find maximum value of variance map
+                imstat = lib.miriad('imstat')
+                imstat.in_ = "'" + 'variance_Q_{}_mos.map'.format(str(qplane).zfill(3)) + "'"
+                imstat.region = "'quarter(1)'"
+                imstat.axes = "'x,y'"
+                try:
+                    a = imstat.go()
+                except Exception as e:
+                    error = "Getting maximum of Stokes Q variance map {} ... Failed".format(qplane)
+                    logger.error(error)
+                    logger.exception(e)
+                    raise RuntimeError(error)
+
+                # Always outputs max value at same point
+                var_max_q = a[10].lstrip().split(" ")[3]
+
+                logger.debug("Maximum of Stokes Q variance map {0} is {1}".format(qplane, var_max_q))
+
+                mosaic_polarisation_max_variance_q[qplane] = var_max_q
+
+            logger.info("Getting maxima of Stokes Q variance maps ... Done")
+
+            mosaic_polarisation_get_max_variance_status_q = True
+
+        else:
+            logger.info("Maximum of Stokes Q variance maps has already been determined.")
+
+        if not mosaic_polarisation_get_max_variance_status_u:
+            for uplane in range(qimages):
+                # Find maximum value of variance map
+                imstat = lib.miriad('imstat')
+                imstat.in_ = "'" + 'variance_U_{}_mos.map'.format(str(uplane).zfill(3)) + "'"
+                imstat.region = "'quarter(1)'"
+                imstat.axes = "'x,y'"
+                try:
+                    a = imstat.go()
+                except Exception as e:
+                    error = "Getting maximum of Stokes U variance map {} ... Failed".format(uplane)
+                    logger.error(error)
+                    logger.exception(e)
+                    raise RuntimeError(error)
+
+                # Always outputs max value at same point
+                var_max_u = a[10].lstrip().split(" ")[3]
+
+                logger.debug("Maximum of Stokes U variance map {0} is {1}".format(uplane, var_max_u))
+
+                mosaic_polarisation_max_variance_u[uplane] = var_max_u
+
+            logger.info("Getting maxima of Stokes U variance maps ... Done")
+
+            mosaic_polarisation_get_max_variance_status_u = True
+
+        else:
+            logger.info("Maximum of Stokes U variance maps has already been determined.")
+
+        if not mosaic_polarisation_get_max_variance_status_v and mosaic_polarisation_max_variance_v == 0.:
+            # Find maximum value of variance map
+            imstat = lib.miriad('imstat')
+            imstat.in_ = "'variance_V_mos.map'"
+            imstat.region = "'quarter(1)'"
+            imstat.axes = "'x,y'"
             try:
-                maths.go()
+                a = imstat.go()
             except Exception as e:
-                error = "Dividing image by variance map ... Failed"
+                error = "Getting maximum of Stokes V variance map ... Failed"
                 logger.error(error)
                 logger.exception(e)
                 raise RuntimeError(error)
 
-            logger.info("Dividing image by variance map ... Done")
+            # Always outputs max value at same point
+            var_max_v = a[10].lstrip().split(" ")[3]
 
-            mosaic_divide_image_variance_status = True
+            logger.debug("Maximum of Stokes V variance map is {}".format(var_max_v))
+
+            logger.info("Getting maximum of Stokes V variance map ... Done")
+
+            mosaic_polarisation_get_max_variance_status_v = True
+            mosaic_polarisation_max_variance_v = var_max_v
         else:
-            logger.info("Division has already been performed")
+            logger.info("Maximum of Stokes V variance map has already been determined.")
 
-        subs_param.add_param(
-            self, 'mosaic_divide_image_variance_status', mosaic_divide_image_variance_status)
 
-    # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    # Function to get mosaic noise map
-    # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    def get_mosaic_noise_map(self):
+        subs_param.add_param(self, 'mosaic_polarisation_get_max_variance_status_q', mosaic_polarisation_get_max_variance_status_q)
+        subs_param.add_param(self, 'mosaic_polarisation_get_max_variance_status_u', mosaic_polarisation_get_max_variance_status_u)
+        subs_param.add_param(self, 'mosaic_polarisation_get_max_variance_status_v', mosaic_polarisation_get_max_variance_status_v)
+
+        subs_param.add_param(self, 'mosaic_polarisation_max_variance_q', mosaic_polarisation_max_variance_q)
+        subs_param.add_param(self, 'mosaic_polarisation_max_variance_u', mosaic_polarisation_max_variance_u)
+        subs_param.add_param(self, 'mosaic_polarisation_max_variance_v', mosaic_polarisation_max_variance_v)
+
+
+    # ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Function to divide image by variance map for continuum
+    # ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    def math_continuum_divide_image_by_variance_map(self):
         """
-        Function to get the mosaic noise map
+        Function to divide the image by the variance map
         """
 
-        logger.info("Getting mosaic noise map")
+        logger.info("Dividing continuum image by continuum variance map")
 
-        mosaic_get_mosaic_noise_map_status = get_param_def(
-            self, 'mosaic_get_mosaic_noise_map_status', False)
+        mosaic_continuum_divide_image_variance_status = get_param_def(self, 'mosaic_continuum_divide_image_variance_status', False)
 
-        mosaic_max_variance = get_param_def(
-            self, 'mosaic_beam_max_variance', 0.)
+        mosaic_continuum_max_variance = get_param_def(self, 'mosaic_continuum_beam_max_variance', 0.)
 
         # switch to mosaic directory
         subs_managefiles.director(self, 'ch', self.mosaic_continuum_mosaic_dir)
 
-        if not mosaic_get_mosaic_noise_map_status:
+        if not mosaic_continuum_divide_image_variance_status:
+            # Divide image by variance map
+            maths = lib.miriad('maths')
+            maths.out = 'mosaic_final.map'
+            maths.exp = "'<mosaic_im.map>/<variance_mos.map>'"
+            maths.mask = "'<variance_mos.map>.gt.0.01*" + str(mosaic_continuum_max_variance) + "'"
+            try:
+                maths.go()
+            except Exception as e:
+                error = "Dividing image by continuum variance map ... Failed"
+                logger.error(error)
+                logger.exception(e)
+                raise RuntimeError(error)
+
+            logger.info("Dividing image by continuum variance map ... Done")
+
+            mosaic_continuum_divide_image_variance_status = True
+        else:
+            logger.info("Division for continuum image has already been performed")
+
+        subs_param.add_param(self, 'mosaic_continuum_divide_image_variance_status', mosaic_continuum_divide_image_variance_status)
+
+    # ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Function to divide image by variance map for continuum
+    # ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    def math_polarisation_divide_image_by_variance_map(self):
+        """
+        Function to divide the image by the variance map
+        """
+
+        logger.info("Dividing polarisation images by polarisation variance maps")
+
+        # Get the needed information from the param files
+        pbeam = 'polarisation_B' + str(self.mosaic_beam_list[0]).zfill(2)
+        polbeamimagestatus = get_param_def(self, pbeam + '_targetbeams_qu_imagestatus', False)
+        qimages = len(polbeamimagestatus)
+
+        mosaic_polarisation_divide_image_variance_status_q = get_param_def(self, 'mosaic_polarisation_divide_image_variance_status_q', False)
+        mosaic_polarisation_divide_image_variance_status_u = get_param_def(self, 'mosaic_polarisation_divide_image_variance_status_u', False)
+        mosaic_polarisation_divide_image_variance_status_v = get_param_def(self, 'mosaic_polarisation_divide_image_variance_status_v', False)
+
+        mosaic_polarisation_max_variance_q = get_param_def(self, 'mosaic_polarisation_beam_max_variance_q', np.zeros(qimages))
+        mosaic_polarisation_max_variance_u = get_param_def(self, 'mosaic_polarisation_beam_max_variance_u', np.zeros(qimages))
+        mosaic_polarisation_max_variance_v = get_param_def(self, 'mosaic_polarisation_beam_max_variance_v', 0.)
+
+        # switch to mosaic directory
+        subs_managefiles.director(self, 'ch', self.mosaic_polarisation_mosaic_dir)
+
+        if not mosaic_polarisation_divide_image_variance_status_q:
+            for qplane in range(qimages):
+                # Divide image by variance map
+                maths = lib.miriad('maths')
+                maths.out = 'mosaic_Q_{}_final.map'.format(str(qplane).zfill(3))
+                maths.exp = "'" + "<mosaic_Q_{0}_im.map>/<variance_Q_{0}_mos.map>".format(str(qplane).zfill(3)) + "'"
+                maths.mask = "'" + "<variance_Q_{}_mos.map>.gt.0.01*".format(str(qplane).zfill(3)) + str(mosaic_polarisation_max_variance_q[qplane]) + "'"
+                try:
+                    maths.go()
+                except Exception as e:
+                    error = "Dividing Stokes Q image by Stokes Q variance map for image plane {} ... Failed".format(qplane)
+                    logger.error(error)
+                    logger.exception(e)
+                    raise RuntimeError(error)
+
+            logger.info("Dividing Stokes Q images by Stokes Q variance maps ... Done")
+
+            mosaic_polarisation_divide_image_variance_status_q = True
+        else:
+            logger.info("Division for Stokes Q images has already been performed")
+
+        if not mosaic_polarisation_divide_image_variance_status_u:
+            for uplane in range(qimages):
+                # Divide image by variance map
+                maths = lib.miriad('maths')
+                maths.out = 'mosaic_U_{}_final.map'.format(str(uplane).zfill(3))
+                maths.exp = "'" + "<mosaic_U_{0}_im.map>/<variance_U_{0}_mos.map>".format(str(uplane).zfill(3)) + "'"
+                maths.mask = "'" + "<variance_U_{}_mos.map>.gt.0.01*".format(str(uplane).zfill(3)) + str(mosaic_polarisation_max_variance_u[uplane]) + "'"
+                try:
+                    maths.go()
+                except Exception as e:
+                    error = "Dividing Stokes U image by Stokes U variance map for image plane {} ... Failed".format(uplane)
+                    logger.error(error)
+                    logger.exception(e)
+                    raise RuntimeError(error)
+
+            logger.info("Dividing Stokes U images by Stokes U variance maps ... Done")
+
+            mosaic_polarisation_divide_image_variance_status_u = True
+        else:
+            logger.info("Division for Stokes U images has already been performed")
+
+        if not mosaic_polarisation_divide_image_variance_status_v:
+            # Divide image by variance map
+            maths = lib.miriad('maths')
+            maths.out = 'mosaic_V_final.map'
+            maths.exp = "'<mosaic_V_im.map>/<variance_V_mos.map>'"
+            maths.mask = "'<variance_V_mos.map>.gt.0.01*" + str(mosaic_polarisation_max_variance_v) + "'"
+            try:
+                maths.go()
+            except Exception as e:
+                error = "Dividing Stokes V image by Stokes V variance map ... Failed"
+                logger.error(error)
+                logger.exception(e)
+                raise RuntimeError(error)
+
+            logger.info("Dividing Stokes V image by Stokes V variance map ... Done")
+
+            mosaic_polarisation_divide_image_variance_status_v = True
+        else:
+            logger.info("Division for Stokes V image has already been performed")
+
+        subs_param.add_param(self, 'mosaic_polarisation_divide_image_variance_status_q', mosaic_polarisation_divide_image_variance_status_q)
+        subs_param.add_param(self, 'mosaic_polarisation_divide_image_variance_status_u', mosaic_polarisation_divide_image_variance_status_u)
+        subs_param.add_param(self, 'mosaic_polarisation_divide_image_variance_status_v', mosaic_polarisation_divide_image_variance_status_v)
+
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Function to get continuum mosaic noise map
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    def get_continuum_mosaic_noise_map(self):
+        """
+        Function to get the continuum mosaic noise map
+        """
+
+        logger.info("Getting continuum mosaic noise map")
+
+        mosaic_continuum_get_mosaic_noise_map_status = get_param_def(self, 'mosaic_continuum_get_mosaic_noise_map_status', False)
+
+        mosaic_continuum_max_variance = get_param_def(self, 'mosaic_continuum_beam_max_variance', 0.)
+
+        # switch to mosaic directory
+        subs_managefiles.director(self, 'ch', self.mosaic_continuum_mosaic_dir)
+
+        if not mosaic_continuum_get_mosaic_noise_map_status:
             # Produce mosaic noise map
             maths = lib.miriad('maths')
             maths.out = 'mosaic_noise.map'
             maths.exp = "'1./sqrt(<variance_mos.map>)'"
-            maths.mask = "'<variance_mos.map>.gt.0.01*" + \
-                str(mosaic_max_variance) + "'"
-            maths.inp()
+            maths.mask = "'<variance_mos.map>.gt.0.01*" + str(mosaic_continuum_max_variance) + "'"
             try:
                 maths.go()
             except Exception as e:
-                error = "Calculating mosaic noise map ... Failed"
+                error = "Calculating continuum mosaic noise map ... Failed"
                 logger.error(error)
                 logger.exception(e)
                 raise RuntimeError(error)
@@ -1799,31 +3576,154 @@ class mosaic(BaseModule):
             try:
                 puthd.go()
             except Exception as e:
-                error = "Adding noise map unit ... Failed"
+                error = "Adding continuum noise map unit ... Failed"
                 logger.error(error)
                 logger.exception(e)
                 raise RuntimeError(error)
 
-            logger.info("Getting mosaic noise map ... Done")
-            mosaic_get_mosaic_noise_map_status = True
+            logger.info("Getting continuum mosaic noise map ... Done")
+            mosaic_continuum_get_mosaic_noise_map_status = True
         else:
-            logger.info("Mosaic noise is already available")
+            logger.info("Mosaic continuum map noise is already available")
 
-        subs_param.add_param(
-            self, 'mosaic_get_mosaic_noise_map_status', mosaic_get_mosaic_noise_map_status)
+        subs_param.add_param(self, 'mosaic_continuum_get_mosaic_noise_map_status', mosaic_continuum_get_mosaic_noise_map_status)
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Function to get continuum mosaic noise map
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    def get_polarisation_mosaic_noise_map(self):
+        """
+        Function to get the polarisation mosaic noise maps
+        """
+
+        logger.info("Getting polarisation mosaic noise maps")
+
+        mosaic_polarisation_get_mosaic_noise_map_status_q = get_param_def(self, 'mosaic_polarisation_get_mosaic_noise_map_status_q', False)
+        mosaic_polarisation_get_mosaic_noise_map_status_u = get_param_def(self, 'mosaic_polarisation_get_mosaic_noise_map_status_u', False)
+        mosaic_polarisation_get_mosaic_noise_map_status_v = get_param_def(self, 'mosaic_polarisation_get_mosaic_noise_map_status_v', False)
+
+        # Get the needed information from the param files
+        pbeam = 'polarisation_B' + str(self.mosaic_beam_list[0]).zfill(2)
+        polbeamimagestatus = get_param_def(self, pbeam + '_targetbeams_qu_imagestatus', False)
+        qimages = len(polbeamimagestatus)
+
+        mosaic_polarisation_max_variance_q = get_param_def(self, 'mosaic_polarisation_beam_max_variance_q', np.zeros(qimages))
+        mosaic_polarisation_max_variance_u = get_param_def(self, 'mosaic_polarisation_beam_max_variance_u', np.zeros(qimages))
+        mosaic_polarisation_max_variance_v = get_param_def(self, 'mosaic_polarisation_beam_max_variance_v', 0.)
+
+        # switch to mosaic directory
+        subs_managefiles.director(self, 'ch', self.mosaic_polarisation_mosaic_dir)
+
+        if not mosaic_polarisation_get_mosaic_noise_map_status_q:
+            for qplane in range(qimages):
+                # Produce mosaic noise map
+                maths = lib.miriad('maths')
+                maths.out = 'mosaic_Q_{}_noise.map'.format(str(qplane).zfill(3))
+                maths.exp = "'" + "1./sqrt(<variance_Q_{}_mos.map>)".format(str(qplane).zfill(3)) + "'"
+                maths.mask = "'" + "<variance_Q_{}_mos.map>.gt.0.01*".format(str(qplane).zfill(3)) + str(mosaic_polarisation_max_variance_q[qplane]) + "'"
+                try:
+                    maths.go()
+                except Exception as e:
+                    error = "Calculating Stokes Q mosaic noise map {} ... Failed".format(qplane)
+                    logger.error(error)
+                    logger.exception(e)
+                    raise RuntimeError(error)
+
+                puthd = lib.miriad('puthd')
+                puthd.in_ = 'mosaic_Q_{}_noise.map/bunit'.format(str(qplane).zfill(3))
+                puthd.value = 'JY/BEAM'
+                try:
+                    puthd.go()
+                except Exception as e:
+                    error = "Adding Stokes Q noise map unit to image plane {} ... Failed".format(qplane)
+                    logger.error(error)
+                    logger.exception(e)
+                    raise RuntimeError(error)
+
+            logger.info("Getting Stokes Q mosaic noise maps ... Done")
+            mosaic_polarisation_get_mosaic_noise_map_status_q = True
+        else:
+            logger.info("Mosaicked Stokes Q noise maps are already available")
+
+        if not mosaic_polarisation_get_mosaic_noise_map_status_u:
+            for uplane in range(qimages):
+                # Produce mosaic noise map
+                maths = lib.miriad('maths')
+                maths.out = 'mosaic_U_{}_noise.map'.format(str(uplane).zfill(3))
+                maths.exp = "'" + "1./sqrt(<variance_U_{}_mos.map>)".format(str(uplane).zfill(3)) + "'"
+                maths.mask = "'" + "<variance_U_{}_mos.map>.gt.0.01*".format(str(uplane).zfill(3)) + str(
+                    mosaic_polarisation_max_variance_u[uplane]) + "'"
+                try:
+                    maths.go()
+                except Exception as e:
+                    error = "Calculating Stokes U mosaic noise map {} ... Failed".format(uplane)
+                    logger.error(error)
+                    logger.exception(e)
+                    raise RuntimeError(error)
+
+                puthd = lib.miriad('puthd')
+                puthd.in_ = 'mosaic_U_{}_noise.map/bunit'.format(str(uplane).zfill(3))
+                puthd.value = 'JY/BEAM'
+                try:
+                    puthd.go()
+                except Exception as e:
+                    error = "Adding Stokes U noise map unit to image plane {} ... Failed".format(uplane)
+                    logger.error(error)
+                    logger.exception(e)
+                    raise RuntimeError(error)
+
+            logger.info("Getting Stokes U mosaic noise maps ... Done")
+            mosaic_polarisation_get_mosaic_noise_map_status_u = True
+        else:
+            logger.info("Mosaicked Stokes U noise maps are already available")
+
+        if not mosaic_polarisation_get_mosaic_noise_map_status_v:
+            # Produce mosaic noise map
+            maths = lib.miriad('maths')
+            maths.out = 'mosaic_V_noise.map'
+            maths.exp = "'1./sqrt(<variance_V_mos.map>)'"
+            maths.mask = "'<variance_V_mos.map>.gt.0.01*" + str(mosaic_polarisation_max_variance_v) + "'"
+            try:
+                maths.go()
+            except Exception as e:
+                error = "Calculating Stokes V mosaic noise map ... Failed"
+                logger.error(error)
+                logger.exception(e)
+                raise RuntimeError(error)
+
+            puthd = lib.miriad('puthd')
+            puthd.in_ = 'mosaic_V_noise.map/bunit'
+            puthd.value = 'JY/BEAM'
+            try:
+                puthd.go()
+            except Exception as e:
+                error = "Adding Stokes V noise map unit ... Failed"
+                logger.error(error)
+                logger.exception(e)
+                raise RuntimeError(error)
+
+            logger.info("Getting Stokes V mosaic noise map ... Done")
+            mosaic_polarisation_get_mosaic_noise_map_status_v = True
+        else:
+            logger.info("Mosaic Stokes V map noise is already available")
+
+        subs_param.add_param(self, 'mosaic_polarisation_get_mosaic_noise_map_status_q', mosaic_polarisation_get_mosaic_noise_map_status_q)
+        subs_param.add_param(self, 'mosaic_polarisation_get_mosaic_noise_map_status_u', mosaic_polarisation_get_mosaic_noise_map_status_u)
+        subs_param.add_param(self, 'mosaic_polarisation_get_mosaic_noise_map_status_v', mosaic_polarisation_get_mosaic_noise_map_status_v)
+
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
     # Function to write out the mosaic FITS files
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    def write_mosaic_fits_files(self):
+    def write_continuum_mosaic_fits_files(self):
         """
         Function to write out the mosaic fits files
         """
 
-        logger.info("Writing mosaic fits files")
+        logger.info("Writing continuum mosaic fits files")
 
-        mosaic_write_mosaic_fits_files_status = get_param_def(
-            self, 'mosaic_write_mosaic_fits_files_status', False)
+        mosaic_continuum_write_mosaic_fits_files_status = get_param_def(
+            self, 'mosaic_continuum_write_mosaic_fits_files_status', False)
 
         # switch to mosaic directory
         subs_managefiles.director(self, 'ch', self.mosaic_continuum_mosaic_dir)
@@ -1833,9 +3733,9 @@ class mosaic(BaseModule):
             self.mosaic_name = "{}_mosaic.fits".format(self.mosaic_taskid)
 
         # name of the noise map
-        mosaic_noise_name = self.mosaic_name.replace(".fits", "_noise.fits")
+        mosaic_continuum_noise_name = self.mosaic_name.replace(".fits", "_noise.fits")
 
-        if not mosaic_write_mosaic_fits_files_status and not os.path.exists(self.mosaic_name):
+        if not mosaic_continuum_write_mosaic_fits_files_status and not os.path.exists(self.mosaic_name):
 
             # Write out FITS files
             # main image
@@ -1843,45 +3743,170 @@ class mosaic(BaseModule):
             fits.op = 'xyout'
             fits.in_ = 'mosaic_final.map'
             fits.out = self.mosaic_name
-            fits.inp()
             try:
                 fits.go()
             except Exception as e:
-                error = "Writing mosaic fits file ... Failed"
+                error = "Writing continuum mosaic fits file ... Failed"
                 logger.error(error)
                 logger.exception(e)
                 raise RuntimeError(error)
         else:
-            logger.info("Mosaic image has already been converted to fits")
+            logger.info("Continuum mosaic image has already been converted to fits")
 
-        if not mosaic_write_mosaic_fits_files_status and not os.path.exists(mosaic_noise_name):
+        if not mosaic_continuum_write_mosaic_fits_files_status and not os.path.exists(mosaic_continuum_noise_name):
             # noise map
             fits = lib.miriad('fits')
             fits.op = 'xyout'
             fits.in_ = 'mosaic_noise.map'
-            fits.out = mosaic_noise_name
-            fits.inp()
+            fits.out = mosaic_continuum_noise_name
             try:
                 fits.go()
             except Exception as e:
-                error = "Writing mosaic noise mape fits file ... Failed"
+                error = "Writing continuum mosaic noise map fits file ... Failed"
                 logger.error(error)
                 logger.exception(e)
                 raise RuntimeError(error)
 
         else:
             logger.info(
-                "Mosaic noise image has already been converted to fits")
+                "Continuum mosaic noise image has already been converted to fits")
 
-        logger.info("Writing mosaic fits files ... Done")
-        mosaic_write_mosaic_fits_files_status = True
+        logger.info("Writing continuum mosaic fits files ... Done")
+        mosaic_continuum_write_mosaic_fits_files_status = True
         subs_param.add_param(
-            self, 'mosaic_write_mosaic_fits_files_status', mosaic_write_mosaic_fits_files_status)
+            self, 'mosaic_continuum_write_mosaic_fits_files_status', mosaic_continuum_write_mosaic_fits_files_status)
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Function to write out the mosaic FITS files
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    def write_polarisation_mosaic_fits_files(self):
+        """
+        Function to write out the polarisation mosaic fits files
+        """
+
+        logger.info("Writing polarisation mosaic fits files")
+
+        mosaic_polarisation_write_mosaic_fits_files_status_q = get_param_def(self, 'mosaic_polarisation_write_mosaic_fits_files_status_q', False)
+        mosaic_polarisation_write_mosaic_fits_files_status_u = get_param_def(self, 'mosaic_polarisation_write_mosaic_fits_files_status_u', False)
+        mosaic_polarisation_write_mosaic_fits_files_status_v = get_param_def(self, 'mosaic_polarisation_write_mosaic_fits_files_status_v', False)
+
+        # Get the needed information from the param files
+        pbeam = 'polarisation_B' + str(self.mosaic_beam_list[0]).zfill(2)
+        polbeamimagestatus = get_param_def(self, pbeam + '_targetbeams_qu_imagestatus', False)
+        qimages = len(polbeamimagestatus)
+
+        # switch to mosaic directory
+        subs_managefiles.director(self, 'ch', self.mosaic_polarisation_mosaic_dir)
+
+        if not mosaic_polarisation_write_mosaic_fits_files_status_q:
+            for qplane in range(qimages):
+                # Write out FITS files
+                # main image
+                fits = lib.miriad('fits')
+                fits.op = 'xyout'
+                fits.in_ = 'mosaic_Q_{}_final.map'.format(str(qplane).zfill(3))
+                mosaic_name_q = "{0}_Q_{1}_mosaic.fits".format(self.mosaic_taskid, str(qplane).zfill(3))
+                fits.out = mosaic_name_q
+                try:
+                    fits.go()
+                except Exception as e:
+                    error = "Writing Stokes Q mosaic fits file for image plane {} ... Failed".format(qplane)
+                    logger.error(error)
+                    logger.exception(e)
+                    raise RuntimeError(error)
+                # noise map
+                fits = lib.miriad('fits')
+                fits.op = 'xyout'
+                fits.in_ = 'mosaic_Q_{}_noise.map'.format(str(qplane).zfill(3))
+                mosaic_noise_name_q = mosaic_name_q.replace(".fits", "_noise.fits")
+                fits.out = mosaic_noise_name_q
+                try:
+                    fits.go()
+                except Exception as e:
+                    error = "Writing Stokes Q mosaic noise map fits file for image plane {}... Failed".format(qplane)
+                    logger.error(error)
+                    logger.exception(e)
+                    raise RuntimeError(error)
+            mosaic_polarisation_write_mosaic_fits_files_status_q = True
+        else:
+            logger.info("Stokes Q mosaic images and noise maps have already been converted to fits")
+
+        if not mosaic_polarisation_write_mosaic_fits_files_status_u:
+            for uplane in range(qimages):
+                # Write out FITS files
+                # main image
+                fits = lib.miriad('fits')
+                fits.op = 'xyout'
+                fits.in_ = 'mosaic_U_{}_final.map'.format(str(uplane).zfill(3))
+                mosaic_name_u = "{0}_U_{1}_mosaic.fits".format(self.mosaic_taskid, str(uplane).zfill(3))
+                fits.out = mosaic_name_u
+                try:
+                    fits.go()
+                except Exception as e:
+                    error = "Writing Stokes U mosaic fits file for image plane {} ... Failed".format(uplane)
+                    logger.error(error)
+                    logger.exception(e)
+                    raise RuntimeError(error)
+                # noise map
+                fits = lib.miriad('fits')
+                fits.op = 'xyout'
+                fits.in_ = 'mosaic_U_{}_noise.map'.format(str(uplane).zfill(3))
+                mosaic_noise_name_u = mosaic_name_u.replace(".fits", "_noise.fits")
+                fits.out = mosaic_noise_name_u
+                try:
+                    fits.go()
+                except Exception as e:
+                    error = "Writing Stokes U mosaic noise map fits file for image plane {}... Failed".format(uplane)
+                    logger.error(error)
+                    logger.exception(e)
+                    raise RuntimeError(error)
+            mosaic_polarisation_write_mosaic_fits_files_status_u = True
+        else:
+            logger.info("Stokes U mosaic images and noise maps have already been converted to fits")
+
+        if not mosaic_polarisation_write_mosaic_fits_files_status_v:
+            # Write out FITS files
+            # main image
+            fits = lib.miriad('fits')
+            fits.op = 'xyout'
+            fits.in_ = 'mosaic_V_final.map'
+            mosaic_name_v = "{0}_V_mosaic.fits".format(self.mosaic_taskid)
+            fits.out = mosaic_name_v
+            try:
+                fits.go()
+            except Exception as e:
+                error = "Writing Stokes V mosaic fits file ... Failed"
+                logger.error(error)
+                logger.exception(e)
+                raise RuntimeError(error)
+            # noise map
+            fits = lib.miriad('fits')
+            fits.op = 'xyout'
+            fits.in_ = 'mosaic_V_noise.map'
+            mosaic_noise_name_v = mosaic_name_v.replace(".fits", "_noise.fits")
+            fits.out = mosaic_noise_name_v
+            try:
+                fits.go()
+            except Exception as e:
+                error = "Writing Stokes V mosaic noise map fits file ... Failed"
+                logger.error(error)
+                logger.exception(e)
+                raise RuntimeError(error)
+            mosaic_polarisation_write_mosaic_fits_files_status_v = True
+        else:
+            logger.info("Stokes V mosaic images and noise maps have already been converted to fits")
+
+        logger.info("Writing polarisation mosaic fits files ... Done")
+
+        subs_param.add_param(self, 'mosaic_polarisation_write_mosaic_fits_files_status_q', mosaic_polarisation_write_mosaic_fits_files_status_q)
+        subs_param.add_param(self, 'mosaic_polarisation_write_mosaic_fits_files_status_u', mosaic_polarisation_write_mosaic_fits_files_status_u)
+        subs_param.add_param(self, 'mosaic_polarisation_write_mosaic_fits_files_status_v', mosaic_polarisation_write_mosaic_fits_files_status_v)
+
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
     # Function to run validation tool
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    def run_image_validation(self):
+    def run_continuum_image_validation(self):
         """
         Function to run image validation
         """
@@ -1889,7 +3914,7 @@ class mosaic(BaseModule):
         mosaic_run_image_validation_status = get_param_def(
             self, 'mosaic_run_image_validation_status', False)
 
-        if self.mosaic_image_validation:
+        if self.mosaic_continuum_image_validation:
             # optional step, so only do the import here
             import dataqa
             from dataqa.continuum.validation_tool import validation
@@ -1922,7 +3947,70 @@ class mosaic(BaseModule):
             mosaic_run_image_validation_status = False
 
         subs_param.add_param(
-            self, 'mosaic_run_image_validation_status', mosaic_run_image_validation_status)
+            self, 'mosaic_continuum_run_image_validation_status', mosaic_continuum_run_image_validation_status)
+
+
+    ###############################
+    ###### Support functions ######
+    ###############################
+
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Function to convert beam maps from fits to miriad
+    # May not be necessary in the end.
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    def convert_continuum_beams_to_miriad(self):
+        """
+        Convert beam fits images to miriad format
+
+        Based on notebook function import_beam(beam_num)
+
+        At the moment the function is only successful
+        if all beams were successfully.
+
+        TODO:
+            Conversion should be parallelised.
+            Could be moved to submodule taking care of creating beam maps
+        """
+
+        logger.info("Converting fits beam images to miriad images")
+
+        mosaic_continuum_convert_fits_beam_status = get_param_def(
+            self, 'mosaic_continuum_convert_fits_beam_status', False)
+
+        # change to directory of continuum images
+        subs_managefiles.director(self, 'ch', self.mosaic_continuum_beam_dir)
+
+        for beam in self.mosaic_beam_list:
+            # This function will import the FITS image of a beam into Miriad format, placing it in the mosaicdir
+            fits = lib.miriad('fits')
+            fits.op = 'xyin'
+            fits.in_ = 'beam_{}.fits'.format(beam)
+            fits.out = 'beam_{}.map'.format(beam)
+            try:
+                fits.go()
+            except Exception as e:
+                mosaic_continuum_convert_fits_beam_status = False
+                error = "Converting fits image of beam {} to miriad image ... Failed".format(
+                    beam)
+                logger.error(error)
+                logger.exception(e)
+                raise RuntimeError(error)
+            else:
+                mosaic_continuum_convert_fits_beam_status = True
+                logger.debug(
+                    "Converting fits image of beam {} to miriad image ... Done".format(beam))
+
+        if mosaic_continuum_convert_fits_beam_status:
+            logger.info(
+                "Converting fits images to miriad images ... Successful")
+        else:
+            logger.warning(
+                "Converting fits images to miriad images ... Failed for at least one beam. Please check the log")
+
+        subs_param.add_param(
+            self, 'mosaic_continuum_convert_fits_beam_status', mosaic_continuum_convert_fits_beam_status)
+
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
     # Function to make the mosaic stop after a certain number of steps
@@ -2028,7 +4116,7 @@ class mosaic(BaseModule):
                 # =======================================
                 logger.info("#### Step {0} ####".format(i))
                 start_time_step = time.time()
-                self.convert_images_to_miriad()
+                self.convert_continuum_images_to_miriad()
                 logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
                     i, time.time() - start_time_step))
                 i += 1
@@ -2041,7 +4129,7 @@ class mosaic(BaseModule):
                 # ==================================
                 logger.info("#### Step {0} ####".format(i))
                 start_time_step = time.time()
-                self.get_mosaic_projection_centre()
+                self.get_mosaic_continuum_projection_centre()
                 logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
                     i, time.time() - start_time_step))
                 i += 1
@@ -2054,7 +4142,7 @@ class mosaic(BaseModule):
                 # ==========================
                 logger.info("#### Step {0} ####".format(i))
                 start_time_step = time.time()
-                self.transfer_coordinates()
+                self.transfer_continuum_coordinates()
                 logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
                     i, time.time() - start_time_step))
                 i += 1
@@ -2067,33 +4155,7 @@ class mosaic(BaseModule):
                 # ========================
                 logger.info("#### Step {0} ####".format(i))
                 start_time_step = time.time()
-                self.create_template_mosaic()
-                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
-                    i, time.time() - start_time_step))
-                i += 1
-
-                # to allow the mosaic to stop earlier
-                if self.stop_mosaic(i):
-                    return None
-
-                # Regrid beam maps
-                # ================
-                logger.info("#### Step {0} ####".format(i))
-                start_time_step = time.time()
-                self.regrid_beam_maps()
-                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
-                    i, time.time() - start_time_step))
-                i += 1
-
-                # to allow the mosaic to stop earlier
-                if self.stop_mosaic(i):
-                    return None
-
-                # Determing common beam for convolution
-                # =====================================
-                logger.info("#### Step {0} ####".format(i))
-                start_time_step = time.time()
-                self.get_common_beam()
+                self.create_continuum_template_mosaic()
                 logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
                     i, time.time() - start_time_step))
                 i += 1
@@ -2106,7 +4168,33 @@ class mosaic(BaseModule):
                 # =============
                 logger.info("#### Step {0} ####".format(i))
                 start_time_step = time.time()
-                self.regrid_images()
+                self.regrid_continuum_images()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                    i, time.time() - start_time_step))
+                i += 1
+
+                # to allow the mosaic to stop earlier
+                if self.stop_mosaic(i):
+                    return None
+
+                # Regrid beam maps
+                # ================
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
+                self.regrid_continuum_beam_maps()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                    i, time.time() - start_time_step))
+                i += 1
+
+                # to allow the mosaic to stop earlier
+                if self.stop_mosaic(i):
+                    return None
+
+                # Determing common beam for convolution
+                # =====================================
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
+                self.get_continuum_common_beam()
                 logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
                     i, time.time() - start_time_step))
                 i += 1
@@ -2119,7 +4207,7 @@ class mosaic(BaseModule):
                 # ===============
                 logger.info("#### Step {0} ####".format(i))
                 start_time_step = time.time()
-                self.mosaic_convolve_images()
+                self.mosaic_continuum_convolve_images()
                 logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
                     i, time.time() - start_time_step))
                 i += 1
@@ -2132,7 +4220,7 @@ class mosaic(BaseModule):
                 # =====================================================
                 logger.info("#### Step {0} ####".format(i))
                 start_time_step = time.time()
-                self.get_inverted_covariance_matrix()
+                self.get_continuum_inverted_covariance_matrix()
                 logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
                     i, time.time() - start_time_step))
                 i += 1
@@ -2145,7 +4233,7 @@ class mosaic(BaseModule):
                 # ======================================================
                 logger.info("#### Step {0} ####".format(i))
                 start_time_step = time.time()
-                self.math_multiply_beam_and_covariance_matrix()
+                self.math_continuum_multiply_beam_and_covariance_matrix()
                 logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
                     i, time.time() - start_time_step))
                 i += 1
@@ -2158,7 +4246,7 @@ class mosaic(BaseModule):
                 # ======================
                 logger.info("#### Step {0} ####".format(i))
                 start_time_step = time.time()
-                self.math_calculate_variance_map()
+                self.math_continuum_calculate_variance_map()
                 logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
                     i, time.time() - start_time_step))
                 i += 1
@@ -2171,7 +4259,7 @@ class mosaic(BaseModule):
                 # =====================================================
                 logger.info("#### Step {0} ####".format(i))
                 start_time_step = time.time()
-                self.math_multiply_beam_matrix_by_covariance_matrix_and_image()
+                self.math_continuum_multiply_beam_matrix_by_covariance_matrix_and_image()
                 logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
                     i, time.time() - start_time_step))
                 i += 1
@@ -2184,7 +4272,7 @@ class mosaic(BaseModule):
                 # =========================
                 logger.info("#### Step {0} ####".format(i))
                 start_time_step = time.time()
-                self.math_get_max_variance_map()
+                self.math_continuum_get_max_variance_map()
                 logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
                     i, time.time() - start_time_step))
                 i += 1
@@ -2197,7 +4285,7 @@ class mosaic(BaseModule):
                 # ======================================
                 logger.info("#### Step {0} ####".format(i))
                 start_time_step = time.time()
-                self.math_divide_image_by_variance_map()
+                self.math_continuum_divide_image_by_variance_map()
                 logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
                     i, time.time() - start_time_step))
                 i += 1
@@ -2210,7 +4298,7 @@ class mosaic(BaseModule):
                 # ==============================
                 logger.info("#### Step {0} ####".format(i))
                 start_time_step = time.time()
-                self.get_mosaic_noise_map()
+                self.get_continuum_mosaic_noise_map()
                 logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
                     i, time.time() - start_time_step))
                 i += 1
@@ -2219,7 +4307,7 @@ class mosaic(BaseModule):
                 # =============
                 logger.info("#### Step {0} ####".format(i))
                 start_time_step = time.time()
-                self.write_mosaic_fits_files()
+                self.write_continuum_mosaic_fits_files()
                 logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
                     i, time.time() - start_time_step))
 
@@ -2228,10 +4316,10 @@ class mosaic(BaseModule):
 
                 # Remove scratch files
                 # ====================
-                if self.mosaic_clean_up:
+                if self.mosaic_continuum_clean_up:
                     logger.info("#### Step: clean up ####")
                     start_time_step = time.time()
-                    self.clean_up(level=self.mosaic_clean_up_level)
+                    self.clean_up_continuum(level=self.mosaic_continuum_clean_up_level)
                     logger.info("#### Step: clean up ... Done (after {0:.0f}s) ####".format(
                         time.time() - start_time_step))
 
@@ -2240,11 +4328,11 @@ class mosaic(BaseModule):
 
             # Image validation
             # ================
-            if self.mosaic_image_validation:
+            if self.mosaic_continuum_image_validation:
                 logger.info("#### Step: mosaic validation ####")
                 start_time_step = time.time()
                 try:
-                    self.run_image_validation()
+                    self.run_continuum_image_validation()
                 except Exception as e:
                     logger.warning("#### Step: mosaic validation ... Failed (after {0:.0f}s) ####".format(
                         time.time() - start_time_step))
@@ -2261,30 +4349,47 @@ class mosaic(BaseModule):
             pass
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
-    # Function to create the polarisation q mosaic
+    # Function to create the polarisation Q, U and V mosaics
     # +++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    def create_mosaic_polarisation_q(self, mosaic_type=None):
+    def create_mosaic_polarisation(self, mosaic_type=None):
         """
         Function to create the different mosaics
         """
         # subs_setinit.setinitdirs(self)
 
-        mosaic_polarisation_q_status = get_param_def(
-            self, 'mosaic_polarisation_q_status', False)
+        mosaic_polarisation_status = get_param_def(
+            self, 'mosaic_polarisation_status', False)
 
-        # Start the mosaicking of the stacked continuum images
-        if self.mosaic_polarisation_q:
-            logger.info("Creating stokes Q mosaic")
+        # Start the mosaicking of the polarisation images
+        if self.mosaic_polarisation:
+            logger.info("Creating stokes Q, U and V mosaics")
 
             # change into the directory for the continuum mosaic
             # subs_managefiles.director(self, 'ch', os.path.join(self.mosdir, self.mosaic_continuum_subdir))
 
             # if no mosaic has already been created
-            if not mosaic_continuum_mf_status:
+            if not mosaic_polarisation_status:
 
                 # step counter
                 i = 1
+
+                # to allow the mosaic to stop earlier
+                if self.stop_mosaic(i):
+                    return None
+
+                # setup
+                # ====================================
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
+                self.mosaic_setup()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                    i, time.time() - start_time_step))
+                i += 1
+
+                # to allow the mosaic to stop earlier
+                if self.stop_mosaic(i):
+                    return None
 
                 # set (and create) the sub-directories
                 # ====================================
@@ -2295,215 +4400,307 @@ class mosaic(BaseModule):
                     i, time.time() - start_time_step))
                 i += 1
 
-                # get the continuum images
+                # to allow the mosaic to stop earlier
+                if self.stop_mosaic(i):
+                    return None
+
+                # get the polarisation images
                 # ========================
                 logger.info("#### Step {0} ####".format(i))
                 start_time_step = time.time()
-                self.get_mosaic_continuum_images()
+                self.get_mosaic_polarisation_images()
                 logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
                     i, time.time() - start_time_step))
                 i += 1
+
+                # to allow the mosaic to stop earlier
+                if self.stop_mosaic(i):
+                    return None
 
                 # get the beams
                 # =============
                 logger.info("#### Step {0} ####".format(i))
                 start_time_step = time.time()
-                self.get_mosaic_continuum_beams()
+                self.get_mosaic_polarisation_beams()
                 logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
                     i, time.time() - start_time_step))
                 i += 1
+
+                # to allow the mosaic to stop earlier
+                if self.stop_mosaic(i):
+                    return None
 
                 # Converting images into miriad
                 # =======================================
                 logger.info("#### Step {0} ####".format(i))
                 start_time_step = time.time()
-                self.convert_images_to_miriad()
+                self.convert_polarisation_images_to_miriad()
                 logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
                     i, time.time() - start_time_step))
                 i += 1
+
+                # to allow the mosaic to stop earlier
+                if self.stop_mosaic(i):
+                    return None
+
+                # Split the Q and U cubes into single images and set the beam in the header
+                # =======================================
+                logger.info("#### Step {0} ####".format(i))
+                start_time_step = time.time()
+                self.split_polarisation_images()
+                logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                i, time.time() - start_time_step))
+                i += 1
+
+                # to allow the mosaic to stop earlier
+                if self.stop_mosaic(i):
+                    return None
 
                 # set or check the projection center
                 # ==================================
                 logger.info("#### Step {0} ####".format(i))
                 start_time_step = time.time()
-                self.get_mosaic_projection_centre()
+                self.get_mosaic_polarisation_projection_centre()
                 logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
                     i, time.time() - start_time_step))
                 i += 1
+
+                # to allow the mosaic to stop earlier
+                if self.stop_mosaic(i):
+                    return None
 
                 # Transfer image coordinates
                 # ==========================
                 logger.info("#### Step {0} ####".format(i))
                 start_time_step = time.time()
-                self.transfer_coordinates()
+                self.transfer_polarisation_coordinates()
                 logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
                     i, time.time() - start_time_step))
                 i += 1
+
+                # to allow the mosaic to stop earlier
+                if self.stop_mosaic(i):
+                    return None
 
                 # Create a template mosaic
                 # ========================
                 logger.info("#### Step {0} ####".format(i))
                 start_time_step = time.time()
-                self.create_template_mosaic()
+                self.create_polarisation_template_mosaic()
                 logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
                     i, time.time() - start_time_step))
                 i += 1
 
-                # Regrid images
+                # to allow the mosaic to stop earlier
+                if self.stop_mosaic(i):
+                    return None
+
+                # Regrid polarisation images
                 # =============
                 logger.info("#### Step {0} ####".format(i))
                 start_time_step = time.time()
-                self.regrid_images()
+                self.regrid_polarisation_images()
                 logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
                     i, time.time() - start_time_step))
                 i += 1
 
-                # Regrid beam maps
+                # to allow the mosaic to stop earlier
+                if self.stop_mosaic(i):
+                    return None
+
+                # Regrid polarisation beam maps
                 # ================
                 logger.info("#### Step {0} ####".format(i))
                 start_time_step = time.time()
-                self.regrid_beam_maps()
+                self.regrid_polarisation_beam_maps()
                 logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
                     i, time.time() - start_time_step))
                 i += 1
+
+                # to allow the mosaic to stop earlier
+                if self.stop_mosaic(i):
+                    return None
 
                 # Determing common beam for convolution
                 # =====================================
                 logger.info("#### Step {0} ####".format(i))
                 start_time_step = time.time()
-                self.get_common_beam()
+                self.get_polarisation_common_beam()
                 logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
                     i, time.time() - start_time_step))
                 i += 1
+
+                # to allow the mosaic to stop earlier
+                if self.stop_mosaic(i):
+                    return None
 
                 # Convolve images
                 # ===============
                 logger.info("#### Step {0} ####".format(i))
                 start_time_step = time.time()
-                self.mosaic_convolve_images()
+                self.mosaic_polarisation_convolve_images()
                 logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
                     i, time.time() - start_time_step))
                 i += 1
+
+                # to allow the mosaic to stop earlier
+                if self.stop_mosaic(i):
+                    return None
 
                 # Get inverse covariance matrix
                 # =====================================================
                 logger.info("#### Step {0} ####".format(i))
                 start_time_step = time.time()
-                self.get_inverted_covariance_matrix()
+                self.get_polarisation_inverted_covariance_matrix()
                 logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
                     i, time.time() - start_time_step))
                 i += 1
+
+                # to allow the mosaic to stop earlier
+                if self.stop_mosaic(i):
+                    return None
 
                 # Calculate product of beam matrix and covariance matrix
                 # ======================================================
                 logger.info("#### Step {0} ####".format(i))
                 start_time_step = time.time()
-                self.math_multiply_beam_and_covariance_matrix()
+                self.math_polarisation_multiply_beam_and_covariance_matrix()
                 logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
                     i, time.time() - start_time_step))
                 i += 1
+
+                # to allow the mosaic to stop earlier
+                if self.stop_mosaic(i):
+                    return None
 
                 # Calculate variance map
                 # ======================
                 logger.info("#### Step {0} ####".format(i))
                 start_time_step = time.time()
-                self.math_calculate_variance_map()
+                self.math_polarisation_calculate_variance_map()
                 logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
                     i, time.time() - start_time_step))
                 i += 1
+
+                # to allow the mosaic to stop earlier
+                if self.stop_mosaic(i):
+                    return None
 
                 # Calculate beam matrix multiplied by covariance matrix
                 # =====================================================
                 logger.info("#### Step {0} ####".format(i))
                 start_time_step = time.time()
-                self.math_multiply_beam_matrix_by_covariance_matrix_and_image()
+                self.math_polarisation_multiply_beam_matrix_by_covariance_matrix_and_image()
                 logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
                     i, time.time() - start_time_step))
                 i += 1
+
+                # to allow the mosaic to stop earlier
+                if self.stop_mosaic(i):
+                    return None
 
                 # Find maximum variance map
                 # =========================
                 logger.info("#### Step {0} ####".format(i))
                 start_time_step = time.time()
-                self.math_get_max_variance_map()
+                self.math_polarisation_get_max_variance_map()
                 logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
                     i, time.time() - start_time_step))
                 i += 1
+
+                # to allow the mosaic to stop earlier
+                if self.stop_mosaic(i):
+                    return None
 
                 # Calculate divide image by variance map
                 # ======================================
                 logger.info("#### Step {0} ####".format(i))
                 start_time_step = time.time()
-                self.math_divide_image_by_variance_map()
+                self.math_polarisation_divide_image_by_variance_map()
                 logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
                     i, time.time() - start_time_step))
                 i += 1
+
+                # to allow the mosaic to stop earlier
+                if self.stop_mosaic(i):
+                    return None
 
                 # Calculate get mosaic noise map
                 # ==============================
                 logger.info("#### Step {0} ####".format(i))
                 start_time_step = time.time()
-                self.get_mosaic_noise_map()
+                self.get_polarisation_mosaic_noise_map()
                 logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
                     i, time.time() - start_time_step))
                 i += 1
+
+                # to allow the mosaic to stop earlier
+                if self.stop_mosaic(i):
+                    return None
 
                 # Writing files
                 # =============
                 logger.info("#### Step {0} ####".format(i))
                 start_time_step = time.time()
-                self.write_mosaic_fits_files()
+                self.write_polarisation_mosaic_fits_files()
                 logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
                     i, time.time() - start_time_step))
                 i += 1
 
-                # Image validation
-                # ================
-                if self.mosaic_image_validation:
+
+                # to allow the mosaic to stop earlier
+                if self.stop_mosaic(i):
+                    return None
+
+                if self.mosaic_polarisation_clean_up:
                     logger.info("#### Step {0} ####".format(i))
                     start_time_step = time.time()
-                    try:
-                        self.run_image_validation()
-                    except Exception as e:
-                        logger.warning("#### Step {0} ... Failed (after {1:.0f}s) ####".format(
-                            i, time.time() - start_time_step))
-                        logger.exception(e)
-                    else:
-                        logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
-                            i, time.time() - start_time_step))
-                    i += 1
+                    self.clean_up_polarisation(level=self.mosaic_polarisation_clean_up_level)
+                    logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+                        i, time.time() - start_time_step))
 
+        #         # Image validation
+        #         # ================
+        #         if self.mosaic_image_validation:
+        #             logger.info("#### Step {0} ####".format(i))
+        #             start_time_step = time.time()
+        #             try:
+        #                 self.run_image_validation()
+        #             except Exception as e:
+        #                 logger.warning("#### Step {0} ... Failed (after {1:.0f}s) ####".format(
+        #                     i, time.time() - start_time_step))
+        #                 logger.exception(e)
+        #             else:
+        #                 logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
+        #                     i, time.time() - start_time_step))
+        #             i += 1
+        #
                 # Save the derived parameters to the parameter file
-                mosaic_polarisation_q_status = True
+                mosaic_polarisation_status = True
+                subs_param.add_param(self, 'mosaic_polarisation_status', mosaic_polarisation_status)
 
-                # if self.mosaic_clean_up:
-                #     logger.info("#### Step {0} ####".format(i))
-                #     start_time_step = time.time()
-                #     self.clean_up(level=self.mosaic_clean_up_level)
-                #     logger.info("#### Step {0} ... Done (after {1:.0f}s) ####".format(
-                #         i, time.time() - start_time_step))
+
             else:
-                logger.info("Stokes Q mosaic was already created")
+                logger.info("Stokes Q, U and V mosaics were already created")
 
-            logger.info("Creating stokes Q mosaic ... Done")
+            logger.info("Stokes Q, U and V mosaics ... Done")
         else:
             pass
 
-        subs_param.add_param(
-            self, 'mosaic_polarisation_q_status', mosaic_polarisation_q_status)
 
     def show(self, showall=False):
         lib.show(self, 'MOSAIC', showall)
 
-    def clean_up(self, level=0):
+
+    def clean_up_continuum(self, level=0):
         """
-        Function to remove scratch files
+        Function to remove scratch files for continuum
 
         Args:
             level (int): level of how much should be removed
         """
         # subs_setinit.setinitdirs(self)
-        logger.info("Removing scratch files")
+        logger.info("Removing scratch files for continuum")
 
         # to be sure, in case this step is run independently, set the paths
         self.set_mosaic_subdirs()
@@ -2568,29 +4765,187 @@ class mosaic(BaseModule):
 
         logger.info("Removing scratch files ... Done")
 
+    def clean_up_polarisation(self, level=0):
+        """
+        Function to remove scratch files for polarisation
+
+        Args:
+            level (int): level of how much should be removed
+        """
+        # subs_setinit.setinitdirs(self)
+        logger.info("Removing scratch files for polarisation")
+
+        # to be sure, in case this step is run independently, set the paths
+        self.set_mosaic_subdirs()
+
+        # remove file from creating template mosaic
+        # shutil.rmtree(mosaicdir+'mosaic_temp.map')
+        subs_managefiles.director(self, 'ch', self.mosaic_polarisation_mosaic_dir)
+        subs_managefiles.director(
+            self, 'rm', 'mosaic_polarisation_temp_preproj.map', ignore_nonexistent=True)
+
+        # Clean up files
+        for fl in glob.glob('*_convol.map'):
+            subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
+        # Clean up files
+        for fl in glob.glob('*_regrid.map'):
+            subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
+
+        subs_managefiles.director(
+            self, 'rm', 'mosaic_*_im.map', ignore_nonexistent=True)
+
+        # shutil.rmtree(mosaicdir+'mosaic_im.map')
+
+        for fl in glob.glob('mos_*.map'):
+            subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
+
+        for fl in glob.glob('btci_*.map'):
+            subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
+
+        for fl in glob.glob('out_*.map'):
+            subs_managefiles.director(self, 'rm', fl, ignore_nonexistent=True)
+
+        # more to remove
+        if level >= 1:
+            subs_managefiles.director(
+                self, 'ch', self.mosaic_polarisation_beam_dir)
+            for fl in glob.glob('beam_??.map'):
+                subs_managefiles.director(
+                    self, 'rm', fl, ignore_nonexistent=True)
+
+            subs_managefiles.director(
+                self, 'ch', self.mosaic_polarisation_images_dir)
+            for fl in glob.glob('image_*_regrid.map'):
+                subs_managefiles.director(
+                    self, 'rm', fl, ignore_nonexistent=True)
+
+            for fl in glob.glob('??'):
+                subs_managefiles.director(
+                    self, 'rm', fl, ignore_nonexistent=True)
+
+        if level >= 2:
+            subs_managefiles.director(
+                self, 'ch', self.mosaic_polarisation_beam_dir)
+            for fl in glob.glob('beam_*_mos.map'):
+                subs_managefiles.director(
+                    self, 'rm', fl, ignore_nonexistent=True)
+
+            subs_managefiles.director(
+                self, 'ch', self.mosaic_polarisation_mosaic_dir)
+            for fl in glob.glob('*cube_*_mos.map'):
+                subs_managefiles.director(
+                    self, 'rm', fl, ignore_nonexistent=True)
+
+        logger.info("Removing scratch files for polarisation ... Done")
+
+
     def reset(self):
         """
         Function to reset the current step and remove all generated data. Be careful! Deletes all data generated in
         this step!
         """
+        subs_setinit.setinitdirs(self)
+        subs_setinit.setdatasetnamestomiriad(self)
+        if os.path.isdir(self.mosdir):
+            logger.warning('Deleting all mosaicked data products.')
+            subs_managefiles.director(self, 'ch', self.basedir)
+            subs_managefiles.director(self, 'rm', self.mosdir)
+            logger.warning('Deleting all parameter file entries for MOSAIC module')
 
-        self.abort_module("Function not yet finished.")
+            subs_param.del_param(self, 'mosaic_continuum_create_subdirs_status')
+            subs_param.del_param(self, 'mosaic_polarisation_create_subdirs_status')
 
-        # subs_setinit.setinitdirs(self)
-        # subs_setinit.setdatasetnamestomiriad(self)
-        # if os.path.isdir(self.mosdir):
-        #     logger.warning('Deleting all mosaicked data products.')
-        #     subs_managefiles.director(self, 'ch', self.basedir)
-        #     subs_managefiles.director(self, 'rm', self.mosdir)
-        #     logger.warning(
-        #         'Deleting all parameter file entries for MOSAIC module')
-        #     subs_param.del_param(self, 'mosaic_continuum_mf_status')
-        #     subs_param.del_param(self, 'mosaic_continuum_mf_continuumstatus')
-        #     subs_param.del_param(self, 'mosaic_continuum_mf_copystatus')
-        #     subs_param.del_param(self, 'mosaic_continuum_mf_convolstatus')
-        #     subs_param.del_param(
-        #         self, 'mosaic_continuum_mf_continuumbeamparams')
-        #     subs_param.del_param(
-        #         self, 'mosaic_continuum_mf_continuumimagestats')
-        # else:
-        #     logger.warning('Mosaicked data products are not present!')
+            subs_param.del_param(self, 'mosaic_continuum_images_status')
+            subs_param.del_param(self, 'mosaic_continuum_failed_beams')
+            subs_param.del_param(self, 'mosaic_polarisation_images_status')
+            subs_param.del_param(self, 'mosaic_polarisation_failed_beams')
+
+            subs_param.del_param(self, 'mosaic_continuum_beam_status')
+            subs_param.del_param(self, 'mosaic_polarisation_beam_status')
+
+            subs_param.del_param(self, 'mosaic_continuum_convert_fits_images_status')
+            subs_param.del_param(self, 'mosaic_polarisation_convert_fits_images_status')
+
+            subs_param.del_param(self, 'mosaic_polarisation_split_cubes_status')
+
+            subs_param.del_param(self, 'mosaic_continuum_projection_centre_status')
+            subs_param.del_param(self, 'mosaic_continuum_projection_centre_values')
+            subs_param.del_param(self, 'mosaic_polarisation_projection_centre_status')
+            subs_param.del_param(self, 'mosaic_polarisation_projection_centre_values')
+
+            subs_param.del_param(self, 'mosaic_continuum_transfer_coordinates_to_beam_status')
+            subs_param.del_param(self, 'mosaic_polarisation_transfer_coordinates_to_beam_status')
+
+            subs_param.del_param(self, 'mosaic_continuum_template_mosaic_status')
+            subs_param.del_param(self, 'mosaic_polarisation_template_mosaic_status')
+
+            subs_param.del_param(self, 'mosaic_continuum_regrid_images_status')
+            subs_param.del_param(self, 'mosaic_polarisation_regrid_images_status')
+
+            subs_param.del_param(self, 'mosaic_continuum_regrid_beam_maps_status')
+            subs_param.del_param(self, 'mosaic_polarisation_regrid_beam_maps_status')
+
+            subs_param.del_param(self, 'mosaic_continuum_common_beam_status')
+            subs_param.del_param(self, 'mosaic_continuum_common_beam_values')
+            subs_param.del_param(self, 'mosaic_polarisation_common_beam_status')
+            subs_param.del_param(self, 'mosaic_polarisation_common_beam_values_qu')
+            subs_param.del_param(self, 'mosaic_polarisation_common_beam_values_v')
+
+            subs_param.del_param(self, 'mosaic_continuum_convolve_images_status')
+            subs_param.del_param(self, 'mosaic_polarisation_convolve_images_status')
+
+            subs_param.del_param(self, 'mosaic_continuum_correlation_matrix_status')
+            subs_param.del_param(self, 'mosaic_continuum_inverse_covariance_matrix')
+            subs_param.del_param(self, 'mosaic_polarisation_correlation_matrix_status')
+            subs_param.del_param(self, 'mosaic_polarisation_inverse_covariance_matrix_q')
+            subs_param.del_param(self, 'mosaic_polarisation_inverse_covariance_matrix_u')
+            subs_param.del_param(self, 'mosaic_polarisation_inverse_covariance_matrix_v')
+            subs_param.del_param(self, 'mosaic_polarisation_inverse_covariance_matrix_status')
+
+            subs_param.del_param(self, 'mosaic_continuum_product_beam_covariance_matrix_status')
+            subs_param.del_param(self, 'mosaic_polarisation_product_beam_covariance_matrix_status_q')
+            subs_param.del_param(self, 'mosaic_polarisation_product_beam_covariance_matrix_status_u')
+            subs_param.del_param(self, 'mosaic_polarisation_product_beam_covariance_matrix_status_v')
+
+            subs_param.del_param(self, 'mosaic_continuum_variance_map_status')
+            subs_param.del_param(self, 'mosaic_polarisation_variance_map_status_q')
+            subs_param.del_param(self, 'mosaic_polarisation_variance_map_status_u')
+            subs_param.del_param(self, 'mosaic_polarisation_variance_map_status_v')
+
+            subs_param.del_param(self, 'mosaic_continuum_product_beam_covariance_matrix_image_status')
+            subs_param.del_param(self, 'mosaic_polarisation_product_beam_covariance_matrix_image_status_q')
+            subs_param.del_param(self, 'mosaic_polarisation_product_beam_covariance_matrix_image_status_u')
+            subs_param.del_param(self, 'mosaic_polarisation_product_beam_covariance_matrix_image_status_v')
+
+            subs_param.del_param(self, 'mosaic_continuum_get_max_variance_status')
+            subs_param.del_param(self, 'mosaic_continuum_max_variance')
+            subs_param.del_param(self, 'mosaic_polarisation_get_max_variance_status_q')
+            subs_param.del_param(self, 'mosaic_polarisation_get_max_variance_status_u')
+            subs_param.del_param(self, 'mosaic_polarisation_get_max_variance_status_v')
+            subs_param.del_param(self, 'mosaic_polarisation_max_variance_q')
+            subs_param.del_param(self, 'mosaic_polarisation_max_variance_u')
+            subs_param.del_param(self, 'mosaic_polarisation_max_variance_v')
+
+            subs_param.del_param(self, 'mosaic_continuum_divide_image_variance_status')
+            subs_param.del_param(self, 'mosaic_polarisation_divide_image_variance_status_q')
+            subs_param.del_param(self, 'mosaic_polarisation_divide_image_variance_status_u')
+            subs_param.del_param(self, 'mosaic_polarisation_divide_image_variance_status_v')
+
+            subs_param.del_param(self, 'mosaic_continuum_get_mosaic_noise_map_status')
+            subs_param.del_param(self, 'mosaic_polarisation_get_mosaic_noise_map_status_q')
+            subs_param.del_param(self, 'mosaic_polarisation_get_mosaic_noise_map_status_u')
+            subs_param.del_param(self, 'mosaic_polarisation_get_mosaic_noise_map_status_v')
+
+            subs_param.del_param(self, 'mosaic_continuum_write_mosaic_fits_files_status')
+            subs_param.del_param(self, 'mosaic_polarisation_write_mosaic_fits_files_status_q')
+            subs_param.del_param(self, 'mosaic_polarisation_write_mosaic_fits_files_status_u')
+            subs_param.del_param(self, 'mosaic_polarisation_write_mosaic_fits_files_status_v')
+
+            subs_param.del_param(self, 'mosaic_continuum_run_image_validation_status')
+            subs_param.del_param(self, 'mosaic_polarisation_run_image_validation_status')
+
+            subs_param.del_param(self, 'mosaic_continuum_mf_status')
+            subs_param.del_param(self, 'mosaic_polarisation_status')
+
+        else:
+            logger.warning('Mosaicked data products are not present!')
