@@ -56,6 +56,46 @@ def getimagestats(self, image):
 
     return imagestats
 
+def getimagestats_cont(self, image, imsize):
+    """
+    Subroutine to calculate the min, max and rms of an image
+    image (string): The absolute path to the image file.
+    returns (numpy array): The min, max and rms of the image
+    """
+    setinit.setinitdirs(self)
+    char_set = string.ascii_uppercase + string.digits
+    if os.path.isdir(image) or os.path.isfile(image):
+        if os.path.isdir(image):
+            temp_string = ''.join(random.sample(char_set * 8, 8))
+            fits = lib.miriad('fits')
+            fits.op = 'xyout'
+            fits.in_ = image
+            with tempfile.TemporaryDirectory() as tempdir:
+                fits.out = tempdir + '/' + temp_string + '.fits'
+                fits.go()
+                image_data = pyfits.open(tempdir + '/' + temp_string + '.fits')
+        elif os.path.isfile(image):
+            image_data = pyfits.open(image)
+        else:
+            error = 'Image format not supported. Only MIRIAD and FITS formats are supported!'
+            logger.error(error)
+            raise ApercalException(error)
+
+        data = image_data[0].data
+        imagestats = np.full(3, np.nan)
+        lowborder = int(0.1 * imsize)
+        highborder = int(0.9 * imsize)
+        imagestats[0] = np.nanmin(data[0,0, lowborder:highborder, lowborder:highborder])  # Get the maxmimum of the image
+        imagestats[1] = np.nanmax(data[0,0, lowborder:highborder, lowborder:highborder])  # Get the minimum of the image
+        imagestats[2] = np.nanstd(data[0,0, lowborder:highborder, lowborder:highborder])  # Get the standard deviation
+        image_data.close()  # Close the image
+    else:
+        error = 'Image does not seem to exist!'
+        logger.error(error)
+        raise ApercalException(error)
+
+    return imagestats
+
 
 def getmaskstats(self, image, size):
     """

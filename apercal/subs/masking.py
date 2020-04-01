@@ -226,7 +226,7 @@ def calc_clean_cutoff(mask_threshold, c1):
     return clean_cutoff
 
 
-def create_mask(self, image, mask, threshold, theoretical_noise, beampars=None, rms_map=None):
+def create_mask(self, image, mask, threshold, theoretical_noise, beampars=None, rms_map=False):
     """
     Creates a mask from an image using pybdsf
     image (string): Input image to use in MIRIAD format
@@ -238,9 +238,9 @@ def create_mask(self, image, mask, threshold, theoretical_noise, beampars=None, 
     bdsf_threshold = threshold / theoretical_noise
     if beampars:
 #        bdsf.process_image(image + '.fits', stop_at='isl', thresh_isl=bdsf_threshold, beam=beampars, adaptive_rms_box=True, rms_map=rms_map).export_image(outfile=mask + '.fits', img_format='fits', img_type='island_mask', pad_image=True)
-        bdsf.process_image(image + '.fits', stop_at='isl', thresh_isl=bdsf_threshold, beam=beampars, adaptive_rms_box=True, rms_map=False, rms_value=theoretical_noise).export_image(outfile=mask + '.fits', img_format='fits', img_type='island_mask', pad_image=True)
+        bdsf.process_image(image + '.fits', stop_at='isl', thresh_isl=bdsf_threshold, beam=beampars, adaptive_rms_box=True, rms_map=rms_map, rms_value=theoretical_noise).export_image(outfile=mask + '.fits', img_format='fits', img_type='island_mask', pad_image=True)
     else:
-        bdsf.process_image(image + '.fits', stop_at='isl', thresh_isl=bdsf_threshold, adaptive_rms_box=True, rms_map=False, rms_value=theoretical_noise).export_image(outfile=mask + '.fits', img_format='fits', img_type='island_mask', pad_image=True)
+        bdsf.process_image(image + '.fits', stop_at='isl', thresh_isl=bdsf_threshold, adaptive_rms_box=True, rms_map=rms_map, rms_value=theoretical_noise).export_image(outfile=mask + '.fits', img_format='fits', img_type='island_mask', pad_image=True)
     if os.path.isfile(mask + '.fits'):
         # Add a random number to the masks to make it viewable in kvis
         fitsmask = pyfits.open(mask + '.fits')

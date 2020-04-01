@@ -235,7 +235,7 @@ class continuum(BaseModule):
                                     # Check if dirty image and beam is there and ok
                                     if os.path.isdir('map_mf_00') and os.path.isdir('beam_mf_00'):
                                         continuumtargetbeamsmfbeamstatus = True
-                                        continuumtargetbeamsmfmapstats[:] = imstats.getimagestats(self, 'map_mf_00')
+                                        continuumtargetbeamsmfmapstats[:] = imstats.getimagestats_cont(self, 'map_mf_00', self.continuum_mfimage_imsize)
                                         if qa.checkdirtyimage(self, 'map_mf_00'):
                                             continuumtargetbeamsmfmapstatus = True
                                         else:
@@ -252,7 +252,7 @@ class continuum(BaseModule):
                                         stop = True
                                         continuumtargetbeamsmffinalminor = minc
                                         break
-                                    dirtystats = imstats.getimagestats(self, 'map_mf_00')  # Min, max, rms of the dirty image
+                                    dirtystats = imstats.getimagestats_cont(self, 'map_mf_00', self.continuum_mfimage_imsize)  # Min, max, rms of the dirty image
                                     TNdr = masking.calc_theoretical_noise_dr(dirtystats[1], TN, self.continuum_mfimage_nsigma)  # Theoretical noise dynamic range
                                     TNth = masking.calc_theoretical_noise_threshold(dirtystats[1], TNdr)
                                     maskth = dirtystats[1]/np.nanmax([self.continuum_mfimage_drinc, self.continuum_mfimage_mindr])
@@ -318,7 +318,7 @@ class continuum(BaseModule):
                                     restor.go()
                                     # Check if restored image is there and ok
                                     if os.path.isdir('image_mf_00'):
-                                        continuumtargetbeamsmfimagestats[minc, :] = imstats.getimagestats(self, 'image_mf_00')
+                                        continuumtargetbeamsmfimagestats[minc, :] = imstats.getimagestats_cont(self, 'image_mf_00', self.continuum_mfimage_imsize)
                                         if qa.checkrestoredimage(self, 'image_mf_00'):
                                             continuumtargetbeamsmfimagestatus[minc] = True
                                         else:
@@ -338,13 +338,13 @@ class continuum(BaseModule):
                                     restor.mode = 'residual'  # Create the residual image
                                     restor.out = 'residual_mf_00'
                                     restor.go()
-                                    residualstats = imstats.getimagestats(self, 'residual_mf_00')  # Min, max, rms of the residual image
+                                    residualstats = imstats.getimagestats_cont(self, 'residual_mf_00', self.continuum_mfimage_imsize)  # Min, max, rms of the residual image
                                     continuumtargetbeamsmfresidualstats[minc, :] = residualstats
                                     currdr = dirtystats[1] / residualstats[2]
                                     logger.info('Beam ' + self.beam + ': Dynamic range is ' + '%.3f' % currdr + ' for cycle ' + str(minc))
                                     continuumtargetbeamsmffinalminor = minc
                                 else:
-                                    residualstats = imstats.getimagestats(self, 'residual_mf_' + str(minc-1).zfill(2))  # Min, max, rms of the residual image
+                                    residualstats = imstats.getimagestats_cont(self, 'residual_mf_' + str(minc-1).zfill(2), self.continuum_mfimage_imsize)  # Min, max, rms of the residual image
                                     maskth = residualstats[1]/self.continuum_mfimage_drinc
                                     if TNth >= maskth:
                                         maskth = TNth
@@ -358,7 +358,7 @@ class continuum(BaseModule):
                                         continuumtargetbeamsmfmaskthreshold[minc] = maskth
                                     Cc = masking.calc_clean_cutoff(maskth, self.continuum_mfimage_c1)  # Clean cutoff
                                     continuumtargetbeamsmfcleanthreshold[minc] = Cc
-                                    masking.create_mask(self, 'image_mf_' + str(minc-1).zfill(2), 'mask_mf_' + str(minc).zfill(2), maskth, TN, beampars=None)
+                                    masking.create_mask(self, 'image_mf_' + str(minc-1).zfill(2), 'mask_mf_' + str(minc).zfill(2), maskth, TN, beampars=None, rms_map=True)
                                     # Check if mask is there and ok
                                     if os.path.isdir('mask_mf_' + str(minc).zfill(2)):
                                         continuumtargetbeamsmfmaskstats[minc, :] = imstats.getmaskstats(self, 'mask_mf_' + str(minc).zfill(2), self.continuum_mfimage_imsize)
@@ -420,7 +420,7 @@ class continuum(BaseModule):
                                     restor.go()
                                     # Check if restored image is there and ok
                                     if os.path.isdir('image_mf_' + str(minc).zfill(2)):
-                                        continuumtargetbeamsmfimagestats[minc, :] = imstats.getimagestats(self, 'image_mf_' + str(minc).zfill(2))
+                                        continuumtargetbeamsmfimagestats[minc, :] = imstats.getimagestats_cont(self, 'image_mf_' + str(minc).zfill(2), self.continuum_mfimage_imsize)
                                         if qa.checkrestoredimage(self, 'image_mf_' + str(minc).zfill(2)):
                                             continuumtargetbeamsmfimagestatus[minc] = True
                                             continuumtargetbeamsmffinalminor = minc
@@ -441,7 +441,7 @@ class continuum(BaseModule):
                                     restor.mode = 'residual'  # Create the residual image
                                     restor.out = 'residual_mf_' + str(minc).zfill(2)
                                     restor.go()
-                                    residualstats = imstats.getimagestats(self, 'residual_mf_' + str(minc).zfill(2))  # Min, max, rms of the residual image
+                                    residualstats = imstats.getimagestats_cont(self, 'residual_mf_' + str(minc).zfill(2), self.continuum_mfimage_imsize)  # Min, max, rms of the residual image
                                     continuumtargetbeamsmfresidualstats[minc, :] = residualstats
                                     currdr = dirtystats[1] / residualstats[2]
                                     logger.info('Beam ' + self.beam + ': Dynamic range is ' + '%.3f' % currdr + ' for cycle ' + str(minc))
