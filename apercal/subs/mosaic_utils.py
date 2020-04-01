@@ -3,6 +3,7 @@ from apercal.libs import lib
 import logging
 import os
 import shutil
+import copy
 
 logger = logging.getLogger(__name__)
 
@@ -203,6 +204,7 @@ def get_measured_beam_maps(beam, beam_map_input_path, beam_map_output_path, beam
     # os.system('rm -r ./*{}_temp.*'.format(beam))
 
 
+
 def beam_cutoff(beamname, tmpbeamname, beamdir, cutoff):
     """
     Function to apply a beam cutoff value
@@ -250,10 +252,62 @@ def fixheader(beamname, beamdir):
     delhd.in_ = '{0}/{1}/bpa'.format(beamdir, beamname)
     delhd.go()
 
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++
+# Functions to calculate the inverse covariance matrix
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+def inverted_covariance_matrix(imagefiles, corr_matrix, nbeams, beamlist):
+    noise_cor = np.loadtxt(corr_matrix, dtype=np.float64)
+    # Initialize covariance matrix
+    noise_cov = copy.deepcopy(noise_cor)
+    # Measure noise in the image for each beam
+    # same size as the correlation matrix
+    sigma_beam = np.zeros(nbeams, np.float64)
+    # number of beams used to go through beam list using indices
+    # no need to use indices because the beams are indices themselves
+    n_beams = len(beamlist)
+    # for bm in range(n_beams):
+    for bm in beamlist:
+        bmmap = imagefiles.format(str(bm).zfill(2))
+        sigma_beam[int(bm)] = beam_noise(bmmap)
+    # write the matrix
+    # take into account that there are not always 40 beams
+    # this is different from the notebook, because the notebook code
+    # does not set non-diagonal matrix elements to zero
+    # for missing beams
+    # for k in self.mosaic_beam_list:
+    #     for m in self.mosaic_beam_list:
+    #         a = int(k)
+    #         b = int(m)
+    for a in range(nbeams):
+        for b in range(nbeams):
+            # logger.debug("noise_cor[{0},{1}]={2}".format(a,b,noise_cor[a,b]))
+            if (sigma_beam[a] == 0. or sigma_beam[b] == 0) and a == b:
+                noise_cov[a, b] = noise_cor[a, b]
+            else:
+                noise_cov[a, b] = noise_cor[a, b] * sigma_beam[a] * \
+                                  sigma_beam[b]  # The noise covariance matrix is
+            # logger.debug("noise_cov[{0},{1}]={2}".format(a,b,noise_cov[a,b]))
+    invcovmatrix = np.linalg.inv(noise_cov)
+    return invcovmatrix
+
+
+def beam_noise(imagename):
+    """
+    Funtion to estimate the noise in an image
+    imagename (str): MIRIAD image name to estimate the nosie for
+    returns (str): Value of the image noise
+    """
+    sigest = lib.miriad('sigest')
+    sigest.in_ = imagename
+    sigstring = sigest.go()
+    noise = float(sigstring[4].lstrip('Estimated rms is '))
+    return noise
+
+
 # ++++++++++++++++++++++++++++++++++++++++
 # Functions to create a correlation matrix
 # ++++++++++++++++++++++++++++++++++++++++
-
 
 def correlation_matrix_symmetrize(a):
     """

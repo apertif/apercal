@@ -76,6 +76,47 @@ def getbeamimage(infile):
     return beamarray
 
 
+def putbmajimage(infile, bmajvalue):
+    """
+    putbmajimage: Put the major beam size into a MIRIAD image
+    infile (string): input image file in MIRIAD format
+    bmajvalue (float): The major axis value in arcseconds
+    """
+    bmajval = bmajvalue / 3600.0 / (360.0 / (2.0 * np.pi))
+    lib.basher('puthd in=' + infile + '/bmaj value=' + str(bmajval))
+
+
+def putbminimage(infile, bminvalue):
+    """
+    putbminimage: Put the minor beam size into a MIRIAD image
+    infile (string): input image file in MIRIAD format
+    bminvalue (float): The minor axis value in arcseconds
+    """
+    bminval = bminvalue / 3600.0 / (360.0 / (2.0 * np.pi))
+    lib.basher('puthd in=' + infile + '/bmin value=' + str(bminval))
+
+
+def putbpaimage(infile, bpavalue):
+    """
+    putbmpaimage: Put the beam angle into a MIRIAD image
+    infile (string): input image file in MIRIAD format
+    bpavalue (float): The position angle in degrees
+    """
+    bpaval = bpavalue
+    lib.basher('puthd in=' + infile + '/bpa value=' + str(bpaval))
+
+
+def putbeamimage(infile, beamparams):
+    """
+    putbeamimage: Put the beam parameters into a MIRIAD image
+    infile (string): input image file in MIRIAD format
+    beamparams(array): The major, minor axis and position angle to put in
+    """
+    putbmajimage(infile, beamparams[0])
+    putbminimage(infile, beamparams[1])
+    putbpaimage(infile, beamparams[2])
+
+
 def getradec(infile):
     """
     getradec: module to extract the pointing centre ra and dec from a miriad image file. Uses the PRTHD task in miriad
