@@ -67,6 +67,10 @@ def make_mosaic(task_id, basedir, centre_ra=None, centre_dec=None, mosaic_beams=
     # enable continuum mosaic
     mo.mosaic_continuum_mf = True
 
+    #disable line and polarization mosaics
+    mo.mosaic_line = False
+    mo.mosaic_polarisation = False
+
     # set the taskid of observation to mosaic
     mo.mosaic_taskid = "{}".format(task_id)
 
