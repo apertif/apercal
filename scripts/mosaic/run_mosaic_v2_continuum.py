@@ -67,6 +67,10 @@ def make_mosaic(task_id, basedir, centre_ra=None, centre_dec=None, mosaic_beams=
     # enable continuum mosaic
     mo.mosaic_continuum_mf = True
 
+    #disable line and polarization mosaics
+    mo.mosaic_line = False
+    mo.mosaic_polarisation = False
+
     # set the taskid of observation to mosaic
     mo.mosaic_taskid = "{}".format(task_id)
 
@@ -98,11 +102,11 @@ def make_mosaic(task_id, basedir, centre_ra=None, centre_dec=None, mosaic_beams=
     # set the projection centre
     if centre_ra is None and centre_dec is None:
         # using the a given beam
-        mo.mosaic_projection_centre_beam = '00'
+        mo.mosaic_continuum_projection_centre_beam = '00'
     else:
         # using ra and dec (untested)
-        mo.mosaic_projection_centre_ra = centre_ra
-        mo.mosaic_projection_centre_dec = centre_dec
+        mo.mosaic_continuum_projection_centre_ra = centre_ra
+        mo.mosaic_continuum_projection_centre_dec = centre_dec
 
     # type of beam for convolution
     mo.mosaic_common_beam_type = 'circular'
@@ -115,16 +119,16 @@ def make_mosaic(task_id, basedir, centre_ra=None, centre_dec=None, mosaic_beams=
 
     # run the image validation tool on the mosaic
     if do_validation:
-        mo.mosaic_image_validation = True
+        mo.mosaic_continuum_image_validation = True
     else:
-        mo.mosaic_image_validation = False
+        mo.mosaic_continuum_image_validation = False
 
     # clean up
-    mo.mosaic_clean_up_level = 1
+    mo.mosaic_continuum_clean_up_level = 1
     if do_not_cleanup:
-        mo.mosaic_clean_up = False
+        mo.mosaic_continuum_clean_up = False
     else:
-        mo.mosaic_clean_up = True
+        mo.mosaic_continuum_clean_up = True
 
     # create the mosaic
     # =================
