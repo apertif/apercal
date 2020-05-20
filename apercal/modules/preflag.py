@@ -95,31 +95,31 @@ class preflag(BaseModule):
         start_time = time()
         self.manualflag()
         logger.info('Beam ' + self.beam + ': Running manualflag for {0} ... Done ({1:.0f}s)'.format(self.target, time() - start_time))
-        
+
         if self.fluxcal != '':
             query = "SELECT GNFALSE(FLAG) == 0 AS all_flagged, " + \
                     "GNTRUE(FLAG) == 0 AS all_unflagged FROM " + self.get_fluxcal_path()
             query_result = pt.taql(query)
             logger.debug('Beam ' + self.beam + ': All visibilities     flagged before aoflag: ' + str(query_result[0]["all_flagged"]))
             logger.debug('Beam ' + self.beam + ': All visibilities not flagged before aoflag: ' + str(query_result[0]["all_unflagged"]))
-        
+
         logger.info('Beam ' + self.beam + ': Running aoflagger tasks for {0}'.format(self.target))
         start_time = time()
         self.aoflagger()
         logger.info('Beam ' + self.beam + ': Running aoflagger tasks for {0} ... Done ({1:.0f}s)'.format(self.target, time() - start_time))
-    
+
         if self.fluxcal != '':
             query = "SELECT GNFALSE(FLAG) == 0 AS all_flagged, " + \
                     "GNTRUE(FLAG) == 0 AS all_unflagged FROM " + self.get_fluxcal_path()
             query_result = pt.taql(query)
             logger.debug('Beam ' + self.beam + ': All visibilities     flagged after aoflag: ' + str(query_result[0]["all_flagged"]))
             logger.debug('Beam ' + self.beam + ': All visibilities not flagged after aoflag: ' + str(query_result[0]["all_unflagged"]))
-        
+
         logger.info('Beam ' + self.beam + ': Running shadow for {0}'.format(self.target))
         start_time = time()
         self.shadow()
         logger.info('Beam ' + self.beam + ': Running shadow for {0} ... Done ({1:.0f}s)'.format(self.target, time() - start_time))
-        
+
         logger.info('Beam ' + self.beam + ': Running edge for {0}'.format(self.target))
         start_time = time()
         self.edges()
@@ -523,7 +523,7 @@ class preflag(BaseModule):
     def manualflag_from_file(self):
         """
         Function to flag based on commands from a file
-        
+
         This provides a way to input more complex flagging commands.
         """
         subs_setinit.setinitdirs(self)
@@ -546,7 +546,7 @@ class preflag(BaseModule):
                 file_location = os.path.join(self.preflag_manualflag_file_path, self.preflag_manualflag_file)
             else:
                 file_location = os.path.join(self.basedir, self.preflag_manualflag_file)
-            
+
             # check that the file exists
             if os.path.exists(file_location):
                 logger.info("Beam {0}: Reading flagging commands from file {1}".format(self.beam, file_location))
@@ -554,7 +554,7 @@ class preflag(BaseModule):
                 # read in the json file
                 with open(file_location, "r") as fp:
                     flag_data = fp.read()
-                
+
                 # get the json dict
                 # need to catch exception in case the json file is wrong
                 try:
@@ -564,7 +564,7 @@ class preflag(BaseModule):
                     logger.exception(e)
                 else:
                     logger.info("Beam {}: Successfully read in json file".format(self.beam))
-                
+
                 # set the key based on the given beam
                 beam_key = "beam_{}".format(str(self.beam).zfill(2))
                 #beam_flag_list = [int(beam.split("_")[-1]) for beam in flag_data_json['flaglist'].keys()]
@@ -582,7 +582,7 @@ class preflag(BaseModule):
                     for flag_key  in flag_list:
                         flag_command = flag_data_json['flaglist'][beam_key][flag_key] + "\n"
                         flag_command_list.append(str(flag_command))
-                    
+
                     if len(flag_command_list) != 0:
                         casa_flag_file = os.path.join(self.rawdir, "casa_flag_list.txt")
                         # writing commands to file
@@ -594,7 +594,7 @@ class preflag(BaseModule):
                             logger.exception(e)
                         else:
                             logger.info("Beam {0}: Successfully created file {1} with casa flag commands".format(self.beam, casa_flag_file))
-                        
+
                         # make sure there is a casa flag file
                         if os.path.exists(casa_flag_file):
                             # now run casa for fluxcal
@@ -618,7 +618,7 @@ class preflag(BaseModule):
                                 preflag_polcal_manualflag_from_file = True
                             else:
                                 logger.warning('Beam {}: No pol calibrator dataset specified'.format(self.beam))
-                            
+
                             # now run casa for target
                             if self.preflag_manualflag_target and os.path.isdir(self.get_target_path()):
                                 #flagdata(vis, mode='list', inpfile=['onlineflags.txt' ,'otherflags.txt'])
@@ -1202,8 +1202,9 @@ class preflag(BaseModule):
         # AOFlagged the target beams?
         preflagaoflaggertargetbeamsflag = get_param_def(self, pbeam + '_aoflagger_targetbeams_flag_status', False)
 
-        base_cmd = 'aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_fluxcalstrat
-        
+        # base_cmd = 'aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_fluxcalstrat
+        base_cmd = 'aolua -strategy ' + ao_strategies + '/strategy-apertif-2020-05-19.lua -baselines all'
+
         # Suppress logging of lines that start with this (to prevent 1000s of lines of logging)
         strip_prefixes = ['Channel ']
         if self.preflag_aoflagger:
@@ -1216,7 +1217,7 @@ class preflag(BaseModule):
                         preflagaoflaggerbandpassstatus = get_param_def(self, '_aoflagger_bandpass_status', True)
                         if self.preflag_aoflagger_bandpass and preflagaoflaggerbandpassstatus:
                             try:
-                                lib.basher(base_cmd + ' -bandpass ' + self.get_bandpass_path() + ' ' + self.get_fluxcal_path(),
+                                lib.basher(base_cmd + ' -preamble "bandpass_filename=\'{}\'" '.format(self.get_bandpass_path()) + self.get_fluxcal_path(),
                                         prefixes_to_strip=strip_prefixes)
                             except Exception as e:
                                 logger.error("Beam {0}: Using AOFlagger to flag flux calibrator ... Failed".format(self.beam))
@@ -1248,7 +1249,7 @@ class preflag(BaseModule):
                         raise ApercalException(error)
                 else:
                     logger.info('Beam ' + self.beam + ': Flux calibrator was already flagged with AOFlagger!')
-            
+
             # Save the derived parameters for the AOFlagger status to the parameter file
             subs_param.add_param(self, pbeam + '_aoflagger_fluxcal_flag_status', preflagaoflaggerfluxcalflag)
 
@@ -1269,10 +1270,10 @@ class preflag(BaseModule):
                     # Check if bandpass was applied successfully
                     # Check if bandpass table was derived successfully
                     preflagaoflaggerbandpassstatus = get_param_def(self, pbeam + '_aoflagger_bandpass_status', False)
-                    ao_base_cmd = 'aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_polcalstrat
+                    ao_base_cmd = 'aolua -strategy ' + '/strategy-apertif-2020-05-19.lua -baselines all'
                     if self.preflag_aoflagger_bandpass and preflagaoflaggerbandpassstatus:
                         try:
-                            lib.basher(ao_base_cmd + ' -bandpass ' + self.get_bandpass_path() + ' ' + self.get_polcal_path(),
+                            lib.basher(ao_base_cmd + ' -preamble "bandpass_filename=\'{}\'" '.format(self.get_bandpass_path()) + self.get_polcal_path(),
                                     prefixes_to_strip=strip_prefixes)
                         except Exception as e:
                             logger.error("Beam {0}: Using AOFlagger to flag polarisaed calibrator ... Failed".format(self.beam))
@@ -1303,7 +1304,7 @@ class preflag(BaseModule):
             # Save the derived parameters for the AOFlagger status to the parameter file
             subs_param.add_param(
                 self, pbeam + '_aoflagger_polcal_flag_status', preflagaoflaggerpolcalflag)
-            
+
             # Flag the target beams with AOFlagger
             if self.preflag_aoflagger_target and self.target != '':
                 if not preflagaoflaggertargetbeamsflag:
@@ -1323,11 +1324,11 @@ class preflag(BaseModule):
                     preflagaoflaggerbandpassstatus = get_param_def(self, pbeam + '_aoflagger_bandpass_status', False)
                     if self.preflag_aoflagger_use_interval:
                         if not preflagaoflaggertargetbeamsflag:
-                            base_cmd = 'aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_targetstrat + " --max-interval-size {0}".format(self.preflag_aoflagger_delta_interval) + " -j {0}".format(
+                            base_cmd = 'aolua -strategy ' + ao_strategies + '/strategy-apertif-2020-05-19.lua -baselines all' + " --max-interval-size {0}".format(self.preflag_aoflagger_delta_interval) + " -j {0}".format(
                             self.preflag_aoflagger_threads)
                             if self.preflag_aoflagger_bandpass and preflagaoflaggerbandpassstatus:
                                 try:
-                                    lib.basher(base_cmd + ' -bandpass ' + self.get_bandpass_path() + ' ' + self.get_target_path(),
+                                    lib.basher(base_cmd + ' -preamble "bandpass_filename=\'{}\'" '.format(self.get_bandpass_path()) + self.get_target_path(),
                                             prefixes_to_strip=strip_prefixes)
                                 except Exception as e:
                                     logger.error("Beam {0}: Using AOFlagger to flag target ... Failed".format(self.beam))
@@ -1354,10 +1355,10 @@ class preflag(BaseModule):
                         else:
                             logger.info('Beam ' + self.beam + ': Target beam dataset was already flagged with AOFlagger!')
                     else:
-                        base_cmd = 'aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_targetstrat
+                        base_cmd = 'aolua -strategy ' + ao_strategies + '/strategy-apertif-2020-05-19.lua -baselines all'
                         if not preflagaoflaggertargetbeamsflag:
                             if self.preflag_aoflagger_bandpass and preflagaoflaggerbandpassstatus:
-                                lib.basher(base_cmd + ' -bandpass ' + self.get_bandpass_path() + ' ' + self.get_target_path(),
+                                lib.basher(base_cmd + ' -preamble "bandpass_filename=\'{}\'" '.format(self.get_bandpass_path()) + self.get_target_path(),
                                         prefixes_to_strip=strip_prefixes)
                                 logger.debug('Beam ' + self.beam + ': Used AOFlagger to flag target beam with preliminary bandpass applied')
                                 preflagaoflaggertargetbeamsflag = True
@@ -1390,7 +1391,7 @@ class preflag(BaseModule):
                 self, pbeam + '_aoflagger_targetbeams_flag_status', preflagaoflaggertargetbeamsflag)
         #subs_param.add_param(self, pbeam + '_aoflagger_fluxcal_flag_status', preflagaoflaggerfluxcalflag)
         #subs_param.add_param(self, pbeam + '_aoflagger_polcal_flag_status', preflagaoflaggerpolcalflag)
-        
+
 
 
     def temp_del(self):
