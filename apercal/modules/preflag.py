@@ -1028,6 +1028,7 @@ class preflag(BaseModule):
                     tg_time = 'flagdata(vis="' + self.get_target_path() + '", timerange="' + self.preflag_manualflag_time + '", flagbackup=False)'
                     lib.run_casa([tg_time])
                     logger.debug('Beam ' + self.beam + ': Flagging time range(s) ' + self.preflag_manualflag_time + ' for target beam dataset')
+                    splttime = self.preflag_manualflag_time.split(',')
                     for time in splttime:
                         if preflagtargetbeamsmanualflagtime[0].find(time) == -1:
                             if preflagtargetbeamsmanualflagtime[0] == '':
