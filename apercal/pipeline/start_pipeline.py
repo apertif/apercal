@@ -4,6 +4,7 @@ from __future__ import print_function
 
 from apercal.modules.prepare import prepare
 from apercal.modules.split import split
+from apercal.modules.compress import compress
 from apercal.modules.preflag import preflag
 from apercal.modules.ccal import ccal
 # from dataqa.crosscal.crosscal_plots import make_all_ccal_plots
@@ -631,6 +632,37 @@ def start_apercal_pipeline(targets, fluxcals, polcals, dry_run=False, basedir=No
 
             logger.info("Running preflag ... Done ({0:.0f}s)".format(
                 time() - start_time_preflag))
+
+
+
+        if "compress" in steps:
+            logger.info("Running compress")
+            start_time_split = time()
+
+            with pymp.Parallel(10) as p:
+                for beam_index in p.range(n_beams):
+                    beamnr = beamlist_target[beam_index]
+                    # individual logfiles for each process
+                    logfilepath = os.path.join(
+                        basedir, 'apercal{:02d}.log'.format(beamnr))
+                    lib.setup_logger('debug', logfile=logfilepath)
+                    logger = logging.getLogger(__name__)
+                    logger.debug("Starting logfile for beam " + str(beamnr))
+
+                    s0 = compress(file_=configfilename_list[beam_index])
+                    set_files(s0)
+                    s0.beam = "{:02d}".format(beamnr)
+                    s0.paramfilename = 'param_{:02d}_compress.npy'.format(beamnr)
+                    if not dry_run:
+                        s0.go()
+            logfilepath = os.path.join(basedir, 'apercal.log')
+            lib.setup_logger('debug', logfile=logfilepath)
+            logger = logging.getLogger(__name__)
+            logger.info("Running compress ... Done ({0:.0f}s)".format(
+                time() - start_time_split))
+        else:
+            logger.info("Skipping compress")
+
 
         # ===============
         # Crosscal
