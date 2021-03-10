@@ -1203,8 +1203,7 @@ class preflag(BaseModule):
         # AOFlagged the target beams?
         preflagaoflaggertargetbeamsflag = get_param_def(self, pbeam + '_aoflagger_targetbeams_flag_status', False)
 
-        # base_cmd = 'aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_fluxcalstrat + ' -baselines all'
-        base_cmd = 'aoflagger -strategy ' + ao_strategies + '/apertif-2021-03-09.lua -baselines all'
+        base_cmd = 'aoflagger -strategy ' + ao_strategies + '/' + self.preflag_aoflagger_fluxcalstrat + ' -baselines all'
 
         # Suppress logging of lines that start with this (to prevent 1000s of lines of logging)
         strip_prefixes = ['Channel ']
@@ -1271,7 +1270,7 @@ class preflag(BaseModule):
                     # Check if bandpass was applied successfully
                     # Check if bandpass table was derived successfully
                     preflagaoflaggerbandpassstatus = get_param_def(self, pbeam + '_aoflagger_bandpass_status', False)
-                    ao_base_cmd = 'aoflagger -strategy ' + '/apertif-2021-03-09.lua -baselines all'
+                    ao_base_cmd = 'aoflagger -strategy ' + ao_strategies + self.preflag_aoflagger_polcalstrat + ' -baselines all'
                     if self.preflag_aoflagger_bandpass and preflagaoflaggerbandpassstatus:
                         try:
                             lib.basher(ao_base_cmd + ' -preamble "bandpass_filename=\'{}\'" '.format(self.get_bandpass_path()) + self.get_polcal_path(),
@@ -1325,7 +1324,7 @@ class preflag(BaseModule):
                     preflagaoflaggerbandpassstatus = get_param_def(self, pbeam + '_aoflagger_bandpass_status', False)
                     if self.preflag_aoflagger_use_interval:
                         if not preflagaoflaggertargetbeamsflag:
-                            base_cmd = 'aoflagger -strategy ' + ao_strategies + '/apertif-2021-03-09.lua -baselines all' + " --max-interval-size {0}".format(self.preflag_aoflagger_delta_interval) + " -j {0}".format(
+                            base_cmd = 'aoflagger -strategy ' + ao_strategies + self.preflag_aoflagger_targetstrat +' -baselines all' + " --max-interval-size {0}".format(self.preflag_aoflagger_delta_interval) + " -j {0}".format(
                             self.preflag_aoflagger_threads)
                             if self.preflag_aoflagger_bandpass and preflagaoflaggerbandpassstatus:
                                 try:
@@ -1356,7 +1355,7 @@ class preflag(BaseModule):
                         else:
                             logger.info('Beam ' + self.beam + ': Target beam dataset was already flagged with AOFlagger!')
                     else:
-                        base_cmd = 'aoflagger -strategy ' + ao_strategies + '/apertif-2021-03-09.lua -baselines all'
+                        base_cmd = 'aoflagger -strategy ' + ao_strategies + self.preflag_aoflagger_targetstrat +' -baselines all'
                         if not preflagaoflaggertargetbeamsflag:
                             if self.preflag_aoflagger_bandpass and preflagaoflaggerbandpassstatus:
                                 lib.basher(base_cmd + ' -preamble "bandpass_filename=\'{}\'" '.format(self.get_bandpass_path()) + self.get_target_path(),
