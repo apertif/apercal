@@ -83,11 +83,11 @@ class preflag(BaseModule):
     def go(self):
         """
         Executes the complete preflag step with the parameters indicated in the config-file in the following order:
+        manualflag
+        aoflagger
         shadow
         edges
         ghosts
-        manualflag
-        aoflagger
         """
         logger.info('Beam ' + self.beam + ': Starting Pre-flagging step')
 
