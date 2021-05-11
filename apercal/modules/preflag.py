@@ -252,7 +252,9 @@ class preflag(BaseModule):
                     a = range(0, nchannel, 64)
                     b = range(1, nchannel, 64)
                     c = range(63, nchannel, 64)
-                    l = a + b + c
+                    #l = a + b + c
+                    #only flag subband 0
+                    l = a
                     m = ';'.join(str(ch) for ch in l)
                     fc_edges_flagcmd = 'flagdata(vis="' + self.get_fluxcal_path() + '", spw="0:' + m + '", flagbackup=False)'
                     lib.run_casa([fc_edges_flagcmd])
