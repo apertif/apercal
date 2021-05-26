@@ -83,11 +83,11 @@ class preflag(BaseModule):
     def go(self):
         """
         Executes the complete preflag step with the parameters indicated in the config-file in the following order:
+        manualflag
+        aoflagger
         shadow
         edges
         ghosts
-        manualflag
-        aoflagger
         """
         logger.info('Beam ' + self.beam + ': Starting Pre-flagging step')
 
@@ -252,7 +252,9 @@ class preflag(BaseModule):
                     a = range(0, nchannel, 64)
                     b = range(1, nchannel, 64)
                     c = range(63, nchannel, 64)
-                    l = a + b + c
+                    #l = a + b + c
+                    #only flag subband 0
+                    l = a
                     m = ';'.join(str(ch) for ch in l)
                     fc_edges_flagcmd = 'flagdata(vis="' + self.get_fluxcal_path() + '", spw="0:' + m + '", flagbackup=False)'
                     lib.run_casa([fc_edges_flagcmd])
@@ -274,7 +276,9 @@ class preflag(BaseModule):
                     a = range(0, nchannel, 64)
                     b = range(1, nchannel, 64)
                     c = range(63, nchannel, 64)
-                    l = a + b + c
+                    #l = a + b + c
+                    #only flag first channel
+                    l = a
                     m = ';'.join(str(ch) for ch in l)
                     pc_edges_flagcmd = 'flagdata(vis="' + self.get_polcal_path() + '", spw="0:' + m + '", flagbackup=False)'
                     lib.run_casa([pc_edges_flagcmd])
@@ -294,7 +298,9 @@ class preflag(BaseModule):
                     a = range(0, nchannel, 64)
                     b = range(1, nchannel, 64)
                     c = range(63, nchannel, 64)
-                    l = a + b + c
+                    #l = a + b + c
+                    #only flag first subband chan
+                    l = a
                     m = ';'.join(str(ch) for ch in l)
                     tg_edges_flagcmd = 'flagdata(vis="' + self.get_target_path() + '", spw="0:' + m + '", flagbackup=False)'
                     lib.run_casa([tg_edges_flagcmd])
