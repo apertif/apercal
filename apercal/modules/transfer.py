@@ -152,6 +152,7 @@ class transfer(BaseModule):
                         gpcopy.go()
                         fits = lib.miriad('fits')
                         fits.op = 'uvout'
+                        fits.stokes = 'xx,yy'   # write only xx and yy to save space, JMH 17.10.2021
                         fits.in_ = self.transferdir + '/' + \
                             self.target.rstrip('.mir') + '_phase.mir'
                         fits.out = self.transferdir + '/' + \
@@ -174,6 +175,7 @@ class transfer(BaseModule):
                         gpcopy.go()
                         fits = lib.miriad('fits')
                         fits.op = 'uvout'
+                        fits.stokes = 'xx,yy'   # write only xx and yy to save space, JMH 17.10.2021
                         fits.in_ = self.transferdir + '/' + self.target
                         fits.out = self.transferdir + '/' + \
                             self.target.rstrip('.mir') + '.UVFITS'
